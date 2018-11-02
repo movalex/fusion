@@ -1,0 +1,11 @@
+{
+  Hotkeys
+  {
+    Target = "FlowView",
+    R = "AddTool{id = 'Loader'}",
+    TAB = "Comp_Choose_Tool",
+    B = "AddTool{id = 'Blur'}",    
+    N = "AddTool{id = 'Note'}",
+    D = "Execute{ cmd = 'obj:Comp():DisableSelectedTools()' }",
+  },
+}
