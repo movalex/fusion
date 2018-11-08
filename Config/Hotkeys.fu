@@ -2,10 +2,13 @@
   Hotkeys
   {
     Target = "FlowView",
-    R = "AddTool{id = 'Loader'}",
+
     TAB = "Comp_Choose_Tool",
-    B = "AddTool{id = 'Blur'}",    
-    N = "AddTool{id = 'Note'}",
-    D = "Execute{ cmd = 'obj:Comp():DisableSelectedTools()' }",
+    R = "AddTool{ id = 'Loader' }",
+    B = "AddTool{ id = 'Blur' }",    
+    N = "AddTool{ id = 'Note' }",
+    D = "Execute{ cmd = 'obj:Comp():DisableSelectedTools()' }"
+    W = "Time_Step_NextKey"
+    Q = "Time_Step_PrevKey"
   },
 }
