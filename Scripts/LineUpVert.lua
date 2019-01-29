@@ -1,6 +1,6 @@
 fl = comp.CurrentFrame.FlowView
 
-comp:StartUndo("Stack Tools")
+comp:StartUndo("Stack Tools Vertically")
 comp:Lock()
 _SEL = comp:GetToolList(true)
 _A = comp.ActiveTool

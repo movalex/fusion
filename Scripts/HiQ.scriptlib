@@ -1,0 +1,3 @@
+if comp:GetAttrs().COMPS_FileName == "" then
+	comp:SetAttrs{COMPB_HiQ = true}
+end
