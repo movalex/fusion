@@ -27,24 +27,22 @@
 --       %p represents all punctuation characters or symbols such as . , ? ! : ; @ [ ] _ { } ~
 --       %s represents all white space characters such as Tab, Carr.Return, Linefeed, Space, etc
 --       %w represents all alphanumeric characters A-Z and a-z and 0-9
---      additional info: https://www.fhug.org.uk/wiki/wiki/doku.php?id=plugins:understanding_lua_patterns
+-- https://www.fhug.org.uk/wiki/wiki/doku.php?id=plugins:understanding_lua_patterns
 --              Alex Bogomolov mail@abogomolov.com
 -- v 2.4 changes: Save preferences with SetData, do not lowercase path, maintain trim for Loaders 
---                  (these were fixed in 2011-01-28, by Stefan Ihringer) 
+-- (these were fixed in 2011-01-28, by Stefan Ihringer) 
 ------------------------------------------------------
 
 function conform(filepath)
-   local matched = string.match(filepath, srchFor)
-   print("found pattern: ", matched)
-   if matched == nil then
-      return nil
-   end
-   
-   -- build the new filename using gsub
-   newclip = string.gsub(filepath, matched, srchTo, 2)
-   print("New file path is: ", newclip)     
-   
-   return newclip
+    local matched = string.match(filepath, srchFor)
+    print("found pattern: ", matched)
+    if matched == nil then
+        return nil
+    end
+    -- build the new filename using gsub
+    newclip = string.gsub(filepath, matched, srchTo)
+    print("New file path is: ", newclip)            
+    return newclip
 end
 
 -- restore settings from globals (if available)
@@ -54,10 +52,19 @@ if prefs then
 	lastReplacement = prefs.Replacement or ""
 	doLoaders = prefs.Loaders or 1
 	doSavers = prefs.Savers or 0
-	doProxy = prefs.Proxy or 1
+	doProxy = prefs.Proxy or 0
     doValid = prefs.Valid or 0
     -- doProcessSelected = prefs.Valid or 0
     doGeoLoaders = prefs.GeoLoaders or 0
+else
+    lastSource = ""
+    lastReplacement = ""
+    doLoaders = 1
+    doSavers = 0
+    doProxy = 0
+    doValid = 0
+    -- doProcessSelected = prefs.Valid or 0
+    doGeoLoaders = 0
 end
 
 -- ask the user for some information
@@ -172,25 +179,17 @@ for i, tool in ipairs(toollist) do
 
       if x.Proxy == 1 then
          for i = 1, table.getn( altclipTable ) do
-            emptyProxyPath = "null" 
-            -- print(tool.ProxyFilename[startTime[i]] )
-            if altclipTable[i] ~= "" or altclipTable[i] ~= nil then
-            newclip = conform( altclipTable[i] )   
-                if newclip ~= nil then
-                    if (fileexists(composition:MapPath(newclip)) == false) and (x.Valid == 1) then
-                        print("FAILED: New proxy clip does not exist; skipping sequence.\n " .. newclip)
-                    else
-                        tool.ProxyFilename[startTime[i]] = newclip
-                        tool.ClipTimeStart[startTime[i]] = trimIn[i]
-                        tool.ClipTimeEnd[startTime[i]] = trimOut[i]
-                    end
-                end
-            else altclipTable[i] = "null" 
-                newclip = conform( altclipTable[i] )
-                tool.ClipTimeStart[startTime[i]] = trimIn[i]
-                tool.ClipTimeEnd[startTime[i]] = trimOut[i]
+            if altclipTable[i] ~= "" then
+               newclip = conform( altclipTable[i] )
+      
+               if newclip ~= nil then
+                  if (fileexists(composition:MapPath(newclip)) == false) and (x.Valid == 1) then
+                     print("FAILED : New proxy clip does not exist; skipping sequence.\n " .. newclip)
+                  else
+                     tool.ProxyFilename[startTime[i]] = newclip
+                  end
+               end
             end
-
          end
       end
    end
