@@ -1,5 +1,4 @@
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
+'''
 COLOR LABELS
 ---------------------------------------------------------------
 Version: v1.0
@@ -26,7 +25,7 @@ Author: Alberto GZ
 Email: albertogzgz@gmail.com
 Website: albertogz.com
 
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''
 
 import os
 import os.path
@@ -351,6 +350,7 @@ def _func(ev):
     itm['TXColor'].Checked = False
 dlg.On.BGColor.Clicked = _func
 
+
 def _func(ev):
     itm['BGColor'].Checked = False
     itm['TXColor'].Checked = True
@@ -372,11 +372,10 @@ def _func(ev):
     disp.ExitLoop()
 dlg.On.ColorLabels.Close = _func
 
-
 # Restore default colors
 def reasignColorsToButtons():
     color = [color0, color1, color2, color3, color4, color5, color6, color7, color8]
-    btnid = ['c0', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8']
+    btnid = ['c{}'.format(x) for x in range(9)]
     for i in range(len(color)):
         itm[btnid[i]].BackgroundColor = color[i]
         print(i)
@@ -389,10 +388,7 @@ def _func(ev):
     reasignColorsToButtons()
 dlg.On.DefaultConfig.Clicked = _func
 
-
-
 ##############  HSV COLOR SELECTOR  ############
-#
 
 # HUE slider
 def _func(ev):
@@ -469,18 +465,13 @@ def _func(ev):
     itm['ValSlider'].Value = hsvColor['V'] * 100
 dlg.On.ValLineEdit.TextEdited = _func
 
-#
-######################################################
 
-
-'''
 # Assign color to already selected items
-def _func(ev):
-    SetToolColors(ev['Color'], None)
-    global currentColor
-    currentColor = ev['Color']
-dlg.On.Color.ColorChanged = _func
-'''
+# def _func(ev):
+    # SetToolColors(ev['Color'], None)
+    # global currentColor
+    # currentColor = ev['Color']
+# dlg.On.Color.ColorChanged = _func
 
 # Assign color to selected items after open window
 def _func(ev):
@@ -536,7 +527,6 @@ dlg.On.Store.Clicked = _func
 # Selection from preset colors
 color = [color0, color1, color2, color3, color4, color5, color6, color7, color8]
 btnid = ['c{}'.format(x) for x in range(9)]
-# ['c0', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8']
 
 
 def selColor(n):
