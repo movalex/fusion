@@ -47,6 +47,10 @@ function showUI(tool, str)
         tool:SetAttrs({TOOLS_Name = itm.mytext:GetText()})
         disp:ExitLoop()
     end
+    
+    -- function win.On.esc.Clicked(ev)
+    --     disp:ExitLoop()
+    -- end
 
     function win.On.cancel.Clicked(ev)
         disp:ExitLoop()
@@ -67,6 +71,7 @@ function showUI(tool, str)
             Target = "renameplus",
             Defaults = true,
         
+            ESCAPE = "Execute{cmd = [[app.UIManager:QueueEvent(obj, 'Close', {})]]}",
             CONTROL_W = "Execute{cmd = [[app.UIManager:QueueEvent(obj, 'Close', {})]]}",
             CONTROL_F4 = "Execute{cmd = [[app.UIManager:QueueEvent(obj, 'Close', {})]]}",
         },
@@ -77,10 +82,10 @@ function showUI(tool, str)
     win:Hide()
 end
 
-comp:Lock()
+-- comp:Lock()
 composition:StartUndo("renaming")
 active = comp.ActiveTool
-if active then
+if active and active:GetAttrs().TOOLS_RegID == 'Underlay' then
     current_name = active:GetAttrs().TOOLS_Name
     showUI(active, current_name)
 else
@@ -91,4 +96,4 @@ else
     end
 end
 composition:EndUndo(true)
-comp:Unlock()
+-- comp:Unlock()
