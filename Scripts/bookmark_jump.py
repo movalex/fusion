@@ -42,8 +42,14 @@ win = disp.AddWindow({'ID': 'combobox',
 itm = win.GetItems()
 
 def fill_checkbox(data):
+    message = 'select bookmark'
+    if len(data) < 2:
+        message = 'add some bookmarks'
+    itm['MyCombo'].AddItem(message)
+    itm['MyCombo'].InsertSeparator()
     for name in sorted(data.values(), key=lambda x: x.lower()):
-        itm['MyCombo'].AddItem(name)
+        if name:
+            itm['MyCombo'].AddItem(name)
 
 fill_checkbox(stored_data)
 
@@ -64,15 +70,20 @@ def delete_bookmark(key):
 
 def get_values():
     value_sorted = sorted(stored_data.items(), key=lambda v: v[1].lower())
+    print(value_sorted)
     return value_sorted
 
 def _func(ev):
     choice = int(itm['MyCombo'].CurrentIndex)
-    tool_name = get_values()[choice][0]
-    print('jump to', tool_name)
-    source = comp.FindTool(tool_name)
-    flow.SetScale(2)
-    comp.SetActiveTool(source)
+    print('choice: ', choice)
+    if choice <= 1:
+        pass
+    else:
+        tool_name = get_values()[choice-1][0]
+        print('jump to', tool_name)
+        source = comp.FindTool(tool_name)
+        flow.SetScale(2)
+        comp.SetActiveTool(source)
 win.On.MyCombo.CurrentIndexChanged = _func
 
 def _func(ev):
@@ -87,12 +98,13 @@ win.On.rmall.Clicked = _func
 
 def _func(ev):
     try:
-        choice = int(itm['MyCombo'].CurrentIndex)
+        choice = int(itm['MyCombo'].CurrentIndex)-1
         tool_name, bm_text = get_values()[choice]
-        itm['MyCombo'].RemoveItem(choice)
+        itm['MyCombo'].RemoveItem(choice+1)
         delete_bookmark(tool_name)
     except IndexError:
-        pass
+        raise
+        print('damn')
 win.On.rm.Clicked = _func
 
 win.Show()
