@@ -40,7 +40,7 @@ def show_UI(tool):
 
     itm = win.GetItems()
     itm['BookmarkLine'].SelectAll()
-
+    comp.SetData('BM.default_value','')
     def get_bookmark():
         bm_text = itm['BookmarkLine'].GetText()
         tool_name = tool.Name
