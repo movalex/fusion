@@ -2,7 +2,7 @@
 Remember flow position script
 Inspired by original tool by Michael Vorberg
 Python implementation with QT UI
-This script stores positional data and script name in current comp metadata
+This script stores tool's name and bookmark in current comp metadata.
 
 Alexey Bogomolov mail@abogomolov.com
 Donations are highly appreciated: https://paypal.me/aabogomolov
@@ -10,8 +10,8 @@ Requests and issues: https://github.com/movalex/fusion_scripts/tree/master/Scrip
 
 MIT License: https://mit-license.org/
 """
-
 flow = comp.CurrentFrame.FlowView
+
 
 def show_UI(tool):
     ui = fusion.UIManager
@@ -19,25 +19,25 @@ def show_UI(tool):
 
     # Main Window
     win = disp.AddWindow({'ID': 'AskUser',
-                        'TargetID': 'AskUser',
-                        'WindowTitle': 'add bookmark',
-                        'Geometry': [100, 300, 300, 78]},
+                          'TargetID': 'AskUser',
+                          'WindowTitle': 'add bookmark',
+                          'Geometry': [100, 300, 300, 78]},
                         [
                         ui.VGroup({'Spacing':0},
                             [
                                 ui.LineEdit({'ID': 'BookmarkLine',
-                                            'Text':tool.Name,
-                                            'Weight': 0.5,
-                                            'Events': {'ReturnPressed': True},
-                                            'Alignment': {'AlignHCenter': True},
+                                             'Text':tool.Name,
+                                             'Weight': 0.5,
+                                             'Events': {'ReturnPressed': True},
+                                             'Alignment': {'AlignHCenter': True},
                                             }),
                                 ui.HGroup(
                                     [
-                                ui.HGap(0, .5),
-                                ui.Button({'ID': 'AddButton',
-                                        'Text': 'Add Bookmark',
-                                        'Weight': 0.5, }),
-                                ui.HGap(0, .5),
+                                        ui.HGap(0, .5),
+                                        ui.Button({'ID': 'AddButton',
+                                                   'Text': 'Add Bookmark',
+                                                   'Weight': 0.5, }),
+                                        ui.HGap(0, .5),
                                     ]
                                 )
                             ]),
@@ -45,11 +45,14 @@ def show_UI(tool):
 
     itm = win.GetItems()
     itm['BookmarkLine'].SelectAll()
-    comp.SetData('BM.default_value','')
+    comp.SetData('BM.default_value', '')
+
+
     def get_bookmark():
         bm_text = itm['BookmarkLine'].GetText()
         tool_name = tool.Name
         comp.SetData('BM.{}'.format(tool_name), bm_text)
+
 
     def _func(ev):
         get_bookmark()
@@ -73,12 +76,12 @@ def show_UI(tool):
     Hotkeys { Target = "AskUser",
     Defaults = true,
     ESCAPE = "Execute{cmd = [[app.UIManager:QueueEvent(obj, 'Close', {})]]}" }})
-    ''')
-
+                 ''')
 
     win.Show()
     disp.RunLoop()
     win.Hide()
+
 
 def get_tool():
     active = comp.ActiveTool
@@ -90,7 +93,7 @@ def get_tool():
         return selected_nodes[0]
     return active
 
+
 tool = get_tool()
 if tool:
     show_UI(tool)
-
