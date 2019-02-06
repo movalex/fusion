@@ -2,25 +2,25 @@ fl = comp.CurrentFrame.FlowView
 
 comp:StartUndo("Align Tools Horizontally")
 comp:Lock()
-_SEL = comp:GetToolList(true)
-_A = comp.ActiveTool
+selected_tools = comp:GetToolList(true)
+active_tool = comp.ActiveTool
 
-if (_A == nil) then
-	_A = _SEL[1]
+if active_tool == nil then
+	active_tool = selected_tools[1]
 end
 
-_AX,_AY = fl:GetPos(_A)
+active_X, active_Y = fl:GetPos(active_tool)
 
-for k,v in pairs(_SEL) do
-	if (v ~= _A) then
-		_TEMP_X, _TEMP_Y = fl:GetPos(v)
+for pos, tool in pairs(selected_tools) do
+	if tool ~= active_tool then
+		_TEMP_X, _TEMP_Y = fl:GetPos(tool)
 		-- check if nodes have the same X value
-		if _TEMP_X == _AX then
-			newpos = _TEMP_X + (k-1)
+		if _TEMP_X == active_X then
+			newpos = _TEMP_X + (pos - 1)
 		else
 			newpos = _TEMP_X
 		end
-		fl:SetPos(v, newpos, _AY)
+		fl:SetPos(tool, newpos, active_Y)
 	end
 end
 
