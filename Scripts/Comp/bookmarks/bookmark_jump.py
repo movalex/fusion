@@ -7,10 +7,12 @@ All bookmarks are alphabetically sorted.
 Alexey Bogomolov mail@abogomolov.com
 Donations are highly appreciated: https://paypal.me/aabogomolov
 Requests and issues: https://github.com/movalex/fusion_scripts/tree/master/Scripts/Comp
+
 MIT License: https://mit-license.org/
 """
+# legacy python reporting compatibility
 from __future__ import print_function
- 
+
 flow = comp.CurrentFrame.FlowView
 
 stored_data = comp.GetData('BM')
@@ -25,28 +27,28 @@ win = disp.AddWindow({'ID': 'combobox',
                       'TargetID': 'combobox',
                       'WindowTitle': 'jump to bookmark',
                       'Geometry': [100, 300, 300, 80]},
-                    [
+                        [
                         ui.VGroup(
                             [
                                 ui.ComboBox({'ID': 'MyCombo',
-                                            'Text':'Choose preset'
-                                }),
+                                            'Text': 'Choose preset'
+                                            }),
                                 ui.HGroup(
                                 [
                                     ui.Button({'ID': 'rm',
-                                'Text': 'delete bookmark',
-                                'Weight': 0.5,
-                                }),
+                                               'Text': 'delete bookmark',
+                                               'Weight': 0.5,
+                                               }),
                                     ui.Button({'ID': 'rmall',
-                                'Text': 'reset',
-                                'Weight': 0.5,
-                                }),
-                                ]
-                                )
+                                               'Text': 'reset',
+                                               'Weight': 0.5,
+                                              }),
+                                ])
                             ]),
                         ])
 
 itm = win.GetItems()
+
 
 def fill_checkbox(data):
     message = 'select bookmark'
@@ -58,25 +60,30 @@ def fill_checkbox(data):
         if name:
             itm['MyCombo'].AddItem(name)
 
+
 fill_checkbox(stored_data)
+
 
 def clear_all():
     comp.SetData('BM')
     print('all bookmarks gone')
+
 
 def delete_bookmark(key):
     global stored_data
     comp.SetData('BM')
     try:
         del stored_data[key]
-        for k,v in stored_data.items():
+        for k, v in stored_data.items():
             comp.SetData('BM.{}'.format(k), v)
     except IndexError:
         pass
 
+
 def get_values():
     value_sorted = sorted(stored_data.items(), key=lambda v: v[1].lower())
     return value_sorted
+
 
 def _func(ev):
     choice = int(itm['MyCombo'].CurrentIndex)
@@ -89,6 +96,7 @@ def _func(ev):
         flow.SetScale(2)
         comp.SetActiveTool(source)
 win.On.MyCombo.CurrentIndexChanged = _func
+
 
 def _func(ev):
     disp.ExitLoop()
@@ -118,7 +126,7 @@ Hotkeys { Target = "combobox",
 Defaults = true,
 ESCAPE = "Execute{cmd = [[app.UIManager:QueueEvent(obj, 'Close', {})]]}" }})
 ''')
+
 win.Show()
 disp.RunLoop()
 win.Hide()
-

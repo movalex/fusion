@@ -8,7 +8,5 @@
     B = "AddTool{ id = 'Blur' }",    
     N = "AddTool{ id = 'Note' }",
     D = "Execute{ cmd = 'obj:Comp():DisableSelectedTools()' }"
-    W = "Time_Step_NextKey"
-    Q = "Time_Step_PrevKey"
   },
 }
