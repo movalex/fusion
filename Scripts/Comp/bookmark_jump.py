@@ -16,8 +16,9 @@ if not stored_data:
 ui = fusion.UIManager
 disp = bmd.UIDispatcher(ui)
 win = disp.AddWindow({'ID': 'combobox',
-                    'WindowTitle': 'jump to bookmark',
-                    'Geometry': [100, 300, 300, 80]},
+                      'TargetID': 'combobox',
+                      'WindowTitle': 'jump to bookmark',
+                      'Geometry': [100, 300, 300, 80]},
                     [
                         ui.VGroup(
                             [
@@ -106,6 +107,19 @@ def _func(ev):
         raise
         print('damn')
 win.On.rm.Clicked = _func
+
+
+fusion.AddConfig({'combobox':
+                  [{'Target':{'ID':'combobox'}},
+                    {'Hotkeys':
+
+                        {'Target':'combobox',
+                        'Defauts': True,
+                        'ESCAPE': 'Execute{cmd = [[fusion.UIManager:QueueEvent(obj, "Close", {})]]}'
+                        }
+
+                    }]
+                  })
 
 win.Show()
 disp.RunLoop()
