@@ -1,10 +1,14 @@
 """
-remember flow position script
-inspired by original tool by Michael Vorberg
-python implementation with QT UI
-this script stores positional data and script name in current comp metadata
-Alex Bogomolov mail@abogomolov.com
-MIT/X Consortium License: https://mit-license.org/
+Remember flow position script
+Inspired by original tool by Michael Vorberg
+Python implementation with QT UI
+This script stores positional data and script name in current comp metadata
+
+Alexey Bogomolov mail@abogomolov.com
+Donations are highly appreciated: https://paypal.me/aabogomolov
+Requests and issues: https://github.com/movalex/fusion_scripts/tree/master/Scripts/Comp
+
+MIT License: https://mit-license.org/
 """
 
 flow = comp.CurrentFrame.FlowView
@@ -15,6 +19,7 @@ def show_UI(tool):
 
     # Main Window
     win = disp.AddWindow({'ID': 'AskUser',
+                        'TargetID': 'AskUser',
                         'WindowTitle': 'add bookmark',
                         'Geometry': [100, 300, 300, 78]},
                         [
@@ -61,6 +66,15 @@ def show_UI(tool):
         print('created bookmark:', itm['BookmarkLine'].Text)
         disp.ExitLoop()
     win.On.AddButton.Clicked = _func
+
+# close UI on ESC button
+    comp.Execute('''app:AddConfig("AskUser",
+    { Target {ID = "AskUser"},
+    Hotkeys { Target = "AskUser",
+    Defaults = true,
+    ESCAPE = "Execute{cmd = [[app.UIManager:QueueEvent(obj, 'Close', {})]]}" }})
+    ''')
+
 
     win.Show()
     disp.RunLoop()

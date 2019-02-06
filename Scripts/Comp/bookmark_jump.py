@@ -1,16 +1,22 @@
 """
-jump to stored flow position
-use dropdown menu to switch to stored position
-Alex Bogomolov mail@abogomolov.com
-MIT/X Consortium License: https://mit-license.org/
-"""
+Jump to stored flow position
+Use dropdown menu to switch to stored position
+Delete single bookmark or all of them
+All bookmarks are alphabetically sorted.
 
+Alexey Bogomolov mail@abogomolov.com
+Donations are highly appreciated: https://paypal.me/aabogomolov
+Requests and issues: https://github.com/movalex/fusion_scripts/tree/master/Scripts/Comp
+MIT License: https://mit-license.org/
+"""
+from __future__ import print_function
+ 
 flow = comp.CurrentFrame.FlowView
 
 stored_data = comp.GetData('BM')
 if not stored_data:
     stored_data = {}
-    print('add some bookmarks')
+    print('add some bookmarks!')
 
 # Main Window
 ui = fusion.UIManager
@@ -45,7 +51,7 @@ itm = win.GetItems()
 def fill_checkbox(data):
     message = 'select bookmark'
     if len(data) < 2:
-        message = 'add some bookmarks'
+        message = 'add some bookmarks!'
     itm['MyCombo'].AddItem(message)
     itm['MyCombo'].InsertSeparator()
     for name in sorted(data.values(), key=lambda x: x.lower()):
@@ -66,17 +72,14 @@ def delete_bookmark(key):
         for k,v in stored_data.items():
             comp.SetData('BM.{}'.format(k), v)
     except IndexError:
-        print('index error')
-        stored_data = {}
+        pass
 
 def get_values():
     value_sorted = sorted(stored_data.items(), key=lambda v: v[1].lower())
-    print(value_sorted)
     return value_sorted
 
 def _func(ev):
     choice = int(itm['MyCombo'].CurrentIndex)
-    print('choice: ', choice)
     if choice <= 1:
         pass
     else:
@@ -102,25 +105,19 @@ def _func(ev):
         choice = int(itm['MyCombo'].CurrentIndex)-1
         tool_name, bm_text = get_values()[choice]
         itm['MyCombo'].RemoveItem(choice+1)
+        print('bookmark {} deleted'.format(bm_text))
         delete_bookmark(tool_name)
     except IndexError:
-        raise
-        print('damn')
+        print('stop hitting that button!')
 win.On.rm.Clicked = _func
 
-
-fusion.AddConfig({'combobox':
-                  [{'Target':{'ID':'combobox'}},
-                    {'Hotkeys':
-
-                        {'Target':'combobox',
-                        'Defauts': True,
-                        'ESCAPE': 'Execute{cmd = [[fusion.UIManager:QueueEvent(obj, "Close", {})]]}'
-                        }
-
-                    }]
-                  })
-
+# close UI on ESC button
+comp.Execute('''app:AddConfig("combobox",
+{ Target {ID = "combobox"},
+Hotkeys { Target = "combobox",
+Defaults = true,
+ESCAPE = "Execute{cmd = [[app.UIManager:QueueEvent(obj, 'Close', {})]]}" }})
+''')
 win.Show()
 disp.RunLoop()
 win.Hide()
