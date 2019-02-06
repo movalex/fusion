@@ -6,7 +6,7 @@ All bookmarks are alphabetically sorted.
 
 Alexey Bogomolov mail@abogomolov.com
 Donations are highly appreciated: https://paypal.me/aabogomolov
-Requests and issues: https://github.com/movalex/fusion_scripts/tree/master/Scripts/Comp
+Requests and issues: https://github.com/movalex/fusion_scripts/issues
 
 MIT License: https://mit-license.org/
 """
