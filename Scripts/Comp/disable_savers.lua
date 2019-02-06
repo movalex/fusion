@@ -1,4 +1,4 @@
-comp:Lock()
+-- comp:Lock()
 local selectedSavers = comp:GetToolList(true, "Saver")
 local allSavers = comp:GetToolList(false, "Saver")
     for i, currentSaver in pairs(allSavers) do
@@ -12,4 +12,4 @@ local allSavers = comp:GetToolList(false, "Saver")
         currentSaver:SetAttrs( { TOOLB_PassThrough = true } )
     end
 end
-comp:Unlock()
+-- comp:Unlock()

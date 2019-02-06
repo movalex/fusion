@@ -9,17 +9,19 @@ corners = {"TopLeft", "TopRight", "BottomLeft", "BottomRight"}
 -- create list of Sizes to get trackers number
 trackers = {}
 if trk and ppn then
+    -- should be 4 trackers for ppn
     for _, s in ipairs(trk:GetInputList()) do
         if string.find(s:GetAttrs().INPS_ID, "Sizes")
             then table.insert(trackers, s)
         end
     end
     print('Found ' .. #trackers .. ' trackers')
-
-    trkName = trk:GetAttrs().TOOLS_Name
-    -- ppn.TopLeft:SetExpression(trkName .. ".TrackedCenter1")
-    for n = 1, 4 do
-            ppn[corners[n]]:SetExpression(trkName .. ".TrackedCenter"..n)
+    if #trackers == 4 then
+        trkName = trk:GetAttrs().TOOLS_Name
+        -- ppn.TopLeft:SetExpression(trkName .. ".TrackedCenter1")
+        for n = 1, 4 do
+                ppn[corners[n]]:SetExpression(trkName .. ".TrackedCenter"..n)
+        end
     end
 else
 	print("Tracker and ppn not found!")
