@@ -37,7 +37,7 @@ def show_UI(tool):
                                     [
                                         ui.HGap(0, .25),
                                         ui.Button({'ID': 'AddButton',
-                                                   'Text': 'Add Bookmark',
+                                                   'Text': 'OK',
                                                    'Weight': 0.5, }),
                                         ui.HGap(0, .25),
                                     ]
