@@ -10,6 +10,8 @@ Requests and issues: https://github.com/movalex/fusion_scripts/issues
 
 MIT License: https://mit-license.org/
 """
+from __future__ import print_function
+
 flow = comp.CurrentFrame.FlowView
 
 
@@ -21,9 +23,9 @@ def show_UI(tool):
     win = disp.AddWindow({'ID': 'AskUser',
                           'TargetID': 'AskUser',
                           'WindowTitle': 'add bookmark',
-                          'Geometry': [100, 300, 300, 78]},
+                          'Geometry': [200, 600, 300, 75]},
                         [
-                        ui.VGroup({'Spacing':0},
+                        ui.VGroup(
                             [
                                 ui.LineEdit({'ID': 'BookmarkLine',
                                              'Text':tool.Name,
@@ -33,11 +35,11 @@ def show_UI(tool):
                                             }),
                                 ui.HGroup(
                                     [
-                                        ui.HGap(0, .5),
+                                        ui.HGap(0, .25),
                                         ui.Button({'ID': 'AddButton',
                                                    'Text': 'Add Bookmark',
                                                    'Weight': 0.5, }),
-                                        ui.HGap(0, .5),
+                                        ui.HGap(0, .25),
                                     ]
                                 )
                             ]),
@@ -53,13 +55,6 @@ def show_UI(tool):
         tool_name = tool.Name
         comp.SetData('BM.{}'.format(tool_name), bm_text)
 
-
-    def _func(ev):
-        get_bookmark()
-        # print(comp.GetData().values())
-        disp.ExitLoop()
-    win.On.BookmarkLine.ReturnPressed = _func
-
     def _func(ev):
         disp.ExitLoop()
     win.On.AskUser.Close = _func
@@ -69,6 +64,7 @@ def show_UI(tool):
         print('created bookmark:', itm['BookmarkLine'].Text)
         disp.ExitLoop()
     win.On.AddButton.Clicked = _func
+    win.On.BookmarkLine.ReturnPressed = _func
 
 # close UI on ESC button
     comp.Execute('''app:AddConfig("AskUser",

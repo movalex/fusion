@@ -26,7 +26,8 @@ disp = bmd.UIDispatcher(ui)
 win = disp.AddWindow({'ID': 'combobox',
                       'TargetID': 'combobox',
                       'WindowTitle': 'jump to bookmark',
-                      'Geometry': [100, 300, 300, 80]},
+                      'Geometry': [550, 600, 300, 75]},
+
                         [
                         ui.VGroup(
                             [
