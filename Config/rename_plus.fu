@@ -1,0 +1,7 @@
+{
+    Hotkeys
+    {
+      Target = "FlowView",
+      F2 = "RunScript{filename = 'GIT:Scripts/Comp/Rename_Plus.lua'}",
+    }
+}
