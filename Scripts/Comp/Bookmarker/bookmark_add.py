@@ -52,8 +52,9 @@ def show_UI(tool):
 
     def get_bookmark():
         bm_text = itm['BookmarkLine'].GetText()
+        current_scale = flow.GetScale()
         tool_name = tool.Name
-        comp.SetData('BM.{}'.format(tool_name), bm_text)
+        comp.SetData('BM.{}'.format(tool_name), [bm_text, current_scale])
 
     def _func(ev):
         disp.ExitLoop()
