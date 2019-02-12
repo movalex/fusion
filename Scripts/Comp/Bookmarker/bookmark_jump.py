@@ -32,7 +32,7 @@ win = disp.AddWindow({'ID': 'combobox',
                         ui.VGroup(
                             [
                                 ui.ComboBox({'ID': 'MyCombo',
-                                            'Text': 'Choose preset'
+                                            'Text': 'Choose preset',
                                             }),
                                 ui.HGroup(
                                 [
@@ -84,6 +84,7 @@ def delete_bookmark(key):
 def get_values():
     value_sorted = sorted(stored_data.items(), key=lambda v: v[1].lower())
     return value_sorted
+
 
 
 def _func(ev):
