@@ -70,7 +70,7 @@ def clear_all():
 
 
 def delete_bookmark(key):
-    global stored_data
+    # global stored_data
     comp.SetData('BM')
     try:
         del stored_data[key]
@@ -109,7 +109,7 @@ def _func(ev):
         pr1.Delete()
         pr2.Delete()
         comp.SetActiveTool(source)
-        
+
 win.On.MyCombo.CurrentIndexChanged = _func
 
 
