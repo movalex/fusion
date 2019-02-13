@@ -47,7 +47,8 @@ trackercount=0
 trackerlist={}
 trackerdump={}
 
-local var1= tool:GetAttrs()
+tool = comp.ActiveTool
+local var1 = tool:GetAttrs()
 -- Check to see if the tool is even a mask.
 if not bmd.isin(mask_ids, var1.TOOLS_RegID) then
    print("ERROR: This is not a Mask / Paint Stroke.")
