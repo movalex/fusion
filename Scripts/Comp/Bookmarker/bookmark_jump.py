@@ -15,7 +15,7 @@ from __future__ import print_function
 
 flow = comp.CurrentFrame.FlowView
 
-stored_data = comp.GetData('BM')
+stored_data = comp.GetData('BM_test')
 if not stored_data:
     stored_data = {}
     print('add some bookmarks!')
@@ -26,13 +26,12 @@ disp = bmd.UIDispatcher(ui)
 win = disp.AddWindow({'ID': 'combobox',
                       'TargetID': 'combobox',
                       'WindowTitle': 'jump to bookmark',
-                      'Geometry': [550, 600, 300, 75]},
-
+                      'Geometry': [100, 300, 300, 80]},
                         [
                         ui.VGroup(
                             [
                                 ui.ComboBox({'ID': 'MyCombo',
-                                            'Text': 'Choose preset',
+                                            'Text': 'Choose preset'
                                             }),
                                 ui.HGroup(
                                 [
@@ -57,26 +56,30 @@ def fill_checkbox(data):
         message = 'add some bookmarks!'
     itm['MyCombo'].AddItem(message)
     itm['MyCombo'].InsertSeparator()
-    for name in sorted(data.values(), key=lambda x: x.lower()):
-        if name:
-            itm['MyCombo'].AddItem(name)
+    # print(data)
+    sorted_bms = sorted([i[1] for i in data.values() if i])
+    for bm in sorted_bms:
+        itm['MyCombo'].AddItem(bm)
+
+    # for name in sorted(data.values(), key=lambda x: x.lower()):
+    #     if name:
+    #         itm['MyCombo'].AddItem(name)
 
 
 fill_checkbox(stored_data)
 
 
 def clear_all():
-    comp.SetData('BM')
+    comp.SetData('BM_test')
     print('all bookmarks gone')
 
 
 def delete_bookmark(key):
-    global stored_data
-    comp.SetData('BM')
+    comp.SetData('BM_test')
     try:
         del stored_data[key]
         for k, v in stored_data.items():
-            comp.SetData('BM.{}'.format(k), v)
+            comp.SetData('BM_test.{}'.format(k), v)
     except IndexError:
         pass
 
@@ -86,18 +89,37 @@ def get_values():
     return value_sorted
 
 
-
-def _func(ev):
+def _main_func(ev):
     choice = int(itm['MyCombo'].CurrentIndex)
     if choice <= 1:
         pass
     else:
-        tool_name = get_values()[choice-1][0]
-        print('jump to', tool_name)
-        source = comp.FindTool(tool_name)
-        flow.SetScale(2)
+        toolName = get_values()[choice-1][0]
+        print('jump to', toolName)
+        source = comp.FindTool(toolName)
+        # position of bookmarked node
+        sx, sy = flow.GetPosTable(source).values() 
+        # would be nice to store the scale with each bookmark and reference here
+        # the actual SetScale value also used 
+        scaleFactor = 1.25 
+        # to place temp PipeRouters for the hack
+        # we have the position of the bookmarked node
+        # (if multiple nodes then we could first get average X
+        # and Y of all selected -- list, add up, divide by count)
+        prRelPosX = round(8 / scaleFactor) # an amount to offset in X - temp PipeRouter from the bookmarked tool
+        prRelPosY = round(6 / scaleFactor) # an amount to offset in Y 
+        pr1 = comp.AddTool("PipeRouter", sx - prRelPosX, sy - prRelPosY)
+        # additional added to favor top left
+        pr2 = comp.AddTool("PipeRouter", sx + prRelPosX + 1, sy + prRelPosY + 2)
+        flow.SetScale(scaleFactor)
+        comp.SetActiveTool(pr2)
+        comp.SetActiveTool(pr1)
+        flow.Select()
+        pr1.Delete()
+        pr2.Delete()
         comp.SetActiveTool(source)
-win.On.MyCombo.CurrentIndexChanged = _func
+        
+win.On.MyCombo.CurrentIndexChanged = _main_func
 
 
 def _func(ev):
