@@ -47,7 +47,7 @@ def show_UI(tool):
 
     itm = win.GetItems()
     itm['BookmarkLine'].SelectAll()
-    comp.SetData('BM_test.default_value', '')
+    comp.SetData('BM_test._', '')
 
 
     def get_bookmark():
@@ -55,10 +55,9 @@ def show_UI(tool):
         print(bm_text)
         current_scale = flow.GetScale()
         tool_name = tool.Name
-        tool_ID = 'tool_{}'.format(int(tool.GetAttrs('TOOLI_ID')))
-        comp.SetData('BM_test.{}'.format(tool_ID), [bm_text, tool_name, current_scale])
+        # tool_ID = 'tool_{}'.format(int(tool.GetAttrs('TOOLI_ID')))
+        comp.SetData('BM_test.{}'.format(bm_text), [tool_name, current_scale])
 
-# TODO: is it possible to find tool by it's TOOLI_ID?
 
     def _func(ev):
         disp.ExitLoop()
