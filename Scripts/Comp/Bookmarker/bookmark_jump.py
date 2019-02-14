@@ -59,7 +59,7 @@ def delete_bookmark(key):
         pass
 
 
-def _switch_func(ev):
+def _switch_UI(ev):
     choice = int(itm['MyCombo'].CurrentIndex)
     if choice <= 1:
         pass
@@ -87,17 +87,17 @@ def _switch_func(ev):
         comp.SetActiveTool(source)
 
 
-def _close_func(ev):
+def _close_UI(ev):
     disp.ExitLoop()
 
 
-def _clear_all_func(ev):
+def _clear_all_UI(ev):
     clear_all()
     itm['MyCombo'].Clear()
     itm['MyCombo'].AddItem('all bookmarks gone')
 
 
-def _clear_func(ev):
+def _clear_UI(ev):
     try:
         choice = int(itm['MyCombo'].CurrentIndex)
         bm_text = parse_data()[choice - 2][0]
@@ -143,10 +143,10 @@ if __name__ == '__main__':
 
     itm = win.GetItems()
 
-    win.On.rm.Clicked = _clear_func
-    win.On.rmall.Clicked = _clear_all_func
-    win.On.combobox.Close = _close_func
-    win.On.MyCombo.CurrentIndexChanged = _switch_func
+    win.On.rm.Clicked = _clear_UI
+    win.On.rmall.Clicked = _clear_all_UI
+    win.On.combobox.Close = _close_UI
+    win.On.MyCombo.CurrentIndexChanged = _switch_UI
 
     fill_checkbox(data)
 
