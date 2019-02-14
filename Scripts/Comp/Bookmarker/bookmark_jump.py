@@ -18,13 +18,11 @@ flow = comp.CurrentFrame.FlowView
 # close UI on ESC button
 comp.Execute('''app:AddConfig("combobox",
 {
-Target {ID = "combobox"},
-Hotkeys {
-        Target = "combobox",
-        Defaults = true,
-        ESCAPE = "Execute{cmd = [[app.UIManager:QueueEvent(obj, 'Close', {})]]}"
-        }
-})''')
+Target  {ID = "combobox"},
+Hotkeys {Target = "combobox",
+         Defaults = true,
+         ESCAPE = "Execute{cmd = [[app.UIManager:QueueEvent(obj, 'Close', {})]]}" } })
+''')
 
 
 def parse_data():
@@ -69,18 +67,23 @@ def _switch_UI(ev):
         print('jump to', tool_name)
         source = comp.FindTool(tool_name)
 
-#uncomment the section below to get kind of centered bookmark:
+# comment the section below if you don't need centered bookmark hackaround
+# the result it too unpredictable for different scales
+# and produces visible flow movements and also 
+# causes tools to temporarily disappear from the flow.
+# Probably we can try the same hack with Underlay instead of PipeRouters.
+# Thanks @Intelligent_Machine for pointing this out:
+# https://www.steakunderwater.com/wesuckless/viewtopic.php?p=22068#p22068 
 #--------------------------------------------------------------------------------
-        # sx, sy = flow.GetPosTable(source).values()
-        # prRelPosX = round(8 / scale_factor)
-        # prRelPosY = round(6 / scale_factor)
-        # pr1 = comp.AddTool("PipeRouter", sx - prRelPosX, sy - prRelPosY)
-        # pr2 = comp.AddTool("PipeRouter", sx + prRelPosX + 1, sy + prRelPosY + 2)
-        # comp.SetActiveTool(pr2)
-        # comp.SetActiveTool(pr1)
-        # flow.Select()
-        # pr1.Delete()
-        # pr2.Delete()
+        sx, sy = flow.GetPosTable(source).values()
+        flow.SetScale(4)
+        pr1 = comp.AddTool("PipeRouter", sx - 1, sy - .5)
+        pr2 = comp.AddTool("PipeRouter", sx + 3, sy + .5)
+        comp.SetActiveTool(pr2)
+        comp.SetActiveTool(pr1)
+        flow.Select()
+        pr1.Delete()
+        pr2.Delete()
 #--------------------------------------------------------------------------------
 
         flow.SetScale(scale_factor)

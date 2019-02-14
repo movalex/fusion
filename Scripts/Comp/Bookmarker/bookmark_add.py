@@ -16,11 +16,13 @@ flow = comp.CurrentFrame.FlowView
 
 # close UI on ESC button
 comp.Execute('''app:AddConfig("AskUser",
-{ Target {ID = "AskUser"},
-Hotkeys { Target = "AskUser",
-Defaults = true,
-ESCAPE = "Execute{cmd = [[app.UIManager:QueueEvent(obj, 'Close', {})]]}" }})
+{
+    Target  {ID = "AskUser"},
+    Hotkeys {Target = "AskUser",
+             Defaults = true,
+             ESCAPE = "Execute{cmd = [[app.UIManager:QueueEvent(obj, 'Close', {})]]}" }})
 ''')
+
 
 def get_bookmark():
     bm_text = itm['BookmarkLine'].GetText()
@@ -28,6 +30,7 @@ def get_bookmark():
     tool_name = tool.Name
     # tool_ID = 'tool_{}'.format(int(tool.GetAttrs('TOOLI_ID')))
     comp.SetData('BM_test.{}'.format(bm_text), [tool_name, current_scale])
+
 
 def get_tool():
     active = comp.ActiveTool
@@ -39,13 +42,16 @@ def get_tool():
         return selected_nodes[0]
     return active
 
+
 def _close_UI(ev):
     disp.ExitLoop()
+
 
 def _choose_bm_UI(ev):
     get_bookmark()
     print('created bookmark:', itm['BookmarkLine'].Text)
     disp.ExitLoop()
+
 
 if __name__ == '__main__':
     tool = get_tool()
