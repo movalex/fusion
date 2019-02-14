@@ -26,6 +26,10 @@ comp.Execute('''app:AddConfig("AskUser",
 
 def get_bookmark():
     bm_text = itm['BookmarkLine'].GetText()
+    if bm_text[0].isdigit():
+        print('bookmark name starts with digit, now prepending with _')
+        bm_text = '_' + bm_text
+    print('created bookmark:', bm_text)
     current_scale = flow.GetScale()
     tool_name = tool.Name
     # tool_ID = 'tool_{}'.format(int(tool.GetAttrs('TOOLI_ID')))
@@ -49,7 +53,6 @@ def _close_UI(ev):
 
 def _choose_bm_UI(ev):
     get_bookmark()
-    print('created bookmark:', itm['BookmarkLine'].Text)
     disp.ExitLoop()
 
 
