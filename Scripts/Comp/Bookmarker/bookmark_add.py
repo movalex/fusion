@@ -14,74 +14,20 @@ from __future__ import print_function
 
 flow = comp.CurrentFrame.FlowView
 
-
-def show_UI(tool):
-    ui = fusion.UIManager
-    disp = bmd.UIDispatcher(ui)
-
-    # Main Window
-    win = disp.AddWindow({'ID': 'AskUser',
-                          'TargetID': 'AskUser',
-                          'WindowTitle': 'add bookmark',
-                          'Geometry': [200, 600, 300, 75]},
-                        [
-                        ui.VGroup(
-                            [
-                                ui.LineEdit({'ID': 'BookmarkLine',
-                                             'Text': tool.Name,
-                                             'Weight': 0.5,
-                                             'Events': {'ReturnPressed': True},
-                                             'Alignment': {'AlignHCenter': True},
-                                            }),
-                                ui.HGroup(
-                                    [
-                                        ui.HGap(0, .25),
-                                        ui.Button({'ID': 'AddButton',
-                                                   'Text': 'OK',
-                                                   'Weight': 0.5, }),
-                                        ui.HGap(0, .25),
-                                    ]
-                                )
-                            ]),
-                        ])
-
-    itm = win.GetItems()
-    itm['BookmarkLine'].SelectAll()
-    comp.SetData('BM_test._', '')
-
-
-    def get_bookmark():
-        bm_text = itm['BookmarkLine'].GetText()
-        print(bm_text)
-        current_scale = flow.GetScale()
-        tool_name = tool.Name
-        # tool_ID = 'tool_{}'.format(int(tool.GetAttrs('TOOLI_ID')))
-        comp.SetData('BM_test.{}'.format(bm_text), [tool_name, current_scale])
-
-
-    def _func(ev):
-        disp.ExitLoop()
-    win.On.AskUser.Close = _func
-
-    def _func(ev):
-        get_bookmark()
-        print('created bookmark:', itm['BookmarkLine'].Text)
-        disp.ExitLoop()
-    win.On.AddButton.Clicked = _func
-    win.On.BookmarkLine.ReturnPressed = _func
-
 # close UI on ESC button
-    comp.Execute('''app:AddConfig("AskUser",
-    { Target {ID = "AskUser"},
-    Hotkeys { Target = "AskUser",
-    Defaults = true,
-    ESCAPE = "Execute{cmd = [[app.UIManager:QueueEvent(obj, 'Close', {})]]}" }})
-                 ''')
+comp.Execute('''app:AddConfig("AskUser",
+{ Target {ID = "AskUser"},
+Hotkeys { Target = "AskUser",
+Defaults = true,
+ESCAPE = "Execute{cmd = [[app.UIManager:QueueEvent(obj, 'Close', {})]]}" }})
+''')
 
-    win.Show()
-    disp.RunLoop()
-    win.Hide()
-
+def get_bookmark():
+    bm_text = itm['BookmarkLine'].GetText()
+    current_scale = flow.GetScale()
+    tool_name = tool.Name
+    # tool_ID = 'tool_{}'.format(int(tool.GetAttrs('TOOLI_ID')))
+    comp.SetData('BM_test.{}'.format(bm_text), [tool_name, current_scale])
 
 def get_tool():
     active = comp.ActiveTool
@@ -93,7 +39,54 @@ def get_tool():
         return selected_nodes[0]
     return active
 
+def _close_UI(ev):
+    disp.ExitLoop()
 
-tool = get_tool()
-if tool:
-    show_UI(tool)
+def _choose_bm_UI(ev):
+    get_bookmark()
+    print('created bookmark:', itm['BookmarkLine'].Text)
+    disp.ExitLoop()
+
+if __name__ == '__main__':
+    tool = get_tool()
+    if tool:
+        ui = fusion.UIManager
+        disp = bmd.UIDispatcher(ui)
+
+        # Main Window
+        win = disp.AddWindow({'ID': 'AskUser',
+                            'TargetID': 'AskUser',
+                            'WindowTitle': 'add bookmark',
+                            'Geometry': [200, 600, 300, 75]},
+                            [
+                            ui.VGroup(
+                                [
+                                    ui.LineEdit({'ID': 'BookmarkLine',
+                                                'Text': tool.Name,
+                                                'Weight': 0.5,
+                                                'Events': {'ReturnPressed': True},
+                                                'Alignment': {'AlignHCenter': True},
+                                                }),
+                                    ui.HGroup(
+                                        [
+                                            ui.HGap(0, .25),
+                                            ui.Button({'ID': 'AddButton',
+                                                    'Text': 'OK',
+                                                    'Weight': 0.5, }),
+                                            ui.HGap(0, .25),
+                                        ]
+                                    )
+                                ]),
+                            ])
+
+        itm = win.GetItems()
+        itm['BookmarkLine'].SelectAll()
+        comp.SetData('BM_test._', '')
+
+        win.On.AddButton.Clicked = _choose_bm_UI
+        win.On.BookmarkLine.ReturnPressed = _choose_bm_UI
+        win.On.AskUser.Close = _close_UI
+
+        win.Show()
+        disp.RunLoop()
+        win.Hide()
