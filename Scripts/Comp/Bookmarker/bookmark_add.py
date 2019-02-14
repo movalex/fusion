@@ -29,7 +29,7 @@ def get_bookmark():
     current_scale = flow.GetScale()
     tool_name = tool.Name
     # tool_ID = 'tool_{}'.format(int(tool.GetAttrs('TOOLI_ID')))
-    comp.SetData('BM_test.{}'.format(bm_text), [tool_name, current_scale])
+    comp.SetData('BM.{}'.format(bm_text), [tool_name, current_scale])
 
 
 def get_tool():
@@ -87,7 +87,7 @@ if __name__ == '__main__':
 
         itm = win.GetItems()
         itm['BookmarkLine'].SelectAll()
-        comp.SetData('BM_test._', '')
+        comp.SetData('BM._', '')
 
         win.On.AddButton.Clicked = _choose_bm_UI
         win.On.BookmarkLine.ReturnPressed = _choose_bm_UI

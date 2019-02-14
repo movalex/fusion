@@ -26,7 +26,7 @@ Hotkeys {Target = "combobox",
 
 
 def parse_data():
-    # return sorted by bm
+    # return sorted by bookmark
     parsed_data = sorted(data.items(), key = lambda x: x[0].lower())
     return parsed_data[1:]
 
@@ -38,21 +38,21 @@ def fill_checkbox(data):
     itm['MyCombo'].AddItem(message)
     itm['MyCombo'].InsertSeparator()
     sorted_bms = [i[0] for i in parse_data()]
-    for bm in sorted_bms:
-        itm['MyCombo'].AddItem(bm)
+    for bkm in sorted_bms:
+        itm['MyCombo'].AddItem(bkm)
 
 
 def clear_all():
-    comp.SetData('BM_test')
+    comp.SetData('BM')
     print('all bookmarks gone')
 
 
 def delete_bookmark(key):
-    comp.SetData('BM_test')
+    comp.SetData('BM')
     try:
         del data[key]
         for k, v in data.items():
-            comp.SetData('BM_test.{}'.format(k), v)
+            comp.SetData('BM.{}'.format(k), v)
     except IndexError:
         pass
 
@@ -88,6 +88,7 @@ def _switch_UI(ev):
 
         flow.SetScale(scale_factor)
         comp.SetActiveTool(source)
+        flow.SetScale(scale_factor)
 
 
 def _close_UI(ev):
@@ -112,7 +113,7 @@ def _clear_UI(ev):
 
 
 if __name__ == '__main__':
-    data = comp.GetData('BM_test')
+    data = comp.GetData('BM')
     if not data:
         data = {}
         print('add some bookmarks!')
