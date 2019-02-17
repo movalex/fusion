@@ -46,11 +46,11 @@ end
 myDialog = composition:AskUser("Rename Loader", { 
 		{"useCatchWord",Name="Use Catch Words", "Checkbox", Default = 0},
           {"DefCatch", Name="Catch Words","Text", ReadOnly = false, Lines = 5, Wrap = true, Default = defCatch},
-           {"renFolder",Name="Rename 2 Parent Folder", "Checkbox", Default = 1}
+           {"renFolder", Name="Rename 2 Parent Folder", "Checkbox", Default = 1}
            } )
 
 if myDialog == nil then
-	print("Ok!Dude")
+	print("Ok!")
 else
 	function split_myCatch(str)
 		return split(str,'[,]+')
@@ -63,14 +63,14 @@ else
 	print(myDialog["renFolder"])
 	
 	catches = split_myCatch(myDialog["DefCatch"])
-	loaderlist = eyeon.GetLoaders(composition)
-	for i, tool in loaderlist do 
+	loaderlist = bmd.GetLoaders(composition)
+	for i, tool in ipairs(loaderlist) do 
 		attrs = tool:GetAttrs() 
 		if attrs["TOOLST_Clip_Name"] then
 			for j = 1, table.getn(attrs["TOOLST_Clip_Name"]) do 
 				tmpPath=attrs["TOOLST_Clip_Name"][j]
 				if myDialog["useCatchWord"]==1 then
-				for i,key in catches do
+				for i,key in ipairs(catches) do
 					if string.find (tmpPath, key) then						
 						pathTable=split_path(tmpPath)
 						for j,catchWord in pathTable do

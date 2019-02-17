@@ -24,7 +24,8 @@ comp.Execute('''app:AddConfig("AskUser",
 ''')
 
 
-def get_bookmark():
+def set_bookmark():
+    '''grab current checkbox index and save bookmark data'''
     bm_text = itm['BookmarkLine'].GetText()
     if bm_text[0].isdigit():
         print('bookmark name starts with digit, now prepending with _')
@@ -37,6 +38,8 @@ def get_bookmark():
 
 
 def get_tool():
+    '''get either active or selected tool
+    from multiple selected tools use the first one'''
     active = comp.ActiveTool
     if not active:
         selected_nodes = list(comp.GetToolList(True).values())
@@ -52,7 +55,7 @@ def _close_UI(ev):
 
 
 def _choose_bm_UI(ev):
-    get_bookmark()
+    set_bookmark()
     disp.ExitLoop()
 
 
@@ -63,30 +66,31 @@ if __name__ == '__main__':
         disp = bmd.UIDispatcher(ui)
 
         # Main Window
-        win = disp.AddWindow({'ID': 'AskUser',
-                            'TargetID': 'AskUser',
-                            'WindowTitle': 'add bookmark',
-                            'Geometry': [200, 600, 300, 75]},
+        win = disp.AddWindow(
+            {'ID': 'AskUser',
+             'TargetID': 'AskUser',
+             'WindowTitle': 'add bookmark',
+             'Geometry': [200, 600, 300, 75]},
+            [
+                ui.VGroup(
+                    [
+                        ui.LineEdit({'ID': 'BookmarkLine',
+                                     'Text': tool.Name,
+                                     'Weight': 0.5,
+                                     'Events': {'ReturnPressed': True},
+                                     'Alignment': {'AlignHCenter': True},
+                                     }),
+                        ui.HGroup(
                             [
-                            ui.VGroup(
-                                [
-                                    ui.LineEdit({'ID': 'BookmarkLine',
-                                                'Text': tool.Name,
-                                                'Weight': 0.5,
-                                                'Events': {'ReturnPressed': True},
-                                                'Alignment': {'AlignHCenter': True},
-                                                }),
-                                    ui.HGroup(
-                                        [
-                                            ui.HGap(0, .25),
-                                            ui.Button({'ID': 'AddButton',
-                                                    'Text': 'OK',
-                                                    'Weight': 0.5, }),
-                                            ui.HGap(0, .25),
-                                        ]
-                                    )
-                                ]),
-                            ])
+                                ui.HGap(0, .25),
+                                ui.Button({'ID': 'AddButton',
+                                           'Text': 'OK',
+                                           'Weight': 0.5, }),
+                                ui.HGap(0, .25),
+                            ]
+                        )
+                    ]),
+            ])
 
         itm = win.GetItems()
         itm['BookmarkLine'].SelectAll()
