@@ -33,8 +33,9 @@ def set_bookmark():
     print('created bookmark:', bm_text)
     current_scale = flow.GetScale()
     tool_name = tool.Name
-    # tool_ID = 'tool_{}'.format(int(tool.GetAttrs('TOOLI_ID')))
-    comp.SetData('BM.{}'.format(bm_text), [tool_name, current_scale])
+    tool_ID = 'tool_ID{}'.format(int(tool.GetAttrs('TOOLI_ID')))
+    comp.SetData('BM.{}'.format(tool_ID), [bm_text, tool_name, current_scale,
+                                           tool_ID])
 
 
 def get_tool():
