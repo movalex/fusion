@@ -27,17 +27,23 @@ Hotkeys {Target = "combobox",
 
 def parse_data(_data):
     # return sorted by bookmark
-    parsed_data = sorted(_data.items(), key=lambda x: x[0].lower())
-    return parsed_data[1:]
+    # parsed_data = sorted(_data.items(), key=lambda x: x[0].lower())
+    strip_data = list(_data.values())[1:]
+    parsed_data = sorted([list(i.values()) for i in strip_data], key=lambda x: x[0].lower())
+    return parsed_data
 
 
-def fill_checkbox(_data):
+def prefill_checkbox():
+    itm['MyCombo'].Clear()
     message = 'select bookmark'
     if len(data) < 2:
         message = 'add some bookmarks!'
     itm['MyCombo'].AddItem(message)
     itm['MyCombo'].InsertSeparator()
 
+
+def fill_checkbox(_data):
+    prefill_checkbox()
     sorted_bms = [i[0] for i in parse_data(_data)]
     for bkm in sorted_bms:
         itm['MyCombo'].AddItem(bkm)
@@ -60,11 +66,9 @@ def delete_bookmark(key):
 
 def _switch_UI(ev):
     choice = int(itm['MyCombo'].CurrentIndex)
-    if choice <= 1:
-        pass
-    else:
-        bm_name, tool_data = parse_data(data)[choice - 2]
-        tool_name, scale_factor = tool_data.values()
+    if choice > 1:
+        tool_data = parse_data(data)[choice - 2]
+        bm_name, tool_name, scale_factor, _ = tool_data
         print('jump to', tool_name)
         source = comp.FindTool(tool_name)
 
@@ -103,13 +107,16 @@ def _clear_all_UI(ev):
     itm['MyCombo'].AddItem('all bookmarks gone')
 
 
-def _clear_UI(ev):
+def _delete_bm_UI(ev):
     try:
         choice = int(itm['MyCombo'].CurrentIndex)
-        bm_text = parse_data(data)[choice - 2][0]
-        itm['MyCombo'].RemoveItem(choice)
-        print('bookmark {} deleted'.format(bm_text))
-        delete_bookmark(bm_text)
+        if choice > 1:
+            bm_text, tool_id = parse_data(data)[choice - 2][::3]
+            itm['MyCombo'].RemoveItem(choice)
+            print('bookmark {} deleted'.format(bm_text))
+            delete_bookmark(tool_id)
+            if len(data) < 2:
+                prefill_checkbox()
     except IndexError:
         print('stop hitting that button!')
 
@@ -117,8 +124,8 @@ def _clear_UI(ev):
 def _refresh_UI(ev):
     global data
     check_data = comp.GetData('BM')
-    if check_data and len(check_data) > len(data):
-        print('updating bms')
+    if check_data and check_data != data:
+        print('updating bookmarks')
         itm['MyCombo'].Clear()
         data = check_data
         fill_checkbox(data)
@@ -189,7 +196,7 @@ if __name__ == '__main__':
 
     itm = win.GetItems()
 
-    win.On.rm.Clicked = _clear_UI
+    win.On.rm.Clicked = _delete_bm_UI
     win.On.rmall.Clicked = _clear_all_UI
     win.On.combobox.Close = _close_UI
     win.On.MyCombo.CurrentIndexChanged = _switch_UI
