@@ -4,9 +4,14 @@ Inspired by original tool by Michael Vorberg
 Python implementation with QT UI
 This script stores tool's name and bookmark in current comp metadata.
 
+KEY FEATURES:
+* Submit bookmark with ENTER button
+* ESC to close the UI
+* Rename current bookmark with just reassigning different bookmark name to the same selected tool
+
 Alexey Bogomolov mail@abogomolov.com
-Donations are highly appreciated: https://paypal.me/aabogomolov
 Requests and issues: https://github.com/movalex/fusion_scripts/issues
+Donations are highly appreciated: https://paypal.me/aabogomolov
 
 MIT License: https://mit-license.org/
 """
@@ -95,7 +100,6 @@ if __name__ == '__main__':
 
         itm = win.GetItems()
         itm['BookmarkLine'].SelectAll()
-        comp.SetData('BM._', '')
 
         win.On.AddButton.Clicked = _choose_bm_UI
         win.On.BookmarkLine.ReturnPressed = _choose_bm_UI
