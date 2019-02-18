@@ -1,18 +1,29 @@
 """
-Jump to stored flow position
-Use dropdown menu to switch to stored position
-Delete single bookmark or all of them
-All bookmarks are alphabetically sorted.
+Jump to stored flow position. Use dropdown menu to switch to stored position
+KEY FEATURES:
+* Delete single bookmark or all of them
+* All bookmarks are alphabetically sorted.
+* Add a bookmark from Jump UI
+* Refresh bookmarks if some was added while Jump UI is running
+
+KNOWN ISSUES: 
+* depending on complexity if the comp, the nodes in a flow
+may temporarily disappear after bookmark jump. As a workaround to this issue
+added 0.1 sec delay before jump to the tool. Hope it works for you :)
+* the script just finds a tool in a flow and makes it active. It does not center it in the flow.
+There's two possible workarounds here:
+    1) after jumping to the tool, click on the flow, press CTRL(CMD)+F and then hit ENTER (recommended)
+    2) use a PipeRouter hackaround (see commented section below)
 
 Alexey Bogomolov mail@abogomolov.com
-Donations are highly appreciated: https://paypal.me/aabogomolov
 Requests and issues: https://github.com/movalex/fusion_scripts/issues
+Donations are highly appreciated: https://paypal.me/aabogomolov
 
 MIT License: https://mit-license.org/
 """
 # legacy python reporting compatibility
 from __future__ import print_function
-
+import time
 flow = comp.CurrentFrame.FlowView
 
 # close UI on ESC button
@@ -27,8 +38,7 @@ Hotkeys {Target = "combobox",
 
 def parse_data(_data):
     # return sorted by bookmark
-    # parsed_data = sorted(_data.items(), key=lambda x: x[0].lower())
-    strip_data = list(_data.values())[1:]
+    strip_data = list(_data.values())
     parsed_data = sorted([list(i.values()) for i in strip_data], key=lambda x: x[0].lower())
     return parsed_data
 
@@ -36,7 +46,7 @@ def parse_data(_data):
 def prefill_checkbox():
     itm['MyCombo'].Clear()
     message = 'select bookmark'
-    if len(data) < 2:
+    if len(data) == 0:
         message = 'add some bookmarks!'
     itm['MyCombo'].AddItem(message)
     itm['MyCombo'].InsertSeparator()
@@ -66,20 +76,19 @@ def delete_bookmark(key):
 
 def _switch_UI(ev):
     choice = int(itm['MyCombo'].CurrentIndex)
-    if choice > 1:
+    if choice > 0:
         tool_data = parse_data(data)[choice - 2]
         bm_name, tool_name, scale_factor, _ = tool_data
         print('jump to', tool_name)
         source = comp.FindTool(tool_name)
 
 # uncomment the section below if you need centered bookmark hackaround
-# Thanks @Intelligent_Machine for that:
+# Thanks @Intelligent_Machine for pointing this out:
 # https://www.steakunderwater.com/wesuckless/viewtopic.php?p=22068#p22068
 # However the result it too unpredictable for different scales
-# and produces visible flow movements (it creates and then deletes two Dots
-# on each size of the tool to try to center it).
-# Also it causes tools to temporarily disappear from the flow.
-# Therefore disabled by default
+# and produces visible flow movements (it zooms in, creates and then deletes
+# two Dots on each side of the tool to try to center it).
+# Therefore this option is disabled by default
 
 # --------------------------------------------------------------------------------
         # sx, sy = flow.GetPosTable(source).values()
@@ -94,6 +103,7 @@ def _switch_UI(ev):
 # --------------------------------------------------------------------------------
 
         flow.SetScale(scale_factor)
+        time.sleep(.1)
         comp.SetActiveTool(source)
 
 
@@ -110,12 +120,12 @@ def _clear_all_UI(ev):
 def _delete_bm_UI(ev):
     try:
         choice = int(itm['MyCombo'].CurrentIndex)
-        if choice > 1:
+        if choice > 0:
             bm_text, tool_id = parse_data(data)[choice - 2][::3]
             itm['MyCombo'].RemoveItem(choice)
             print('bookmark {} deleted'.format(bm_text))
             delete_bookmark(tool_id)
-            if len(data) < 2:
+            if len(data) == 0:
                 prefill_checkbox()
     except IndexError:
         print('stop hitting that button!')
@@ -161,23 +171,23 @@ if __name__ == '__main__':
                                          'Text': 'Choose preset',
                                          # 'Events': {'Activated': True},
                                          'ShowPopup': True,
-                                         'Weight': .9}),
+                                         'Weight': .8}),
                             ui.Button({'ID': 'AddButton',
                                        'Flat': False,
                                        'IconSize': [12, 12],
                                        'MinimumSize': [20, 25],
                                        'Icon': ui.Icon({'File':
-                                                        'GIT:Scripts/Comp/Bookmarker/plus_icon.png'}),
-                                       'Weight': .05
+                                                        'GIT:Scripts/Comp/Bookmarker/icons/plus_icon.png'}),
+                                       'Weight': .1
                                        }),
                             ui.Button({'ID': 'refreshButton',
                                        'Flat': False,
                                        'IconSize': [12, 12],
                                        'MinimumSize': [20, 25],
                                        'Icon': ui.Icon({'File':
-                                                        'GIT:Scripts/Comp/Bookmarker/refresh_icon.png',
+                                                        'GIT:Scripts/Comp/Bookmarker/icons/refresh_icon.png',
                                                         }),
-                                       'Weight': .05
+                                       'Weight': .1 
                                        }),
                         ]),
                     ui.HGroup(
