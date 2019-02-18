@@ -6,7 +6,7 @@ KEY FEATURES:
 * Add a bookmark from Jump UI
 * Refresh bookmarks if some was added while Jump UI is running
 
-KNOWN ISSUES: 
+KNOWN ISSUES:
 * depending on complexity if the comp, the nodes in a flow
 may temporarily disappear after bookmark jump. As a workaround to this issue
 added 0.1 sec delay before jump to the tool. Hope it works for you :)
@@ -46,7 +46,7 @@ def parse_data(_data):
 def prefill_checkbox():
     itm['MyCombo'].Clear()
     message = 'select bookmark'
-    if len(data) == 0:
+    if not data:
         message = 'add some bookmarks!'
     itm['MyCombo'].AddItem(message)
     itm['MyCombo'].InsertSeparator()
@@ -54,9 +54,10 @@ def prefill_checkbox():
 
 def fill_checkbox(_data):
     prefill_checkbox()
-    sorted_bms = [i[0] for i in parse_data(_data)]
-    for bkm in sorted_bms:
-        itm['MyCombo'].AddItem(bkm)
+    if _data:
+        sorted_bms = [i[0] for i in parse_data(_data)]
+        for bkm in sorted_bms:
+            itm['MyCombo'].AddItem(bkm)
 
 
 def clear_all():
@@ -76,7 +77,7 @@ def delete_bookmark(key):
 
 def _switch_UI(ev):
     choice = int(itm['MyCombo'].CurrentIndex)
-    if choice > 0:
+    if choice > 1 and data:
         tool_data = parse_data(data)[choice - 2]
         bm_name, tool_name, scale_factor, _ = tool_data
         print('jump to', tool_name)
@@ -187,7 +188,7 @@ if __name__ == '__main__':
                                        'Icon': ui.Icon({'File':
                                                         'GIT:Scripts/Comp/Bookmarker/icons/refresh_icon.png',
                                                         }),
-                                       'Weight': .1 
+                                       'Weight': .1
                                        }),
                         ]),
                     ui.HGroup(
