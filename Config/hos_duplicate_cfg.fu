@@ -1,0 +1,7 @@
+{
+    Hotkeys
+    {
+      Target = "FlowView",
+      SHIFT_D = "RunScript{filename = 'Scripts:Comp/hos_duplicateTool.lua'}",
+    }
+}

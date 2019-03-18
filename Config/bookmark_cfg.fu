@@ -1,8 +1,0 @@
-{
-    Hotkeys
-    {
-      Target = "FlowView",
-      SHIFT_A = "RunScript{filename = 'GIT:/Scripts/Comp/Bookmarker/bookmark_add.py'}",
-      SHIFT_J = "RunScript{filename = 'GIT:/Scripts/Comp/Bookmarker/bookmark_jump.py'}"
-    }
-}
