@@ -1,0 +1,140 @@
+{
+	Tools = ordered() {
+		UVScaleTool = MacroOperator {
+			Inputs = ordered() {
+				Input1 = InstanceInput {
+					SourceOp = "Resize2",
+					Source = "Width",
+					Default = 2048,
+				},
+				Input2 = InstanceInput {
+					SourceOp = "Resize2",
+					Source = "Height",
+					Default = 857,
+				},
+				MainInput1 = InstanceInput {
+					SourceOp = "Alpha",
+					Source = "Image",
+				},
+				MainInput2 = InstanceInput {
+					SourceOp = "Texture1_1",
+					Source = "Texture",
+				},
+				MainInput3 = InstanceInput {
+					SourceOp = "Resize1",
+					Source = "Input",
+				},
+				Input3 = InstanceInput {
+					SourceOp = "Resize1",
+					Source = "scale",
+					Page = "Controls",
+					Default = 1,
+				},
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Resize2",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			Tools = ordered() {
+				Resize2 = BetterResize {
+					Inputs = {
+						Width = Input { Value = 2048, },
+						Height = Input { Value = 857, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						Input = Input {
+							SourceOp = "MatteControl3",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1760, 742.5 } },
+				},
+				MatteControl3 = MatteControl {
+					Inputs = {
+						["Garbage.Matte"] = Input {
+							SourceOp = "Instance_Texture1_1",
+							Source = "Output",
+						},
+						["Garbage.MaskNest"] = Input { Value = 1, },
+						["Garbage.MaskInverted"] = Input { Value = 1, },
+						["Garbage.MaskChannel"] = Input { Value = 5, },
+						Background = Input {
+							SourceOp = "Texture1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1760, 676.5 } },
+				},
+				Alpha = BitmapMask {
+					NameSet = true,
+					Inputs = {
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 1925, 610.5 } },
+				},
+				Instance_Texture1_1 = Texture {
+					SourceOp = "Texture1_1",
+					Inputs = {
+						Input = Input {
+							SourceOp = "Resize1",
+							Source = "Output",
+						},
+						Texture = Input {
+							SourceOp = "Alpha",
+							Source = "Mask",
+						},
+						StartEndRenderScripts = Input { },
+						EffectMask = Input { }
+					},
+					ViewInfo = OperatorInfo { Pos = { 1760, 610.5 } },
+				},
+				Texture1_1 = Texture {
+					Inputs = {
+						UScale = Input { Value = 0.7043, },
+						Input = Input {
+							SourceOp = "Resize1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1595, 610.5 } },
+				},
+				Resize1 = BetterResize {
+					CtrlWZoom = false,
+					Inputs = {
+						Width = Input {
+							Value = 2048,
+							Expression = "Resize2.Width*scale",
+						},
+						Height = Input {
+							Value = 857,
+							Expression = "Resize2.Height*scale",
+						},
+						PixelAspect = Input { Value = { 1, 1 }, },
+						FilterMethod = Input { Value = 6, },
+						scale = Input { Value = 1, }
+					},
+					ViewInfo = OperatorInfo { Pos = { 1595, 511.5 } },
+					UserControls = ordered() {
+						scale = {
+							LINKS_Name = "scale",
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							INP_Integer = true,
+							INP_MinScale = 1,
+							INP_MaxScale = 5,
+							INP_MinAllowed = 1,
+							INP_MaxAllowed = 5,
+							ICS_ControlPage = "Controls"
+						}
+					}
+				}
+			},
+		}
+	},
+	ActiveTool = "UVScaleTool"
+}
