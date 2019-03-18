@@ -1,0 +1,117 @@
+{
+	Tools = ordered() {
+		Tint = Custom {
+			CtrlWZoom = false,
+			NameSet = true,
+			Inputs = {
+				LUTIn1 = Input {
+					SourceOp = "TintLUTIn1",
+					Source = "Value",
+				},
+				LUTIn2 = Input {
+					SourceOp = "TintLUTIn2",
+					Source = "Value",
+				},
+				LUTIn3 = Input {
+					SourceOp = "TintLUTIn3",
+					Source = "Value",
+				},
+				LUTIn4 = Input {
+					SourceOp = "TintLUTIn4",
+					Source = "Value",
+				},
+				Setup1 = Input {
+					Value = "0",
+					Expression = "MapBlackToR",
+				},
+				Setup2 = Input {
+					Value = "0",
+					Expression = "MapBlackToG",
+				},
+				Setup3 = Input {
+					Value = "0",
+					Expression = "MapBlackToB",
+				},
+				Setup4 = Input {
+					Value = "1",
+					Expression = "MapWhiteToR",
+				},
+				Setup5 = Input {
+					Value = "1",
+					Expression = "MapWhiteToG",
+				},
+				Setup6 = Input {
+					Value = "1",
+					Expression = "MapWhiteToB",
+				},
+				Setup7 = Input {
+					Value = "1",
+					Expression = "AmountToTint",
+				},
+				Intermediate1 = Input { Value = "(r1 + g1 + b1) / 3", },
+				RedExpression = Input { Value = "(((1-i1) * s1) + ( i1 * s4))*s7 +\nr1 * (1-s7)", },
+				GreenExpression = Input { Value = "(((1-i1) * s2) + ( i1 * s5))*s7 +\ng1 * (1-s7)", },
+				BlueExpression = Input { Value = "(((1-i1) * s3) + ( i1 * s6))*s7 +\nb1 * (1-s7)\n", },
+				ShowNumber1 = Input { Value = 0, },
+				ShowNumber2 = Input { Value = 0, },
+				ShowNumber3 = Input { Value = 0, },
+				ShowNumber4 = Input { Value = 0, },
+				ShowNumber5 = Input { Value = 0, },
+				ShowNumber6 = Input { Value = 0, },
+				ShowNumber7 = Input { Value = 0, },
+				ShowNumber8 = Input { Value = 0, },
+				ShowPoint1 = Input { Value = 0, },
+				ShowPoint2 = Input { Value = 0, },
+				ShowPoint3 = Input { Value = 0, },
+				ShowPoint4 = Input { Value = 0, },
+				ShowLUT1 = Input { Value = 0, },
+				ShowLUT2 = Input { Value = 0, },
+				ShowLUT3 = Input { Value = 0, },
+				ShowLUT4 = Input { Value = 0, },
+				MapWhiteToR = Input { Value = 1, },
+				MapWhiteToG = Input { Value = 1, },
+				MapWhiteToB = Input { Value = 1, },
+				AmountToTint = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 550, 148.5 } },
+			UserControls = ordered() { MapBlackToR = { ICS_ControlPage = "Controls", CLRC_ColorSpace = "HSV", IC_ControlGroup = 2, INP_MinScale = 0, CLRC_ShowWheel = true, LINKID_DataType = "Number", IC_ControlID = 0, INPID_InputControl = "ColorControl", LINKS_Name = "Map Black To" }, MapBlackToG = { INP_MinScale = 0, INP_Default = 0, LINKID_DataType = "Number", IC_ControlID = 1, INPID_InputControl = "ColorControl", INP_MaxScale = 1, IC_ControlGroup = 2, }, MapBlackToB = { INP_MinScale = 0, INP_Default = 0, LINKID_DataType = "Number", IC_ControlID = 2, INPID_InputControl = "ColorControl", INP_MaxScale = 1, IC_ControlGroup = 2, }, MapWhiteToR = { ICS_ControlPage = "Controls", CLRC_ColorSpace = "HSV", IC_ControlGroup = 3, INP_MinScale = 0, CLRC_ShowWheel = true, LINKID_DataType = "Number", IC_ControlID = 0, INPID_InputControl = "ColorControl", LINKS_Name = "Map White To" }, MapWhiteToG = { INP_MinScale = 0, INP_Default = 0, LINKID_DataType = "Number", IC_ControlID = 1, INPID_InputControl = "ColorControl", INP_MaxScale = 1, IC_ControlGroup = 3, }, MapWhiteToB = { INP_MinScale = 0, INP_Default = 0, LINKID_DataType = "Number", IC_ControlID = 2, INPID_InputControl = "ColorControl", INP_MaxScale = 1, IC_ControlGroup = 3, }, AmountToTint = { INP_MaxAllowed = 1, INP_Integer = false, INPID_InputControl = "SliderControl", INP_MaxScale = 1, INP_MinScale = 0, INP_MinAllowed = 0, LINKID_DataType = "Number", ICS_ControlPage = "Controls", LINKS_Name = "Amount To Tint" } }
+		},
+		TintLUTIn1 = LUTBezier {
+			KeyColorSplines = {
+				[0] = {
+					[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+					[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+				}
+			},
+			SplineColor = { Red = 204, Green = 0, Blue = 0 },
+		},
+		TintLUTIn2 = LUTBezier {
+			KeyColorSplines = {
+				[0] = {
+					[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+					[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+				}
+			},
+			SplineColor = { Red = 0, Green = 204, Blue = 0 },
+		},
+		TintLUTIn3 = LUTBezier {
+			KeyColorSplines = {
+				[0] = {
+					[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+					[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+				}
+			},
+			SplineColor = { Red = 0, Green = 0, Blue = 204 },
+		},
+		TintLUTIn4 = LUTBezier {
+			KeyColorSplines = {
+				[0] = {
+					[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+					[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+				}
+			},
+			SplineColor = { Red = 204, Green = 204, Blue = 204 },
+		}
+	},
+	ActiveTool = "Tint"
+}

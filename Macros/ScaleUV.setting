@@ -1,0 +1,163 @@
+{
+	Tools = ordered() {
+		ScaleUV = MacroOperator {
+			Inputs = ordered() {
+				MainInput1 = InstanceInput {
+					SourceOp = "resize_control",
+					Source = "Input",
+					Name = "inputUV",
+				},
+				Input1 = InstanceInput {
+					SourceOp = "resize_control",
+					Source = "Width",
+					Default = 2048,
+				},
+				Input2 = InstanceInput {
+					SourceOp = "resize_control",
+					Source = "Height",
+					Default = 857,
+				},
+				Input3 = InstanceInput {
+					SourceOp = "resize_scale",
+					Source = "scale",
+					Name = "scaleUP",
+					Page = "Controls",
+					Default = 1,
+				},
+				MainInput2 = InstanceInput {
+					SourceOp = "tex",
+					Source = "Texture",
+					Name = "TEXTURE",
+				},
+				MainInput3 = InstanceInput {
+					SourceOp = "alpha",
+					Source = "Image",
+					Name = "ALPHA",
+				},
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "resize_output",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			Tools = ordered() {
+				resize_control = BetterResize {
+					CtrlWZoom = false,
+					Inputs = {
+						Width = Input { Value = 2048, },
+						Height = Input { Value = 857, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 2271.68, 265.142 } },
+				},
+				resize_scale = BetterResize {
+					Inputs = {
+						Width = Input {
+							Value = 2048,
+							Expression = "resize_control.Width*scale",
+						},
+						Height = Input {
+							Value = 857,
+							Expression = "resize_control.Height*scale",
+						},
+						PixelAspect = Input { Value = { 1, 1 }, },
+						FilterMethod = Input { Value = 6, },
+						Input = Input {
+							SourceOp = "resize_control",
+							Source = "Output",
+						},
+						scale = Input { Value = 1, }
+					},
+					ViewInfo = OperatorInfo { Pos = { 2412.52, 266.06 } },
+					UserControls = ordered() {
+						scale = {
+							INP_MaxAllowed = 5,
+							INP_Integer = true,
+							INPID_InputControl = "SliderControl",
+							INP_MaxScale = 5,
+							INP_MinScale = 1,
+							INP_MinAllowed = 1,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							LINKS_Name = "scale"
+						}
+					}
+				},
+				Instance_Texture1_1_1_1 = Texture {
+					SourceOp = "tex",
+					Inputs = {
+						Input = Input {
+							SourceOp = "resize_scale",
+							Source = "Output",
+						},
+						Texture = Input {
+							SourceOp = "alpha",
+							Source = "Mask",
+						},
+						StartEndRenderScripts = Input { },
+						EffectMask = Input { }
+					},
+					ViewInfo = OperatorInfo { Pos = { 2522.52, 358.71 } },
+				},
+				tex = Texture {
+					Inputs = {
+						UScale = Input { Value = 0.7043, },
+						Input = Input {
+							SourceOp = "resize_scale",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2412.52, 431.06 } },
+				},
+				MatteControl3_1_1 = MatteControl {
+					CtrlWZoom = false,
+					Inputs = {
+						["Garbage.Matte"] = Input {
+							SourceOp = "Instance_Texture1_1_1_1",
+							Source = "Output",
+						},
+						["Garbage.MaskNest"] = Input { Value = 1, },
+						["Garbage.MaskInverted"] = Input { Value = 1, },
+						["Garbage.MaskChannel"] = Input { Value = 5, },
+						Background = Input {
+							SourceOp = "tex",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2577.52, 431.06 } },
+				},
+				resize_output = BetterResize {
+					Inputs = {
+						Width = Input {
+							Value = 2048,
+							Expression = "resize_control.Width",
+						},
+						Height = Input {
+							Value = 857,
+							Expression = "resize_control.Height",
+						},
+						PixelAspect = Input { Value = { 1, 1 }, },
+						Input = Input {
+							SourceOp = "MatteControl3_1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2519.75, 490.775 } },
+				},
+				alpha = BitmapMask {
+					NameSet = true,
+					Inputs = {
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 2632.52, 266.06 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "ScaleUV"
+}

@@ -1,0 +1,133 @@
+--[[--
+Brutally Simple Fuse - used to wirelessly connect one part of a composition with another.
+
+Updated to v1.1 as a replacement of the standard Wireless link.
+Added REG_Version, adjusted category and added functionality to view the connected source node.
+2017.11.27 - Pieter Van Houte
+
+WIP - Attempt at Combinging Wireless, Wireless 3D, and Wireless 3D Material Fuses into one -- Sam Treadway (Intelligent Machine on WSL) - 2019.02.18
+--]]--
+
+FuRegisterClass('WirelessAnything', CT_Tool, {
+	REGS_Name = 'Wireless Link Anything',
+	REGS_Category = 'Flow',
+	REGS_OpIconString = 'Wrless',
+	REGS_OpDescription = 'Wireless Link Anything',
+	REG_OpNoMask = true,
+	REG_NoBlendCtrls = true,
+	REG_NoObjMatCtrls = true,
+	REG_NoMotionBlurCtrls = true,
+	REG_SupportsDoD = true,
+	REG_Fuse_NoEdit     = true,
+	REG_Fuse_NoReload   = true,
+	REG_Version = 111,
+	})
+
+function Create()
+	self:RemoveControlPage('Controls')
+	self:AddControlPage('Wireless Link')
+
+
+	InMode = self:AddInput('Data Type', 'DataType', {
+		{ CCS_AddString = '--Select Mode--', CCID_AddID = 'SelectMode', },
+		{ CCS_AddString = 'Image', CCID_AddID = 'Image', },
+		{ CCS_AddString = '3D', CCID_AddID = '3D', },
+		{ CCS_AddString = 'Material', CCID_AddID = 'Material', },
+		LINKID_DataType = 'FuID',
+		LINKS_Name = 'Data Type',
+		ICS_ControlPage = 'Wireless Link',
+		INPID_InputControl = 'ComboIDControl',
+		INP_DoNotifyChanged  = true,
+		})
+
+	InImage = self:AddInput('Image Input', 'ImageInput', {
+		LINKID_DataType = 'Image',
+		INPID_InputControl = 'ImageControl',
+		LINK_Visible = false,
+		})
+	In3D = self:AddInput('3D Input', '3DInput', {
+		LINKID_DataType = 'DataType3D',
+		INPID_InputControl = 'ImageControl',
+		LINK_Visible = false,
+		})
+	InMtl = self:AddInput('Material Input', 'MaterialInput', {
+		LINKID_DataType = 'MtlGraph3D',
+		INPID_InputControl = 'ImageControl',
+		LINK_Visible = false,
+		})
+   
+	ShowSource = self:AddInput('Show Source', 'ShowSource', {
+		INPID_InputControl =  'ButtonControl',
+		INP_External = false,
+		BTNCS_Execute = 'comp:SetActiveTool(tool.Input:GetConnectedOutput():GetTool())',
+		})
+
+	OutImage = self:AddOutput('Image Output', 'ImageOutput', {
+		LINKID_DataType = 'Image',
+		LINK_Main = 1,
+		})
+	Out3D = self:AddOutput('3D Output', '3DOutput', {
+		LINKID_DataType = 'DataType3D',
+		LINK_Main = 1,
+		})
+	OutMtl = self:AddOutput('Material Output', 'MaterialOutput', {
+		LINKID_DataType = 'MtlGraph3D',
+		LINK_Main = 1,
+		})
+           
+	-- if InMode == "SelectMode" then
+	-- 	OutMode = self:AddOutput("Output", "Output", {
+	-- 		LINKID_DataType = nil,
+	-- 		LINK_Main = 0,
+	-- 		})
+	-- elseif InMode == "Image" then
+	-- 	print('IMG')
+	-- 	In = InImage
+	-- 	Out = OutImage
+	-- elseif InMode == "3D" then
+	-- 	In = In3D
+	-- 	Out = Out3D
+	-- elseif InMode == "Material" then
+	-- 	In = InMtl
+	-- 	Out = OutMtl
+	-- end
+end
+
+------------------------- DYNAMIC GUI -------------------------
+function NotifyChanged(inp, param, time)
+	if inp ~= nil and param ~= nil then
+		if inp == InMode then
+			if param.Value == 'SelectMode' then
+				InImage:SetAttrs({IC_Visible = false})
+				In3D:SetAttrs({IC_Visible = false})
+				InMtl:SetAttrs({IC_Visible = false})
+
+			elseif param.Value == 'Image' then
+				InImage:SetAttrs({IC_Visible = true})
+				In3D:SetAttrs({IC_Visible = false})
+				InMtl:SetAttrs({IC_Visible = false})
+				In = InImage
+				Out = OutImage
+			elseif param.Value == '3D' then
+				InImage:SetAttrs({IC_Visible = false})
+				In3D:SetAttrs({IC_Visible = true})
+				InMtl:SetAttrs({IC_Visible = false})
+				In = In3D
+				Out = Out3D
+			elseif param.Value == 'Material' then
+				InImage:SetAttrs({IC_Visible = false})
+				In3D:SetAttrs({IC_Visible = false})
+				InMtl:SetAttrs({IC_Visible = true})
+				In = InMtl
+				Out = OutMtl
+			end
+		end
+	end
+end
+---------------------------------------------------------------
+
+
+function Process(req)
+	local img = In:GetValue(req)
+   	Out:Set(req, img)
+end

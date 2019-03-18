@@ -1,0 +1,191 @@
+{
+	Tools = ordered() {
+		HWrap = MacroOperator {
+			Inputs = ordered() {
+				Input2 = InstanceInput {
+					SourceOp = "xfCenter_XYPath",
+					Source = "X",
+					Default = 0.5,
+				},
+				Input3 = InstanceInput {
+					SourceOp = "xfCenter_XYPath",
+					Source = "Y",
+					Default = 0.5,
+				},
+				Input7 = InstanceInput {
+					SourceOp = "rect",
+					Source = "Width",
+					Name = "Rect_Width",
+					Default = 0.47,
+				},
+				Input8 = InstanceInput {
+					SourceOp = "rect",
+					Source = "Height",
+					Name = "Rect_Height",
+					Default = 0.021,
+				},
+				Input4 = InstanceInput {
+					SourceOp = "rect",
+					Source = "Level",
+					Name = "Opacity",
+					Default = 1,
+				},
+				Input5 = InstanceInput {
+					SourceOp = "rect",
+					Source = "SoftEdge",
+				},
+				Input6 = InstanceInput {
+					SourceOp = "rect",
+					Source = "Solid",
+					Name = "Enable",
+					Default = 1,
+				},
+
+				Input9 = InstanceInput {
+					SourceOp = "rect",
+					Source = "CornerRadius",
+					Default = 0,
+				},
+				Input1 = InstanceInput {
+					SourceOp = "btmp",
+					Source = "EffectMask",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "btmp",
+					Source = "Mask",
+				},
+				Output1 = InstanceOutput {
+					SourceOp = "xfCenter_XYPath",
+					Source = "Heading",
+				},
+				Output2 = InstanceOutput {
+					SourceOp = "xfCenter_XYPathX",
+					Source = "Value",
+				},
+				Output3 = InstanceOutput {
+					SourceOp = "xfCenter_XYPathY",
+					Source = "Value",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Name = "HWrap2",
+				Pos = { 0, 0 }
+			},
+			Tools = ordered() {
+				btmp = BitmapMask {
+					CtrlWShown = false,
+					Inputs = {
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Image = Input {
+							SourceOp = "xf",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -407.563, -479.013 } },
+				},
+				xf = Transform {
+					CtrlWShown = false,
+					Inputs = {
+						Center = Input {
+							SourceOp = "xfCenter_XYPath",
+							Source = "Value",
+						},
+						Edges = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "rect",
+							Source = "Mask",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -405.563, -542.013 } },
+				},
+				xfCenter_XYPath = XYPath {
+					ShowKeyPoints = false,
+					DrawMode = "ModifyOnly",
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						X = Input {
+							SourceOp = "xfCenter_XYPathX",
+							Source = "Value",
+						},
+						Y = Input {
+							SourceOp = "xfCenter_XYPathY",
+							Source = "Value",
+						},
+					},
+				},
+				xfCenter_XYPathX = BezierSpline {
+					SplineColor = { Red = 255, Green = 0, Blue = 0 },
+					CtrlWShown = false,
+					NameSet = true,
+					KeyFrames = {
+						[3] = { 0.5, Flags = { Linear = true } }
+					}
+				},
+				xfCenter_XYPathY = BezierSpline {
+					SplineColor = { Red = 0, Green = 255, Blue = 0 },
+					CtrlWShown = false,
+					NameSet = true,
+					KeyFrames = {
+						[3] = { 0.5, Flags = { Linear = true } }
+					}
+				},
+				rect = RectangleMask {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						OutputSize = Input { Value = FuID { "Custom" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1920, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.657241086734681, 0.660063391442155 }, },
+						Width = Input { Value = 0.47, },
+						Height = Input { Value = 0.021, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -403.5, -608.013 } },
+				}
+			},
+			UserControls = ordered() {
+                Input7 = {
+                    LINKS_Name = "Rect_Width",
+                    LINKID_DataType = "Number",
+                    INPID_InputControl = "SliderControl",
+                    INPID_PreviewControl = "RectangleControl",
+                    INP_Default = 0.5,
+                    INP_Integer = false,
+                    INP_MinScale = 0,
+                    INP_MaxScale = 1.3140000000000,
+                    INP_MinAllowed = -1000000,
+                    INP_MaxAllowed = 1000000,
+                    PC_ControlGroup = 1,
+                    PC_ControlID = 0,
+                    ICS_ControlPage = "Controls"
+                },
+                Input8 = {
+                    LINKS_Name = "Rect_Height",
+                    LINKID_DataType = "Number",
+                    INPID_InputControl = "SliderControl",
+                    INPID_PreviewControl = "RectangleControl",
+                    INP_Default = 0.021,
+                    INP_Integer = false,
+                    INP_MinScale = 0,
+                    INP_MaxScale = 0.20000000000,
+                    INP_MinAllowed = -1000000,
+                    INP_MaxAllowed = 1000000,
+                    PC_ControlGroup = 1,
+                    PC_ControlID = 0,
+                    ICS_ControlPage = "Controls"
+                }
+            }
+		}
+	},
+	ActiveTool = "HWrap"
+}

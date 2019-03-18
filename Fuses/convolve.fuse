@@ -1,0 +1,175 @@
+-- Convolve v1.2 by Unai Martínez Barredo - unaimb.com
+FuRegisterClass('Convolve', CT_Tool, {
+  REGS_Category = 'Blur',
+  REGS_OpIconString = 'Cnv',
+  REGS_OpDescription = 'OpenCL Convolve Fuse',
+  REG_OpNoMask = true,
+  REG_NoBlendCtrls = true,
+  REG_NoObjMatCtrls = true,
+  REG_NoMotionBlurCtrls = true
+})
+function Create()
+  Input = self:AddInput('Input', 'Input', {
+    LINKID_DataType = 'Image',
+    LINK_Main = 1
+  })
+  Filter = self:AddInput('Filter', 'Filter', {
+    LINKID_DataType = 'Image',
+    LINK_Main = 2
+  })
+  Output = self:AddOutput('Output', 'Output', {
+    LINKID_DataType = 'Image',
+    LINK_Main = 1
+  })
+  Normal = self:AddInput('Normalise', 'Normalise', {
+    LINKID_DataType = 'Number',
+    INP_Integer = true,
+    INPID_InputControl = 'CheckboxControl',
+    INP_Default = 1
+  })
+end
+local mgr
+local clsource = [[
+kernel void normFind(FuReadImage_t inpImg, FuWriteImage_t outMul,
+                      int2 inpSiz){
+  int2 inpPos = (int2)(get_global_id(1), get_global_id(0));
+  if(inpPos.x == 0 && inpPos.y == 0){
+    float4 gdiv = (float4)(0.0, 0.0, 0.0, 0.0);
+    for(int y = 0; y < inpSiz.y; y ++){
+      for(int x = 0; x < inpSiz.x; x ++){
+        int2 cPos = (int2)(x, y);
+        gdiv += FuReadImagef(inpImg, cPos, inpSiz);
+      }
+    }
+    FuWriteImagef(outMul, (int2)(0, 0), (int2)(1, 1), 1 / gdiv);
+  }
+}
+kernel void normMult(FuReadImage_t inpImg, FuWriteImage_t outImg,
+                     FuReadImage_t mulImg, int2 inpSiz){
+  int2 inpPos = (int2)(get_global_id(1), get_global_id(0));
+  float4 mul = FuReadImagef(mulImg, (int2)(0, 0), (int2)(1, 1));
+  FuWriteImagef(outImg, inpPos, inpSiz,
+                FuReadImagef(inpImg, inpPos, inpSiz) * mul);
+}
+kernel void convolve(FuReadImage_t inpImg, FuReadImage_t filImg,
+                     FuWriteImage_t outImg, int2 inpSiz, int2 filSiz){
+  int2 inpPos = (int2)(get_global_id(1), get_global_id(0));
+  float4 outVal = (float4)(0.0, 0.0, 0.0, 0.0);
+  for(int y = 0; y < filSiz.y; y ++){
+    for(int x = 0; x < filSiz.x; x ++){
+      int2 filPos = (int2)(x, y);
+      float4 inpVal = FuReadImageCf(inpImg, inpPos - filPos + filSiz / 2,
+                                    inpSiz);
+      float4 filVal = FuReadImagef(filImg, filPos, filSiz);
+      outVal = mad(inpVal, filVal, outVal);
+    }
+  }
+  FuWriteImagef(outImg, inpPos, inpSiz, outVal);
+}
+]]
+function OnAddToFlow()
+  mgr = OCLManager()
+  if mgr then
+    prog = mgr:BuildCachedProgram('Convolve', debug.getinfo(1).source:sub(2),
+                                  clsource)
+  end
+end
+function OnRemoveFromFlow()
+   prog = nil
+   mgr = nil
+end
+function Process(req)
+  local filter = Filter:GetValue(req)
+  local filcl
+  if prog then
+    filcl = prog:CreateImage(filter, 'read')
+  end
+  local success = true
+  local nrmcl
+  local out
+  if Normal:GetValue(req).Value > 0.5 then
+    success = false
+    local mul = Image({
+      IMG_Width = 1,
+      IMG_Height = 1,
+      IMG_Depth = 8
+    })
+    local mulcl
+    if prog and mul then
+      mulcl = prog:CreateImage(mul, 'readwrite')
+      if filcl and mulcl then
+        local kernel = prog:CreateKernel('normFind')
+        if kernel then
+          prog:SetArg(kernel, 0, filcl)
+          prog:SetArg(kernel, 1, mulcl)
+          prog:SetArgInt(kernel, 2, filter.Width, filter.Height)
+          success = prog:RunKernel(kernel)
+        end
+      end
+    end
+    if success then
+      success = false
+      local nrm = Image({IMG_Like = filter})
+      if nrm then
+        nrmcl = prog:CreateImage(nrm, 'readwrite')
+        if nrmcl then
+          local kernel = prog:CreateKernel('normMult')
+          if kernel then
+            prog:SetArg(kernel, 0, filcl)
+            prog:SetArg(kernel, 1, nrmcl)
+            prog:SetArg(kernel, 2, mulcl)
+            prog:SetArgInt(kernel, 3, filter.Width, filter.Height)
+            success = prog:RunKernel(kernel)
+            if mulcl then
+              mulcl:ReleaseCLObject()
+            end
+          end
+        end
+      end
+    end
+    if success then
+      filcl = nrmcl
+    end
+  end
+  if success then
+    success = false
+    local input = Input:GetValue(req)
+    out = Image({IMG_Like = input})
+    if out then
+      local incl = prog:CreateImage(input, 'read')
+      local outcl = prog:CreateImage(out, 'write')
+      if filcl and incl and outcl then
+        local kernel = prog:CreateKernel('convolve')
+        if kernel then
+          prog:SetArg(kernel, 0, incl)
+          prog:SetArg(kernel, 1, filcl)
+          prog:SetArg(kernel, 2, outcl)
+          prog:SetArgInt(kernel, 3, input.Width, input.Height)
+          prog:SetArgInt(kernel, 4, filter.Width, filter.Height)
+          success = prog:RunKernel(kernel)
+          if success then
+            success = prog:Download(outcl, out)
+          end
+          if incl then
+            incl:ReleaseCLObject()
+          end
+          if filcl then
+            filcl:ReleaseCLObject()
+          end
+          if nrmcl then
+            nrmcl:ReleaseCLObject()
+          end
+          if outcl then
+            outcl:ReleaseCLObject()
+          end
+        end
+      end
+    end
+  end
+  if prog and not success then
+    OnRemoveFromFlow()
+    collectgarbage()
+    OnAddToFlow()
+  end
+  Output:Set(req, out)
+end
