@@ -1,0 +1,125 @@
+--[[--
+SourceTest.Fuse 
+
+A Creator type tool. This creates an image full of random noise. A good example of how to create new images.
+
+version 1.0
+August 21st, 2007
+--]]--
+
+FuRegisterClass("PixelSort", CT_Tool, {
+	REGS_Category = "Fuses",
+	REGS_OpIconString = "PixS",
+	REGS_OpDescription = "PixelSorter Fuse",
+
+	})
+
+
+function Create()
+    InThreshold = self:AddInput("Threshold", "Threshold", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_MaxScale = 1.0,
+        INP_Default = 0.0,
+        ICD_Center = 1,
+        })
+        
+    InStyle = self:AddInput("Orient", "Orient", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "MultiButtonControl",
+		INP_Default = 0.0,
+		{MBTNC_AddButton = "Colum", 	MBTNCD_ButtonWidth = 0.5, },
+		{MBTNC_AddButton = "Rows", 	MBTNCD_ButtonWidth = 0.5, },
+		})
+    
+    InImage = self:AddInput("Input", "Input", {
+        LINKID_DataType = "Image",
+        LINK_Main = 1,
+    })
+
+	OutImage = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})
+
+end
+
+function Process(req)
+    self:SetProgress(0.0)
+	local img = InImage:GetValue(req) 
+    local threshold = InThreshold:GetValue(req).Value
+    local orient = InStyle:GetValue(req).Value
+    
+    local img2 = img:Copy()
+    local out = img:Copy()
+    local temp = img:Copy()
+    
+    local p = Pixel({A=1})
+    local temp_p = Pixel({A=1})
+    
+    local realwidth = img.Width;
+    local realheight = img.Height;
+-- We'll handle proxy ourselves
+    --Width = Width / Scale
+    --Height = Height / Scale
+    --Scale = 1
+    if orient == 1 then
+        for y=0,img.Height-1 do
+            if self.Status ~= "OK" then break end
+            
+            for x=0,img.Width-1 do
+                local record = -1
+                img2:GetPixel(x,y,p)
+                local luma1 = (p.R*.2126)+(p.G*.7152)+(p.B*.0722)
+                if luma1 > threshold then 
+                    for tempX = x, img.Width-1 do
+                        
+                        img2:GetPixel(tempX,y,p)
+                        local luma = (p.R*.2126)+(p.G*.7152)+(p.B*.0722)
+                        if luma > record then
+                            record = luma
+                            out:GetPixel(x,y,temp_p)
+                            temp:SetPixel(x,y,temp_p)
+                            out:SetPixel(x,y, p)
+                            temp:GetPixel(x,y,temp_p)
+                            img2:SetPixel(tempX,y,temp_p)
+                            --x = tempX
+                            tempX = x
+                        end
+                    end
+                end
+            end
+            self:SetProgress(y/img.Height)
+        end
+    else
+        for x=0,img.Width-1 do
+            if self.Status ~= "OK" then break end
+            
+            for y=0,img.Height-1 do
+                local record = -1
+                img2:GetPixel(x,y,p)
+                local luma1 = (p.R*.2126)+(p.G*.7152)+(p.B*.0722)
+                if luma1 > threshold then 
+                    for tempY = y, img.Height-1 do
+                        
+                        img2:GetPixel(x,tempY,p)
+                        local luma = (p.R*.2126)+(p.G*.7152)+(p.B*.0722)
+                        if luma > record then
+                            record = luma
+                            out:GetPixel(x,y,temp_p)
+                            temp:SetPixel(x,y,temp_p)
+                            out:SetPixel(x,y, p)
+                            temp:GetPixel(x,y,temp_p)
+                            img2:SetPixel(x,tempY,temp_p)
+                            --x = tempX
+                            tempY = y
+                        end
+                    end
+                end
+            end
+            self:SetProgress(x/img.Width)
+        end
+    end
+    OutImage:Set(req, out)
+
+end
