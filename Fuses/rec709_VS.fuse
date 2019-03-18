@@ -1,0 +1,78 @@
+--[[
+Simple linear-to-ITU-R BT.709 (HD Gamut) viewshader with Nuke-like gain/gamma sliders
+based on GainGammaVS.fuse by eyeon
+
+This shader does not convert white points or primaries. It simply adds the required gamma curve.
+]]--
+
+-- Here's the Cg shader itself:
+shader = 
+[[
+struct rec709VS : ViewShader
+{
+	ViewShader source;					// need this line
+	float gain, gamma;					// external parameters
+
+	void ShadePixel(inout FuPixel f)
+	{
+		source.ShadePixel(f);			// get source pixel
+		
+		f.Color.rgb *= gain;
+		f.Color.rgb = sign(f.Color.rgb) * pow(abs(f.Color.rgb), gamma);
+		// convert result to ITU-R BT.709
+		f.Color.rgb = f.Color.rgb > 0.018 ? 1.099f * pow(f.Color.rgb, 0.45f) - 0.099f : 4.5f * f.Color.rgb;
+	}
+};
+]]
+
+-- regnode
+FuRegisterClass("rec709_VSFuse", CT_ViewLUTPlugin, {		-- ID must be unique
+	REGS_Name = "rec709",
+	REG_Fuse_NoEdit   = true,
+	REG_Fuse_NoReload = true,
+	})
+	
+-- Called on creation. Add any controls here.
+function Create()
+	InGain = self:AddInput("Gain", "Gain", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 5.0,
+		INP_Default  = 1.0,
+		ICD_Center = 1.0,
+		})
+	InGamma = self:AddInput("Gamma", "Gamma", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 0.001,
+		INP_MaxScale = 5.0,
+		INP_Default  = 1.0,
+		ICD_Center = 1.0,
+		})
+end
+
+-- This is called when the shader is created
+-- img may be nil
+function SetupShader(req, img)
+	local vs = ViewShader("rec709VS", shader);		-- pass struct name and shader string
+
+	vs:AddParam("gain");
+	vs:AddParam("gamma");
+	return vs;
+end
+
+-- This is called every display refresh
+-- img may be nil
+function SetupParams(req, vs, img)
+	local gain = InGain:GetValue(req).Value;
+	local gamma = InGamma:GetValue(req).Value;
+
+	gamma = 1.0 / gamma;
+	
+	vs:SetParam(1, gain);
+	vs:SetParam(2, gamma);
+	return true;
+end
+
+

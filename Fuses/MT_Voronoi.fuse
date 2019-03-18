@@ -1,0 +1,882 @@
+--[[--
+MT_Voronoi.Fuse
+
+A Creator tool. This creates an image with a Voronoi segmentation. Number of cells, smoothness of distribution, color, visibility of sites, 
+and random seed are all configurable by the user.
+
+Development roadmap: 
+	Add animation: brownian, etc. 
+	Export site locations somehow. 
+	Add new Voronoi algorithms: Manhattan, Minkowski (currently implemented Euclidean)
+	Add additional site distribution algorithms: True random, Bernoulli, Rademacher, binomial, beta-binomial, degenerate, discrete uniform, hypergeometric, Fisher's
+		Wallenius', Benford's
+	Add styling for intersections
+	Permit borders and cells to inherit color from sites
+	Permit sites to inherit color from input image.
+	Additional anti-aliasing/filtering options for borders and cell edges.
+
+version 1.0
+Feb 28, 2017
+Bryan Ray for Muse VFX
+--]]--
+
+
+FuRegisterClass("Voronoi", CT_SourceTool, {
+	REGS_Category = "Fuses",
+	REGS_Name = "Voronoi",
+	REGS_OpIconString = "vor",
+	REGS_OpDescription = "Raster Voronoi Segmentation",
+	
+	REGS_Company = "Muse VFX",
+	REGS_URL = "http://www.musevfx.com",
+	
+	REG_Source_GlobalCtrls = true,
+	REG_Source_SizeCtrls = true,
+	REG_Source_AspectCtrls = true,
+	REG_Source_DepthCtrls = true,
+
+})
+
+function Create()
+
+	InSeed = self:AddInput("Random Seed", "RandomSeed", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_MinScale = -10000.0,
+		INP_MaxScale = 10000.0,
+		INP_Default = 1234,
+	})
+	
+	InShowSites = self:AddInput("Show Sites", "showSites", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Default = 0,
+		INP_Integer = true,
+		ICD_Width = 0.5,
+	})
+	
+	InShowBorders = self:AddInput("Show Borders", "showBorders", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Default = 1,
+		INP_Integer = true,	
+		ICD_Width = 0.5,
+	})
+
+	InSiteNumber = self:AddInput("Number of Sites", "SiteNumber", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 0,
+		INP_MaxScale = 100.0,
+		INP_Default = 15.0,
+		INP_Integer = true,
+	})
+
+	InDiscSize = self:AddInput("Minimum Distance", "DiscSize", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 0,
+		INP_MaxScale = 100.0,
+		INP_Default = 10.0,
+	})
+	
+	InLimit = self:AddInput("Loop Limit", "LoopLimit", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 1.0,
+		INP_MaxScale = 100.0,
+		INP_Default = 10.0,
+		INP_Integer = true,
+		})
+
+	
+	InSiteSize = self:AddInput("Site Size", "SiteSize", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 0,
+		INP_MaxScale = 100.0,
+		INP_Default = 4.0,
+		ICS_ControlPage = "Site Style",
+	})
+	
+	InSiteVariance = self:AddInput("Site Size Variance", "siteVariance", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 0,
+		INP_MaxScale = 100.00,
+		INP_Default = 0,
+		ICS_ControlPage = "Site Style",
+	})
+	
+	InSiteColorR = self:AddInput("R", "siteColorR", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		IC_ControlGroup = 1,
+		IC_ControlID = 0,
+		LINKS_Name = "Site Color", -- the name for the entire Color control group displayed on the Control Panel
+		CLRC_ShowWheel = false,			-- makes the color wheel expanded by default. If the attribute is omitted, it's collapsed by default
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+		ICD_Center = 1,
+		INP_Default = 1,
+		ICS_ControlPage = "Site Style",
+	})
+	
+	InSiteColorG = self:AddInput("G", "siteColorG", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		IC_ControlGroup = 1,
+		IC_ControlID = 1,
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+		ICD_Center = 1,
+		INP_Default = 1,
+	})
+	
+	InSiteColorB = self:AddInput("B", "siteColorB", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		IC_ControlGroup = 1,
+		IC_ControlID = 2,
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+		ICD_Center = 1,
+		INP_Default = 1,
+	})
+	
+	InSiteColorA = self:AddInput("A", "siteColorA", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		IC_ControlGroup = 1,
+		IC_ControlID = 3,
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+		ICD_Center = 1,
+		INP_Default = 1,
+	})
+
+	InLabelSiteVar = self:AddInput("Sites Color Variation", "labelSiteVar", {
+		INPID_InputControl = "LabelControl",
+		ICS_ControlPage = "Site Style",
+		LINKS_Name = "Sites Color Variation",
+		LBLC_DropDownButton = true,
+		LBLC_NumInputs = 8,
+		INP_Default = 0,
+	})
+
+	InSiteRLow = self:AddInput("Red Low", "siteRedLow", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 4,
+		IC_ControlID = 0,
+		LINKS_Name = "Red Low",
+		RNGCS_MidName = "Red Variance",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,
+		ICS_ControlPage = "Site Style",
+	})
+
+	InSiteRHigh = self:AddInput("Red High", "siteRedHigh", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 4,
+		IC_ControlID = 1,
+		LINKS_Name = "Red High",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,
+		ICS_ControlPage = "Site Style",
+	})
+	
+	InSiteGLow = self:AddInput("Green Low", "siteGreenLow", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 5,
+		IC_ControlID = 0,
+		LINKS_Name = "Green Low",
+		RNGCS_MidName = "Green Variance",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,
+		ICS_ControlPage = "Site Style",
+	})
+
+	InSiteGHigh = self:AddInput("Green High", "siteGreenHigh", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 5,
+		IC_ControlID = 1,
+		LINKS_Name = "Green High",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,
+		ICS_ControlPage = "Site Style",
+	})
+	
+	InSiteBLow = self:AddInput("Blue Low", "siteBlueLow", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 6,
+		IC_ControlID = 0,
+		LINKS_Name = "Blue Low",
+		RNGCS_MidName = "Blue Variance",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,
+		ICS_ControlPage = "Site Style",
+	})
+
+	InSiteBHigh = self:AddInput("Blue High", "siteBlueHigh", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 6,
+		IC_ControlID = 1,
+		LINKS_Name = "Blue High",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,
+		ICS_ControlPage = "Site Style",
+	})
+	
+	InSiteALow = self:AddInput("Alpha Low", "siteAlphaLow", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 11,
+		IC_ControlID = 0,
+		LINKS_Name = "Alpha Low",
+		RNGCS_MidName = "Alpha Variance",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,
+		ICS_ControlPage = "Site Style",
+	})
+
+	InSiteAHigh = self:AddInput("Alpha High", "siteAlphaHigh", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 11,
+		IC_ControlID = 1,
+		LINKS_Name = "Alpha High",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,
+		ICS_ControlPage = "Site Style",
+	})
+
+	InCellColorR = self:AddInput("R", "cellColorR", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		IC_ControlGroup = 2,
+		IC_ControlID = 0,
+		LINKS_Name = "Cell Color", -- the name for the entire Color control group displayed on the Control Panel
+		CLRC_ShowWheel = false,			-- makes the color wheel expanded by default. If the attribute is omitted, it's collapsed by default
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+		ICD_Center = 1,
+		INP_Default = 0.5,
+		ICS_ControlPage = "Cell Style",
+	})
+	
+	InCellColorG = self:AddInput("G", "cellColorG", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		IC_ControlGroup = 2,
+		IC_ControlID = 1,
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+		ICD_Center = 1,
+		INP_Default = 0.5,
+		ICS_ControlPage = "Cell Style",
+	})
+	
+	InCellColorB = self:AddInput("B", "cellColorB", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		IC_ControlGroup = 2,
+		IC_ControlID = 2,
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+		ICD_Center = 1,
+		INP_Default = 0.5,		
+		ICS_ControlPage = "Cell Style",
+	})
+	
+	InCellColorA = self:AddInput("A", "cellColorA", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		IC_ControlGroup = 2,
+		IC_ControlID = 3,
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+		ICD_Center = 1,
+		INP_Default = 1,		
+		ICS_ControlPage = "Cell Style",
+	})
+	
+	InLabelCellVar = self:AddInput("Cells Color Variation", "labelCellVar", {
+		INPID_InputControl = "LabelControl",
+		ICS_ControlPage = "Cell Style",
+		LINKS_Name = "Cells Color Variation",
+		LBLC_DropDownButton = true,
+		LBLC_NumInputs = 8,
+		INP_Default = 0,
+	})
+
+	InCellRLow = self:AddInput("Red Low", "cellRedLow", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 7,
+		IC_ControlID = 0,
+		LINKS_Name = "Red Low",
+		RNGCS_MidName = "Red Variance",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,		
+		ICS_ControlPage = "Cell Style",
+	})
+
+	InCellRHigh = self:AddInput("Red High", "cellRedHigh", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 7,
+		IC_ControlID = 1,
+		LINKS_Name = "Red High",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,		
+		ICS_ControlPage = "Cell Style",
+	})
+	
+	InCellGLow = self:AddInput("Green Low", "cellGreenLow", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 8,
+		IC_ControlID = 0,
+		LINKS_Name = "Green Low",
+		RNGCS_MidName = "Green Variance",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,		
+		ICS_ControlPage = "Cell Style",
+	})
+
+	InCellGHigh = self:AddInput("Green High", "cellGreenHigh", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 8,
+		IC_ControlID = 1,
+		LINKS_Name = "Green High",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,		
+		ICS_ControlPage = "Cell Style",
+	})
+	
+	InCellBLow = self:AddInput("Blue Low", "cellBlueLow", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 9,
+		IC_ControlID = 0,
+		LINKS_Name = "Blue Low",
+		RNGCS_MidName = "Blue Variance",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,		
+		ICS_ControlPage = "Cell Style",
+	})
+
+	InCellBHigh = self:AddInput("Blue High", "cellBlueHigh", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 9,
+		IC_ControlID = 1,
+		LINKS_Name = "Blue High",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,		
+		ICS_ControlPage = "Cell Style",
+	})
+	
+	InCellALow = self:AddInput("Alpha Low", "cellAlphaLow", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 10,
+		IC_ControlID = 0,
+		LINKS_Name = "Alpha Low",
+		RNGCS_MidName = "Alpha Variance",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,		
+		ICS_ControlPage = "Cell Style",
+	})
+
+	InCellAHigh = self:AddInput("Alpha High", "cellAlphaHigh", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 10,
+		IC_ControlID = 1,
+		LINKS_Name = "Alpha High",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,		
+		ICS_ControlPage = "Cell Style",
+	})
+
+	InBorderWidth = self:AddInput("Border Width", "borderWidth", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 0,
+		INP_MaxScale = 30,
+		INP_Default = 3,
+		ICS_ControlPage = "Border Style",
+	})
+
+	InBorderColorR = self:AddInput("R", "borderColorR", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		IC_ControlGroup = 3,
+		IC_ControlID = 0,
+		LINKS_Name = "Border Color", -- the name for the entire Color control group displayed on the Control Panel
+		CLRC_ShowWheel = false,			-- makes the color wheel expanded by default. If the attribute is omitted, it's collapsed by default
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+		ICD_Center = 1,
+		INP_Default = 0,
+		ICS_ControlPage = "Border Style",
+	})
+	
+	InBorderColorG = self:AddInput("G", "borderColorG", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		IC_ControlGroup = 3,
+		IC_ControlID = 1,
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+		ICD_Center = 1,
+		INP_Default = 0,
+		ICS_ControlPage = "Border Style",
+	})
+	
+	InBorderColorB = self:AddInput("B", "borderColorB", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		IC_ControlGroup = 3,
+		IC_ControlID = 2,
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+		ICD_Center = 1,
+		INP_Default = 0,
+		ICS_ControlPage = "Border Style",
+	})
+	
+	InBorderColorA = self:AddInput("A", "borderColorA", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		IC_ControlGroup = 3,
+		IC_ControlID = 3,
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+		ICD_Center = 1,
+		INP_Default = 1,
+		ICS_ControlPage = "Border Style",
+	})
+
+	InLabelBorderVar = self:AddInput("Borders Color Variation", "labelBorderVar", {
+		INPID_InputControl = "LabelControl",
+		ICS_ControlPage = "Border Style",
+		LINKS_Name = "Borders Color Variation",
+		LBLC_DropDownButton = true,
+		LBLC_NumInputs = 8,
+		INP_Default = 0,
+	})
+
+	InBorderRLow = self:AddInput("Red Low", "borderRedLow", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 20,
+		IC_ControlID = 0,
+		LINKS_Name = "Red Low",
+		RNGCS_MidName = "Red Variance",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,
+		ICS_ControlPage = "Border Style",
+	})
+
+	InBorderRHigh = self:AddInput("Red High", "borderRedHigh", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 20,
+		IC_ControlID = 1,
+		LINKS_Name = "Red High",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,
+		ICS_ControlPage = "Border Style",
+	})
+	
+	InBorderGLow = self:AddInput("Green Low", "borderGreenLow", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 21,
+		IC_ControlID = 0,
+		LINKS_Name = "Green Low",
+		RNGCS_MidName = "Green Variance",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,
+		ICS_ControlPage = "Border Style",
+	})
+
+	InBorderGHigh = self:AddInput("Green High", "borderGreenHigh", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 21,
+		IC_ControlID = 1,
+		LINKS_Name = "Green High",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,
+		ICS_ControlPage = "Border Style",
+	})
+	
+	InBorderBLow = self:AddInput("Blue Low", "borderBlueLow", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 22,
+		IC_ControlID = 0,
+		LINKS_Name = "Blue Low",
+		RNGCS_MidName = "Blue Variance",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,
+		ICS_ControlPage = "Border Style",
+	})
+
+	InBorderBHigh = self:AddInput("Blue High", "borderBlueHigh", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 22,
+		IC_ControlID = 1,
+		LINKS_Name = "Blue High",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,
+		ICS_ControlPage = "Border Style",
+	})
+	
+	InBorderALow = self:AddInput("Alpha Low", "borderAlphaLow", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 23,
+		IC_ControlID = 0,
+		LINKS_Name = "Alpha Low",
+		RNGCS_MidName = "Alpha Variance",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,
+		ICS_ControlPage = "Border Style",
+	})
+
+	InBorderAHigh = self:AddInput("Alpha High", "borderAlphaHigh", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		IC_ControlGroup = 23,
+		IC_ControlID = 1,
+		LINKS_Name = "Alpha High",
+		INP_MinScale = -1.0,
+		INP_MaxScale = 1.0,
+		INP_Default = 0,
+		ICS_ControlPage = "Border Style",
+	})
+
+end -- end of Create()
+
+
+function Process(req)
+	
+	local realwidth = Width;
+	local realheight = Height;
+	
+	-- We'll handle proxy ourselves
+	Width = Width / Scale
+	Height = Height / Scale
+	Scale = 1
+	
+	-- Attributes for new images
+	local imgattrs = {
+		IMG_Document = self.Comp,
+		{ IMG_Channel = "Red", },
+		{ IMG_Channel = "Green", },
+		{ IMG_Channel = "Blue", },
+		{ IMG_Channel = "Alpha", },
+		IMG_Width = Width,
+		IMG_Height = Height,
+		IMG_XScale = XAspect,
+		IMG_YScale = YAspect,
+		IMAT_OriginalWidth = realwidth,
+		IMAT_OriginalHeight = realheight,
+		IMG_Quality = not req:IsQuick(),
+		IMG_MotionBlurQuality = not req:IsNoMotionBlur(),
+		}
+		
+	if not req:IsStampOnly() then
+		imgattrs.IMG_ProxyScale = 1
+	end
+	
+	if SourceDepth ~= 0 then
+		imgattrs.IMG_Depth = SourceDepth
+	end
+	
+	-- structure controls  
+	local loopLimit = InLimit:GetValue(req).Value
+	local discSize = InDiscSize:GetValue(req).Value
+	local siteNumber = InSiteNumber:GetValue(req).Value
+	local siteSizeVariance = InSiteVariance:GetValue(req).Value
+	local seed = InSeed:GetValue(req).Value
+	local siteSize = InSiteSize:GetValue(req).Value
+	local showSites = InShowSites:GetValue(req).Value
+	local showBorders = InShowBorders:GetValue(req).Value
+	local borderWidth = InBorderWidth:GetValue(req).Value
+	
+	-- Distribution type
+	Poisson = TRUE
+	
+	-- color controls
+	local siteColorR = InSiteColorR:GetValue(req).Value
+	local siteColorG = InSiteColorG:GetValue(req).Value
+	local siteColorB = InSiteColorB:GetValue(req).Value
+	local siteColorA = InSiteColorA:GetValue(req).Value
+
+	local cellColorR = InCellColorR:GetValue(req).Value
+	local cellColorG = InCellColorG:GetValue(req).Value
+	local cellColorB = InCellColorB:GetValue(req).Value
+	local cellColorA = InCellColorA:GetValue(req).Value
+
+	local borderColorR = InBorderColorR:GetValue(req).Value
+	local borderColorG = InBorderColorG:GetValue(req).Value
+	local borderColorB = InBorderColorB:GetValue(req).Value
+	local borderColorA = InBorderColorA:GetValue(req).Value
+
+	-- Color variance controls
+	local siteRedLow = InSiteRLow:GetValue(req).Value
+	local siteGreenLow = InSiteGLow:GetValue(req).Value
+	local siteBlueLow = InSiteBLow:GetValue(req).Value
+	local siteAlphaLow = InSiteALow:GetValue(req).Value
+
+	local cellRedLow = InCellRLow:GetValue(req).Value
+	local cellGreenLow = InCellGLow:GetValue(req).Value
+	local cellBlueLow = InCellBLow:GetValue(req).Value
+	local cellAlphaLow = InCellALow:GetValue(req).Value
+	
+	local borderRedLow = InBorderRLow:GetValue(req).Value
+	local borderGreenLow = InBorderGLow:GetValue(req).Value
+	local borderBlueLow = InBorderBLow:GetValue(req).Value
+	local borderAlphaLow = InBorderALow:GetValue(req).Value
+	
+	local siteRedHigh = InSiteRHigh:GetValue(req).Value
+	local siteGreenHigh = InSiteGHigh:GetValue(req).Value
+	local siteBlueHigh = InSiteBHigh:GetValue(req).Value
+	local siteAlphaHigh = InSiteAHigh:GetValue(req).Value
+
+	local cellRedHigh = InCellRHigh:GetValue(req).Value
+	local cellGreenHigh = InCellGHigh:GetValue(req).Value
+	local cellBlueHigh = InCellBHigh:GetValue(req).Value
+	local cellAlphaHigh = InCellAHigh:GetValue(req).Value
+	
+	local borderRedHigh = InBorderRHigh:GetValue(req).Value
+	local borderGreenHigh = InBorderGHigh:GetValue(req).Value
+	local borderBlueHigh = InBorderBHigh:GetValue(req).Value
+	local borderAlphaHigh = InBorderAHigh:GetValue(req).Value
+	
+	-- Size variance controls
+	-- Switches for random color, size, animation
+	-- Motion type
+	
+	-- Initialize the images
+	local img = Image(imgattrs)
+	local out = Image(imgattrs)
+	local p = Pixel({R=0,G=0,B=0,A=0})
+	img:Fill(p) -- Clear the image so the next frame doesn't contain the previous one.
+	out:Fill(p)
+	
+	local sitesx = {}
+	local sitesy = {}
+	
+	-- Initialize random number generator
+	math.randomseed(seed)
+	math.random(); math.random(); math.random() -- clears out the first couple of non-random results	
+	local random = math.random -- faster in a local
+	
+	-- Some generic counter variables for loops
+	local count = 0
+	local i = 0
+	
+	-- Create list of sites
+	-- For future versions of the tool, we want to execute this routine only once. 
+	
+	-- if Poisson = FALSE
+		-- While i < SiteNumber
+			-- Assign a random location to each Site and store it in the table.
+			-- i = i + 1
+			-- XLoc = rand(0,Width) 
+			-- YLoc = rand(0,Height)
+			-- sites[i].x = XLoc
+			-- sites[i].y = YLoc
+			
+	if Poisson == TRUE then -- Create the vertex list
+		while i < siteNumber do
+
+			-- Prevents the loop from continuing infinitely if there is not enough room for all the sites at the specified disc size
+			if count > loopLimit then break 
+			end 
+				
+			-- Set a flag indicating that the current site may be written to the table
+			approved = 1
+				
+			i = i + 1
+
+			-- Assign a random location for site i
+			XLoc = random(0,Width)
+			YLoc = random(0,Height)
+
+			for j in pairs(sitesx) do
+				-- Compare the location of the site to that of each existing site. If it is too close to any existing site, reset counter i and try again
+				if sitesx[j] then -- test for existence of the index
+					distance = math.sqrt((XLoc - sitesx[j])^2+(YLoc - sitesy[j])^2)
+					if distance < discSize then 
+						i = i - 1
+						count = count + 1 
+						approved = 0
+						break 
+					end
+				end -- end of test for sitesx
+			end -- end of Poisson disc test
+			
+		-- If the site passed all the tests, write its values to the table
+			if approved == 1 then 
+				sitesx[i] = XLoc
+				sitesy[i] = YLoc
+				-- reset the loop limit counter
+				count = 0
+			end
+		end -- end of While loop
+	end -- end of Poisson routine
+
+
+	-- Assign a color to each cell, each border region, each intersection, and each site node
+
+	cellColorRList = {}
+	cellColorGList = {}
+	cellColorBList = {}
+	cellColorAList = {}
+
+	borderColorRList = {}
+	borderColorGList = {}
+	borderColorBList = {}
+	borderColorAList = {}
+	
+	siteColorRList = {}
+	siteColorGList = {}
+	siteColorBList = {}
+	siteColorAList = {}
+	
+	siteSizeList = {}
+	
+	for i in pairs(sitesx) do
+		siteColorRList[i] = ((random() * (siteRedHigh-siteRedLow)) + siteRedLow) + siteColorR
+		siteColorGList[i] = ((random() * (siteGreenHigh-siteGreenLow)) + siteGreenLow) + siteColorG
+		siteColorBList[i] = ((random() * (siteBlueHigh-siteBlueLow)) + siteBlueLow) + siteColorB
+		siteColorAList[i] = ((random() * (siteAlphaHigh-siteAlphaLow)) + siteAlphaLow) + siteColorA
+		
+		cellColorRList[i] = ((random() * (cellRedHigh-cellRedLow)) + cellRedLow) + cellColorR
+		cellColorGList[i] = ((random() * (cellGreenHigh-cellGreenLow)) + cellGreenLow) + cellColorG
+		cellColorBList[i] = ((random() * (cellBlueHigh-cellBlueLow)) + cellBlueLow) + cellColorB
+		cellColorAList[i] = ((random() * (cellAlphaHigh-cellAlphaLow)) + cellAlphaLow) + cellColorA
+		
+		borderColorRList[i] = ((random() * (borderRedHigh-borderRedLow)) + borderRedLow) + borderColorR
+		borderColorGList[i] = ((random() * (borderGreenHigh-borderGreenLow)) + borderGreenLow) + borderColorG
+		borderColorBList[i] = ((random() * (borderBlueHigh-borderBlueLow)) + borderBlueLow) + borderColorB
+		borderColorAList[i] = ((random() * (borderAlphaHigh-borderAlphaLow)) + borderAlphaLow) + borderColorA
+		
+		siteSizeList[i] = (random() * siteSizeVariance) + siteSize
+		
+	end
+
+				
+	-- Testing each pixel in the image, assign the appropriate color based on which region it is in
+	
+	deviation = borderWidth
+	
+	
+	out:MultiProcessPixels(nil, {
+			Sitesx = sitesx, 
+			Sitesy = sitesy, 
+			SiteSizeList = siteSizeList, 
+			Deviation = deviation, 
+			NumSites = siteNumber, 
+			ShowSites = showSites, 
+			ShowBorders = showBorders, 
+			SiteColorRList = siteColorRList,
+			SiteColorGList = siteColorGList, 
+			SiteColorBList = siteColorBList, 
+			SiteColorAList = siteColorAList, 
+			CellColorRList = cellColorRList,
+			CellColorGList = cellColorGList, 
+			CellColorBList = cellColorBList, 
+			CellColorAList = cellColorAList,
+			BorderColorRList = borderColorRList,
+			BorderColorGList = borderColorGList, 
+			BorderColorBList = borderColorBList, 
+			BorderColorAList = borderColorAList
+			}, 
+			0,0, img.Width, img.Height, img, function(x,y,p)
+			
+		smallest = 200000 -- arbitrarily large number. This may break if the image is more than 100k in width.
+		
+		for i in pairs(Sitesx) do
+			if Sitesx[i] then
+				-- Check distance of pixel to site under consideration
+				distance = math.sqrt((x - Sitesx[i])^2 + (y - Sitesy[i])^2)
+
+				-- check to see if this distance is the same (within deviation) as previously determined smallest distance
+				checkDiff = math.sqrt((distance-smallest)^2)
+				
+				if checkDiff < Deviation then -- if the difference is smaller than the allowed border width, the pixel is in a border
+					border = 1 
+				else
+					border = 0
+				end
+				
+				if distance < smallest then -- if the distance is smaller than any previously found distance, use it as the new smallest
+					smallest = distance
+					p.R = CellColorRList[i]
+					p.G = CellColorGList[i]
+					p.B = CellColorBList[i]
+					p.A = CellColorAList[i]
+				end
+
+				if distance < SiteSizeList[i] and ShowSites == 1 then -- provide an option to turn this off
+					point = 1
+					p.R = SiteColorRList[i] * (1 - distance/SiteSizeList[i]) + p.R * (distance/SiteSizeList[i])
+					p.G = SiteColorGList[i] * (1 - distance/SiteSizeList[i]) + p.G * (distance/SiteSizeList[i])
+					p.B = SiteColorBList[i] * (1 - distance/SiteSizeList[i]) + p.B * (distance/SiteSizeList[i])
+					p.A = SiteColorAList[i] * (1 - distance/SiteSizeList[i]) + p.A * (distance/SiteSizeList[i])
+				end
+				
+				if border == 1 and ShowBorders == 1 then
+					p.R = p.R * (checkDiff/Deviation) + BorderColorRList[i] * (1 - checkDiff/Deviation)
+					p.G = p.G * (checkDiff/Deviation) + BorderColorGList[i] * (1 - checkDiff/Deviation)
+					p.B = p.B * (checkDiff/Deviation) + BorderColorBList[i] * (1 - checkDiff/Deviation)
+					p.A = p.A * (checkDiff/Deviation) + BorderColorAList[i] * (1 - checkDiff/Deviation)
+				end
+				
+			end -- end of test for Sitesx
+		end -- end of main loop
+
+		return p
+	end) -- end of MultiProcessPixels
+	
+	OutImage:Set(req, out) -- send the image to the output
+end	-- end of Process()

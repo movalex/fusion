@@ -1,0 +1,44 @@
+--[[
+A simple notepad that can be pinned in the tools panel
+--]]
+
+version = "Notepad v0.01 - 30 January 2019"
+
+FuRegisterClass('Notepad', CT_Tool, {
+	REGS_Name				= 'Notepad',
+	REGS_Category			= 'Miscellaneous',
+	REGS_OpIconString		= 'Not',
+	REGS_OpDescription		= 'Notepad',
+	REG_NoMotionBlurCtrls	= true,
+	REG_NoBlendCtrls		= true,
+	REG_OpNoMask			= true,
+	REG_NoBlendCtrls		= true,
+	REG_NoObjMatCtrls		= true,
+	REG_NoPreCalcProcess	= true,	-- make default PreCalcProcess() behaviour be to call Process() rather than automatic pass through.
+	REG_Fuse_NoJIT			= true,
+	REGS_Company			= "The Intelligent Machine",
+	REGS_URL				= "http://www.imachinevfx.com",
+	REGS_HelpTopic			= "",
+	REG_Fuse_NoEdit			= true,
+	REG_Fuse_NoReload		= true,
+	REG_Version				= 001,
+	REG_NoScriptCtrls		= true,
+})
+
+function Create()
+	-- Remove the default 'Controls' page
+	self:RemoveControlPage('Controls')
+	
+	-- Add a new 'Notepad' page to the Fuse GUI
+	self:AddControlPage('Notepad')
+	
+	NoteName = self:AddInput('Note', 'Note', {
+		LINKID_DataType = 'Text',
+		INPID_InputControl = 'TextEditControl',
+		TEC_Lines = 10,
+		TEC_Wrap = true,
+		TEC_ReadOnly = false,
+		ICS_ControlPage = 'Notepad',
+		INPS_DefaultText = '',
+	})
+end
