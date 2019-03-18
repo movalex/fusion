@@ -1,211 +1,297 @@
 {
-	Tools = ordered() {
-		Tint_AE1 = MacroOperator {
-			Inputs = ordered() {
-				Input1 = InstanceInput {
-					SourceOp = "swap",
-					Source = "Which",
-					Name = "Swap Colors",
-					Default = 1,
+    Tools = ordered() {
+        TintAE = MacroOperator {
+            CtrlWZoom = false,
+            Inputs = ordered() {
+                Input1 = Input { Value = 1, },
+                Input2 = InstanceInput {
+                    SourceOp = "TintAmount",
+                    Source = "Mix",
+                    Name = "Amount to Tint",
+                    Default = 1,
+                },
+                Input3 = InstanceInput {
+                    SourceOp = "mapColors",
+                    Source = "Gradient",
+                    Name = "Colors",
+                },
+                MainInput1 = InstanceInput {
+                    SourceOp = "PipeRouter1",
+                    Source = "Input",
+                }
+            },
+            Outputs = {
+                MainOutput1 = InstanceOutput {
+                    SourceOp = "TintAmount",
+                    Source = "Output",
+                }
+            },
+            ViewInfo = GroupInfo {
+                Pos = { 1440.47, 98.5856 },
+                Flags = {
+                    Expanded = true,
+                    AllowPan = false,
+                    ConnectedSnap = true,
+                    AutoSnap = true,
+                    ShowInstance = false
+                },
+                Size = { 663.099, 275.36, 331.549, 22 },
+                Direction = "Vertical",
+                PipeStyle = "Direct",
+                Scale = 1,
+                Offset = { -2.7772, 0 }
+            },
+            Tools = ordered() {
+                invert = ChannelBoolean {
+                    Inputs = {
+                        Operation = Input { Value = 10, },
+                        ToAlpha = Input { Value = 4, },
+                        Background = Input {
+                            SourceOp = "desat",
+                            Source = "Output",
+                        },
+                        Foreground = Input {
+                            SourceOp = "desat",
+                            Source = "Output",
+                        },
+                    },
+                    ViewInfo = OperatorInfo { Pos = { -110, 16.5 } },
+                },
+                desat = ColorCorrector {
+                    NameSet = true,
+                    Inputs = {
+                        MaskChannel = Input { Value = 5, },
+                        WheelSaturation1 = Input { Value = 0, },
+                        ColorRanges = Input {
+                            Value = ColorCurves {
+                                Curves = {
+                                    {
+                                        Points = {
+                                            { 0, 1 },
+                                            { 0.4, 0.2 },
+                                            { 0.6, 0 },
+                                            { 1, 0 }
+                                        }
+                                    },
+                                    {
+                                        Points = {
+                                            { 0, 0 },
+                                            { 0.4, 0 },
+                                            { 0.6, 0.2 },
+                                            { 1, 1 }
+                                        }
+                                    }
+                                }
+                            },
+                        },
+                        HistogramIgnoreTransparent = Input { Value = 1, },
+                        Input = Input {
+                            SourceOp = "PipeRouter1",
+                            Source = "Output",
+                        },
+                    },
+                    ViewInfo = OperatorInfo { Pos = { -275, 172.364 } },
+                },
+                mask = ChannelBoolean {
+                    NameSet = true,
+                    Inputs = {
+                        ToRed = Input { Value = 8, },
+                        ToGreen = Input { Value = 8, },
+                        ToBlue = Input { Value = 8, },
+                        ToAlpha = Input { Value = 16, },
+                        Background = Input {
+                            SourceOp = "PipeRouter1",
+                            Source = "Output",
+                        },
+                    },
+                    ViewInfo = OperatorInfo { Pos = { -51.0861, 172.962 } },
+                },
+                Texture1 = Texture {
+                    Inputs = {
+                        ProcessAlpha = Input { Value = 0, },
+                        MaskChannel = Input { Value = 5, },
+                        MaskClipBlack = Input { Value = 0, },
+                        MaskClipWhite = Input { Value = 0, },
+                        UScale = Input { Value = 0.9956, },
+                        Input = Input {
+                            SourceOp = "switch",
+                            Source = "Output",
+                        },
+                        Texture = Input {
+                            SourceOp = "mapColors",
+                            Source = "Output",
+                        },
+                        EffectMask = Input {
+                            SourceOp = "mask",
+                            Source = "Output",
+                        }
+                    },
+                    ViewInfo = OperatorInfo { Pos = { 218.043, 172.962 } },
+                },
+                TintAmount = Dissolve {
+                    Transitions = {
+                        [0] = "DFTDissolve"
+                    },
+                    NameSet = true,
+                    Inputs = {
+                        Background = Input {
+                            SourceOp = "PipeRouter1",
+                            Source = "Output",
+                        },
+                        Foreground = Input {
+                            SourceOp = "Texture1",
+                            Source = "Output",
+                        },
+                    },
+                    ViewInfo = OperatorInfo { Pos = { 127.24, 216.702 } },
+                },
+                mapColors = Background {
+                    NameSet = true,
+                    Inputs = {
+                        Width = Input { Value = 1000, },
+                        Height = Input { Value = 1000, },
+                        Depth = Input { Value = 3, },
+                        ["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+                        Type = Input { Value = FuID { "Gradient" }, },
+                        TopLeftRed = Input { Value = 0.9725490196078, },
+                        TopLeftBlue = Input { Value = 0.0392156862745, },
+                        TopRightRed = Input { Value = 1, },
+                        TopRightGreen = Input { Value = 1, },
+                        TopRightBlue = Input { Value = 1, },
+                        Gradient = Input {
+                            Value = Gradient {
+                                Colors = {
+                                    [0] = { 0, 0, 0, 1 },
+                                    [1] = { 0, 1, 1, 1 }
+                                }
+                            },
+                        },
+                    },
+                    ViewInfo = OperatorInfo { Pos = { 279.163, 117.541 } },
+                },
+                PipeRouter1 = PipeRouter {
+                    ViewInfo = PipeRouterInfo { Pos = { -275, 14.5431 } },
+                },
+                AlphaMultiply = AlphaMultiply {
+                    Inputs = {
+                        Input = Input {
+                            SourceOp = "invert",
+                            Source = "Output",
+                        },
+                    },
+                    ViewInfo = OperatorInfo { Pos = { 38.9706, 16.5 } },
+                },
+                switch = Custom {
+                    Inputs = {
+                        LUTIn1 = Input {
+                            SourceOp = "switchLUTIn11",
+                            Source = "Value",
+                        },
+                        LUTIn2 = Input {
+                            SourceOp = "switchLUTIn21",
+                            Source = "Value",
+                        },
+                        LUTIn3 = Input {
+                            SourceOp = "switchLUTIn31",
+                            Source = "Value",
+                        },
+                        LUTIn4 = Input {
+                            SourceOp = "switchLUTIn41",
+                            Source = "Value",
+                        },
+                        RedExpression = Input { Value = "if(n1 == 1, c1, c2)", },
+                        GreenExpression = Input { Value = "if(n1 == 1, c1, c2)", },
+                        BlueExpression = Input { Value = "if(n1 == 1, c1, c2)", },
+                        NumberControls = Input { Value = 1, },
+                        ShowNumber2 = Input { Value = 0, },
+                        ShowNumber3 = Input { Value = 0, },
+                        ShowNumber4 = Input { Value = 0, },
+                        ShowNumber5 = Input { Value = 0, },
+                        ShowNumber6 = Input { Value = 0, },
+                        ShowNumber7 = Input { Value = 0, },
+                        ShowNumber8 = Input { Value = 0, },
+                        Image1 = Input {
+                            SourceOp = "AlphaMultiply",
+                            Source = "Output",
+                        },
+                        Image2 = Input {
+                            SourceOp = "desat",
+                            Source = "Output",
+                        },
+                        NumberIn1 = Input { Expression = "TintAE.swp", },
+                    },
+                    ViewInfo = OperatorInfo { Pos = { 195.335, 16.5 } },
+                    UserControls = ordered() {
+                        NumberIn1 = {
+                            INP_MaxAllowed = 1,
+                            INP_Integer = true,
+                            INPID_InputControl = "SliderControl",
+                            INP_MaxScale = 1,
+                            INP_MinScale = 0,
+                            INP_MinAllowed = 0,
+                            LINKID_DataType = "Number",
+                            ICS_ControlPage = "Controls",
+                            LINKS_Name = "switch"
+                        }
+                    }
+                }
+            },
+            UserControls = ordered() {
+				swp = {
+					LINKS_Name = "Color Swap",
+					LINKID_DataType = "Number",
+					INPID_InputControl = "CheckboxControl",
+					INP_Integer = true,
+					INP_MinScale = 0,
+					INP_MaxScale = 1,
+					INP_MinAllowed = -1000000,
+					INP_MaxAllowed = 1000000,
+					CBC_TriState = false,
+					ICS_ControlPage = "Controls",
+					INP_Passive = true
 				},
-				MainInput1 = InstanceInput {
-					SourceOp = "PipeRouter",
-					Source = "Input",
-				},
-				Input2 = InstanceInput {
-					SourceOp = "mapColors",
-					Source = "Gradient",
-					Name = "Map Colors",
-				},
-				Input3 = InstanceInput {
-					SourceOp = "TintAmount",
-					Source = "Mix",
-					Name = "Amount to Tint",
-					Default = 1,
-				},
-			},
-			Outputs = {
-				MainOutput1 = InstanceOutput {
-					SourceOp = "TintAmount",
-					Source = "Output",
-				}
-			},
-			ViewInfo = GroupInfo {
-				Name = "Tint_AE",
-				Pos = { 0, 0 }
-			},
-			Tools = ordered() {
-				Desaturation = ColorCorrector {
-					CtrlWShown = false,
-					NameSet = true,
-					Inputs = {
-						MaskChannel = Input { Value = 5, },
-						WheelSaturation1 = Input { Value = 0, },
-						ColorRanges = Input {
-							Value = ColorCurves {
-								Curves = {
-									{
-										Points = {
-											{ 0, 1 },
-											{ 0.4, 0.2 },
-											{ 0.6, 0 },
-											{ 1, 0 }
-										}
-									},
-									{
-										Points = {
-											{ 0, 0 },
-											{ 0.4, 0 },
-											{ 0.6, 0.2 },
-											{ 1, 1 }
-										}
-									}
-								}
-							},
-						},
-						HistogramIgnoreTransparent = Input { Value = 1, },
-						Input = Input {
-							SourceOp = "PipeRouter",
-							Source = "Output",
-						},
-					},
-					ViewInfo = OperatorInfo { Pos = { -4877.57, 1602.36 } },
-				},
-				negative = ChannelBoolean {
-					CtrlWShown = false,
-					NameSet = true,
-					Inputs = {
-						Operation = Input { Value = 10, },
-						ToAlpha = Input { Value = 4, },
-						Background = Input {
-							SourceOp = "Desaturation",
-							Source = "Output",
-						},
-						Foreground = Input {
-							SourceOp = "Desaturation",
-							Source = "Output",
-						},
-					},
-					ViewInfo = OperatorInfo { Pos = { -4759.81, 1524.19 } },
-				},
-				Mask = ChannelBoolean {
-					CtrlWShown = false,
-					NameSet = true,
-					Inputs = {
-						ToRed = Input { Value = 8, },
-						ToGreen = Input { Value = 8, },
-						ToBlue = Input { Value = 8, },
-						ToAlpha = Input { Value = 16, },
-						Background = Input {
-							SourceOp = "PipeRouter",
-							Source = "Output",
-						},
-					},
-					ViewInfo = OperatorInfo { Pos = { -4734.45, 1676.52 } },
-				},
-				swap = Fuse.Switch {
-					CtrlWShown = false,
-					NameSet = true,
-					Inputs = {
-						Which = Input { Value = 1, },
-						Input1 = Input {
-							SourceOp = "Desaturation",
-							Source = "Output",
-						},
-						Input2 = Input {
-							SourceOp = "AlphaMultiply",
-							Source = "Output",
-						},
-					},
-					ViewInfo = OperatorInfo { Pos = { -4537.7, 1601.58 } },
-					Version = 172
-				},
-				AlphaMultiply = AlphaMultiply {
-					CtrlWShown = false,
-					NameSet = true,
-					Inputs = {
-						Input = Input {
-							SourceOp = "negative",
-							Source = "Output",
-						},
-					},
-					ViewInfo = OperatorInfo { Pos = { -4537.13, 1524.19 } },
-				},
-				Tint = Texture {
-					CtrlWShown = false,
-					NameSet = true,
-					Inputs = {
-						ProcessAlpha = Input { Value = 0, },
-						MaskChannel = Input { Value = 5, },
-						MaskClipBlack = Input { Value = 0, },
-						MaskClipWhite = Input { Value = 0, },
-						UScale = Input { Value = 0.9956, },
-						Input = Input {
-							SourceOp = "swap",
-							Source = "Output",
-						},
-						Texture = Input {
-							SourceOp = "mapColors",
-							Source = "Output",
-						},
-						EffectMask = Input {
-							SourceOp = "Mask",
-							Source = "Output",
-						}
-					},
-					ViewInfo = OperatorInfo { Pos = { -4463.74, 1666.83 } },
-				},
-				PipeRouter = PipeRouter {
-					CtrlWShown = false,
-					NameSet = true,
-					ViewInfo = PipeRouterInfo { Pos = { -4936.41, 1749.12 } },
-				},
-				mapColors = Background {
-					CtrlWShown = false,
-					NameSet = true,
-					Inputs = {
-						Width = Input { Value = 1000, },
-						Height = Input { Value = 1000, },
-						Depth = Input { Value = 3, },
-						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
-						Type = Input { Value = FuID { "Gradient" }, },
-						TopLeftRed = Input { Value = 0.9725490196078, },
-						TopLeftBlue = Input { Value = 0.0392156862745, },
-						TopRightRed = Input { Value = 1, },
-						TopRightGreen = Input { Value = 1, },
-						TopRightBlue = Input { Value = 1, },
-						Gradient = Input {
-							Value = Gradient {
-								Colors = {
-									[0] = { 0, 0, 0, 1 },
-									[1] = { 1, 0, 1, 1 }
-								}
-							},
-						},
-					},
-					ViewInfo = OperatorInfo { Pos = { -4378.52, 1601.38 } },
-				},
-				TintAmount = Dissolve {
-					Transitions = {
-						[0] = "DFTDissolve"
-					},
-					CtrlWZoom = false,
-					CtrlWShown = false,
-					NameSet = true,
-					Inputs = {
-						Background = Input {
-							SourceOp = "PipeRouter",
-							Source = "Output",
-						},
-						Foreground = Input {
-							SourceOp = "Tint",
-							Source = "Output",
-						},
-					},
-					ViewInfo = OperatorInfo { Pos = { -4366.81, 1732.44 } },
-				}
-			},
-		}
-	},
-	ActiveTool = "Tint_AE1"
+            }
+        },
+        switchLUTIn11 = LUTBezier {
+            KeyColorSplines = {
+                [0] = {
+                    [0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+                    [1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+                }
+            },
+            SplineColor = { Red = 204, Green = 0, Blue = 0 },
+            NameSet = true,
+        },
+        switchLUTIn21 = LUTBezier {
+            KeyColorSplines = {
+                [0] = {
+                    [0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+                    [1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+                }
+            },
+            SplineColor = { Red = 0, Green = 204, Blue = 0 },
+            NameSet = true,
+        },
+        switchLUTIn31 = LUTBezier {
+            KeyColorSplines = {
+                [0] = {
+                    [0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+                    [1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+                }
+            },
+            SplineColor = { Red = 0, Green = 0, Blue = 204 },
+            NameSet = true,
+        },
+        switchLUTIn41 = LUTBezier {
+            KeyColorSplines = {
+                [0] = {
+                    [0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+                    [1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+                }
+            },
+            SplineColor = { Red = 204, Green = 204, Blue = 204 },
+            NameSet = true,
+        }
+    },
+    ActiveTool = "TintAE"
 }
