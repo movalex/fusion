@@ -1,0 +1,80 @@
+--[[--
+This tool sets a custom value into the image's metadata
+--]]--
+
+FuRegisterClass("SetMetaData", CT_Tool, {
+	REGS_Name = "Set Metadata",
+	REGS_Category = "Metadata",
+	REGS_OpIconString = "SMeta",
+	REGS_OpDescription = "Sets Custom Metadata",
+	REG_NoMotionBlurCtrls = true,
+	REG_NoBlendCtrls = true,
+	REG_OpNoMask = true,
+	REG_NoPreCalcProcess = true,	-- make default PreCalcProcess() behaviour be to call Process() rather than automatic pass through.
+	REG_SupportsDoD = true,
+	})
+
+function Create()
+	InFieldName = self:AddInput("Field Name", "FieldName", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "TextEditControl",
+		TEC_Lines = 1,
+	})
+
+	InFieldValue = self:AddInput("Field Value", "FieldValue", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "TextEditControl",
+		TEC_Lines = 1,
+	})
+
+	InImage = self:AddInput("Input", "Input", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+	})
+
+	OutImage = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+	})				
+end
+
+function Process(req) 
+	local f_name = InFieldName:GetValue(req).Value
+	local f_value = InFieldValue:GetValue(req).Value
+	local img = InImage:GetValue(req)
+
+	local result = Image({IMG_Like = img, IMG_NoData = req:IsPreCalc()})
+	-- Crop (with no offset, ie. Copy) handles images having no data, so we don't need to put this within if/then/end
+	img:Crop(result, { })
+
+	if (f_name ~= "") then 
+		local newmetadata = result.Metadata or {}
+		
+		if f_value ~= "" then
+			-- create subtables for dotted field names
+			local key
+			local subtable = newmetadata
+			for key in string.gmatch(f_name, "([%w_]+)%.") do
+				subtable[key] = subtable[key] or {}
+				subtable = subtable[key]
+			end
+			
+			-- get final key
+			f_name = string.match(f_name, "[%w_]+$")
+
+			-- look for tables in f_value
+			local tbl = string.match(f_value, "%s*%b{}%s*")
+			if tbl then
+				subtable[f_name] = eyeon.readstring(f_value)		-- parse tables
+			else
+				subtable[f_name] = f_value
+			end
+		else
+			newmetadata[f_name] = nil
+		end
+		
+		result.Metadata = newmetadata
+	end
+
+	OutImage:Set(req, result)
+end

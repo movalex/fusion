@@ -1,0 +1,219 @@
+--[[-- 
+http://www.emberlight.se
+Written by : Jacob Danell 
+Written on : December, 2018
+
+version 1.0,  2018-6-4: First Version
+--]]--
+
+FuRegisterClass("JD_ChromaticZoom", CT_Tool, {
+    REGS_Name = "Chromatic Zoom",
+    REGS_Category = "Transform",
+    REGS_OpIconString = "crz",
+    REGS_OpDescription = "A chromatic aberration zoom with OpenCL power",
+    REGS_Company = "Ember Light",
+    REGS_URL        = "https://www.emberlight.se",
+    REGS_HelpTopic       = "",
+    REG_NoObjMatCtrls = true,
+    REG_NoMotionBlurCtrls = true,   
+    })
+
+
+clsource = [[
+
+kernel void hello(
+                    FuReadImage_t inimg,
+                    FuWriteImage_t outimg,
+                    int2 imgsize,
+                    float2 cent,
+                    float streng,
+                    float samp,
+                    float fallo,
+                    float redinc,
+                    float greeninc,
+                    float blueinc
+                    ) {
+    int2 ipos = (int2)(get_global_id(1), get_global_id(0));
+    float2 fragCoord = convert_float2(ipos) + 0.5f; 
+    float2 iResolution = convert_float2(imgsize);
+    float2 center = iResolution*cent;
+
+    int sampleCount = convert_int(samp);
+    float blur = streng; 
+    float falloff = fallo;
+
+    float2 destCoord = fragCoord.xy / iResolution.xy;
+
+    float2 direction = normalize(destCoord - cent); 
+    float2 velocity = direction * blur * pow(length(destCoord - cent), falloff);
+    float inverseSampleCount = 1.0 / (float)(sampleCount);
+    
+    float2 incrementsR = velocity * (float2)(redinc) * (float2)(inverseSampleCount);
+
+    float2 incrementsG = velocity * (float2)(greeninc) * (float2)(inverseSampleCount);
+
+    float2 incrementsB = velocity * (float2)(blueinc) * (float2)(inverseSampleCount);
+
+    float4 accumulator = (float4)(0);
+    float2 offsetsR = (float2)(0);
+    float2 offsetsG = (float2)(0); 
+    float2 offsetsB = (float2)(0); 
+    
+    for (int i = 0; i < sampleCount; i++) {
+        accumulator.x += FuSampleImageCf(inimg, destCoord + offsetsR,imgsize).x; 
+        accumulator.y += FuSampleImageCf(inimg, destCoord + offsetsG,imgsize).y; 
+        accumulator.z += FuSampleImageCf(inimg, destCoord + offsetsB,imgsize).z; 
+        accumulator.w += FuSampleImageCf(inimg, destCoord + ((offsetsR+offsetsG+offsetsB)/3),imgsize).w; 
+        
+        offsetsR -= incrementsR;
+        offsetsG -= incrementsG;
+        offsetsB -= incrementsB;
+    }
+
+
+
+    float4 fragColor = (accumulator / (float)(sampleCount));
+
+    FuWriteImagef(outimg, ipos, imgsize, fragColor);
+}
+]]
+
+function Create()
+    InCenter = self:AddInput("Center", "Center", {
+        LINKID_DataType = "Point",
+        INPID_InputControl = "OffsetControl",
+        INPID_PreviewControl = "CrosshairControl",
+    })
+
+    InStrength = self:AddInput("Strength", "Strength", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default = 10,
+        INP_MinScale = -50,
+        INP_MaxScale = 50,
+    })
+
+    InSample = self:AddInput("Sample", "Sample", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Integer = true,
+        INP_Default = 20,
+        INP_MinScale = 1,
+        INP_MaxScale = 60,
+    })
+
+    InFalloff = self:AddInput("Falloff", "Falloff", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default = 10,
+        INP_MinScale = 0,
+        INP_MaxScale = 50,
+    })
+
+    InFalloff = self:AddInput("Falloff", "Falloff", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default = 10,
+        INP_MinScale = 0,
+        INP_MaxScale = 50,
+    })
+
+    InImage = self:AddInput("Input", "Input", {
+        LINKID_DataType = "Image",
+        LINK_Main = 1,
+    })
+
+    self:BeginControlNest("Color Strenght", "colorstrength", false, {})
+
+    InRedIncrem = self:AddInput("R", "r", {
+        LINKID_DataType     = "Number",
+        INPID_InputControl  = "SliderControl",
+        INP_Integer         = false,
+        INP_Default         = 1,
+        INP_MinScale = 0,
+        INP_MaxScale = 10,
+    })
+
+    InGreenIncrem = self:AddInput("G", "g", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Integer = false,
+        INP_Default = 2,
+        INP_MinScale = 0,
+        INP_MaxScale = 10,
+    })
+
+    InBlueIncrem = self:AddInput("B", "b", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Integer = false,
+        INP_Default = 4,
+        INP_MinScale = 0,
+        INP_MaxScale = 10,
+    })
+
+    self:EndControlNest()
+
+    OutImage = self:AddOutput("Output", "Output", {
+        LINKID_DataType = "Image",
+        LINK_Main = 1,
+    }) 
+end
+
+function OnAddToFlow()
+    mgr = OCLManager()
+    if mgr then
+        local path = string.sub(debug.getinfo(1).source, 2)
+        path = string.gsub(path, "%.[fF][uU][sS][eE]$", "%.cl")
+        prog = mgr:BuildCachedProgram("Fuse.BoSOCL", path, clsource) 
+    end
+end
+
+function OnRemoveFromFlow()
+    prog = nil
+    mgr = nil
+end
+
+function Process(req)
+    local center = InCenter:GetValue(req)
+    local inimg = InImage:GetValue(req)
+    local instrength = InStrength:GetValue(req).Value/1000
+    local insample = InSample:GetValue(req).Value
+    local infalloff = InFalloff:GetValue(req).Value/10
+    local inred = InRedIncrem:GetValue(req).Value
+    local ingreen = InGreenIncrem:GetValue(req).Value
+    local inblue = InBlueIncrem:GetValue(req).Value
+
+    local img = Image{ IMG_Like = inimg }                         
+    local out = Image{ IMG_Like = inimg }
+
+    local success = false
+    if img and prog then
+        local incl = prog:CreateImage(inimg, "read")
+        local outcl = prog:CreateImage(img, "write")
+        if incl and outcl then
+            local kernel = prog:CreateKernel("hello")
+
+            if kernel then
+                prog:SetArg(kernel, 0, incl)
+                prog:SetArg(kernel, 1, outcl)
+                prog:SetArgInt(kernel, 2, img.Width, img.Height)
+                prog:SetArg(kernel, 3, center.X ,center.Y)
+                prog:SetArg(kernel, 4, instrength)
+                prog:SetArg(kernel, 5, insample)
+                prog:SetArg(kernel, 6, infalloff)
+                prog:SetArg(kernel, 7, inred)
+                prog:SetArg(kernel, 8, ingreen)
+                prog:SetArg(kernel, 9, inblue)
+
+                success = prog:RunKernel(kernel)
+            end
+
+            if success then
+                success = prog:Download(outcl, out)
+            end
+        end
+    end
+        
+    OutImage:Set(req, out)
+end

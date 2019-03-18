@@ -1,0 +1,88 @@
+{
+	Tools = ordered() {
+		FitTool = MacroOperator {
+			Inputs = ordered() {
+				Input1 = InstanceInput {
+					SourceOp = "Background1",
+					Source = "Width",
+					Default = 1920,
+				},
+				Input2 = InstanceInput {
+					SourceOp = "Background1",
+					Source = "Height",
+					Default = 1080,
+				},
+				Input3 = InstanceInput {
+					SourceOp = "Background1",
+					Source = "UseFrameFormatSettings",
+					Default = 0,
+				},
+				MainInput1 = InstanceInput {
+					SourceOp = "Resize1",
+					Source = "Input",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Merge1",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Pos = { 542, 115 },
+				Flags = {
+					AllowPan = false,
+					AutoSnap = true,
+					RemoveRouters = true
+				},
+				Size = { 328, 198.3, 164, 21 },
+				Direction = "Horizontal",
+				PipeStyle = "Direct",
+				Scale = 1,
+				Offset = { 0, 0 }
+			},
+			Tools = ordered() {
+				Merge1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Background1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Resize1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 37, 144.15 } },
+				},
+				Background1 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						Depth = Input { Value = 3, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftAlpha = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 82, 12.15 } },
+				},
+				Resize1 = BetterResize {
+					Inputs = {
+						Width = Input {
+							Value = 1920,
+							Expression = "iif(self.MainInput1.Width > self.MainInput1.Height, self.Input1, self.Input2/(self.MainInput1.Height/self.MainInput1.Width))",
+						},
+						Height = Input {
+							Value = 589,
+							Expression = "iif(self.MainInput1.Width < self.MainInput1.Height, self.Input2, self.Input1/(self.MainInput1.Width/self.MainInput1.Height))",
+						},
+						PixelAspect = Input { Value = { 1, 1 }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -101, 144.15 } },
+				}
+			},
+		}
+	}
+}

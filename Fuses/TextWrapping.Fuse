@@ -1,0 +1,569 @@
+--[[
+
+-- HIJACKED Annotation Fuse and add wordwraping ;-)  -- Dunn Lewis <dunn[at]native-newmedia[dot]com>
+A simple Annotation Fuse, which prints a single line of text onto the input image. 
+
+Unlike Text+, the resolution comes from the input image, and there is no need for 
+an additional Merge. This keeps the composition simple. Useful for slates and templates.
+--]]
+
+FuRegisterClass("TEXTWRAPPING", CT_Tool, {
+	REGS_Category = "Fuses",
+	REGS_OpIconString = "TwR",
+	REGS_OpDescription = "Textwrapping fuse",
+	})
+
+function Create()
+	InFont = self:AddInput("Font", "Font", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "FontFileControl",
+		IC_ControlGroup = 2,
+		IC_ControlID = 0,
+		INP_Level = 1,
+		INP_DoNotifyChanged = true,
+	})
+		
+	InFontStyle = self:AddInput("Style", "Style", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "FontFileControl",
+		IC_ControlGroup = 2,
+		IC_ControlID = 1,
+		INP_Level = 1,
+		INP_DoNotifyChanged = true,
+	})
+	
+	
+	InText = self:AddInput("Styled Text", "StyledText", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "TextEditControl",
+		TEC_Lines = 10,
+	})
+	
+
+	InOffsetLo = self:AddInput("Start", "OffsetLow", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "RangeControl",
+		RNGCS_MidName      = "Write On",
+		INP_MinScale       = 0.0,
+		INP_MaxScale       = 1.0,
+		INP_Default        = 0,
+		IC_ControlGroup    = 3,
+		IC_ControlID       = 0,
+		--INP_Integer    = true,
+		})	
+	InOffsetHi = self:AddInput("End", "OffsetHigh", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "RangeControl",
+		INP_MinScale       = 0.0,
+		INP_MaxScale       = 1.0,
+		INP_Default        = 1.0,
+		IC_ControlGroup    = 3,
+		IC_ControlID       = 1,
+		--INP_Integer    = true,
+		})	
+				
+	InCase = self:AddInput("Letter Case", "Case", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "MultiButtonControl",
+		INP_Default = 0.0,
+		{ MBTNC_AddButton = "NONE", MBTNCD_ButtonWidth = 1/3, },
+		{ MBTNC_AddButton = "UPPER", MBTNCD_ButtonWidth = 1/3, },
+		{ MBTNC_AddButton = "LOWER", MBTNCD_ButtonWidth = 1/3, },
+		
+		INP_Integer = true,
+		})
+		
+	InPosition = self:AddInput("Position", "Position", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		INP_DoNotifyChanged = true,
+		})
+
+	InSize = self:AddInput("Size", "Size", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale =    0.0,
+		INP_MaxScale =    0.5,
+		INP_Default = 	  0.03,
+		})
+
+	InCharacterSpacing = self:AddInput("Character Spacing", "Characterspacing", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed =    -10,
+		INP_MaxScale =   10.0,
+		INP_Default = 	  0.0,
+		--INP_DoNotifyChanged = true,
+		})
+		
+
+	InLineSpacing = self:AddInput("Line Spacing", "linespacing", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale =    -0.5,
+		INP_MaxScale =    0.5,
+		INP_Default = 	  0.0,
+		--INP_DoNotifyChanged = true,
+		})
+		
+	
+	InWrap_Width = self:AddInput("Width", "wrap_Width", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Default = 1.0,
+		INPID_PreviewControl = "RectangleControl",
+		PC_ControlGroup = 1,
+		PC_ControlID = 0,
+		INP_DoNotifyChanged = true,
+		})			
+
+	InWrap_Height = self:AddInput("Height", "wrap_Height", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Default = 1.0,
+		INPID_PreviewControl = "RectangleControl",
+		PC_ControlGroup = 1,
+		PC_ControlID = 1,
+		INP_DoNotifyChanged = true,
+		})		
+	
+		--------------------------------------------------------------
+	
+	InVer_Justify = self:AddInput("Horizontal Justification", "Hori_Justification", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "MultiButtonControl",
+		INP_Default = 0.0,
+		{ MBTNC_AddButton = "LEFT", MBTNCD_ButtonWidth = 1/3, },
+		{ MBTNC_AddButton = "CENTER", MBTNCD_ButtonWidth = 1/3, },
+		{ MBTNC_AddButton = "RIGHT", MBTNCD_ButtonWidth = 1/3, },
+		INP_Integer = true,
+		INP_DoNotifyChanged = true,
+		})
+	InHori_adjustment = self:AddInput("Horizontal Adjustment", "Hori_adjustment", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale =    -0.5,
+		INP_MaxScale =    0.5,
+		INP_Default = 	  0.0,
+		INPID_PreviewControl = "RectangleControl",
+		PC_ControlGroup = 1,
+		PC_ControlID = 3,
+	--	INP_DoNotifyChanged = true,
+		})	
+		
+	InHori_Justify = self:AddInput("Vertical Justification", "Ver_Justification", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "MultiButtonControl",
+		INP_Default = 0.0,
+		{ MBTNC_AddButton = "TOP", MBTNCD_ButtonWidth = 1/3, },
+		{ MBTNC_AddButton = "CENTER", MBTNCD_ButtonWidth = 1/3, },
+		{ MBTNC_AddButton = "BOTTOM", MBTNCD_ButtonWidth = 1/3, },
+		INP_Integer = true,
+		INP_DoNotifyChanged = true,
+		})
+	InVer_adjustment = self:AddInput("Vertical Adjustment", "Ver_adjustment", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale =    -0.5,
+		INP_MaxScale =    0.5,
+		INP_Default = 	  0.0,
+		INPID_PreviewControl = "RectangleControl",
+		PC_ControlGroup = 1,
+		PC_ControlID = 4,
+	--	INP_DoNotifyChanged = true,
+		})	
+	
+	InR = self:AddInput("Red", "Red", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 1.0,
+		ICS_Name = "Color",
+		IC_ControlGroup = 1,
+		IC_ControlID = 0,
+		})
+		
+	InG = self:AddInput("Green", "Green", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 1.0,
+		IC_ControlGroup = 1,
+		IC_ControlID = 1,
+		})
+		
+	InB = self:AddInput("Blue", "Blue", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 1.0,
+		IC_ControlGroup = 1,
+		IC_ControlID = 2,
+		})
+		
+	InA = self:AddInput("Alpha", "Alpha", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 1.0,
+		IC_ControlGroup = 1,
+		IC_ControlID = 3,
+		})
+
+		-------------DRAW ON TRANSPARENT-------------
+
+	InOnBlack = self:AddInput("Draw on Transparent Background", "OnBlack", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "CheckboxControl",
+		INP_Default         = 0,
+		})
+	  ---------------------------------------------
+		self:AddInput(">> TEXT WRAPPING Ver.1.0.0 - 12 DEC 2016 <<", "Ver_100", {
+		INPID_InputControl = "LabelControl",
+		INP_External = false,
+		INP_Passive  = true,
+		})	
+		
+	InImage = self:AddInput("Input", "Input", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})
+
+	OutImage = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})	
+end
+
+function drawstring(img, font, style, size, justify, hori_justify, quality, x, y, colour, text,line_spacing,char_spacing,hori_adjust,ver_adjust,wordwrap_width,wordwrap_height)
+	local ic = ImageChannel(img, quality) 
+	local fs = FillStyle()
+	local cs = ChannelStyle()
+	local spacer=10+char_spacing
+	
+	cs.Color = colour
+	ic:SetStyleFill(fs)
+	
+	-- get the fonts metrics (see http://freetype.sourceforge.net/freetype2/docs/glyphs/index.html for a great guide)
+	local font = TextStyleFont(font, style)
+	local tfm = TextStyleFontMetrics(font)
+	
+	-- This is the distance between this line and the next one. 
+	local line_height = (tfm.TextAscent + tfm.TextDescent + tfm.TextExternalLeading) * 10 * size +line_spacing
+	local x_move = 0
+	
+	local mat = Matrix4()
+			
+	mat:Scale(1.0/tfm.Scale, 1.0/tfm.Scale, 1.0)
+	mat:Scale(size, size, 1)
+		
+	-- set the initial baseline position of the text cursor
+	local sh, ch, prevch
+	local text_shape = Shape()
+	local shape = Shape()
+	
+	mat:Move(x + hori_adjust , y + ver_adjust, 0)
+
+	local shape_Count=0
+	
+	
+	-- split the text into seperate lines
+	for line in string.gmatch(text, "%C+") do
+		
+		shape_Count=shape_Count+1
+		-- First pass, work out what the total width of this line is going to be
+		local line_width = 0
+		for i=1,#line do
+			ch = line:sub(i,i):byte()
+			
+			-- is this ignoring kerning?
+			line_width = line_width + tfm:CharacterWidth(ch)*spacer*size
+					
+		end
+		
+		-- Now work out our initial cursor position, based on the justification
+		-- 0 = left justify, 
+		-- 1 = centered
+		-- 2 = right justify
+		if justify == 0 then
+			--mat:Move(0, 0, 0)
+		elseif justify == 1 then
+			mat:Move(-line_width/2, 0, 0)
+		elseif justify == 2 then 
+			mat:Move(-line_width, 0, 0)
+		end
+	
+		-- Second pass, now we assemble the actual shape
+		for i=1,#line do
+			prevch = ch
+				
+			-- get the character, or glyph
+			ch = line:sub(i,i):byte()
+			
+			-- first we want to know what the width of the character is,
+			-- so we know where to start drawing this next character
+			-- not really sure why we multiply this by 10, we just do :-)
+			local cw = tfm:CharacterWidth(ch)*spacer*size
+			
+			
+			-- if there is a previous character, we need to get the kerning 
+			-- between the current character and the last one. 
+			if prevch then
+				x_offset = tfm:CharacterKerning(prevch, ch)*spacer*size
+				x_move = x_move + x_offset
+				mat:Move(x_offset, 0, 0)
+			end
+			
+			-- move the cursor to the center of the character
+			mat:Move(cw/2, 0, 0)
+			
+			-- I think this renders the shape we are interested in
+			sh = tfm:GetCharacterShape(ch, false)
+			sh = sh:TransformOfShape(mat)
+			
+			-- move the text cursor to the end of the glyph.
+			mat:Move(cw/2, 0, 0)
+			x_move = x_move + cw
+			
+			shape:AddShape(sh)
+				
+		end
+		
+		-- line end, move the cursor back to the start
+		if justify == 0 then
+			mat:Move(-x_move, -line_height, 0)
+		elseif justify == 1 then
+			mat:Move(-x_move/2, -line_height, 0)
+		elseif justify == 2 then 
+			mat:Move(0, -line_height, 0)
+		end
+		
+		x_move = 0
+		
+	
+	end
+
+--------------RE-POSITION TEXT-----------------------------
+	
+	local line_heightX = (tfm.TextAscent + tfm.TextDescent + tfm.TextExternalLeading) * 10 * size + line_spacing
+		
+	local base_mat=Matrix4()
+		  base_mat:Identity()
+
+		if hori_justify == 0 then
+
+		elseif hori_justify == 1 then
+
+			base_mat:Move(0, (line_heightX*(shape_Count-1))/2 , 0)
+
+		elseif hori_justify == 2 then 
+	
+			base_mat:Move(0,(-wordwrap_height/4) + (line_heightX*(shape_Count-1)), 0)
+	
+		end
+
+
+	shape = shape:TransformOfShape(base_mat)
+
+	
+	ic:ShapeFill(shape)
+	ic:PutToImage("CM_Merge", cs)
+	
+end
+
+--------------------------------------------------------
+
+-----WORDWRAPPING FUNCTIONS------------------------------
+function splittokens(s)
+    local res = {}
+    for w in s:gmatch("%S+") do
+        res[#res+1] = w
+    end
+    return res
+end
+ 
+function textwrap(text, linewidth)
+    if not linewidth then
+        linewidth = 75
+    end
+ 
+    local spaceleft = linewidth
+    local res = {}
+    local line = {}
+ 
+    for _, word in ipairs(splittokens(text)) do
+        if #word + 1 > spaceleft then
+            table.insert(res, table.concat(line, ' '))
+            line = {word}
+            spaceleft = linewidth - #word
+        else
+            table.insert(line, word)
+            spaceleft = spaceleft - (#word + 1)
+        end
+    end
+ 
+    table.insert(res, table.concat(line, ' '))
+    return table.concat(res, '\n')
+end
+	
+------------------------------------------------	
+------------REMAPPER--------------------
+
+function map_range( a1, a2, b1, b2, s )
+    return b1 + (s-a1)*(b2-b1)/(a2-a1)
+end
+ --------------------------------------
+ 
+function Process(req) 	
+	local img = InImage:GetValue(req)
+	local font = InFont:GetValue(req).Value
+	local style = InFontStyle:GetValue(req).Value
+	local out = img:CopyOf()
+	
+	local text      = InText:GetValue(req).Value
+	local case	= InCase:GetValue(req).Value
+	
+	local size      = InSize:GetValue(req).Value
+	local center    = InPosition:GetValue(req)
+	local ver_justify	= InVer_Justify:GetValue(req).Value
+	local hori_justify   = InHori_Justify:GetValue(req).Value
+
+	local hori_adjust   = InHori_adjustment:GetValue(req).Value
+	local ver_adjust   = InVer_adjustment:GetValue(req).Value
+
+	local char_spacing= InCharacterSpacing:GetValue(req).Value
+	local line_spacing= InLineSpacing:GetValue(req).Value
+	
+	local r         = InR:GetValue(req).Value
+	local g         = InG:GetValue(req).Value
+	local b         = InB:GetValue(req).Value
+	local a         = InA:GetValue(req).Value
+	
+	
+	local offsetmin  = InOffsetLo:GetValue(req).Value
+	local offsetmax  = InOffsetHi:GetValue(req).Value	
+	
+
+	local wordwrap_height= InWrap_Height:GetValue(req).Value
+	local wordwrap_width= InWrap_Width:GetValue(req).Value
+	
+	local cx = center.X
+	local cy = center.Y * (out.Height * out.YScale) / (out.Width * out.XScale)
+	local quality = 32
+	
+	local onblack    	= (InOnBlack:GetValue(req).Value > 0.5)
+	-- if the FontManager list is empty, scan the font list
+	-- If the UI has never been shown, as would always be the case on a render slave, 
+	-- nothing will scan the font list for available fonts. So we check for that here, 
+	-- and force a scan if needed.
+	if not next( FontManager:GetFontList() ) then
+		FontManager:ScanDir()
+	end
+	
+	if req:IsQuick() then 
+		quality = 1
+	end
+	
+	
+
+
+----------------------------DRAW ON TRANSPARENT-------------------------------------
+
+	if onblack then
+		out:Fill(Pixel({R = 0, G = 0, B = 0, A = 0}))
+	end
+	
+------------------------------------------------------------------------------------
+
+	----------------CASE----------------------------
+	
+	local offsetmin_A= math.floor(map_range( 0, 1, 0, string.len(text), offsetmin))
+	local offsetmax_A= math.floor(map_range( 0, 1, 0, string.len(text), offsetmax))
+	
+	
+		if case == 0 then
+		
+		text = string.sub(text,offsetmin_A,offsetmax_A)	
+				
+		elseif case == 1 then
+		
+		text = string.upper (string.sub(text,offsetmin_A,offsetmax_A))
+		
+		elseif case == 2 then
+		text = string.lower (string.sub(text,offsetmin_A,offsetmax_A))
+	
+		end
+		
+
+	---------------------------------------------------
+	------------Justification--------------------------
+	
+		if ver_justify == 0 then
+
+			cx=cx-wordwrap_width/2
+			
+		elseif ver_justify == 1 then
+	
+		elseif ver_justify == 2 then 
+			cx=cx+wordwrap_width/2
+		end
+
+		
+		if hori_justify == 0 then
+
+			cy=cy+(wordwrap_height/4)
+
+		elseif hori_justify == 1 then
+
+		elseif hori_justify == 2 then 
+	
+		end
+------------------------------------------
+	
+	-- the drawstring function is doing all the heavy lifting 
+	drawstring(out, font, style, size, ver_justify, hori_justify, quality, cx, cy, Pixel{R=r,G=g,B=b,A=a}, 
+	          textwrap(text, map_range( 0, 1, 0, 100, wordwrap_width )),line_spacing,char_spacing,hori_adjust,ver_adjust,wordwrap_width,wordwrap_height)
+	
+--------------------------------------------
+	
+	OutImage:Set(req, out)
+end
+
+function NotifyChanged(inp, param, time)
+	-- when the tools FontFileControl is first created, the FontManager has not yet 
+	-- provided a FontList, so we can't set a default value. Instead we do it here.
+	
+	if inp == InFont then
+		local f = param.Value
+		
+		if f == nil or string.len(f) == 0 then
+			InFont:SetSource(Text("Arial"), time)
+		end
+	elseif inp == InFontStyle then
+		local f = param.Value
+		
+		if f == nil or string.len(f) == 0 then
+			InFontStyle:SetSource(Text("Regular"), time)
+		end
+	end
+	
+	-----------------------
+
+	
+	if inp == InPosition then   -- Center moved, update rectangle control position
+			InWrap_Height:SetAttrs({ RCD_SetX = param.X, RCD_SetY = param.Y })
+	
+	elseif inp == InOperation then
+		
+		InWrap_Height:SetAttrs({ PC_Visible = (param.Value < 1) })
+		InPosition:SetAttrs({ PC_Visible = (param.Value < 1) })
+	end
+	
+	
+end
+

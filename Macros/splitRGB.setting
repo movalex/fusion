@@ -1,0 +1,117 @@
+{
+	Tools = ordered() {
+		splitRGB1 = MacroOperator {
+			Inputs = ordered() {
+				MainInput1 = InstanceInput {
+					SourceOp = "BLUE",
+					Source = "Background",
+				},
+				Input1 = InstanceInput {
+					SourceOp = "BLUE",
+					Source = "ToRed",
+					Default = 2,
+				},
+				Input2 = InstanceInput {
+					SourceOp = "BLUE",
+					Source = "ToGreen",
+					Default = 2,
+				},
+				Input3 = InstanceInput {
+					SourceOp = "BLUE",
+					Source = "ToBlue",
+					Default = 2,
+				},
+				MainInput2 = InstanceInput {
+					SourceOp = "GREEN",
+					Source = "Background",
+				},
+				Input4 = InstanceInput {
+					SourceOp = "GREEN",
+					Source = "ToRed",
+					Default = 1,
+				},
+				Input5 = InstanceInput {
+					SourceOp = "GREEN",
+					Source = "ToGreen",
+					Default = 1,
+				},
+				Input6 = InstanceInput {
+					SourceOp = "GREEN",
+					Source = "ToBlue",
+					Default = 1,
+				},
+				MainInput3 = InstanceInput {
+					SourceOp = "RED",
+					Source = "Background",
+				},
+				Input7 = InstanceInput {
+					SourceOp = "RED",
+					Source = "ToRed",
+					Default = 0,
+				},
+				Input8 = InstanceInput {
+					SourceOp = "RED",
+					Source = "ToGreen",
+					Default = 0,
+				},
+				Input9 = InstanceInput {
+					SourceOp = "RED",
+					Source = "ToBlue",
+					Default = 0,
+				},
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "BLUE",
+					Source = "Output",
+				},
+				MainOutput2 = InstanceOutput {
+					SourceOp = "GREEN",
+					Source = "Output",
+				},
+				MainOutput3 = InstanceOutput {
+					SourceOp = "RED",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Name = "splitRGB",
+				Pos = { 0, 0 }
+			},
+			Tools = ordered() {
+				BLUE = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						ToRed = Input { Value = 2, },
+						ToGreen = Input { Value = 2, },
+						ToAlpha = Input { Value = 4, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 161, -48 } },
+				},
+				GREEN = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						ToRed = Input { Value = 1, },
+						ToBlue = Input { Value = 1, },
+						ToAlpha = Input { Value = 4, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 169, -113 } },
+				},
+				RED = ChannelBoolean {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						ToGreen = Input { Value = 0, },
+						ToBlue = Input { Value = 0, },
+						ToAlpha = Input { Value = 4, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 175, -174 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "splitRGB1"
+}

@@ -1,0 +1,180 @@
+{
+	Tools = ordered() {
+		ScaleUpUVTool = MacroOperator {
+			Inputs = ordered() {
+				MainInput1 = InstanceInput {
+					SourceOp = "upscaleUV",
+					Source = "Input",
+					Name = "UV Input",
+				},
+				Input1 = InstanceInput {
+					SourceOp = "upscaleUV",
+					Source = "FilterMethod",
+					Name = "Scale Filter Method",
+					Default = 6,
+				},
+				Input2 = InstanceInput {
+					SourceOp = "upscaleUV",
+					Source = "Scale",
+					Name = "upScale",
+					Page = "Controls",
+					Default = 1,
+				},
+				MainInput2 = InstanceInput {
+					SourceOp = "PipeRouter1",
+					Source = "Input",
+					Name = "Texture Input",
+				},
+				Input3 = InstanceInput {
+					SourceOp = "Texture",
+					Source = "SwapUV0",
+					Default = 0,
+				},
+				Input4 = InstanceInput {
+					SourceOp = "Texture",
+					Source = "FlipHoriz",
+					Default = 0,
+				},
+				Input5 = InstanceInput {
+					SourceOp = "Texture",
+					Source = "FlipVert",
+					Default = 0,
+				},
+				Input6 = InstanceInput {
+					SourceOp = "Texture",
+					Source = "Rotate90",
+					Default = 0,
+				},
+				Input7 = InstanceInput {
+					SourceOp = "Texture",
+					Source = "UScale",
+					Default = 1,
+				},
+				Input8 = InstanceInput {
+					SourceOp = "Texture",
+					Source = "VScale",
+					Default = 1,
+				},
+				Input9 = InstanceInput {
+					SourceOp = "Texture",
+					Source = "UOffset",
+					Default = 0,
+				},
+				Input10 = InstanceInput {
+					SourceOp = "Texture",
+					Source = "VOffset",
+					Default = 0,
+				},
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "downscaleALL",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			Tools = ordered() {
+				upscaleUV = Scale {
+					NameSet = true,
+					Inputs = {
+						XSize = Input { Expression = "Scale", },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						FilterMethod = Input { Value = 6, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 1595, 511.5 } },
+					UserControls = ordered() {
+						Scale = {
+							INP_MaxAllowed = 6,
+							INP_Integer = true,
+							INPID_InputControl = "SliderControl",
+							INP_MaxScale = 6,
+							INP_Default = 1,
+							INP_MinScale = 1,
+							INP_MinAllowed = 1,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							LINKS_Name = "Scale"
+						}
+					}
+				},
+				PipeRouter1 = PipeRouter {
+					ViewInfo = PipeRouterInfo { Pos = { 1815, 577.5 } },
+				},
+				Instance_TextureAlpha = Texture {
+					CtrlWZoom = false,
+					SourceOp = "Texture",
+					Inputs = {
+						Input = Input {
+							SourceOp = "upscaleUV",
+							Source = "Output",
+						},
+						Texture = Input {
+							SourceOp = "Alpha",
+							Source = "Mask",
+						},
+						StartEndRenderScripts = Input { },
+						EffectMask = Input { }
+					},
+					ViewInfo = OperatorInfo { Pos = { 1760, 610.5 } },
+				},
+				Texture = Texture {
+					Inputs = {
+						Input = Input {
+							SourceOp = "upscaleUV",
+							Source = "Output",
+						},
+						Texture = Input {
+							SourceOp = "PipeRouter1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1595, 610.5 } },
+				},
+				Alpha = BitmapMask {
+					NameSet = true,
+					Inputs = {
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Image = Input {
+							SourceOp = "PipeRouter1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1925, 610.5 } },
+				},
+				MatteControl = MatteControl {
+					Inputs = {
+						["Garbage.Matte"] = Input {
+							SourceOp = "Instance_TextureAlpha",
+							Source = "Output",
+						},
+						["Garbage.MaskNest"] = Input { Value = 1, },
+						["Garbage.MaskInverted"] = Input { Value = 1, },
+						["Garbage.MaskChannel"] = Input { Value = 5, },
+						Background = Input {
+							SourceOp = "Texture",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1760, 676.5 } },
+				},
+				downscaleALL = Scale {
+					NameSet = true,
+					Inputs = {
+						XSize = Input { Expression = "1/upscaleUV.Scale", },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						FilterMethod = Input { Value = 6, },
+						Input = Input {
+							SourceOp = "MatteControl",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1760, 742.5 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "ScaleUpUVTool"
+}

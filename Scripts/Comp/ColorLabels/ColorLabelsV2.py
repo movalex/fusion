@@ -36,7 +36,7 @@ import colorsys
 ###  CONFIG FILE DEFINITION  ###
 
 # pathname = os.path.dirname(sys.argv[0])
-pathname = composition.MapPath('Scripts:Comp')
+pathname = composition.MapPath('GIT:Scripts/Comp')
 filename = 'ColorLabels/ColorLabels.conf'
 cfg_file = os.path.join(pathname, filename)
 
