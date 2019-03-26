@@ -41,14 +41,12 @@
 ------------------------------------------------------
 
 function conform(filepath)
-    print(filepath)
     local matched = string.match(filepath, srchFor)
     print("found pattern: ", matched)
     if matched == nil then
         return nil
     end
     -- build the new filename using gsub
-    print(srchFor..' '..srchTo)
     newclip = string.gsub(filepath, srchFor, srchTo)
     print("New file path is: ", newclip)            
     return newclip
