@@ -89,11 +89,14 @@ end
 
 function is_known_format(ext)
    ext = string.lower(ext)
-   for j, ext2 in pairs(known_extensions) do
-      if ext2 == ext then
-         return -1
-      end
+   if known_extensions[ext] then
+      return -1
    end
+   -- for j, ext2 in pairs(known_extensions) do
+   --    if ext2 == ext then
+   --       return -1
+   --    end
+   -- end
 
    for i, v in pairs(fmt_attrs) do
       for j, ext2 in pairs(v.REGST_MediaFormat_Extension) do
@@ -148,7 +151,7 @@ local function doInsert(seq, known)
                
                -- search for known file seq
                found = false
-               for i, v in pairs(known) do
+               for i, v in known do
                   if v.term == term then
                      if seq.Number < known[i].numMin then known[i].numMin = seq.Number end
                      if seq.Number > known[i].numMax then known[i].numMax = seq.Number end
@@ -229,7 +232,7 @@ function oneUpDirectory(pth)
    pathParts = eyeon.split(pth, "\\")
    if table.getn(pathParts) >= 3 then
       -- get one up directory
-      for i, itm in pairs(pathParts) do
+      for i, itm in pathParts do
          if i < table.getn(pathParts)-1 then
             newpath = newpath..itm.."\\"
          end
@@ -273,7 +276,7 @@ function splitToPathAndVersion(pth)
       
       -- get one up directory
       newpath = ""
-      for i, itm in pairs(pathParts) do
+      for i, itm in pathParts do
          if i < table.getn(pathParts)-1 then
             newpath = newpath..itm.."\\"
          end
@@ -379,9 +382,9 @@ end
 ------------------------------------------------------------------------------
 function makeVersionList(loaderTable, known)
    versionList = {}
-   for j, pickedLoader in pairs(loaderTable) do
+   for j, pickedLoader in loaderTable do
       if pickedLoader.toChange then
-         for i, tst in pairs(known)[pickedLoader.knownindex].corresponding do
+         for i, tst in known[pickedLoader.knownindex].corresponding do
             --if tst.numbersMatch then
                if versionList[tst.version] ~= nil then
                   versionList[tst.version] = versionList[tst.version] + 1
@@ -413,7 +416,7 @@ function makeListing(loaderTable, known, versionList)
    local tempList = {}
    
    -- format strings and save them to tempList
-   for j, pickedLoader in pairs(loaderTable) do
+   for j, pickedLoader in loaderTable do
       if pickedLoader.toChange then
          oneline = {}
          k = known[pickedLoader.knownindex]
@@ -436,10 +439,10 @@ function makeListing(loaderTable, known, versionList)
    maxverstr = 1
    maxnmestr = 5
    maxonestr = 3
-   for j, lne in pairs(tempList) do
+   for j, lne in tempList do
       if string.len(lne.verstr) > maxverstr then maxverstr = string.len(lne.verstr) end
       if string.len(lne.nmestr) > maxnmestr then maxnmestr = string.len(lne.nmestr) end
-      for i, nm in pairs(lne).numtab do
+      for i, nm in lne.numtab do
          if string.len(nm) > maxonestr then maxonestr = string.len(nm) end
       end
    end
@@ -448,11 +451,11 @@ function makeListing(loaderTable, known, versionList)
    maxonestr = maxonestr + 2
    
    -- create table with aligned columns
-   for j, lne in pairs(tempList) do
+   for j, lne in tempList do
       line = ""
       line = "v"..lne.verstr..string.rep(" ", maxverstr - string.len(lne.verstr))
       line = line .. lne.nmestr..string.rep(" ", maxnmestr - string.len(lne.nmestr))
-      for i, nm in pairs(lne).numtab do
+      for i, nm in lne.numtab do
          line = line .. nm..string.rep(" ", maxonestr - string.len(nm))
       end
       table.insert(lst, line)
@@ -555,7 +558,7 @@ function changeLoaders(mode, ver, loaderTable, known)
    
    knownItem = nil
    
-   for j, pickedLoader in pairs(loaderTable) do
+   for j, pickedLoader in loaderTable do
       if pickedLoader.toChange then
          
          if mode == "maxM" then
@@ -570,7 +573,7 @@ function changeLoaders(mode, ver, loaderTable, known)
             -- ver from parameter
             -- find knownitem by version number
             corr = known[pickedLoader.knownindex].corresponding
-            for i, corritm in pairs(corr) do
+            for i, corritm in corr do
                if corritm.version == ver then
                   knownItem = known[corritm.pos]
                end
@@ -596,7 +599,7 @@ end
 
 -- for debug, dumps just picked loaders and their corresponding known item
 function dumpPickedLoaders(loaderTable)
-   for j, pickedLoader in pairs(loaderTable) do
+   for j, pickedLoader in loaderTable do
       if pickedLoader.toChange then
          print("*********************************")
          dump(pickedLoader.versionTbl)
@@ -630,7 +633,7 @@ versionTool = nil
 versionAttrs = nil
 
 tllist = composition:GetToolList(false)
-for i, tool in ipairs(tllist) do
+for i, tool in tllist do
    attrs = tool:GetAttrs()
    if attrs["TOOLS_RegID"] == "Loader" then
       oneLoader = {}
@@ -652,7 +655,7 @@ end
 loaderTableSel = {}
 -- get selected loader(s)
 toollistSel = composition:GetToolList(true)
-for i, tool in pairs(toollistSel) do
+for i, tool in toollistSel do
    attrs = tool:GetAttrs()
    if attrs["TOOLS_RegID"] == "Loader" then
       table.insert(loaderTableSel, tool)
@@ -683,7 +686,7 @@ print("File search path: "..seqSrcSearch)
 
 -- search loaders for similar path
 loadersToChangeCnt = 0
-for i, item in pairs(loaderTable) do
+for i, item in loaderTable do
    if item.attrs.TOOLST_Clip_Name[1] then
       seqPickSearch = oneUpDirectory(MapPath(item.attrs.TOOLST_Clip_Name[1]))
       seqPick = eyeon.parseFilename(MapPath(item.attrs.TOOLST_Clip_Name[1]))
@@ -703,7 +706,7 @@ doDirectories(seqSrcSearch, "*.*")
 -- Cleanup known
 seqMax = 0
 layerPlusPassMaxLn = 0
-for i, v in pairs(known) do
+for i, v in known do
    --if v.category == "seq" then
    if true then
          -- first frame for loader
@@ -756,7 +759,7 @@ print("---------------------------------------\n")
 
 -- find picked loaders in known clips
 allLoadersFound = true
-for j, pickedLoader in pairs(loaderTable) do
+for j, pickedLoader in loaderTable do
    if pickedLoader.toChange then
       seq = eyeon.parseFilename(MapPath(pickedLoader.attrs.TOOLST_Clip_Name[1]))
       term = seq.Path..seq.CleanName..seq.Extension
@@ -781,7 +784,7 @@ end
 
 -- find highest version (with and withouth matching numbers) for each picked loader
 -- fill 
-for j, pickedLoader in pairs(loaderTable) do
+for j, pickedLoader in loaderTable do
    if pickedLoader.toChange then
       maxVersion = -1
       maxVersionPos = -1
@@ -789,7 +792,7 @@ for j, pickedLoader in pairs(loaderTable) do
       maxVersionMatchingPos = -1
 
       corr = known[pickedLoader.knownindex].corresponding
-      for i, tst in pairs(corr) do
+      for i, tst in corr do
          -- set highest matching version
          if tst.version > maxVersion and not tst.numbersMatch then
             maxVersion = tst.version
@@ -815,15 +818,15 @@ versionList = makeVersionList(loaderTable, known)
 -- find highest common version for all picked loaders
 maxCommonVersion = -1
 maxCommonVersionMatching = -1
-for k, pickedVersion in pairs(versionList) do
+for k, pickedVersion in versionList do
    verExistsForAll = true
    verExistsForAllandMatches = true
-   for j, pickedLoader in pairs(loaderTable) do
+   for j, pickedLoader in loaderTable do
       if pickedLoader.toChange then
          corr = known[pickedLoader.knownindex].corresponding
          verExists = false
          verExistsAndMatches = false
-         for i, tst in pairs(corr) do
+         for i, tst in corr do
             if tst.version == pickedVersion then
                verExists = true
                if tst.numbersMatch then
@@ -974,7 +977,7 @@ composition:StartUndo("3D Raise Version")
 -- select picked loaders to show user what will be changed
 flow = comp.CurrentFrame.FlowView
 flow:Select()
-for i, pickedLoader in pairs(loaderTable) do
+for i, pickedLoader in loaderTable do
    if pickedLoader.toChange then
       flow:Select(loaderTable[i].tool)
    end
