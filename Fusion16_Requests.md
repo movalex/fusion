@@ -16,13 +16,9 @@ All the UI tests are made on 1920x1200 monitor.
         * nodes list column is also too wide
         * unusable lock icon before node name (does not reflect if the node is locked, so what is it for?)
         * Feature request: add more articulate indication if the single keyframe is selected.
-<<<<<<< HEAD
 
 4. Three dots buttons in the window corners that do nothing (Inspector, Nodes window). If the menu is empty, the button should not appear https://cl.ly/a3f3ab9e9c55
 
-=======
-4. Three dots buttons in the window corners that do nothing (Inspector, Nodes window). If the menu is empty, the button should not appear https://cl.ly/a3f3ab9e9c55
->>>>>>> c8388b8d144593c6c909f5172d463dea79967a83
 5. On-screen view controls are hidden behind context menus, this triples the amount of clicks. We need DoD, lock view, show normalized buttons. Also show only selected tool button in Splines and Keyframes.
 
 6. Oddly enough some buttons remained text only, such as `HQ`, `MB`, `Some`. We need an option for text-only Toolbar buttons, like in Fu9
