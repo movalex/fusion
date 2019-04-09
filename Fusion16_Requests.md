@@ -1,7 +1,7 @@
 ## UI
 All the UI tests are made on 1920x1200 monitor.
 1. Node size scale is too big.
-    - Currently Fusion 16 flow scale measurements are the same as in Fu9. For instance, the node name disappears from the view on the 0.6 scale of the Flowview in both versions. But since the nodes in fu16 are initially bigger, the text disappears too early, and we end up with normal size nodes without any text.
+    - Currently Fusion 16 flow scale measurements are the same as in Fu9. For instance, the node name disappears from the view on the 0.6 scale of the Flowview in both versions. But since the nodes in fu16 are initially bigger, the text disappears too early, and we end up with normal size nodes without any text. https://cl.ly/5741fc26e46e
     - minimum scale is also too large. Here's side-by-side comparison of the minimum size flow in Fu16 and Fu9 https://cl.ly/8d096181e9a4
     - node elements (arrows, lines) should gradually scale down when scale is below 1. Right now they are only scaled on flow scale < 0.6 
 2. Underlay draw
