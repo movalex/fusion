@@ -1,0 +1,44 @@
+{
+	Tools = ordered() {
+		Text1 = TextPlus {
+			CtrlWZoom = false,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { 0.505729166666666, 0.538986967218565 }, },
+				Size = Input {
+					Value = 0.132072727272727,
+					Expression = "ptSize/1375",
+				},
+				Font = Input { Value = "Arial", },
+				StyledText = Input { Value = "TEXT", },
+				Style = Input { Value = "Regular", },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+				Opacity1 = Input { Value = 1, },
+				ptSize = Input { Value = 181.6, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 686, 63 } },
+			UserControls = ordered() {
+				ptSize = {
+					LINKS_Name = "ptSize",
+					LINKID_DataType = "Number",
+					INPID_InputControl = "SliderControl",
+					INP_Default = 25,
+					INP_Integer = false,
+					INP_MinScale = 0,
+					INP_MaxScale = 500,
+					INP_MinAllowed = 0,
+					INP_MaxAllowed = 1000,
+					ICS_ControlPage = "Text"
+				}
+			}
+		}
+	}
+}

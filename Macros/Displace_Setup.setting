@@ -1,0 +1,173 @@
+{
+	Tools = ordered() {
+		CustomTool = Custom {
+			ViewInfo = OperatorInfo { Pos = { 385, -214.5 } },
+			Inputs = {
+				RedExpression = Input { Value = "0" },
+				LUTIn4 = Input {
+					Source = "Value",
+					SourceOp = "CustomTool2LUTIn4"
+				},
+				LUTIn3 = Input {
+					Source = "Value",
+					SourceOp = "CustomTool2LUTIn3"
+				},
+				LUTIn2 = Input {
+					Source = "Value",
+					SourceOp = "CustomTool2LUTIn2"
+				},
+				LUTIn1 = Input {
+					Source = "Value",
+					SourceOp = "CustomTool2LUTIn1"
+				},
+				Image1 = Input {
+					Source = "Output",
+					SourceOp = "ChannelBooleans1_1"
+				},
+				GreenExpression = Input { Value = "0" },
+				AlphaExpression = Input { Value = "0" },
+				BlueExpression = Input { Value = "0\n" }
+			}
+		},
+		CustomTool2LUTIn1 = LUTBezier {
+			KeyColorSplines = {
+				[0] = {
+					[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+					{ 1, Flags = { Linear = true }, LH = { 0.666666666666667, 0.666666666666667 } }
+				}
+			},
+			NameSet = true,
+			SplineColor = { Red = 204, Green = 0, Blue = 0 }
+		},
+		CustomTool2LUTIn2 = LUTBezier {
+			KeyColorSplines = {
+				[0] = {
+					[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+					{ 1, Flags = { Linear = true }, LH = { 0.666666666666667, 0.666666666666667 } }
+				}
+			},
+			NameSet = true,
+			SplineColor = { Red = 0, Green = 204, Blue = 0 }
+		},
+		CustomTool2LUTIn3 = LUTBezier {
+			KeyColorSplines = {
+				[0] = {
+					[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+					{ 1, Flags = { Linear = true }, LH = { 0.666666666666667, 0.666666666666667 } }
+				}
+			},
+			NameSet = true,
+			SplineColor = { Red = 0, Green = 0, Blue = 204 }
+		},
+		CustomTool2LUTIn4 = LUTBezier {
+			KeyColorSplines = {
+				[0] = {
+					[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+					{ 1, Flags = { Linear = true }, LH = { 0.666666666666667, 0.666666666666667 } }
+				}
+			},
+			NameSet = true,
+			SplineColor = { Red = 204, Green = 204, Blue = 204 }
+		},
+		Displace = Displace {
+			CtrlWZoom = false,
+			ViewInfo = OperatorInfo { Pos = { 385, -181.5 } },
+			Inputs = {
+				Type = Input { Value = 1 },
+				Input = Input {
+					Source = "Output",
+					SourceOp = "ChannelBooleans1_1"
+				},
+				Foreground = Input {
+					Source = "Output",
+					SourceOp = "CustomTool"
+				}
+			}
+		},
+		CheckerBoard = GroupOperator {
+			ViewInfo = GroupInfo {
+				Offset = { -220, 190.756256103516 },
+				Pos = { 55, -181.5 },
+				Size = { 346, 95.8562622070313, 173, 22 },
+				Flags = {
+					AllowPan = false,
+					Expanded = true,
+					AutoSnap = true,
+					GridSnap = true,
+					RemoveRouters = true
+				},
+				Direction = "Horizontal",
+				PipeStyle = "Direct",
+				Scale = 1
+			},
+			Tools = ordered() {
+				Rectangle1_1 = RectangleMask {
+					ViewInfo = OperatorInfo { Pos = { 330, -181.5 } },
+					Inputs = {
+						ClippingMode = Input { Value = FuID { "None" } },
+						MaskHeight = Input { Value = 1080 },
+						BorderWidth = Input { Value = 0.009 },
+						Width = Input { Value = 0.99 },
+						MaskWidth = Input { Value = 1920 },
+						Solid = Input { Value = 0 },
+						Height = Input { Value = 0.98 },
+						PixelAspect = Input { Value = { 1, 1 } }
+					}
+				},
+				ChannelBooleans1_1 = ChannelBoolean {
+					ViewInfo = OperatorInfo { Pos = { 330, -148.5 } },
+					Inputs = {
+						Blend = Input { Value = 0.5 },
+						Operation = Input { Value = 10 },
+						EffectMask = Input {
+							Source = "Mask",
+							SourceOp = "Rectangle1_1"
+						},
+						ToGreen = Input { Value = 4 },
+						Background = Input {
+							Source = "Output",
+							SourceOp = "Resize1"
+						},
+						ToAlpha = Input { Value = 4 },
+						ToBlue = Input { Value = 4 }
+					}
+				},
+				Resize1 = BetterResize {
+					ViewInfo = OperatorInfo { Pos = { 220, -148.5 } },
+					Inputs = {
+						Width = Input { Value = 1920 },
+						Input = Input {
+							Source = "Output",
+							SourceOp = "Background3"
+						},
+						UseFrameFormatSettings = Input { Value = 1 },
+						FilterMethod = Input { Value = 0 },
+						Height = Input { Value = 1080 },
+						PixelAspect = Input { Value = { 1, 1 } }
+					}
+				},
+				Background3 = Background {
+					ViewInfo = OperatorInfo { Pos = { 110, -148.5 } },
+					Inputs = {
+						TopLeftRed = Input { Value = 1 },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } },
+						Type = Input { Value = FuID { "Corner" } },
+						BottomRightRed = Input { Value = 1 },
+						TopLeftBlue = Input { Value = 1 },
+						Width = Input { Value = 2 },
+						BottomRightGreen = Input { Value = 1 },
+						BottomRightBlue = Input { Value = 1 },
+						Height = Input { Value = 2 },
+						TopLeftGreen = Input { Value = 1 }
+					}
+				}
+			},
+			Outputs = {
+				Output1 = InstanceOutput {
+					Source = "Output",
+					SourceOp = "ChannelBooleans1_1"
+				}
+			}
+		}
+	}
+}

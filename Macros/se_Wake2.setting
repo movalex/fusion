@@ -1,0 +1,572 @@
+{
+	Tools = ordered() {
+		se_Wake2 = MacroOperator {
+			Inputs = ordered() {
+				MainInput1 = InstanceInput {
+					SourceOp = "waveIn",
+					Source = "Input",
+				},
+				Input1 = InstanceInput {
+					SourceOp = "waveIn",
+					Source = "Saturation",
+					Default = 5,
+				},
+				Input2 = InstanceInput {
+					SourceOp = "waveIn",
+					Source = "VerticalResolution",
+					Default = 1024,
+				},
+				Input3 = InstanceInput {
+					SourceOp = "waveIn",
+					Source = "HorizontalResolution",
+					Default = 512,
+				},
+				Input4 = InstanceInput {
+					SourceOp = "waveIn",
+					Source = "LineThickness",
+					Default = 1,
+				},
+				Input5 = InstanceInput {
+					SourceOp = "waveIn",
+					Source = "LowLight",
+					Default = 0.25,
+				},
+				Input6 = InstanceInput {
+					SourceOp = "waveIn",
+					Source = "GridLines",
+					Default = 1,
+				},
+				Input7 = InstanceInput {
+					SourceOp = "waveIn",
+					Source = "OuterFrame",
+					Default = 1,
+				},
+				Input8 = InstanceInput {
+					SourceOp = "waveIn",
+					Source = "InnerFrame",
+					Default = 1,
+				},
+				Input9 = InstanceInput {
+					SourceOp = "waveIn",
+					Source = "GridLineThickness",
+					MinScale = 9.99999975e-005,
+					Default = 0.005,
+				},
+				Input10 = InstanceInput {
+					SourceOp = "waveIn",
+					Source = "GridLineCount",
+					Default = 10,
+				},
+				Input11 = InstanceInput {
+					SourceOp = "waveIn",
+					Source = "OuterFrameThickness",
+					MinScale = 9.99999975e-005,
+					Default = 0.00499999988824129,
+				},
+				Input12 = InstanceInput {
+					SourceOp = "waveIn",
+					Source = "InnerFrameThickness",
+					MinScale = 9.9999997e-006,
+					Default = 0.00249999994412065,
+				},
+				Input13 = InstanceInput {
+					SourceOp = "waveIn",
+					Source = "InnerFrameWidth",
+					Default = 0.959999978542328,
+				},
+				Input14 = InstanceInput {
+					SourceOp = "waveIn",
+					Source = "InnerFrameHeight",
+					Default = 0.920000016689301,
+				},
+				Input15 = InstanceInput {
+					SourceOp = "waveIn",
+					Source = "ColourOut",
+					Default = 0,
+				},
+				Input16 = InstanceInput {
+					SourceOp = "wavCol",
+					Source = "TopLeftRed",
+					Name = "CustomColor",
+					ControlGroup = 17,
+					Default = 0.25,
+				},
+				Input17 = InstanceInput {
+					SourceOp = "wavCol",
+					Source = "TopLeftGreen",
+					ControlGroup = 17,
+					Default = 1,
+				},
+				Input18 = InstanceInput {
+					SourceOp = "wavCol",
+					Source = "TopLeftBlue",
+					ControlGroup = 17,
+					Default = 0.25,
+				},
+				Input19 = InstanceInput {
+					SourceOp = "wavCol",
+					Source = "TopLeftAlpha",
+					ControlGroup = 17,
+					Default = 1,
+				},
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "waveOut",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			Tools = ordered() {
+				waveIn = BrightnessContrast {
+					CtrlWZoom = false,
+					NameSet = true,
+					CustomData = {
+						Settings = {
+							[1] = {
+								Tools = ordered() {
+									BrightnessContrast6 = BrightnessContrast {
+										Inputs = {
+											Saturation = Input { Value = 5 },
+											Input = Input {
+												SourceOp = "Loader1",
+												Source = "Output"
+											}
+										},
+										Name = "BrightnessContrast6",
+										CtrlWZoom = false,
+										ViewInfo = OperatorInfo { Pos = { -1430, 280.5 } },
+										CustomData = {
+										}
+									}
+								}
+							},
+						}
+					},
+					Inputs = {
+						VerticalTune = Input { Value = 0.02, },
+						ColorBoost = Input { Value = 3, },
+						Saturation = Input { Value = 5, },
+						GridLineThickness = Input { Value = 0.005, },
+						InnerFrameThickness = Input { Value = 0.0025, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -1045, 412.5 } },
+					UserControls = ordered() {
+						VerticalResolution = {
+							INP_Integer = true,
+							INP_Default = 1024,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							INP_MinScale = 100,
+							INP_MaxScale = 2048,
+							LINKS_Name = "Vertical Resolution",
+						},
+						HorizontalResolution = {
+							INP_Integer = true,
+							LINKS_Name = "Horizontal Resolution",
+							INPID_InputControl = "SliderControl",
+							INP_MinScale = 10,
+							LINKID_DataType = "Number",
+							INP_MaxScale = 2048,
+							INP_Default = 512,
+						},
+						LineThickness = {
+							INP_Integer = true,
+							LINKS_Name = "Line Thickness",
+							INPID_InputControl = "SliderControl",
+							INP_MinScale = 1,
+							LINKID_DataType = "Number",
+							INP_MaxScale = 10,
+							INP_Default = 1,
+						},
+						LowLight = {
+							INP_Integer = false,
+							LINKS_Name = "Low Light Boost",
+							INPID_InputControl = "SliderControl",
+							INP_MinScale = 0,
+							LINKID_DataType = "Number",
+							INP_MaxScale = 1,
+							INP_Default = 0.25,
+						},
+						GridLines = {
+							INP_MaxAllowed = 1,
+							INP_Integer = true,
+							INPID_InputControl = "CheckboxControl",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							CBC_TriState = false,
+							ICD_Width = 0.300000011920929,
+							LINKS_Name = "Grid Lines",
+						},
+						OuterFrame = {
+							ICD_Width = 0.300000011920929,
+							INP_Integer = false,
+							LINKID_DataType = "Number",
+							LINKS_Name = "Outer Frame",
+							INPID_InputControl = "CheckboxControl",
+							CBC_TriState = false,
+							INP_Default = 1,
+						},
+						InnerFrame = {
+							ICD_Width = 0.300000011920929,
+							INP_Integer = false,
+							LINKID_DataType = "Number",
+							LINKS_Name = "Inner Frame",
+							INPID_InputControl = "CheckboxControl",
+							CBC_TriState = false,
+							INP_Default = 1,
+						},
+						GridLineThickness = {
+							INP_Integer = false,
+							LINKS_Name = "Grid Line Thickness",
+							INPID_InputControl = "SliderControl",
+							INP_MinScale = 9.99999974737875e-005,
+							LINKID_DataType = "Number",
+							INP_MaxScale = 1,
+							INP_Default = 0.00999999977648258,
+						},
+						GridLineCount = {
+							INP_Integer = true,
+							LINKS_Name = "Grid Line Count",
+							INPID_InputControl = "SliderControl",
+							INP_MinScale = 1,
+							LINKID_DataType = "Number",
+							INP_MaxScale = 20,
+							INP_Default = 10,
+						},
+						OuterFrameThickness = {
+							INP_Integer = false,
+							LINKS_Name = "Outer Frame Thickness",
+							INPID_InputControl = "SliderControl",
+							INP_MinScale = 9.99999974737875e-005,
+							LINKID_DataType = "Number",
+							INP_MaxScale = 0.5,
+							INP_Default = 0.00499999988824129,
+						},
+						InnerFrameThickness = {
+							INP_Integer = false,
+							LINKS_Name = "Inner Frame Thickness",
+							INPID_InputControl = "SliderControl",
+							INP_MinScale = 9.99999974737875e-006,
+							LINKID_DataType = "Number",
+							INP_MaxScale = 0.5,
+							INP_Default = 0.00249999994412065,
+						},
+						InnerFrameWidth = {
+							INP_Integer = false,
+							LINKS_Name = "Inner FrameWidth",
+							INPID_InputControl = "SliderControl",
+							INP_MinScale = 0,
+							LINKID_DataType = "Number",
+							INP_MaxScale = 1,
+							INP_Default = 0.959999978542328,
+						},
+						InnerFrameHeight = {
+							INP_Integer = false,
+							LINKS_Name = "Inner Frame Height",
+							INPID_InputControl = "SliderControl",
+							INP_MinScale = 0,
+							LINKID_DataType = "Number",
+							INP_MaxScale = 1,
+							INP_Default = 0.920000016689301,
+						},
+						ColourOut = {
+							INP_Integer = false,
+							LINKS_Name = "Colour Out (Orignal vs Custom)",
+							INPID_InputControl = "SliderControl",
+							INP_MinScale = 0,
+							LINKID_DataType = "Number",
+							INP_MaxScale = 1,
+							INP_Default = 0,
+						}
+					}
+				},
+				BrightnessContrast6 = BrightnessContrast {
+					Inputs = {
+						Lift = Input {
+							Value = 0.25,
+							Expression = "waveIn.LowLight",
+						},
+						Input = Input {
+							SourceOp = "waveIn",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -935, 478.5 } },
+				},
+				MaterialMerge1 = MtlMerge3D {
+					Inputs = {
+						Blend = Input { Expression = "1-waveIn.ColourOut", },
+						BackgroundMaterial = Input {
+							SourceOp = "wavCol",
+							Source = "Output",
+						},
+						ForegroundMaterial = Input {
+							SourceOp = "BrightnessContrast6",
+							Source = "Output",
+						},
+						MaterialID = Input { Value = 6, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -825, 478.5 } },
+				},
+				wavCol = Background {
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.25, },
+						TopLeftGreen = Input { Value = 1, },
+						TopLeftBlue = Input { Value = 0.25, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -935, 511.5 } },
+				},
+				Ribbon3D1 = Ribbon3D {
+					Inputs = {
+						NumberOfLines = Input {
+							Value = 512,
+							Expression = "waveIn.HorizontalResolution",
+						},
+						LineThickness = Input { Expression = "waveIn.LineThickness", },
+						SubdivisionLevel = Input {
+							Value = 1024,
+							Expression = "waveIn.VerticalResolution",
+						},
+						RibbonWidth = Input { Value = 1, },
+						RibbonRotation = Input { Value = -90, },
+						["ObjectID.ObjectID"] = Input { Value = 3, },
+						MaterialInput = Input {
+							SourceOp = "MaterialMerge1",
+							Source = "MaterialOutput",
+						},
+						["MtlStdInputs.MaterialID"] = Input { Value = 3, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -715, 478.5 } },
+				},
+				camWave_1 = Camera3D {
+					NameSet = true,
+					Inputs = {
+						["Transform3DOp.Translate.Z"] = Input { Value = 1, },
+						ProjectionType = Input { Value = FuID { "Orthographic" }, },
+						AoV = Input { Value = 84.3846141329964, },
+						FLength = Input { Value = 10, },
+						["Stereo.Mode"] = Input { Value = FuID { "OffAxis" }, },
+						FilmBack = Input { Value = 1, },
+						FilmGate = Input { Value = FuID { "ArriAlexaOpenGate" }, },
+						ApertureW = Input { Value = 1.109055, },
+						ApertureH = Input { Value = 0.7137795275591, },
+						ViewingVolumeSize = Input { Value = 1.75, },
+						["SurfacePlaneInputs.ObjectID.ObjectID"] = Input { Value = 1, },
+						["MtlStdInputs.MaterialID"] = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -605, 577.5 } },
+				},
+				Displace3D1 = Displace3D {
+					Inputs = {
+						SceneInput = Input {
+							SourceOp = "Ribbon3D1",
+							Source = "Output",
+						},
+						Scale = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "waveIn",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -605, 478.5 } },
+				},
+				Transform3D2 = Transform3D {
+					Inputs = {
+						SceneInput = Input {
+							SourceOp = "Displace3D1",
+							Source = "Output",
+						},
+						["Transform3DOp.Translate.Y"] = Input { Value = -0.525, },
+						["Transform3DOp.ScaleLock"] = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -495, 478.5 } },
+				},
+				Merge3D2 = Merge3D {
+					Inputs = {
+						SceneInput1 = Input {
+							SourceOp = "camWave_1",
+							Source = "Output",
+						},
+						SceneInput2 = Input {
+							SourceOp = "Transform3D2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -495, 577.5 } },
+				},
+				mGrid = RectangleMask {
+					NameSet = true,
+					Inputs = {
+						Level = Input { Expression = "waveIn.GridLines", },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.5, 0 }, },
+						Width = Input { Value = 1, },
+						Height = Input {
+							Value = 0.005,
+							Expression = "waveIn.GridLineThickness",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -880, 643.5 } },
+				},
+				Merge27 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "Duplicate4",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "bFrame",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -385, 643.5 } },
+				},
+				bGrid = Background {
+					NameSet = true,
+					Inputs = {
+						MaskChannel = Input { Value = 5, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.8274510502815, },
+						TopLeftGreen = Input { Value = 0.8274510502815, },
+						TopLeftBlue = Input { Value = 0.8274510502815, },
+						EffectMask = Input {
+							SourceOp = "mGrid",
+							Source = "Mask",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { -715, 643.5 } },
+				},
+				Renderer3D1 = Renderer3D {
+					CustomData = {
+						ToolVersion = 2
+					},
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						SceneInput = Input {
+							SourceOp = "Merge3D2",
+							Source = "Output",
+						},
+						RendererType = Input { Value = FuID { "RendererOpenGL" }, },
+						["RendererOpenGL.Channels.Nest"] = Input { Value = 1, },
+						["RendererOpenGL.Channels.RGBASS"] = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -385, 577.5 } },
+				},
+				Duplicate4 = Fuse.Duplicate {
+					Inputs = {
+						Copies = Input {
+							Value = 10,
+							Expression = "waveIn.GridLineCount",
+						},
+						Center = Input {
+							Value = { 0.5, 0.6 },
+							Expression = "Point(0.5, 0.5+1/Copies)",
+						},
+						RandomSeed = Input { Value = 26024, },
+						Background = Input {
+							SourceOp = "bGrid",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -605, 643.5 } },
+				},
+				mOuter = RectangleMask {
+					NameSet = true,
+					Inputs = {
+						Level = Input { Expression = "waveIn.OuterFrame", },
+						BorderWidth = Input {
+							Value = 0.00499999988824129,
+							Expression = "waveIn.OuterFrameThickness",
+						},
+						Solid = Input { Value = 0, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Width = Input { Value = 1, },
+						Height = Input { Value = 1, },
+						EffectMask = Input {
+							SourceOp = "mInner",
+							Source = "Mask",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { -770, 676.5 } },
+				},
+				mInner = RectangleMask {
+					NameSet = true,
+					Inputs = {
+						Level = Input { Expression = "waveIn.InnerFrame", },
+						BorderWidth = Input {
+							Value = 0.0025,
+							Expression = "waveIn.InnerFrameThickness",
+						},
+						Solid = Input { Value = 0, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Width = Input {
+							Value = 0.959999978542328,
+							Expression = "waveIn.InnerFrameWidth",
+						},
+						Height = Input {
+							Value = 0.920000016689301,
+							Expression = "waveIn.InnerFrameHeight",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -880, 676.5 } },
+				},
+				bFrame = Background {
+					NameSet = true,
+					Inputs = {
+						MaskChannel = Input { Value = 5, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.8274510502815, },
+						TopLeftGreen = Input { Value = 0.8274510502815, },
+						TopLeftBlue = Input { Value = 0.8274510502815, },
+						EffectMask = Input {
+							SourceOp = "mOuter",
+							Source = "Mask",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { -605, 676.5 } },
+				},
+				waveOut = Merge {
+					CtrlWZoom = false,
+					NameSet = true,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge27",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Renderer3D1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -220, 643.5 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "se_Wake2"
+}
