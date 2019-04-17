@@ -1,0 +1,313 @@
+{
+	Tools = ordered() {
+		ChromaticAberration = MacroOperator {
+			CtrlWZoom = false,
+			Inputs = ordered() {
+				Input1 = InstanceInput {
+					SourceOp = "B_Distort",
+					Source = "FLength",
+					Name = "B_Focal Length (mm)",
+					Default = 70,
+				},
+				Input2 = InstanceInput {
+					SourceOp = "B_Distort",
+					Source = "FilmGate",
+					Name = "B_Film Gate",
+				},
+				Input3 = InstanceInput {
+					SourceOp = "B_Distort",
+					Source = "Model",
+					Name = "B_Model",
+				},
+				Input4 = InstanceInput {
+					SourceOp = "B_Distort",
+					Source = "DEClassicLDModel.Distortion",
+					Name = "B_Distortion",
+					Default = 0.005,
+				},
+				Input5 = InstanceInput {
+					SourceOp = "G_Distort",
+					Source = "FLength",
+					Name = "G_Focal Length (mm)",
+					Default = 70,
+				},
+				Input6 = InstanceInput {
+					SourceOp = "G_Distort",
+					Source = "FilmGate",
+					Name = "G_Film Gate",
+				},
+				Input7 = InstanceInput {
+					SourceOp = "G_Distort",
+					Source = "Model",
+					Name = "G_Model",
+				},
+				Input8 = InstanceInput {
+					SourceOp = "G_Distort",
+					Source = "DEClassicLDModel.Distortion",
+					Name = "G_Distortion",
+					Default = 0,
+				},
+				MainInput1 = InstanceInput {
+					SourceOp = "InPut",
+					Source = "Input",
+					Name = "InPut",
+				},
+				Input9 = InstanceInput {
+					SourceOp = "R_Distort",
+					Source = "FLength",
+					Name = "R_Focal Length (mm)",
+					Default = 70,
+				},
+				Input10 = InstanceInput {
+					SourceOp = "R_Distort",
+					Source = "FilmGate",
+					Name = "R_Film Gate",
+				},
+				Input11 = InstanceInput {
+					SourceOp = "R_Distort",
+					Source = "Model",
+					Name = "R_Model",
+				},
+				Input12 = InstanceInput {
+					SourceOp = "R_Distort",
+					Source = "DEClassicLDModel.Distortion",
+					Name = "R_Distortion",
+					Default = 0.005,
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "OutPut",
+					Source = "Output",
+					Name = "OutPut",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 880, 1237.5 } },
+			Tools = ordered() {
+				ColorMatrix1_1_1 = CustomColorMatrix {
+					CtrlWShown = false,
+					Inputs = {
+						Matrix = Input {
+							Value = MatrixTable {
+								NumEntries = 54,
+								Type = 10,
+								Offset = 0,
+								Minimum = 0,
+								Maximum = 1,
+								MinimumValue = 0,
+								MaximumValue = 1,
+								StartSlope = 1,
+								EndSlope = 1,
+								StartIn = 0,
+								EndIn = 1,
+								Table = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1 }
+							},
+						},
+						Input = Input {
+							SourceOp = "InPut",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 165, 109.05 } },
+				},
+				B_Distort = LensDistort {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						LensDistortionModel = Input { Value = 1, },
+						["DEClassicLDModel.Distortion"] = Input { Value = 0.005, },
+						CameraSettings = Input { Value = 1, },
+						FLength = Input { Value = 20, },
+						FilmGate = Input { Value = FuID { "HD" }, },
+						ApertureW = Input { Value = 0.3775, },
+						ApertureH = Input { Value = 0.2123, },
+						ResolutionGateFit = Input { Value = FuID { "Outside" }, },
+						SamplingOptions = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "ColorMatrix1_1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 165, 208.05 } },
+				},
+				Merge9_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge8_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "B_Distort",
+							Source = "Output",
+						},
+						ApplyMode = Input { Value = FuID { "Difference" }, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 165, 340.958 } },
+				},
+				OutPut = PipeRouter {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Input = Input {
+							SourceOp = "Merge9_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { 275, 340.05 } },
+				},
+				ColorMatrix1_1 = CustomColorMatrix {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					Inputs = {
+						Matrix = Input {
+							Value = MatrixTable {
+								NumEntries = 54,
+								Type = 10,
+								Offset = 0,
+								Minimum = 0,
+								Maximum = 1,
+								MinimumValue = 0,
+								MaximumValue = 1,
+								StartSlope = 1,
+								EndSlope = 1,
+								StartIn = 0,
+								EndIn = 1,
+								Table = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1 }
+							},
+						},
+						Input = Input {
+							SourceOp = "InPut",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, 109.05 } },
+				},
+				G_Distort = LensDistort {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						LensDistortionModel = Input { Value = 1, },
+						CameraSettings = Input { Value = 1, },
+						FLength = Input { Value = 70, },
+						FilmGate = Input { Value = FuID { "HD" }, },
+						ApertureW = Input { Value = 0.3775, },
+						ApertureH = Input { Value = 0.2123, },
+						ResolutionGateFit = Input { Value = FuID { "Outside" }, },
+						SamplingOptions = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "ColorMatrix1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, 208.05 } },
+				},
+				Merge8_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge7_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "G_Distort",
+							Source = "Output",
+						},
+						ApplyMode = Input { Value = FuID { "Difference" }, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, 340.05 } },
+				},
+				InPut = PipeRouter {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					NameSet = true,
+					ViewInfo = PipeRouterInfo { Pos = { 0, 10.05 } },
+				},
+				ColorMatrix1 = CustomColorMatrix {
+					CtrlWShown = false,
+					Inputs = {
+						Matrix = Input {
+							Value = MatrixTable {
+								NumEntries = 54,
+								Type = 10,
+								Offset = 0,
+								Minimum = 0,
+								Maximum = 1,
+								MinimumValue = 0,
+								MaximumValue = 1,
+								StartSlope = 1,
+								EndSlope = 1,
+								StartIn = 0,
+								EndIn = 1,
+								Table = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1 }
+							},
+						},
+						Input = Input {
+							SourceOp = "InPut",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -165, 109.05 } },
+				},
+				R_Distort = LensDistort {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						LensDistortionModel = Input { Value = 1, },
+						["DEClassicLDModel.Distortion"] = Input { Value = 0.002, },
+						CameraSettings = Input { Value = 1, },
+						FLength = Input { Value = 70, },
+						FilmGate = Input { Value = FuID { "HD" }, },
+						ApertureW = Input { Value = 0.3775, },
+						ApertureH = Input { Value = 0.2123, },
+						ResolutionGateFit = Input { Value = FuID { "Outside" }, },
+						SamplingOptions = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "ColorMatrix1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -165, 208.05 } },
+				},
+				Merge7_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "PipeRouter5",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "R_Distort",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -165, 340.05 } },
+				},
+				PipeRouter5 = PipeRouter {
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "PipeRouter6",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { -275, 340.05 } },
+				},
+				PipeRouter6 = PipeRouter {
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "InPut",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { -275, 43.05 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "ChromaticAberration"
+}

@@ -1,0 +1,105 @@
+{
+	Tools = ordered() {
+		Vignette = MacroOperator {
+			CtrlWZoom = false,
+			Inputs = ordered() {
+				MainInput1 = InstanceInput {
+					SourceOp = "ColorCorrector3_1",
+					Source = "Input",
+				},
+				Input1 = InstanceInput {
+					SourceOp = "ColorCorrector3_1",
+					Source = "MasterRGBContrast",
+					Name = "Contrast",
+					Default = 1.458333,
+				},
+				Input2 = InstanceInput {
+					SourceOp = "ColorCorrector3_1",
+					Source = "MasterRGBGain",
+					Name = "Gain",
+					Default = 0.4947368,
+				},
+				Input3 = InstanceInput {
+					SourceOp = "ColorCorrector3_1",
+					Source = "MasterRGBGamma",
+					Name = " Gamma",
+					Default = 0.9157895,
+				},
+				Input4 = InstanceInput {
+					SourceOp = "Ellipse1",
+					Source = "SoftEdge",
+				},
+				Input5 = InstanceInput {
+					SourceOp = "Ellipse1",
+					Source = "BorderWidth",
+				},
+				Input6 = InstanceInput {
+					SourceOp = "Ellipse1",
+					Source = "Invert",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "ColorCorrector3_1",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 1193.3, 1315.48 } },
+			Tools = ordered() {
+				ColorCorrector3_1 = ColorCorrector {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					Inputs = {
+						MasterRGBContrast = Input { Value = 0.966, },
+						MasterRGBGain = Input { Value = 0.3894737, },
+						MasterRGBGamma = Input { Value = 0.9157895, },
+						ColorRanges = Input {
+							Value = ColorCurves {
+								Curves = {
+									{
+										Points = {
+											{ 0, 1 },
+											{ 0.4, 0.2 },
+											{ 0.6, 0 },
+											{ 1, 0 }
+										}
+									},
+									{
+										Points = {
+											{ 0, 0 },
+											{ 0.4, 0 },
+											{ 0.6, 0.2 },
+											{ 1, 1 }
+										}
+									}
+								}
+							},
+						},
+						EffectMask = Input {
+							SourceOp = "Ellipse1",
+							Source = "Mask",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, 9.53125 } },
+				},
+				Ellipse1 = EllipseMask {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					Inputs = {
+						ShowViewControls = Input { Value = 0, },
+						SoftEdge = Input { Value = 0.2, },
+						BorderWidth = Input { Value = 0.1645833, },
+						Invert = Input { Value = 1, },
+						MaskWidth = Input { Value = 2048, },
+						MaskHeight = Input { Value = 1556, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Width = Input { Value = 0.9975124378109, },
+						Height = Input { Value = 0.5621890547264, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, 75.5313 } },
+				}
+			},
+		}
+	}
+}

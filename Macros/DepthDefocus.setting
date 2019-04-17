@@ -1,0 +1,1298 @@
+{
+	Tools = ordered() {
+		DepthDefocus = MacroOperator {
+			PassThrough = true,
+			CtrlWZoom = false,
+			CustomData = {
+				HelpPage = "http://vfxpedia.com/index.php?title=Settings_and_Macros/DepthDefocus_Description",
+			},
+			Inputs = ordered() {
+				Comments = Input { Value = "Depth Defocus for Fusion 6.3 and above\r\n\r\nIn v07-4:\rDouble Alpha bug fixed\r\n\r\nby Gregory Chalenko\r\nwww.compositing.ru", },
+				Input = InstanceInput {
+					SourceOp = "ChangeDepth",
+					Source = "Input",
+				},
+				DepthMap = InstanceInput {
+					SourceOp = "Instance_ChangeDepth",
+					Source = "Input",
+					Name = "Depth Map",
+				},
+				DepthMapChannel = InstanceInput {
+					SourceOp = "Bol_ChannelSelector",
+					Source = "BlurChannel",
+					Name = "Depth Map Channel",
+				},
+				InvertDepthMap = InstanceInput {
+					SourceOp = "Bol_ChannelSelector",
+					Source = "InvertDepthMap",
+				},
+				FocalPoint = InstanceInput {
+					SourceOp = "BC_CurvatureFocalPoint",
+					Source = "FocalPoint",
+					Name = "Focal Point",
+					ControlGroup = 4,
+					Default = 0.5,
+				},
+				DefocusStrength = InstanceInput {
+					SourceOp = "VariBlur",
+					Source = "DefocusStrength",
+					Default = 5,
+				},
+				ForegroundDefocusMultiplier = InstanceInput {
+					SourceOp = "Clr_ForegroundMap",
+					Source = "ForegroundDefocusMultiplier",
+					Default = 1,
+				},
+				BackgroundDefocusMultiplier = InstanceInput {
+					SourceOp = "Clr_BackgroundMap",
+					Source = "GainRed",
+					Name = "Background Defocus Multiplier",
+					Default = 1,
+				},
+				PerspectiveCorrection = InstanceInput {
+					SourceOp = "BC_CurvatureFocalPoint",
+					Source = "Gamma",
+					Name = "Perspective Correction (deceleration of strength with distance)",
+					MinScale = 1,
+					Default = 2,
+				},
+				SharpZone = InstanceInput {
+					SourceOp = "BC_SharpZone",
+					Source = "SharpZone",
+					Default = 0,
+				},
+				Anamorphic = InstanceInput {
+					SourceOp = "VariBlur",
+					Source = "StartEndRenderScripts",
+					Name = "Anamorphic",
+					Default = 0,
+				},
+				XDefocusMultiplier = InstanceInput {
+					SourceOp = "VariBlur",
+					Source = "XDefocusMultiplier",
+					Default = 1,
+				},
+				YDefocusMultiplier = InstanceInput {
+					SourceOp = "VariBlur",
+					Source = "YDefocusMultiplier",
+					Default = 1,
+				},
+				ChromaticAberrations = InstanceInput {
+					SourceOp = "Clr_ForegroundMap",
+					Source = "ChromaticAberrations",
+				},
+				EnableCromaticAberrations = InstanceInput {
+					SourceOp = "Bol_ChromaticAberrations",
+					Source = "ProcessWhenBlendIs00",
+					Name = "Enable Chromatic Aberrations",
+				},
+				AxialChromaticAberrationsSlider = InstanceInput {
+					SourceOp = "Clr_ForegroundMap",
+					Source = "AxialChromaticAberrationsSlider",
+					Default = 1.1,
+				},
+				RedDefocusMultiplier = InstanceInput {
+					SourceOp = "VariBlur",
+					Source = "RedDefocusMultiplier",
+					Default = 1,
+				},
+				GreenDefocusMultiplier = InstanceInput {
+					SourceOp = "VariBlurG",
+					Source = "GreenDefocusMultiplier",
+					Default = 1,
+				},
+				BlueDefocusMultiplier = InstanceInput {
+					SourceOp = "VariBlurB",
+					Source = "BlueDefocusMultiplier",
+					Default = 1,
+				},
+				BokehProfile = InstanceInput {
+					SourceOp = "Bol_AddBokehProfile",
+					Source = "BokehProfile",
+				},
+				EnableBokehProfiling = InstanceInput {
+					SourceOp = "Bol_AddBokehProfile",
+					Source = "ProcessWhenBlendIs00",
+					Name = "Enable Bokeh Profiling",
+					Default = 0,
+				},
+				EditRed = InstanceInput {
+					SourceOp = "ColorCurves",
+					Source = "EditRed",
+				},
+				EditGreen = InstanceInput {
+					SourceOp = "ColorCurves",
+					Source = "EditGreen",
+				},
+				EditBlue = InstanceInput {
+					SourceOp = "ColorCurves",
+					Source = "EditBlue",
+				},
+				BokehProfileRed = InstanceInput {
+					SourceOp = "ColorCurves",
+					Source = "Red",
+					ControlGroup = 1,
+				},
+				BokehProfileGreen = InstanceInput {
+					SourceOp = "ColorCurves",
+					Source = "Green",
+					ControlGroup = 1,
+				},
+				BokehProfileBlue = InstanceInput {
+					SourceOp = "ColorCurves",
+					Source = "Blue",
+					ControlGroup = 1,
+				},
+				BokehProfileStrength = InstanceInput {
+					SourceOp = "Bol_AddBokehProfile",
+					Source = "BokehProfileStrength",
+					Default = 1,
+				},
+				BlurringMethod = InstanceInput {
+					SourceOp = "VariBlur",
+					Source = "Method",
+					Name = "Blurring Method",
+					Default = 4,
+				},
+				Quality = InstanceInput {
+					SourceOp = "VariBlur",
+					Source = "Quality",
+					Default = 4,
+				},
+				EnableEdgeArtefactsReduction = InstanceInput {
+					SourceOp = "VBl_ReduceEdgeArtefacts",
+					Source = "ProcessWhenBlendIs00",
+					Name = "Enable Edge Artefacts Reduction",
+					Default = 0,
+				},
+				ReduceEdgeArtefacts = InstanceInput {
+					SourceOp = "VBl_ReduceEdgeArtefacts",
+					Source = "XBlurSize",
+					Name = "Reduce Edge Artefacts",
+					Default = 1,
+				},
+				PreGammaPostGamma = InstanceInput {
+					SourceOp = "BC_Regamma",
+					Source = "PreGammaPostGamma",
+				},
+				ImageGamma = InstanceInput {
+					SourceOp = "BC_Regamma",
+					Source = "Gamma",
+					Name = "Image Gamma",
+					Default = 2.2,
+				},
+				Depth = InstanceInput {
+					SourceOp = "ChangeDepth",
+					Source = "Depth",
+					Name = "Set Depth",
+				},
+				OutputImage = InstanceInput {
+					SourceOp = "DepthDefocusMacro",
+					Source = "OutputImage",
+				},
+				ConnectZBufferToTheOutput = InstanceInput {
+					SourceOp = "Bol_ZConnection",
+					Source = "ConnectZBuffer",
+					Name = "Connect Z Buffer to the Output",
+				},
+				Blend = InstanceInput {
+					SourceOp = "VariBlur",
+					Source = "BlendClone",
+					Name = "Blend",
+					Page = "Common Controls",
+					Default = 1,
+				},
+				ProcessWhenBlendIs00 = InstanceInput {
+					SourceOp = "VariBlur",
+					Source = "ProcessWhenBlendIs00",
+					Default = 0,
+				},
+				ApplyMaskInverted = InstanceInput {
+					SourceOp = "VariBlur",
+					Source = "ApplyMaskInverted",
+					Default = 0,
+				},
+				MultiplyByMask = InstanceInput {
+					SourceOp = "VariBlur",
+					Source = "MultiplyByMask",
+					Default = 0,
+				},
+				FitMask = InstanceInput {
+					SourceOp = "VariBlur",
+					Source = "FitMask",
+				},
+				MaskChannel = InstanceInput {
+					SourceOp = "VariBlur",
+					Source = "MaskChannel",
+					Default = 3,
+				},
+				MaskHigh = InstanceInput {
+					SourceOp = "VariBlur",
+					Source = "MaskHigh",
+					ControlGroup = 12,
+					Default = 1,
+				},
+				MaskLow = InstanceInput {
+					SourceOp = "VariBlur",
+					Source = "MaskLow",
+					ControlGroup = 12,
+					Default = 0,
+				},
+				EffectMask = InstanceInput {
+					SourceOp = "PipeRouter4_1",
+					Source = "Input",
+				}
+			},
+			Outputs = {
+				Output = InstanceOutput {
+					SourceOp = "DepthDefocusMacro",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 880, 16.5 } },
+			Tools = ordered() {
+				ChangeDepth = ChangeDepth {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Depth = Input { Value = 4, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 10.6 } },
+				},
+				Bol_ChannelSelector = ChannelBoolean {
+					CtrlWShown = false,
+					Inputs = {
+						ProcessAlpha = Input { Value = 0, },
+						Operation = Input { Expression = "iif(InvertDepthMap==1,10,0)", },
+						ToRed = Input { Expression = "iif(BlurChannel<4,BlurChannel,18)", },
+						Background = Input {
+							SourceOp = "Instance_ChangeDepth",
+							Source = "Output",
+						},
+						BlurChannel = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -220, 76.6 } },
+					UserControls = ordered() {
+						BlurChannel = {
+							{ MBTNC_AddButton = "Red" },
+							{ MBTNC_AddButton = "Green" },
+							{ MBTNC_AddButton = "Blue" },
+							{ MBTNC_AddButton = "Alpha" },
+							{ MBTNC_AddButton = "Z" },
+							LINKID_DataType = "Number",
+							INPID_InputControl = "MultiButtonControl",
+							IC_ControlPage = 0,
+							MBTNC_StretchToFit = true,
+							INPS_Name = "Blur Channel",
+							INP_Default = 4,
+						},
+						InvertDepthMap = {
+							LINKID_DataType = "Number",
+							LINKS_Name = "Invert Depth Map",
+							IC_ControlPage = 0,
+							INPID_InputControl = "CheckboxControl",
+							INP_Default = 0,
+						}
+					}
+				},
+				BC_Degamma = BrightnessContrast {
+					CtrlWShown = false,
+					NameSet = true,
+					SourceOp = "BC_Regamma",
+					Inputs = {
+						Blend = Input { Expression = "iif(VariBlur.Blend==0,0,BC_Regamma.PreGammaPostGamma)" },
+						Direction = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "ChangeDepth",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 43.6 } },
+					Colors = {
+						TileColor = { R = 0.666666666666667, G = 0.498039215686275, B = 0.235294117647059 },
+						TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+					}
+				},
+				VariBlur = VariBlur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Expression = "BlendClone", },
+						Method = Input { Value = 2, },
+						LockXY = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 5,
+							Expression = "DefocusStrength*XDefocusMultiplier*RedDefocusMultiplier",
+						},
+						YBlurSize = Input {
+							Value = 5,
+							Expression = "DefocusStrength*YDefocusMultiplier*RedDefocusMultiplier",
+						},
+						Input = Input {
+							SourceOp = "BC_Degamma",
+							Source = "Output",
+						},
+						BlurImage = Input {
+							SourceOp = "BC_SharpZone",
+							Source = "Output",
+						},
+						EffectMask = Input {
+							SourceOp = "PipeRouter4_1",
+							Source = "Output",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, 76.6 } },
+					Colors = {
+						TileColor = { R = 0.423529411764706, G = 0.498039215686275, B = 0.298039215686275 },
+						TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+					},
+					UserControls = ordered() {
+						BlendClone = {
+							INP_Default = 1,
+							LINKID_DataType = "Number",
+							INPS_Name = "Blend",
+							INPID_InputControl = "SliderControl",
+						},
+						DefocusStrength = {
+							LINKS_Name = "Defocus Strength",
+							ICD_Center = 5,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							IC_ControlPage = 0,
+							INP_MaxScale = 10,
+							INP_Default = 5,
+						},
+						XDefocusMultiplier = {
+							LINKS_Name = "X Defocus Multiplier",
+							ICD_Center = 1,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							IC_ControlPage = 0,
+							INP_MaxScale = 3,
+							INP_Default = 1,
+						},
+						YDefocusMultiplier = {
+							LINKS_Name = "Y Defocus Multiplier",
+							ICD_Center = 1,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							IC_ControlPage = 0,
+							INP_MaxScale = 3,
+							INP_Default = 1,
+						},
+						RedDefocusMultiplier = {
+							LINKS_Name = "Red Defocus Multiplier",
+							ICD_Center = 1,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							IC_ControlPage = 0,
+							INP_MaxScale = 3,
+							INP_Default = 1,
+						}
+					}
+				},
+				VariBlurG = VariBlur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Expression = "math.min(VariBlur.BlendClone,Bol_ChromaticAberrations.ProcessWhenBlendIs00)", },
+						ProcessRed = Input { Value = 0, },
+						ProcessBlue = Input { Value = 0, },
+						ProcessAlpha = Input { Value = 0, },
+						Method = Input {
+							Value = 2,
+							Expression = "VariBlur.Method",
+						},
+						Quality = Input { Expression = "VariBlur.Quality", },
+						BlurChannel = Input { Value = 1, },
+						LockXY = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 5,
+							Expression = "VariBlur.DefocusStrength*VariBlur.XDefocusMultiplier*GreenDefocusMultiplier",
+						},
+						YBlurSize = Input {
+							Value = 5,
+							Expression = "VariBlur.DefocusStrength*VariBlur.YDefocusMultiplier*GreenDefocusMultiplier",
+						},
+						Input = Input {
+							SourceOp = "BC_Degamma",
+							Source = "Output",
+						},
+						BlurImage = Input {
+							SourceOp = "BC_SharpZone",
+							Source = "Output",
+						},
+						EffectMask = Input {
+							SourceOp = "PipeRouter4_1",
+							Source = "Output",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { 165, 43.6 } },
+					Colors = {
+						TileColor = { R = 0.423529411764706, G = 0.498039215686275, B = 0.298039215686275 },
+						TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+					},
+					UserControls = ordered() {
+						GreenDefocusMultiplier = {
+							LINKS_Name = "Green Defocus Multiplier",
+							ICD_Center = 1,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							IC_ControlPage = 0,
+							INP_MaxScale = 3,
+							INP_Default = 1,
+						}
+					}
+				},
+				VariBlurB = VariBlur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input {
+							Value = 0,
+							Expression = "iif(BlueDefocusMultiplier==VariBlur.RedDefocusMultiplier,0,math.min(VariBlur.BlendClone,Bol_ChromaticAberrations.ProcessWhenBlendIs00))",
+						},
+						ProcessRed = Input { Value = 0, },
+						ProcessGreen = Input { Value = 0, },
+						ProcessAlpha = Input { Value = 0, },
+						Method = Input {
+							Value = 2,
+							Expression = "VariBlur.Method",
+						},
+						Quality = Input { Expression = "VariBlur.Quality", },
+						LockXY = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 5,
+							Expression = "VariBlur.DefocusStrength*VariBlur.XDefocusMultiplier*BlueDefocusMultiplier",
+						},
+						YBlurSize = Input {
+							Value = 5,
+							Expression = "VariBlur.DefocusStrength*VariBlur.YDefocusMultiplier*BlueDefocusMultiplier",
+						},
+						Input = Input {
+							SourceOp = "VariBlurG",
+							Source = "Output",
+						},
+						BlurImage = Input {
+							SourceOp = "BC_SharpZone",
+							Source = "Output",
+						},
+						EffectMask = Input {
+							SourceOp = "PipeRouter4_1",
+							Source = "Output",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { 165, 76.6 } },
+					Colors = {
+						TileColor = { R = 0.423529411764706, G = 0.498039215686275, B = 0.298039215686275 },
+						TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+					},
+					UserControls = ordered() {
+						BlueDefocusMultiplier = {
+							LINKS_Name = "Blue Defocus Multiplier",
+							ICD_Center = 1,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							IC_ControlPage = 0,
+							INP_MaxScale = 3,
+							INP_Default = 1,
+						}
+					}
+				},
+				BC_Regamma = BrightnessContrast {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Expression = "iif(VariBlur.Blend==0,0,BC_Regamma.PreGammaPostGamma)", },
+						Alpha = Input { Value = 1, },
+						Gamma = Input { Value = 2.2, },
+						Input = Input {
+							SourceOp = "Bol_AddBokehProfile",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 208.6 } },
+					Colors = {
+						TileColor = { R = 0.666666666666667, G = 0.498039215686275, B = 0.235294117647059 },
+						TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+					},
+					UserControls = ordered() {
+						PreGammaPostGamma = {
+							LINKID_DataType = "Number",
+							LINKS_Name = "Pre-Gamma / Post-Gamma",
+							IC_ControlPage = 0,
+							INPID_InputControl = "CheckboxControl",
+							INP_Default = 1,
+						}
+					}
+				},
+				Bol_ZConnection = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Expression = "ConnectZBuffer", },
+						ToRed = Input { Value = 4, },
+						ToGreen = Input { Value = 4, },
+						ToBlue = Input { Value = 4, },
+						ToAlpha = Input { Value = 4, },
+						EnableExtraChannels = Input { Value = 1, },
+						ToZBuffer = Input { Value = 0, },
+						Background = Input {
+							SourceOp = "BC_Regamma",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Bol_ChannelSelector",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 241.6 } },
+					Colors = {
+						TileColor = { R = 0.666666666666667, G = 0.498039215686275, B = 0.235294117647059 },
+						TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+					},
+					UserControls = ordered() {
+						ConnectZBuffer = {
+							INPID_InputControl = "CheckboxControl",
+							LINKID_DataType = "Number",
+							IC_ControlPage = 2,
+							INPS_Name = "Connect Z Buffer",
+							INP_Default = 1,
+						}
+					}
+				},
+				DepthDefocusMacro = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Mix = Input {
+							Value = 0,
+							Expression = "iif(OutputImage==3,0,1)",
+						},
+						Background = Input {
+							SourceOp = "Bol_ZConnection",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Bol_SharpZoneConnection",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 274.6 } },
+					Colors = {
+						TileColor = { R = 0.666666666666667, G = 0.498039215686275, B = 0.235294117647059 },
+						TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+					},
+					UserControls = ordered() {
+						OutputImage = {
+							{ MBTNCD_ButtonWidth = 0.333, MBTNC_AddButton = "Depth Channel" },
+							{ MBTNC_AddButton = "Defocus Strength" },
+							{ MBTNC_AddButton = "Sharp Zone" },
+							{ MBTNCD_ButtonWidth = 1, MBTNC_AddButton = "Final Result" },
+							LINKS_Name = "Output Image",
+							INPID_InputControl = "MultiButtonControl",
+							LINKID_DataType = "Number",
+							MBTNC_StretchToFit = true,
+							IC_ControlPage = 0,
+							INP_Default = 3,
+						}
+					}
+				},
+				BOL_Maximum = ChannelBoolean {
+					CtrlWShown = false,
+					Inputs = {
+						Blend = Input { Expression = "math.min(DepthDefocusMacro.OutputImage,1)", },
+						Operation = Input { Value = 8, },
+						Background = Input {
+							SourceOp = "Clr_BackgroundMap",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Clr_ForegroundMap",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -275, 175.6 } },
+				},
+				BC_SharpZone = BrightnessContrast {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Expression = "math.min(DepthDefocusMacro.OutputImage,1)", },
+						ApplyMaskInverted = Input { Value = 1, },
+						Brightness = Input {
+							Value = -2.7225131,
+							Expression = "-SharpZone",
+						},
+						ClipBlack = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "VBl_ReduceEdgeArtefacts",
+							Source = "Output",
+						},
+						SharpZone = Input { Value = 2.7225131, },
+						EffectMask = Input {
+							SourceOp = "Bitmap2_1",
+							Source = "Mask",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { -165, 208.6 } },
+					Colors = {
+						TileColor = { R = 0.666666666666667, G = 0.498039215686275, B = 0.235294117647059 },
+						TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+					},
+					UserControls = ordered() {
+						SharpZone = {
+							LINKS_Name = "Sharp Zone",
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							IC_ControlPage = 0,
+							INP_MaxScale = 5,
+							INP_Default = 0,
+						}
+					}
+				},
+				Bitmap1_1 = BitmapMask {
+					CtrlWShown = false,
+					Inputs = {
+						Invert = Input { Value = 1, },
+						MaskWidth = Input { Value = 2048, },
+						MaskHeight = Input { Value = 1556, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Image = Input {
+							SourceOp = "BC_SharpZone",
+							Source = "Output",
+						},
+						Channel = Input { Value = FuID { "Red" }, },
+						High = Input {
+							Value = 0.2,
+							Expression = "Low+SharpZoneDecay",
+						},
+						SharpZoneDecay = Input { Value = 0.2, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -110, 274.6 } },
+					UserControls = ordered() {
+						SharpZoneDecay = {
+							LINKID_DataType = "Number",
+							INP_Default = 0,
+							IC_ControlPage = 0,
+							INPID_InputControl = "SliderControl",
+							LINKS_Name = "Sharp Zone Decay",
+						}
+					}
+				},
+				BC_CurvatureFocalPoint = BrightnessContrast {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						CromaticAberrations = Input { Value = 1, },
+						Blend = Input { Expression = "math.min(DepthDefocusMacro.OutputImage,1)", },
+						Gamma = Input { Value = 2, },
+						Brightness = Input {
+							Value = -0.958002212928016,
+							Expression = "iif(Bol_ChannelSelector.InvertDepthMap==1, (1-FocalPoint)^(1/Gamma)*-1, -FocalPoint^(1/Gamma))",
+						},
+						Input = Input {
+							SourceOp = "Bol_ChannelSelector",
+							Source = "Output",
+						},
+						FocalPoint = Input { Value = 0.917768239974976, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -275, 109.6 } },
+					Colors = {
+						TileColor = { R = 0.666666666666667, G = 0.498039215686275, B = 0.235294117647059 },
+						TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+					},
+					UserControls = ordered() {
+						FocalPoint = {
+							INP_Default = 0.5,
+							INPID_InputControl = "ColorControl",
+							CLRC_ColorSpace = 0,
+							LINKID_DataType = "Number",
+							IC_ControlID = 12,
+							IC_ControlPage = 0,
+							INPS_Name = "Focal Point",
+							IC_ControlGroup = 1,
+						}
+					}
+				},
+				Clr_BackgroundMap = ColorGain {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Expression = "math.min(DepthDefocusMacro.OutputImage,1)", },
+						GainRed = Input { Value = 0.5263158, },
+						GainGreen = Input { Expression = "iif(Bol_ChromaticAberrations.ProcessWhenBlendIs00==1,GainRed*Clr_ForegroundMap.AxialChromaticAberrationsSlider,1)", },
+						ColorRanges = Input {
+							Value = ColorCurves {
+								Curves = {
+									{
+										Points = {
+											{ 0, 1 },
+											{ 0.125, 0.75 },
+											{ 0.375, 0.25 },
+											{ 0.5, 0 }
+										}
+									},
+									{
+										Points = {
+											{ 0.5, 0 },
+											{ 0.625, 0.25 },
+											{ 0.875, 0.75 },
+											{ 1, 1 }
+										}
+									}
+								}
+							},
+						},
+						Input = Input {
+							SourceOp = "BC_CurvatureFocalPoint",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -385, 175.6 } },
+				},
+				Clr_ForegroundMap = ColorGain {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						GainRed = Input {
+							Value = -0.9368421,
+							Expression = "-ForegroundDefocusMultiplier",
+						},
+						GainGreen = Input { Expression = "iif(Bol_ChromaticAberrations.ProcessWhenBlendIs00==1,GainRed/AxialChromaticAberrationsSlider,1)", },
+						ColorRanges = Input {
+							Value = ColorCurves {
+								Curves = {
+									{
+										Points = {
+											{ 0, 1 },
+											{ 0.125, 0.75 },
+											{ 0.375, 0.25 },
+											{ 0.5, 0 }
+										}
+									},
+									{
+										Points = {
+											{ 0.5, 0 },
+											{ 0.625, 0.25 },
+											{ 0.875, 0.75 },
+											{ 1, 1 }
+										}
+									}
+								}
+							},
+						},
+						Input = Input {
+							SourceOp = "BC_CurvatureFocalPoint",
+							Source = "Output",
+						},
+						ForegroundDefocusMultiplier = Input { Value = 0.9368421, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -275, 142.6 } },
+					UserControls = ordered() {
+						ForegroundDefocusMultiplier = {
+							LINKS_Name = "Foreground Defocus Multiplier",
+							ICD_Center = 1,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							IC_ControlPage = 0,
+							INP_MaxScale = 5,
+							INP_Default = 1,
+						},
+						AxialChromaticAberrationsSlider = {
+							INP_Default = 1.1,
+							ICD_Center = 1,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							IC_ControlPage = 0,
+							INP_MaxScale = 5,
+							LINKS_Name = "Axial Chromatic Aberrations",
+						},
+						ChromaticAberrations = {
+							LBLC_DropDownButton = true,
+							INPID_InputControl = "LabelControl",
+							LBLC_NumInputs = 5,
+							IC_ControlPage = 0,
+							INP_Default = 0,
+							LINKS_Name = "Chromatic Aberrations",
+						}
+					}
+				},
+				Bitmap2_1 = BitmapMask {
+					CtrlWShown = false,
+					Inputs = {
+						Level = Input { Value = 0.5, },
+						MaskWidth = Input { Value = 2048, },
+						MaskHeight = Input { Value = 1556, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Image = Input {
+							SourceOp = "VBl_ReduceEdgeArtefacts",
+							Source = "Output",
+						},
+						Channel = Input { Value = FuID { "Red" }, },
+						High = Input {
+							Value = 2.7225131,
+							Expression = "-BC_SharpZone.Brightness",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -220, 241.6 } },
+				},
+				VBl_ReduceEdgeArtefacts = VariBlur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input {
+							Value = 0,
+							Expression = "ProcessWhenBlendIs00*math.min(DepthDefocusMacro.OutputImage,1)",
+						},
+						Method = Input { Value = 2, },
+						Input = Input {
+							SourceOp = "BOL_Maximum",
+							Source = "Output",
+						},
+						BlurImage = Input {
+							SourceOp = "BOL_Maximum",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -275, 208.6 } },
+					Colors = {
+						TileColor = { R = 0.423529411764706, G = 0.501960784313725, B = 0.333333333333333 },
+						TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+					}
+				},
+				Bol_SharpZoneConnection = ChannelBoolean {
+					CtrlWShown = false,
+					Inputs = {
+						Blend = Input { Expression = "math.min(DepthDefocusMacro.OutputImage,1)", },
+						ToRed = Input {
+							Value = 5,
+							Expression = "iif(DepthDefocusMacro.OutputImage==2,3,5)",
+						},
+						ToGreen = Input {
+							Value = 5,
+							Expression = "ToRed",
+						},
+						ToBlue = Input {
+							Value = 5,
+							Expression = "ToRed",
+						},
+						ToAlpha = Input { Value = 4, },
+						Background = Input {
+							SourceOp = "BC_SharpZone",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Bitmap1_1",
+							Source = "Mask",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -55, 241.6 } },
+					Colors = {
+						TileColor = { R = 0.666666666666667, G = 0.498039215686275, B = 0.235294117647059 },
+						TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+					}
+				},
+				Instance_ChangeDepth = ChangeDepth {
+					CtrlWShown = false,
+					NameSet = true,
+					SourceOp = "ChangeDepth",
+					Inputs = {
+						Input = Input { },
+						StartEndRenderScripts = Input { },
+					},
+					ViewInfo = OperatorInfo { Pos = { -220, 43.6 } },
+				},
+				PipeRouter4_1 = PipeRouter {
+					CtrlWShown = false,
+					ViewInfo = PipeRouterInfo { Pos = { 220, 274.6 } },
+				},
+				Bol_ChromaticAberrations = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input {
+							Value = 0,
+							Expression = "ProcessWhenBlendIs00",
+						},
+						ProcessRed = Input { Value = 0, },
+						ProcessAlpha = Input { Value = 0, },
+						ToRed = Input { Value = 4, },
+						ToBlue = Input {
+							Value = 4,
+							Expression = "iif(VariBlurB.BlueDefocusMultiplier==1,4,2)",
+						},
+						ToAlpha = Input { Value = 4, },
+						Background = Input {
+							SourceOp = "VariBlur",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "VariBlurB",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 110, 109.6 } },
+					Colors = {
+						TileColor = { R = 0.666666666666667, G = 0.498039215686275, B = 0.235294117647059 },
+						TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+					}
+				},
+				ColorCurves = ColorCurves {
+					PickColor = true,
+					CtrlWShown = false,
+					Inputs = {
+						EditAlpha = Input { Value = 0, },
+						Red = Input {
+							SourceOp = "ColorCurvesRed",
+							Source = "Value",
+						},
+						Green = Input {
+							SourceOp = "ColorCurvesGreen",
+							Source = "Value",
+						},
+						Blue = Input {
+							SourceOp = "ColorCurvesBlue",
+							Source = "Value",
+						},
+						Alpha = Input {
+							SourceOp = "ColorCurvesAlpha",
+							Source = "Value",
+						},
+						Input = Input {
+							SourceOp = "Bol_EdgeSubtract",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 330, 208.6 } },
+					Tools = {
+						ColorCurvesGreen = LUTBezier {
+							KeyColorSplines = {
+								[0] = {
+									[-0.134586921925896] = { -0.0543907909395727, RH = { -0.0990436313760217, -0.0285512687876905 }, Flags = { Linear = true } },
+									[-0.0279570502762729] = { 0.00404944009849287, LH = { -0.0634967846449623, -0.0103132798035171 }, RH = { -0.018762958677511, 0.00776506050849738 } },
+									[0] = { 0, LH = { -0.00931901675875764, -0.0019526782941334 }, RH = { 0.0110563518399643, 0.00158918692461571 } },
+									[0.0322768622205375] = { 0.0571935254328659, LH = { 0.0181359692195394, 0.0637219000439139 }, RH = { 0.0785190023198877, 0.0358511837958423 } },
+									[0.110178089160029] = { 0.0383212106494792, LH = { 0.0719685269433348, 0.037490850453694 } }
+								}
+							},
+							SplineColor = { Red = 0, Green = 255, Blue = 0 },
+							CtrlWShown = false,
+							NameSet = true,
+						},
+						ColorCurvesBlue = LUTBezier {
+							KeyColorSplines = {
+								[0] = {
+									[-0.134586921925896] = { -0.0543907909395727, RH = { -0.0990436313760217, -0.0285512687876905 }, Flags = { Linear = true } },
+									[-0.0279570502762729] = { 0.00404944009849287, LH = { -0.0634967846449623, -0.0103132798035171 }, RH = { -0.018762958677511, 0.00776506050849738 } },
+									[0] = { 0, LH = { -0.00931901675875764, -0.0019526782941334 }, RH = { 0.0110563518399643, 0.00158918692461571 } },
+									[0.0322768622205375] = { 0.0571935254328659, LH = { 0.0181359692195394, 0.0637219000439139 }, RH = { 0.0785190023198877, 0.0358511837958423 } },
+									[0.110178089160029] = { 0.0383212106494792, LH = { 0.0719685269433348, 0.037490850453694 } }
+								}
+							},
+							SplineColor = { Red = 68, Green = 68, Blue = 255 },
+							CtrlWShown = false,
+							NameSet = true,
+						},
+						ColorCurvesAlpha = LUTBezier {
+							KeyColorSplines = {
+								[0] = {
+									[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+									[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+								}
+							},
+							SplineColor = { Red = 204, Green = 204, Blue = 204 },
+							CtrlWShown = false,
+							NameSet = true,
+						},
+						ColorCurvesRed = LUTBezier {
+							KeyColorSplines = {
+								[0] = {
+									[-0.134586921925896] = { -0.0543907909395727, RH = { -0.0990436313760217, -0.0285512687876905 }, Flags = { Linear = true } },
+									[-0.0279570502762729] = { 0.00404944009849287, LH = { -0.0634967846449623, -0.0103132798035171 }, RH = { -0.018762958677511, 0.00776506050849738 } },
+									[0] = { 0, LH = { -0.00931901675875764, -0.0019526782941334 }, RH = { 0.0110563518399643, 0.00158918692461571 } },
+									[0.0322768622205375] = { 0.0571935254328659, LH = { 0.0181359692195394, 0.0637219000439139 }, RH = { 0.0785190023198877, 0.0358511837958423 } },
+									[0.110178089160029] = { 0.0383212106494792, LH = { 0.0719685269433348, 0.037490850453694 } }
+								}
+							},
+							SplineColor = { Red = 255, Green = 52, Blue = 52 },
+							CtrlWShown = false,
+							NameSet = true,
+						}
+					},
+					Colors = {
+						TileColor = { R = 0.666666666666667, G = 0.498039215686275, B = 0.235294117647059 },
+						TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+					}
+				},
+				Bol_EdgeSubtract = ChannelBoolean {
+					CtrlWShown = false,
+					Inputs = {
+						Operation = Input { Value = 2, },
+						ToAlpha = Input { Value = 4, },
+						Background = Input {
+							SourceOp = "Bol_ChromaticAberrations",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Instance_Bol_ChromaticAberrations",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 330, 175.6 } },
+				},
+				Instance_Bol_ChromaticAberrations = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					SourceOp = "Bol_ChromaticAberrations",
+					Inputs = {
+						Blend = Input { Expression = "ProcessWhenBlendIs00" },
+						ToBlue = Input { Expression = "iif(VariBlurB.BlueDefocusMultiplier==1,4,2)" },
+						Background = Input {
+							SourceOp = "Instance_VariBlur",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Instance_VariBlurB",
+							Source = "Output",
+						},
+						StartEndRenderScripts = Input { },
+						EffectMask = Input { },
+						Matte = Input { }
+					},
+					ViewInfo = OperatorInfo { Pos = { 330, 109.6 } },
+					Colors = {
+						TileColor = { R = 0.666666666666667, G = 0.498039215686275, B = 0.235294117647059 },
+						TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+					}
+				},
+				Instance_VariBlur = VariBlur {
+					CtrlWShown = false,
+					NameSet = true,
+					SourceOp = "VariBlur",
+					Inputs = {
+						Blend = Input { Expression = "BlendClone" },
+						Method = Input {
+							Value = 0,
+							Expression = "3-VariBlur.Method"
+						},
+						XBlurSize = Input {
+							Value = 5,
+							Expression = "DefocusStrength*XDefocusMultiplier*RedDefocusMultiplier*1"
+						},
+						YBlurSize = Input {
+							Value = 5,
+							Expression = "DefocusStrength*YDefocusMultiplier*RedDefocusMultiplier*1"
+						},
+						Input = Input {
+							SourceOp = "BC_Degamma",
+							Source = "Output",
+						},
+						BlurImage = Input {
+							SourceOp = "BC_SharpZone",
+							Source = "Output",
+						},
+						StartEndRenderScripts = Input { },
+						EffectMask = Input {
+							SourceOp = "PipeRouter4_1",
+							Source = "Output",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { 275, 76.6 } },
+					Colors = {
+						TileColor = { R = 0.423529411764706, G = 0.498039215686275, B = 0.298039215686275 },
+						TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+					},
+					UserControls = ordered() {
+						BlendClone = {
+							INP_Default = 1,
+							LINKID_DataType = "Number",
+							INPS_Name = "Blend",
+							INPID_InputControl = "SliderControl",
+						},
+						DefocusStrength = {
+							LINKS_Name = "Defocus Strength",
+							ICD_Center = 5,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							IC_ControlPage = 0,
+							INP_MaxScale = 10,
+							INP_Default = 5,
+						},
+						XDefocusMultiplier = {
+							LINKS_Name = "X Defocus Multiplier",
+							ICD_Center = 1,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							IC_ControlPage = 0,
+							INP_MaxScale = 3,
+							INP_Default = 1,
+						},
+						YDefocusMultiplier = {
+							LINKS_Name = "Y Defocus Multiplier",
+							ICD_Center = 1,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							IC_ControlPage = 0,
+							INP_MaxScale = 3,
+							INP_Default = 1,
+						},
+						RedDefocusMultiplier = {
+							LINKS_Name = "Red Defocus Multiplier",
+							ICD_Center = 1,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							IC_ControlPage = 0,
+							INP_MaxScale = 3,
+							INP_Default = 1,
+						}
+					}
+				},
+				Instance_VariBlurG = VariBlur {
+					CtrlWShown = false,
+					NameSet = true,
+					SourceOp = "VariBlurG",
+					Inputs = {
+						Blend = Input { Expression = "math.min(VariBlur.BlendClone,Bol_ChromaticAberrations.ProcessWhenBlendIs00)" },
+						Method = Input {
+							Value = 0,
+							Expression = "3-VariBlur.Method"
+						},
+						Quality = Input { Expression = "VariBlur.Quality" },
+						XBlurSize = Input { Expression = "VariBlur.DefocusStrength*VariBlur.XDefocusMultiplier*GreenDefocusMultiplier" },
+						YBlurSize = Input { Expression = "VariBlur.DefocusStrength*VariBlur.YDefocusMultiplier*GreenDefocusMultiplier" },
+						Input = Input {
+							SourceOp = "BC_Degamma",
+							Source = "Output",
+						},
+						BlurImage = Input {
+							SourceOp = "BC_SharpZone",
+							Source = "Output",
+						},
+						StartEndRenderScripts = Input { },
+						EffectMask = Input {
+							SourceOp = "PipeRouter4_1",
+							Source = "Output",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { 385, 43.6 } },
+					Colors = {
+						TileColor = { R = 0.423529411764706, G = 0.498039215686275, B = 0.298039215686275 },
+						TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+					},
+					UserControls = ordered() {
+						GreenDefocusMultiplier = {
+							LINKS_Name = "Green Defocus Multiplier",
+							ICD_Center = 1,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							IC_ControlPage = 0,
+							INP_MaxScale = 3,
+							INP_Default = 1,
+						}
+					}
+				},
+				Instance_VariBlurB = VariBlur {
+					CtrlWShown = false,
+					NameSet = true,
+					SourceOp = "VariBlurB",
+					Inputs = {
+						Blend = Input { Expression = "iif(BlueDefocusMultiplier==VariBlur.RedDefocusMultiplier,0,math.min(VariBlur.BlendClone,Bol_ChromaticAberrations.ProcessWhenBlendIs00))" },
+						Method = Input {
+							Value = 0,
+							Expression = "3-VariBlur.Method"
+						},
+						Quality = Input { Expression = "VariBlur.Quality" },
+						XBlurSize = Input { Expression = "VariBlur.DefocusStrength*VariBlur.XDefocusMultiplier*BlueDefocusMultiplier" },
+						YBlurSize = Input { Expression = "VariBlur.DefocusStrength*VariBlur.YDefocusMultiplier*BlueDefocusMultiplier" },
+						Input = Input {
+							SourceOp = "Instance_VariBlurG",
+							Source = "Output",
+						},
+						BlurImage = Input {
+							SourceOp = "BC_SharpZone",
+							Source = "Output",
+						},
+						StartEndRenderScripts = Input { },
+						EffectMask = Input {
+							SourceOp = "PipeRouter4_1",
+							Source = "Output",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { 385, 76.6 } },
+					Colors = {
+						TileColor = { R = 0.423529411764706, G = 0.498039215686275, B = 0.298039215686275 },
+						TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+					},
+					UserControls = ordered() {
+						BlueDefocusMultiplier = {
+							LINKS_Name = "Blue Defocus Multiplier",
+							ICD_Center = 1,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							IC_ControlPage = 0,
+							INP_MaxScale = 3,
+							INP_Default = 1,
+						}
+					}
+				},
+				Bol_AddBokehProfile = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input {
+							Value = 0,
+							Expression = "ProcessWhenBlendIs00*BokehProfileStrength",
+						},
+						Operation = Input { Value = 1, },
+						ToAlpha = Input { Value = 4, },
+						Background = Input {
+							SourceOp = "Bol_ChromaticAberrations",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "ColorCurves",
+							Source = "Output",
+						},
+						EffectMask = Input {
+							SourceOp = "PipeRouter4_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 175.6 } },
+					Colors = {
+						TileColor = { R = 0.666666666666667, G = 0.498039215686275, B = 0.235294117647059 },
+						TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+					},
+					UserControls = ordered() {
+						BokehProfileStrength = {
+							LINKID_DataType = "Number",
+							INP_Default = 1,
+							INPID_InputControl = "SliderControl",
+							INPS_Name = "BokehProfileStrength",
+							LINKS_Name = "Bokeh Profile Strength",
+						},
+						BokehProfile = {
+							LBLC_DropDownButton = true,
+							INPID_InputControl = "LabelControl",
+							LBLC_NumInputs = 8,
+							IC_ControlPage = 0,
+							INP_Default = 0,
+							LINKS_Name = "Bokeh Profile",
+						}
+					}
+				}
+			},
+			Colors = {
+				TileColor = { R = 0.423529411764706, G = 0.498039215686275, B = 0.298039215686275 },
+				TextColor = { R = 0.862745098039216, G = 0.862745098039216, B = 0.862745098039216 },
+			}
+		}
+	},
+	ActiveTool = "DepthDefocus"
+}
