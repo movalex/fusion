@@ -1,0 +1,54 @@
+{
+	Tools = ordered() {
+		se_ShootOn = TimeStretcher {
+			CtrlWZoom = false,
+			NameSet = true,
+			Inputs = {
+				SourceTime = Input {
+					Value = 35,
+					Expression = "Mode == 1 and math.floor(time/ShootOn)*ShootOn or math.floor(time/(25/SamplesPerSecond))*math.floor(25/SamplesPerSecond)",
+				},
+				InterpolateBetweenFrames = Input { Value = 0, },
+				SampleSpread = Input { Disabled = true, },
+				Input = Input {
+					SourceOp = "wakeOut_1",
+					Source = "Output",
+				},
+				ShootOn = Input { Value = 5, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -1430, 214.5 } },
+			UserControls = ordered() {
+				ShootOn = {
+					LINKS_Name = "Shoot On",
+					INP_Integer = true,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "SliderControl",
+					INP_MinScale = 1,
+					INP_MaxScale = 10,
+					INP_Default = 2
+				},
+				SamplesPerSecond = {
+					LINKS_Name = "Samples Per Second",
+					INP_Integer = true,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "SliderControl",
+					INP_MinScale = 1,
+					INP_MaxScale = 25,
+					INP_Default = 5
+				},
+				Mode = {
+					{ CCS_AddString = "Samples Per Second" },
+					{ CCS_AddString = "Shoot On" },
+					INP_Integer = false,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					CC_LabelPosition = "Vertical",
+					INPID_InputControl = "ComboControl",
+					LINKS_Name = "Mode"
+				}
+			}
+		}
+	}
+}

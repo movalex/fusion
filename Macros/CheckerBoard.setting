@@ -1,0 +1,157 @@
+{
+	Tools = ordered() {
+		Checkerboard = MacroOperator {
+			CtrlWZoom = false,
+			Inputs = ordered() {
+				Comments = Input { Value = "Muse Tools Library\r\nby Joe Laude\r\nwww.musevfx.com", },
+				Center = InstanceInput {
+					SourceOp = "CustomTool1",
+					Source = "PointIn1",
+				},
+				CheckerSize = InstanceInput {
+					SourceOp = "CustomTool1",
+					Source = "CheckerSize",
+					Default = 64,
+				},
+				Width = InstanceInput {
+					SourceOp = "Background1",
+					Source = "Width",
+					Default = 1920,
+				},
+				Height = InstanceInput {
+					SourceOp = "Background1",
+					Source = "Height",
+					Default = 1080,
+				}
+			},
+			Outputs = {
+				Output = InstanceOutput {
+					SourceOp = "CustomTool1",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 478.5 } },
+			Tools = ordered() {
+				Background1 = Background {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					Inputs = {
+						GlobalOut = Input { Value = 60, },
+						Width = Input { Value = 1173, },
+						Height = Input { Value = 439, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, 25.15 } },
+				},
+				CustomTool1 = Custom {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					Inputs = {
+						NumberIn1 = Input {
+							Value = 77,
+							Expression = "CheckerSize",
+						},
+						LUTIn1 = Input {
+							SourceOp = "CustomTool1LUTIn1",
+							Source = "Value",
+						},
+						LUTIn2 = Input {
+							SourceOp = "CustomTool1LUTIn2",
+							Source = "Value",
+						},
+						LUTIn3 = Input {
+							SourceOp = "CustomTool1LUTIn3",
+							Source = "Value",
+						},
+						LUTIn4 = Input {
+							SourceOp = "CustomTool1LUTIn4",
+							Source = "Value",
+						},
+						Intermediate1 = Input { Value = "(abs(floor((x-p1x)*(w/n1)))%2)", },
+						Intermediate2 = Input { Value = "(abs(floor((y-p1y)*(h/n1)))%2)", },
+						RedExpression = Input { Value = "abs(i1-i2)", },
+						GreenExpression = Input { Value = "abs(i1-i2)", },
+						BlueExpression = Input { Value = "abs(i1-i2)", },
+						NumberControls = Input { Value = 1, },
+						NameforNumber1 = Input { Value = "SquareSize", },
+						ShowNumber2 = Input { Value = 0, },
+						ShowNumber3 = Input { Value = 0, },
+						ShowNumber4 = Input { Value = 0, },
+						ShowNumber5 = Input { Value = 0, },
+						ShowNumber6 = Input { Value = 0, },
+						ShowNumber7 = Input { Value = 0, },
+						ShowNumber8 = Input { Value = 0, },
+						PointControls = Input { Value = 1, },
+						NameforPoint1 = Input { Value = "Center", },
+						ShowPoint2 = Input { Value = 0, },
+						ShowPoint3 = Input { Value = 0, },
+						ShowPoint4 = Input { Value = 0, },
+						ShowLUT1 = Input { Value = 0, },
+						ShowLUT2 = Input { Value = 0, },
+						ShowLUT3 = Input { Value = 0, },
+						ShowLUT4 = Input { Value = 0, },
+						Image1 = Input {
+							SourceOp = "Background1",
+							Source = "Output",
+						},
+						CheckerSize = Input { Value = 77, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, 58.15 } },
+					UserControls = ordered() {
+						CheckerSize = {
+							INP_Integer = true,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							IC_ControlPage = 0,
+							INP_MaxScale = 100,
+							INP_Default = 64,
+						}
+					}
+				},
+				CustomTool1LUTIn1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 0, Blue = 0 },
+					CtrlWShown = false,
+				},
+				CustomTool1LUTIn2 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 204, Blue = 0 },
+					CtrlWShown = false,
+				},
+				CustomTool1LUTIn3 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 0, Blue = 204 },
+					CtrlWShown = false,
+				},
+				CustomTool1LUTIn4 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 204, Blue = 204 },
+					CtrlWShown = false,
+				}
+			},
+		}
+	},
+	ActiveTool = "Checkerboard"
+}
