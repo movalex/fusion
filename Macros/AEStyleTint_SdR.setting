@@ -1,0 +1,273 @@
+{
+	Tools = ordered() {
+		AEStyleTint = MacroOperator{
+			CtrlWZoom = false,
+			Inputs = ordered() {
+				MainInput1 = InstanceInput {
+					SourceOp = "MapInput",
+					Source = "Input",
+				},
+				TwoToneOrGradientSelector = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Type",
+					Default = 0,
+				},
+				MapToBlackRed = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Color1Red",
+					Name = "Map To Black",
+					ControlGroup = 4,
+					Default = 0,
+				},
+				MapToBlackGreen = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Color1Green",
+					ControlGroup = 4,
+					Default = 0,
+				},
+				MapToBlackBlue = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Color1Blue",
+					ControlGroup = 4,
+					Default = 0,
+				},
+				MapToBlackAlpha = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Color1Alpha",
+					ControlGroup = 4,
+					Default = 1,
+				},
+				MapToWhiteRed = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Color2Red",
+					Name = "Map to White",
+					ControlGroup = 5,
+					Default = 1,
+				},
+				MapToWhiteGreen = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Color2Green",
+					ControlGroup = 5,
+					Default = 1,
+				},
+				MapToWhiteBlue = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Color2Blue",
+					ControlGroup = 5,
+					Default = 1,
+				},
+				MapToWhiteAlpha = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Color2Alpha",
+					ControlGroup = 5,
+					Default = 1,
+				},
+				GradientType = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "GradientType",
+				},
+				GradMapToBlack = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Start",
+					Name = "Map To Black",
+					DefaultX = 0,
+					DefaultY = 0.5,
+				},
+				GradMapToWhite = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "End",
+					Name = "Map To White",
+					DefaultX = 1,
+					DefaultY = 0.5,
+				},
+				Gradient = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Gradient",
+				},
+				GradientInterpolationMethod = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "GradientInterpolationMethod",
+				},
+				GradientOffset = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Offset",
+					Default = 0,
+				},
+				GradientRepeat = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Repeat",
+					Default = 0,
+				},
+				GradientSubPixel = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "SubPixel",
+					Default = 0,
+				},
+				ApplyModeDropdown = InstanceInput {
+					SourceOp = "Merge1_1",
+					Source = "ApplyMode",
+				},
+				OperatorDropdown = InstanceInput {
+					SourceOp = "Merge1_1",
+					Source = "Operator",
+				},
+				SubtractiveAdditiveSlider = InstanceInput {
+					SourceOp = "Merge1_1",
+					Source = "SubtractiveAdditive",
+					Name = "Subtractive",
+					Default = 1,
+				},
+				AlphaGain = InstanceInput {
+					SourceOp = "Merge1_1",
+					Source = "Gain",
+					Default = 1,
+				},
+				BurnIn = InstanceInput {
+					SourceOp = "Merge1_1",
+					Source = "BurnIn",
+					Default = 0,
+				},
+				AmountToTint = InstanceInput {
+					SourceOp = "Merge1_1",
+					Source = "BlendClone",
+					Name = "Amount to Tint",
+					Default = 1,
+				},
+				EffectMask = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "EffectMask",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "AlphaMultiply1",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Pos = { 385, 49.5 },
+				Flags = {
+					Expanded = true,
+					AllowPan = false,
+					GridSnap = true,
+					ShowGrid = false,
+					AutoSnap = true,
+					RemoveRouters = true
+				},
+				Size = { 1085, 243.3, 298.5, 22 },
+				Direction = "Horizontal",
+				PipeStyle = "Direct",
+				Scale = 1,
+				Offset = { -20, -3 }
+			},
+			Tools = ordered() {
+				MapInput = BrightnessContrast {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Value = 0, },
+						Red = Input { Value = 0, },
+						Green = Input { Value = 0, },
+						Blue = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -165, 82.5 } },
+				},
+				Bitmap1_1 = BitmapMask {
+					CtrlWShown = false,
+					Inputs = {
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Image = Input {
+							SourceOp = "AlphaDivide1",
+							Source = "Output",
+						},
+						Channel = Input { Value = FuID { "Luminance" }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 181.5 } },
+				},
+				FastNoise1_1_1 = FastNoise {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					Inputs = {
+						GlobalOut = Input { Value = 500, },
+						Width = Input {
+							Value = 1920,
+							Expression = "MapInput.Input.Width",
+						},
+						Height = Input {
+							Value = 1080,
+							Expression = "MapInput.Input.Height",
+						},
+						Depth = Input { Value = 4, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Detail = Input { Value = 0, },
+						Brightness = Input { Value = 1, },
+						XScale = Input { Value = 1, },
+						Color1Alpha = Input { Value = 1, },
+						Offset = Input { Value = 0.5, },
+						NoiseBrightnessMap = Input {
+							SourceOp = "Bitmap1_1",
+							Source = "Mask",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 220, 181.5 } },
+				},
+				Merge1_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "AlphaDivide1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "FastNoise1_1_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 385, 181.5 } },
+				},
+				AlphaDivide1 = AlphaDivide {
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "MapInput",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -55, 82.5 } },
+				},
+				AlphaMultiply1 = AlphaMultiply {
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "ChannelBooleans1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 605, 181.5 } },
+				},
+				ChannelBooleans1 = ChannelBoolean {
+					CtrlWShown = false,
+					Inputs = {
+						ToRed = Input { Value = 4, },
+						ToGreen = Input { Value = 4, },
+						ToBlue = Input { Value = 4, },
+						Background = Input {
+							SourceOp = "Merge1_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "AlphaDivide1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 495, 181.5 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "AEStyleTint"
+}
