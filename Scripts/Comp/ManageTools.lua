@@ -1,7 +1,7 @@
 
 local ui = fu.UIManager
 local disp = bmd.UIDispatcher(ui)
-local width,height = 330,70
+local width,height = 330,110
 checked_state = comp:GetData('check_enabled')
 
 function fetch_data()
@@ -45,28 +45,54 @@ win = disp:AddWindow({
   TargetID = 'Manage',
   WindowTitle = 'Manage Tools',
   Geometry = {500, 500, width, height},
-  Spacing = 5,
+  Spacing = 0,
   
   ui:VGroup{
     ID = 'root',
-    -- Add your GUI elements here:
     ui:HGroup{
       ui:Button{ID = 'Disable', Text = 'Disable',},
       ui:Button{ID = 'Enable', Text = 'Enable',},
-
     },
     ui.HGroup{
-        Margin = 3,
-        ui:Label{ID = 'L', Weight = .7, Text = print_label(), Alignment = {AlignLeft = true,  AlignVCenter = true},},
-        ui:CheckBox{ID = 'checkbox', Weight = .1, Text = 'use comment:', Alignment = {AlignLeft = true,  AlignVCenter = true}, Checked = checked_state or false},
-        -- ui:Label{ID = 'comm', Weight = .2, Text = 'Use comment:', Alignment = {AlignRight = true, AlignVCenter = true},},
-        ui.LineEdit{ID = 'Line', Weight = .2, Text = comp:GetData('comment') or '1', Events = {ReturnPressed = true}}
+        ui:Label{ID = 'L', Weight = .7, Text = print_label(), 
+                Alignment = {AlignLeft = true,  AlignVCenter = true},},
+        ui:CheckBox{ID = 'checkbox', Weight = .1, Text = 'use comment:',
+                    Alignment = {AlignLeft = true,  AlignVCenter = true},
+                    Checked = checked_state or false},
+        ui.LineEdit{ID = 'Line', Weight = .2, 
+                    Text = comp:GetData('comment') or '1',
+                    Events = {ReturnPressed = true}}
+    }, 
+    ui:HGroup{
+        ui.Button{ID = 'Toggle', Text = 'Toggle All Tools with Comment'},
     }
+    
   },
 })
 
 
 itm = win:GetItems()
+
+
+function win.On.Toggle.Clicked(ev)
+    local comment = itm['Line'].Text
+    local tools = comp:GetToolList(false)
+    count = 0
+    for _, tool in pairs(tools) do
+        if tool.Comments[fu.TIME_UNDEFINED] == comment then
+            count = count + 1
+            if tool:GetAttrs().TOOLB_PassThrough == true then
+                tool:SetAttrs( { TOOLB_PassThrough = false } )
+            else
+                tool:SetAttrs( { TOOLB_PassThrough = true } )
+            end
+        end
+    end
+    if count == 0 then
+        print('no tools with chosen comment in the comp')
+    end
+end
+
 
 function win.On.Manage.Close(ev)
     comp:SetData('check_enabled', itm['checkbox'].Checked)
@@ -79,7 +105,6 @@ end
 
 function win.On.Line.ReturnPressed(ev)
     comp:SetData('comment', itm['Line'].Text)
-    -- comp:SetData('comment','11')
     print('now searching for comment "'..comp:GetData('comment')..'"')
 end
 
@@ -130,57 +155,10 @@ end
 function win.On.Disable.Clicked(ev)
 operate(true, 'disabled ')
 end
--- function win.On.Disable.Clicked(ev)
---     local cmp = fu:GetCurrentComp()
---     if #cmp:GetToolList(true) == 0 then
---         tool = fetch_data()
---     else    
---         tool = get_selected_tool()
---     end
-
---     if tool then
---         itm['L'].Text = 'tool:  '.. tool
---         local allTools = cmp:GetToolList(false, tool)
---         cmp:SetData('tool_id', tool)
---         count = 0
---         for _, curTool in pairs(allTools) do
---             if itm.checkbox.Checked then
---                 comment = itm['Line'].Text
---                 if curTool.Comments[fu.TIME_UNDEFINED] == comment then
---                     curTool:SetAttrs( { TOOLB_PassThrough = true } )
---                     count = count + 1
---                 end
---             else
---                 curTool:SetAttrs( { TOOLB_PassThrough = true } )
---             end
---         end
---         if count and count == 0 then
---             print('did not find any tools with comment "' .. comment..'"')
---         else print('disabled ' ..count.. ' tools')
---         end
---     end
-
--- end
 
 
 function win.On.Enable.Clicked(ev)
     operate(false, 'enabled ')
-     -- tool = get_selected_tool()
-    -- local allTools = comp:GetToolList(false, tool)
-    -- if tool then
-    --     for _, currentTool in pairs(allTools) do
-    --         if itm.checkbox.Checked then
-                
-    --         else    
-    --             currentTool:SetAttrs( { TOOLB_PassThrough = false } )
-    --     end
-    -- end
-    -- comp:Lock()
-    -- local allTools = comp:GetToolList(false, tool)
-    --     for i, currentTool in pairs(allTools) do
-    --         currentTool:SetAttrs( { TOOLB_PassThrough = false } )
-    --     end
-    -- comp:Unlock()
 end
 
 app:AddConfig("Manage",
