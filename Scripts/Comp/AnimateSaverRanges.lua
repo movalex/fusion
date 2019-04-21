@@ -46,7 +46,7 @@ function main(savers)
     local dialogcounter = 1
     cmp:StartUndo("SaverRangesScript")
 
-    for i, v in ipairs(savers) do
+    for i, v in pairs(savers) do
         dialog[dialogcounter] = {"process"..i, Name= "Process: "..v:GetAttrs().TOOLS_Name, "Checkbox", Default=1, NumAcross=2}
         dialog[dialogcounter+1] = {"renderrange"..i, Name="RenderRange", "Position", Default = {RenderStart, RenderEnd} }
         dialogcounter = dialogcounter + 2
@@ -62,7 +62,7 @@ function main(savers)
     local RenderStartNew = ask.renderrange1[1]
 
 
-    for i, v in ipairs(savers) do
+    for i, v in pairs(savers) do
         local processVar = "process"..i
         local renderrangeVar = "renderrange"..i
         local start = ask[renderrangeVar][1]
