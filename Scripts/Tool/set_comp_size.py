@@ -17,8 +17,6 @@ def main(tool):
         if aspect_x and aspect_y:
             comp.SetPrefs({'Comp.FrameFormat.AspectX': aspect_x, 'Comp.FrameFormat.AspectY': aspect_y})
             print('Comp aspect is changed to {}:{}'.format(aspect_x, aspect_y))
-    else:
-        print('please set Custom pixel aspect ratio for the Loader')
 
     comp.SetPrefs({'Comp.FrameFormat.Name': 'Set by Script'})
 
