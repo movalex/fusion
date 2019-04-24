@@ -1,35 +1,31 @@
 --stx_kissConnect
 --v1.2
--- disabled comp locking, caused some issues
+-- disabled cmp locking, caused some issues
 
--- lock comp
--- comp:Lock()
+-- lock cmp
+-- cmp:Lock()
 
 -- get selection 
-selectedNodes = comp:GetToolList(true)
-allNodes = comp:GetToolList(false)
+cmp = fu:GetCurrentComp()
+-- selectedNodes = cmp:GetToolList(true)
+selectedNodes = cmp:GetToolList(true)
+allNodes = cmp:GetToolList(false)
 
-flow = comp.CurrentFrame.FlowView
+flow = cmp.CurrentFrame.FlowView
 data = {}
 
--- store node count in a variable
-connections = #selectedNodes
-print(connections)
-
--- create merge node, and store some position variables
-flow = comp.CurrentFrame.FlowView
 selX, selY = flow:GetPos(selectedNodes[1])
 
 distances = {}
-
-for i=1, #allNodes, 1 do
+for i, n in pairs(allNodes) do
 	--print(flow:GetPos(allNodes[i]))
-	tempX, tempY = flow:GetPos(allNodes[i])
-	local tempDist = math.sqrt((selX-tempX)*(selX-tempX)+(selY-tempY)*(selY-tempY))
-	table.insert(distances,{allNodes[i], tempDist})
+	tempX, tempY = flow:GetPos(n)
+    if tempX and tempY then
+        local tempDist = math.sqrt((selX-tempX)*(selX-tempX)+(selY-tempY)*(selY-tempY))
+        table.insert(distances,{n, tempDist})
+    end
 	--print(tempDist)
 end
-
 
 table.sort(distances, function(b, a) return a[2] > b[2] end)
 
@@ -37,13 +33,10 @@ table.sort(distances, function(b, a) return a[2] > b[2] end)
 --     print(v[1].Name, ' == ', v[2])
 -- end
 
-
 selectedNodes[1]:ConnectInput("Input", distances[2][1])
 selectedNodes[1]:ConnectInput("Background", distances[2][1])
 selectedNodes[1]:ConnectInput("MaterialInput", distances[2][1])
 selectedNodes[1]:ConnectInput("SceneInput", distances[2][1])
 selectedNodes[1]:ConnectInput("SceneInput1", distances[2][1])
 
---dump(allNodes)
-
---comp:Unlock()
+--cmp:Unlock()
