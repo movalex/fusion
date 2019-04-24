@@ -47,7 +47,7 @@ function conform(filepath)
         return nil
     end
     -- build the new filename using gsub
-    newclip = string.gsub(filepath, matched, srchTo)
+    newclip = string.gsub(filepath, srchFor, srchTo)
     print("New file path is: ", newclip)            
     return newclip
 end
