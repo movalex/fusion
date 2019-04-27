@@ -42,6 +42,7 @@ function main(tool)
     tool:ConnectInput("MaterialInput", distances[2][1])
     tool:ConnectInput("SceneInput", distances[2][1])
     tool:ConnectInput("SceneInput1", distances[2][1])
+    tool:ConnectInput("ProjectiveImage", distances[2][1])
 end
 
 tool = get_tool()
