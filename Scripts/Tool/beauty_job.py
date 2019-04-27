@@ -4,13 +4,6 @@ import re
 from pathlib import Path
 
 
-def check_loader():
-    if tool.ID != 'Loader':
-        print('use with loader tool only')
-        return 0
-    return get_name(tool)
-
-
 def increment(path, name):
     list_directory = os.listdir(path)
     match_str = '^' + name + '_FX(\d{3}).*$'
@@ -22,36 +15,49 @@ def increment(path, name):
     return '{:03}'.format(max(incremental))
 
 
-def save_comp(comp_name, split_name, prefix='FX'):
-    folder = Path('~/Desktop/beauty/').expanduser()
-    if not folder.exists():
-        folder.mkdir(parents=True)
-    target = Path(folder, comp_name)
-    comp.Save(str(target))
-    comp.Lock()
-    saver = comp.Saver
-    save_path = Path(
-        folder,
-        'save_beauty')
-    if not save_path.exists():
-        save_path.mkdir(parents=True)
-    inc = increment(save_path, split_name[0])
-    file_name = '{}_{}{}_0000{}'.format(split_name[0], prefix, inc, split_name[1])
-    save_path = Path(save_path, file_name)
-    saver.Clip = str(save_path)
-    flow = comp.CurrentFrame.FlowView
-    pos_x, pos_y = flow.GetPosTable(tool).values()
-    flow.SetPos(saver, pos_x + 1, pos_y)
-    saver.Input.ConnectTo(tool.Output)
-    comp.Unlock()
-
-
 def get_name(tool):
     name = tool.GetAttrs()['TOOLST_Clip_Name'][1]
     file_name = Path(name).name
     split_name = os.path.splitext(file_name)
-    comp_name = split_name[0] + '.comp'
-    save_comp(comp_name, split_name)
+    return split_name
+
+def create_folder(*file_path):
+    folder = Path.mkdir(*file_path).mkdir(parents=True, exist_ok=True)
+    return folder
+
+def save_comp(tool, prefix=None):
+    folder = create_folder('~/Desktop/beauty').expanduser()
+    print(folder)
+    split_name = get_name(tool)
+    fname, ext = split_name
+    comp_name = fname + '.comp'
+    target = Path(folder, comp_name)
+    comp.Save(str(target))
+
+    print("--------- processing -----------")
+    comp.Lock()
+    # add saver
+    saver = comp.Saver
+    save_path = create_folder(folder, 'renders')
+    # increment file numver if exists
+    inc = increment(save_path, fname)
+    file_name = f'{fname}_{prefix}{inc}_0000{ext}'
+    # set saver filename
+    saver.Clip = str(save_path) + file_name
+    # place saver next to loader
+    flow = comp.CurrentFrame.FlowView
+    pos_x, pos_y = flow.GetPosTable(tool).values()
+    flow.SetPos(saver, pos_x + 1, pos_y)
+    # connect saver to loader
+    saver.Input.ConnectTo(tool.Output)
+    comp.Unlock()
+
+
+def check_loader():
+    if tool.ID != 'Loader':
+        print('use with loader tool only')
+        return 0
+    return save_comp(tool, 'FX')
 
 
 check_loader()
