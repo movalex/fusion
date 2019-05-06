@@ -32,15 +32,16 @@ function main(tool)
 
     table.sort(distances, function(b, a) return a[2] > b[2] end)
 
-    -- for k,v in ipairs(distances) do
-    --     print(v[1].Name, ' == ', v[2])
-    -- end
+    for k,v in ipairs(distances) do
+        print(v[1].Name, ' == ', v[2])
+    end
 
     tool:ConnectInput("Input", distances[2][1])
     tool:ConnectInput("Background", distances[2][1])
     tool:ConnectInput("MaterialInput", distances[2][1])
     tool:ConnectInput("SceneInput", distances[2][1])
     tool:ConnectInput("SceneInput1", distances[2][1])
+    tool:ConnectInput("ProjectiveImage", distances[2][1])
 end
 
 tool = get_tool()

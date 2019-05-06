@@ -1,0 +1,63 @@
+{
+	Tools = ordered() {
+		Transform2_1_1_1 = Transform {
+			Inputs = {
+				Input = Input {
+					SourceOp = "PipeRouter1_1_1_1_1",
+					Source = "Output",
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 880, 214.5 } },
+		},
+		Merge2_1_1_1 = Merge {
+			CtrlWZoom = false,
+			Inputs = {
+				Background = Input {
+					SourceOp = "PipeRouter1_1_1_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Transform2_1_1_1",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+				EffectMask = Input {
+					SourceOp = "Polygon149",
+					Source = "Mask",
+				}
+			},
+			ViewInfo = OperatorInfo { Pos = { 880, 280.5 } },
+		},
+		PipeRouter1_1_1_1_1 = PipeRouter {
+			ViewInfo = PipeRouterInfo { Pos = { 770, 280.5 } },
+		},
+		Polygon149 = PolylineMask {
+			DrawMode = "ClickAppend",
+			DrawMode2 = "InsertAndModify",
+			Inputs = {
+				MaskWidth = Input { Value = 3200, },
+				MaskHeight = Input { Value = 1800, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Polyline = Input {
+					Value = Polyline {
+					},
+				},
+				Polyline2 = Input {
+					Value = Polyline {
+					},
+					Disabled = true,
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 880, 346.5 } },
+		},
+		Patch = Underlay {
+			NameSet = true,
+			ViewInfo = UnderlayInfo {
+				Pos = { 879.6, 182.469 },
+				Size = { 276.85, 212.024 }
+			},
+		}
+	},
+	ActiveTool = "Merge2_1_1_1"
+}
