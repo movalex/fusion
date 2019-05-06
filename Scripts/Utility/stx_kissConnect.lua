@@ -14,7 +14,6 @@ function get_tool()
     return active
 end
 
-
 function main(tool)
     cmp = fu:GetCurrentComp()
     allNodes = cmp:GetToolList(false)
