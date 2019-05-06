@@ -1,3 +1,5 @@
+-- https://www.steakunderwater.com/wesuckless/viewtopic.php?p=9319#p9319
+
 local flow = comp.CurrentFrame.FlowView
  
 function recurseSelect(t)
