@@ -15,6 +15,9 @@ function get_tool()
 end
 
 
+local kiss = false
+
+
 function main(tool)
     cmp = fu:GetCurrentComp()
     allNodes = cmp:GetToolList(false)
@@ -22,6 +25,7 @@ function main(tool)
     data = {}
     selX, selY = flow:GetPos(tool)
     distances = {}
+    
 
     for i, n in pairs(allNodes) do
         tempX, tempY = flow:GetPos(n)
