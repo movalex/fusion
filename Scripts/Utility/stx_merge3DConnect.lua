@@ -1,4 +1,5 @@
 --stx_merge3DConnect
+--v1.2 update to Fusion9 syntax
 --v1.1
 --1.0 - release
 --1.1 - fixed node creation position when nothing is selected
@@ -45,11 +46,11 @@ for i=1, connections, 1 do
 	-- update positions
 	x1, y1 = flow:GetPos(selectedNodes[i])
 	xx = xx + x1 - startX
-	yy = yy + y1 - startY
+	yy = yy + 2 + y1 - startY
 end		
 
 -- set final position to be in the center of all the selections
-if selectedNodes[1] not nil then
+if selectedNodes[1] ~= nil then
 --	flow:SetPos(mg1, -32768, -32768)
     flow:SetPos(mg1, startX + (xx/connections), startY + (yy/connections))			
 end

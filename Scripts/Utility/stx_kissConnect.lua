@@ -21,6 +21,7 @@ function main(tool)
     data = {}
     selX, selY = flow:GetPos(tool)
     distances = {}
+    
 
     for i, n in pairs(allNodes) do
         tempX, tempY = flow:GetPos(n)

@@ -7,9 +7,9 @@ def recurse_select_backward(t):
     flow.Select(t)
     for inp in t.GetInputList().values():
         if inp.GetAttrs()['INPS_DataType'] in valid_types:
-            output = inp.GetConnectedOutput()
-            if output:
-                recurse_select_backward(output.GetTool())
+            next_out = inp.GetConnectedOutput()
+            if next_out:
+                recurse_select_backward(next_out.GetTool())
         pass
 
 
