@@ -75,7 +75,7 @@ local range_mode = 1
 local range_min = -1000000
 local range_max = 1000000
 -- Fusion 7 uses a much MUCH larger possible frame range, check for that
-if fusion_major_version == 7 then
+if fusion_major_version > 6 then
     range_min = -1000000000
     range_max = 1000000000
 end
