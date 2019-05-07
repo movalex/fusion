@@ -7,12 +7,13 @@ tool = comp.ActiveTool
 def recurse_select_forward(t):
     flow.Select(t)
     out = t.GetOutputList()[1]
-    inp = out.GetConnectedInputs()
-    for i in inp.values():
+    next_inp = out.GetConnectedInputs()
+    for inp in next_inp.values():
         try:
-            print(i.GetAttrs()['INPS_DataType'])
-            if i.GetAttrs()['INPS_DataType'] in valid_types:
-                recurse_select_forward(i.GetTool())
+            # if the node added to the viewer, inp will be null
+            # print(inp.GetAttrs()['INPS_DataType'])
+            if inp.GetAttrs()['INPS_DataType'] in valid_types:
+                recurse_select_forward(inp.GetTool())
         except KeyError:
             pass
 

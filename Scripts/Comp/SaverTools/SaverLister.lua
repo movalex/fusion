@@ -29,7 +29,7 @@ win = disp:AddWindow({
 itm = win:GetItems()
 
 hdr = itm.Tree:NewItem()
-hdr.Text[0] = 'P'
+hdr.Text[0] = 'Pass'
 hdr.Text[1] = 'Saver Name'
 hdr.Text[2] = 'In'
 hdr.Text[3] = 'Out'
