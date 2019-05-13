@@ -431,7 +431,7 @@ if oldLoaderClip ~= nil then
 
 	-- Check new file path is valid
 
-		if fileexists(filePathBrowse) then
+		if fileexists(comp:MapPath(filePathBrowse)) then
 
 			updateLoaders(oldLoaderClip, filePathBrowse, onlySelectedLoaders)
 

@@ -15,10 +15,13 @@ for i, tool in ipairs(originalToolList) do
 				if duplicateToolList[i]:GetInputList()[j]:GetAttrs().INPB_Connected then
 					print("    " .. input.Name .. " input : both connected")
 				else
-					print("    " .. input:GetConnectedOutput():GetTool().Name .. "." .. input:GetConnectedOutput().Name .. " only connected to original " .. input.Name .. " input, trying to connect")
+					print("    " .. input:GetConnectedOutput():GetTool().Name .. 
+                         "." .. input:GetConnectedOutput().Name ..
+                         " only connected to original " ..
+                         input.Name .. " input, trying to connect")
 					duplicateToolList[i]:GetInputList()[j]:ConnectTo(input:GetConnectedOutput())
 					if(duplicateToolList[i]:GetInputList()[j]:GetAttrs().INPB_Connected) then
-						print("    connection successful")
+						-- print("    connection successful")
 					end
 				end
 			else
