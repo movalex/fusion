@@ -1,0 +1,402 @@
+{
+	Tools = ordered() {
+		SE_YATS = MacroOperator {
+			Inputs = ordered() {
+				Input1 = InstanceInput {
+					SourceOp = "Outer",
+					Source = "Center",
+				},
+				Input2 = InstanceInput {
+					SourceOp = "Outer",
+					Source = "Width",
+					Name = "Outer Width",
+					Default = 1,
+				},
+				Input3 = InstanceInput {
+					SourceOp = "Outer",
+					Source = "Height",
+					Name = "Outer Height",
+					Default = 0.75,
+				},
+				Input4 = InstanceInput {
+					SourceOp = "Outer",
+					Source = "Angle",
+					Default = 0,
+				},
+				Input5 = InstanceInput {
+					SourceOp = "Inner",
+					Source = "Width",
+					Expression = "Outer.Width",
+					Name = "Inner Width",
+					Default = 1,
+				},
+				Input6 = InstanceInput {
+					SourceOp = "Inner",
+					Source = "Height",
+					Name = "Inner Height",
+					Default = 0.5,
+				},
+				MainInput1 = InstanceInput {
+					SourceOp = "Master",
+					Source = "Input",
+				},
+				Input7 = InstanceInput {
+					SourceOp = "VariBlur1",
+					Source = "Method",
+					Default = 2,
+				},
+				Input8 = InstanceInput {
+					SourceOp = "VariBlur1",
+					Source = "Quality",
+					Default = 4,
+				},
+				Input9 = InstanceInput {
+					SourceOp = "VariBlur1",
+					Source = "LockXY",
+					Default = 1,
+				},
+				Input10 = InstanceInput {
+					SourceOp = "VariBlur1",
+					Source = "XBlurSize",
+					Default = 20,
+				},
+				Input11 = InstanceInput {
+					SourceOp = "VariBlur1",
+					Source = "YBlurSize",
+					Default = 1,
+				},
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "VariBlur1",
+					Source = "Output",
+				},
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0, }, },
+			Tools = ordered() {
+				Upper = Background {
+					NameSet = true,
+					CustomData = {
+						Settings = {
+							[1] = {
+								Tools = ordered() {
+									Background1 = Background {
+										Inputs = {
+											Height = Input { Value = 720, },
+											Gradient = Input {
+												Value = Gradient {
+													Colors = {
+														[0] = { 0, 0, 0, 1, },
+														[1] = { 1, 1, 1, 1, },
+													},
+												},
+											},
+											TopLeftAlpha = Input { Value = 0, },
+											Width = Input { Value = 1280, },
+										},
+										Name = "Background1",
+										CtrlWZoom = false,
+										ViewInfo = OperatorInfo { Pos = { 259, 256, }, },
+										CustomData = {
+										},
+									},
+								},
+							},
+							[2] = {
+								Tools = ordered() {
+									Background1 = Background {
+										Inputs = {
+											TopLeftRed = Input { Value = 1, },
+											TopLeftGreen = Input { Value = 0.760784387588501, },
+											Height = Input { Value = 720, },
+											Gradient = Input {
+												Value = Gradient {
+													Colors = {
+														[0] = { 0, 0, 0, 1, },
+														[1] = { 1, 1, 1, 1, },
+													},
+												},
+											},
+											TopLeftBlue = Input { Value = 0.0588235333561897, },
+											Width = Input { Value = 1280, },
+										},
+										CtrlWZoom = false,
+										ViewInfo = OperatorInfo { Pos = { 259, 256, }, },
+										CustomData = {
+										},
+									},
+								},
+							},
+						},
+					},
+					Inputs = {
+						Width = Input {
+							Value = 1024,
+							Expression = "Master.Input.OriginalWidth",
+						},
+						Height = Input {
+							Value = 768,
+							Expression = "Master.Input.OriginalHeight",
+						},
+						Type = Input { Value = FuID { "Gradient", }, },
+						TopLeftAlpha = Input { Value = 0, },
+						Start = Input {
+							SourceOp = "Vector2",
+							Source = "Position",
+						},
+						End = Input {
+							SourceOp = "Vector1",
+							Source = "Position",
+						},
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 1, 1, 1, 1, },
+									[1] = { 0, 0, 0, 0, },
+								},
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 385, 148.5, }, },
+				},
+				Vector2 = Vector {
+					CtrlWZoom = false,
+					Inputs = {
+						Origin = Input { Expression = "Point(Outer.Center.X,Outer.Center.Y)", },
+						Distance = Input {
+							Value = -0.3677419,
+							Expression = "(-Outer.Height/2)/ImageAspect",
+						},
+						Angle = Input {
+							Value = -90,
+							Expression = "Outer.Angle-90",
+						},
+						ImageAspect = Input {
+							Value = 1.33333333333333,
+							Expression = "Master.Input.OriginalWidth/Master.Input.OriginalHeight",
+						},
+					},
+				},
+				Vector1 = Vector {
+					CtrlWZoom = false,
+					Inputs = {
+						Origin = Input {
+							Value = { 0.5, 0.801060225829148, },
+							Expression = "Point(Outer.Center.X,Outer.Center.Y)",
+						},
+						Distance = Input {
+							Value = -0.2258065,
+							Expression = "(-Inner.Height/2)/ImageAspect",
+						},
+						Angle = Input {
+							Value = -22.2077922,
+							Expression = "Outer.Angle-90",
+						},
+						ImageAspect = Input {
+							Value = 1,
+							Expression = "Master.Input.OriginalWidth/Master.Input.OriginalHeight",
+						},
+					},
+				},
+				Outer = RectangleMask {
+					NameSet = true,
+					Inputs = {
+						PaintMode = Input { Value = FuID { "Subtract", }, },
+						MaskWidth = Input { Value = 1280, },
+						MaskHeight = Input { Value = 720, },
+						PixelAspect = Input { Value = { 1, 1, }, },
+						ClippingMode = Input { Value = FuID { "None", }, },
+						Width = Input { Value = 1, },
+						Height = Input { Value = 0.75, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 165, 148.5, }, },
+				},
+				Inner = RectangleMask {
+					NameSet = true,
+					Inputs = {
+						PaintMode = Input { Value = FuID { "Subtract", }, },
+						MaskWidth = Input { Value = 1280, },
+						MaskHeight = Input { Value = 720, },
+						PixelAspect = Input { Value = { 1, 1, }, },
+						ClippingMode = Input { Value = FuID { "None", }, },
+						Center = Input { Expression = "Outer.Center", },
+						Width = Input {
+							Value = 1,
+							Expression = "Outer.Width",
+						},
+						Angle = Input { Expression = "Outer.Angle", },
+						EffectMask = Input {
+							SourceOp = "Outer",
+							Source = "Mask",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 165, 181.5, }, },
+				},
+				Lower = Background {
+					NameSet = true,
+					CustomData = {
+						Settings = {
+							[1] = {
+								Tools = ordered() {
+									Background1 = Background {
+										Inputs = {
+											Height = Input { Value = 720, },
+											Gradient = Input {
+												Value = Gradient {
+													Colors = {
+														[0] = { 0, 0, 0, 1, },
+														[1] = { 1, 1, 1, 1, },
+													},
+												},
+											},
+											TopLeftAlpha = Input { Value = 0, },
+											Width = Input { Value = 1280, },
+										},
+										Name = "Background1",
+										CtrlWZoom = false,
+										ViewInfo = OperatorInfo { Pos = { 259, 256, }, },
+										CustomData = {
+										},
+									},
+								},
+							},
+							[2] = {
+								Tools = ordered() {
+									Background1 = Background {
+										Inputs = {
+											TopLeftRed = Input { Value = 1, },
+											TopLeftGreen = Input { Value = 0.760784387588501, },
+											Height = Input { Value = 720, },
+											Gradient = Input {
+												Value = Gradient {
+													Colors = {
+														[0] = { 0, 0, 0, 1, },
+														[1] = { 1, 1, 1, 1, },
+													},
+												},
+											},
+											TopLeftBlue = Input { Value = 0.0588235333561897, },
+											Width = Input { Value = 1280, },
+										},
+										CtrlWZoom = false,
+										ViewInfo = OperatorInfo { Pos = { 259, 256, }, },
+										CustomData = {
+										},
+									},
+								},
+							},
+						},
+					},
+					Inputs = {
+						Width = Input {
+							Value = 1024,
+							Expression = "Master.Input.OriginalWidth",
+						},
+						Height = Input {
+							Value = 768,
+							Expression = "Master.Input.OriginalHeight",
+						},
+						Type = Input { Value = FuID { "Gradient", }, },
+						TopLeftAlpha = Input { Value = 0, },
+						Start = Input {
+							SourceOp = "Vector2_1",
+							Source = "Position",
+						},
+						End = Input {
+							SourceOp = "Vector1_1",
+							Source = "Position",
+						},
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 1, 1, 1, 1, },
+									[1] = { 0, 0, 0, 0, },
+								},
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 275, 181.5, }, },
+				},
+				Vector2_1 = Vector {
+					CtrlWZoom = false,
+					Inputs = {
+						Origin = Input { Expression = "Point(Outer.Center.X,Outer.Center.Y)", },
+						Distance = Input {
+							Value = -0.291677133420262,
+							Expression = "(Outer.Height/2)/ImageAspect",
+						},
+						Angle = Input {
+							Value = -45.5844156,
+							Expression = "Outer.Angle-90",
+						},
+						ImageAspect = Input {
+							Value = 1.33333333333333,
+							Expression = "Master.Input.OriginalWidth/Master.Input.OriginalHeight",
+						},
+					},
+				},
+				Vector1_1 = Vector {
+					CtrlWZoom = false,
+					Inputs = {
+						Origin = Input { Expression = "Point(Outer.Center.X,Outer.Center.Y)", },
+						Distance = Input {
+							Value = -0.103711100106929,
+							Expression = "(Inner.Height/2)/ImageAspect",
+						},
+						Angle = Input {
+							Value = -45.5844156,
+							Expression = "Outer.Angle-90",
+						},
+						ImageAspect = Input {
+							Value = 1.33333333333333,
+							Expression = "Master.Input.OriginalWidth/Master.Input.OriginalHeight",
+						},
+					},
+				},
+				Merge1 = Merge {
+					Inputs = {
+						PerformDepthMerge = Input { Value = 0, },
+						Background = Input {
+							SourceOp = "Upper",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Lower",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 385, 181.5, }, },
+				},
+				Master = BrightnessContrast {
+					CtrlWZoom = false,
+					NameSet = true,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Inner",
+							Source = "Mask",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 165, 214.5, }, },
+				},
+				VariBlur1 = VariBlur {
+					CtrlWZoom = false,
+					Inputs = {
+						Method = Input { Value = 2, },
+						BlurChannel = Input { Value = 4, },
+						XBlurSize = Input { Value = 20, },
+						Input = Input {
+							SourceOp = "Master",
+							Source = "Output",
+						},
+						BlurImage = Input {
+							SourceOp = "Merge1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 385, 214.5, }, },
+				},
+			},
+		},
+	},
+	ActiveTool = "SE_YATS",
+}

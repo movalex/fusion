@@ -1,0 +1,61 @@
+{
+	Tools = ordered() {
+		negative2 = MacroOperator {
+			Inputs = ordered() {
+				MainInput1 = InstanceInput {
+					SourceOp = "negative",
+					Source = "Background",
+				},
+				MainInput2 = InstanceInput {
+					SourceOp = "negative",
+					Source = "Foreground",
+				},
+				Input3 = InstanceInput {
+					SourceOp = "negative",
+					Source = "Blend",
+					Default = 1,
+				},
+				Input4 = InstanceInput {
+					SourceOp = "negative",
+					Source = "ApplyMaskInverted",
+					Default = 0,
+				},
+				Input5 = InstanceInput {
+					SourceOp = "negative",
+					Source = "MultiplyByMask",
+					Default = 0,
+				},
+				Input1 = InstanceInput {
+					SourceOp = "negative",
+					Source = "EffectMask",
+				},
+				Input2 = InstanceInput {
+					SourceOp = "negative",
+					Source = "Matte",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "negative",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Name = "negative",
+				Pos = { 0, 0 }
+			},
+			Tools = ordered() {
+				negative = ChannelBoolean {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Operation = Input { Value = 10, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 694, 136 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "negative2"
+}
