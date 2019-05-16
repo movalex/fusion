@@ -1,1 +1,0 @@
-fusion.CacheManager:Purge()

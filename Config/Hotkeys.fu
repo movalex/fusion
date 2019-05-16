@@ -41,14 +41,28 @@
     C = "AddTool{ id = 'ColorCorrector' }",
     G = "AddTool{ id = 'BrightnessContrast' }",
     R = "AddTool{ id = 'Loader' }",
-    W = "AddTool{ id = 'Saver' }",
+    S = "AddTool{ id = 'Saver' }",
     SHIFT_M = "RunScript{filename = 'Scripts:/Utility/stx_merge3DConnect.lua'}",
     M = "RunScript{filename = 'Scripts:/Utility/stx_mergeConnect.lua'}",
     K = "RunScript{filename = 'Scripts:/Utility/stx_kissConnect.lua'}",
     OEM_PERIOD = "AddTool{ id = 'PipeRouter' }",
     LEFT  = "Time_Step_Back",
     RIGHT = "Time_Step_Forward",
+   
   },
+  
+  Hotkeys
+  {
+    Target = "GraphView",
+    Q = "Time_Step_PrevKey",
+    W = "Time_Step_NextKey"  
+  },
+  -- Hotkeys
+  -- {
+  --   Target = "FuFrame",
+  --   Q = "Time_Step_PrevKey",
+  --   W = "Time_Step_NextKey"  
+  -- },
 
   Hotkeys
   {
