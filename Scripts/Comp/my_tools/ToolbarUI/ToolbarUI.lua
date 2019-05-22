@@ -32,7 +32,7 @@ if view and viewer then
 
     ui = fu.UIManager
     disp = bmd.UIDispatcher(ui)
-    width,height = 550,26
+    width,height = 600,26
     iconsMedium = {16,26}
     iconsMediumLong = {50,26}
 
@@ -52,7 +52,7 @@ if view and viewer then
             
             ui:HGroup{
                 ui:HGroup{
-                    Weight = 0.7,
+                    Weight = 0.8,
                     
                     -- Add three buttons that have an icon resource attached and no border shading
                     -- ui:Button{
@@ -250,6 +250,7 @@ if view and viewer then
                         MinimumSize = iconsMedium,
                         Checkable = true,
                     },
+                    --
                     -- ui:Button{
                     --     ID = 'IconButtonSmR',
                     --     Text = 'SmR',
@@ -284,17 +285,18 @@ if view and viewer then
 
                     -- },
                 },
-                -- ui:HGroup{
-                --     Weight = 0.3,
-                --     ui:Button{
-                --         ID = 'IconButtonTool',
-                --         Text = 'Background 1',
-                --         Flat = true,
-                --         IconSize = {10,10},
-                --         -- Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/TriangleUp.png'},
-                --         Checkable = false,
-                --     },
-                -- },
+                ui:HGroup{
+                    Weight = 0.2,
+                    ui:Button{
+                        ID = 'CloseButton',
+                        Text = 'Close',
+                        Margin = 20,
+                        Flat = false,
+                        IconSize = {32,16},
+                        Checkable = false
+                    },
+                    ui.HGap(0.25,0),
+                },
             },
 
         },
@@ -302,6 +304,9 @@ if view and viewer then
 
     -- The window was closed
     function win.On.ToolbarWin.Close(ev)
+            disp:ExitLoop()
+    end
+    function win.On.CloseButton.Clicked(ev)
             disp:ExitLoop()
     end
 
@@ -440,7 +445,6 @@ if view and viewer then
     function win.On.IconButtonDoD.Clicked(ev)
         state = itm.IconButtonDoD.Checked
         print('[DoD][Button State] ', state)
-        viewer = get_viewer()
         viewer:ShowDoD()
         viewer:Redraw()
     end
