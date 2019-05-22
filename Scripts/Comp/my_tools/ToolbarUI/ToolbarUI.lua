@@ -290,7 +290,6 @@ if view and viewer then
                     ui:Button{
                         ID = 'CloseButton',
                         Text = 'Close',
-                        Margin = 20,
                         Flat = false,
                         IconSize = {32,16},
                         Checkable = false
@@ -436,8 +435,6 @@ if view and viewer then
     function win.On.IconButtonROI.Clicked(ev)
         state = itm.IconButtonROI.Checked
         print('[ROI][Button State] ', state)
-        viewer = get_viewer()
-        -- local set = not state
         viewer:EnableRoI(state)
         viewer:Redraw()
     end
@@ -466,35 +463,35 @@ if view and viewer then
         state = itm.IconButtonChequers.Checked
         print('[Chequers][Button State] ', state)
         if fu.Version == 16 then
-            viewer:EnableChecker()
+            viewer:EnableChecker(state)
             viewer:Redraw()
         end
     end
 
-    function win.On.IconButtonSmR.Clicked(ev)
-        state = itm.IconButtonSmR.Checked
-        print('[SmR][Button State] ', state)
-    end
+    -- function win.On.IconButtonSmR.Clicked(ev)
+    --     state = itm.IconButtonSmR.Checked
+    --     print('[SmR][Button State] ', state)
+    -- end
 
     -- function win.On.IconButtonOne2One.Clicked(ev)
     --     state = itm.IconButtonOne2One.Checked
     --     print('[One2One][Button State] ', state)
     -- end
 
-    function win.On.IconButtonNormalise.Clicked(ev)
-        state = itm.IconButtonNormalise.Checked
-        print('[Normalise][Button State] ', state)
-    end
+    -- function win.On.IconButtonNormalise.Clicked(ev)
+    --     state = itm.IconButtonNormalise.Checked
+    --     print('[Normalise][Button State] ', state)
+    -- end
 
-    function win.On.IconButtonSliders.Clicked(ev)
-        state = itm.IconButtonSliders.Checked
-        print('[Sliders][Button State] ', state)
-    end
+    -- function win.On.IconButtonSliders.Clicked(ev)
+    --     state = itm.IconButtonSliders.Checked
+    --     print('[Sliders][Button State] ', state)
+    -- end
 
-    function win.On.IconButtonTool.Clicked(ev)
-        state = itm.IconButtonTool.Checked
-        print('[Tool][Button State] ', state)
-    end
+    -- function win.On.IconButtonTool.Clicked(ev)
+    --     state = itm.IconButtonTool.Checked
+    --     print('[Tool][Button State] ', state)
+    -- end
 
     -- The app:AddConfig() command that will capture the "Shift + Control + W" or "Shift + Control + F4" hotkeys so they will close the window instead of closing the foreground composite.
         app:AddConfig('ToolbarWin', {
