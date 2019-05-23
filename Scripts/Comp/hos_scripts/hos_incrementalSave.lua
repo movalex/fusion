@@ -33,9 +33,9 @@ fa = composition:GetAttrs()
 if fa.COMPS_FileName == "" then
 	Save()
 else
-	pf = eyeon.parseFilename(comp:MapPath(fa.COMPS_FileName))
+	pf = bmd.parseFilename(comp:MapPath(fa.COMPS_FileName))
 
-	if not direxists( pf.Path .. "incrementalSave" ) then
+	if not direxists(pf.Path .. "incrementalSave") then
 		print("creating dir : " .. pf.Path .. "incrementalSave")
 		os.execute("mkdir \"" .. pf.Path .. "incrementalSave\"")
 	else
@@ -57,10 +57,10 @@ else
 
 	for i = 1,num do
 		if not dir[i].IsDir then
-			fileExtension = string.gsub( dir[i].Name, "[.][^.]*$", "")
+			fileExtension = string.gsub(dir[i].Name, "[.][^.]*$", "")
 			--fileNumberString = string.gsub( fileExtension, string.gsub( fileExtension, "[^.][0-9]+$", ""), "")
 			fileNumberString = string.sub(fileExtension, string.find(fileExtension, "(%d+)$", 0))
-			fileNumber = tonumber( fileNumberString )
+			fileNumber = tonumber(fileNumberString)
 			--print(fileNumberString)
 			--print(fileNumber)
 			if currentVersion < fileNumber then

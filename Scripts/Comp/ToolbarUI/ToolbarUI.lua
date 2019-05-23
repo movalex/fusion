@@ -24,7 +24,9 @@ end
 view = get_viewer()
 viewer = view.CurrentViewer
 
-if view and viewer then
+
+
+if view and viewer and viewer:GetID() == 'GLImageViewer' then
     roi_state = viewer:IsEnableRoI()
     lut_state = viewer:IsLUTEnabled()
     locked_state = view:GetLocked()
@@ -32,16 +34,19 @@ if view and viewer then
 
     ui = fu.UIManager
     disp = bmd.UIDispatcher(ui)
-    width,height = 600,26
+    width,height = 650,26
     iconsMedium = {16,26}
     iconsMediumLong = {50,26}
-
+	local x = fu:GetMousePos()[1]
+	local y = fu:GetMousePos()[2]
     win = disp:AddWindow({
         ID = 'ToolbarWin',
         TargetID = 'ToolbarWin',
         WindowTitle = 'Viewer Toolbar for Fusion16',
-        -- Geometry = {0, 540, width, height},
-        Geometry = {0, 0, width, height},
+        -- WindowFlags = {FramelessWindowHint = true, },
+        -- WindowFlags = {WA_NoSystemBackground = true, WA_TranslucentBackground = true},
+        Geometry = {x-(width)/2, y+20, width, height},
+        -- Geometry = {0, 0, width, height},
         Spacing = 0,
         Margin = 0,
         
@@ -60,7 +65,7 @@ if view and viewer then
                     --     Text = 'SubV',
                     --     Flat = true,
                     --     IconSize = {10,10},
-                    --     Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/TriangleUp.png'},
+                    --     Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/TriangleUp.png'},
                     --     MinimumSize = iconsMediumLong,
                     --     Checkable = true,
                     -- },
@@ -69,7 +74,7 @@ if view and viewer then
                         Text = '100%',
                         Flat = true,
                         IconSize = {6,10},
-                        -- Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/TriangleUp.png'},
+                        -- Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/TriangleUp.png'},
                         MinimumSize = iconsMediumLong,
                         Checkable = false,
                     },
@@ -85,7 +90,7 @@ if view and viewer then
                         ID = 'IconButtonPolyline',
                         Flat = true,
                         IconSize = {16,16},
-                        Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/PT_Polyline.png'},
+                        Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_Polyline.png'},
                         MinimumSize = iconsMedium,
                         Checkable = false,
                     },
@@ -93,7 +98,7 @@ if view and viewer then
                         ID = 'IconButtonBSpline',
                         Flat = true,
                         IconSize = {16,16},
-                        Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/PT_BSpline.png'},
+                        Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_BSpline.png'},
                         MinimumSize = iconsMedium,
                         Checkable = false,
                     },
@@ -101,7 +106,7 @@ if view and viewer then
                         ID = 'IconButtonBitmap',
                         Flat = true,
                         IconSize = {16,16},
-                        Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/PT_Bitmap.png'},
+                        Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_Bitmap.png'},
                         MinimumSize = iconsMedium,
                         Checkable = false,
                     },
@@ -109,7 +114,7 @@ if view and viewer then
                         ID = 'IconButtonPaint',
                         Flat = true,
                         IconSize = {16,16},
-                        Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/PT_Paint.png'},
+                        Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_Paint.png'},
                         MinimumSize = iconsMedium,
                         Checkable = false,
                     },
@@ -117,7 +122,7 @@ if view and viewer then
                         ID = 'IconButtonWand',
                         Flat = true,
                         IconSize = {16,16},
-                        Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/PT_Wand.png'},
+                        Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_Wand.png'},
                         MinimumSize = iconsMedium,
                         Checkable = false,
                     },
@@ -125,7 +130,7 @@ if view and viewer then
                         ID = 'IconButtonRectangle',
                         Flat = true,
                         IconSize = {16,16},
-                        Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/PT_Rectangle.png'},
+                        Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_Rectangle.png'},
                         MinimumSize = iconsMedium,
                         Checkable = false,
                     },
@@ -133,7 +138,7 @@ if view and viewer then
                         ID = 'IconButtonCircle',
                         Flat = true,
                         IconSize = {16,16},
-                        Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/PT_Circle.png'},
+                        Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_Circle.png'},
                         MinimumSize = iconsMedium,
                         Checkable = false,
                     },
@@ -141,7 +146,7 @@ if view and viewer then
                     --     ID = 'IconButtonABuffer',
                     --     Flat = true,
                     --     IconSize = {16,16},
-                    --     Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/PT_ABuffer.png'},
+                    --     Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_ABuffer.png'},
                     --     MinimumSize = iconsMedium,
                     --     Checkable = true,
                     --     Checked = true,
@@ -150,7 +155,7 @@ if view and viewer then
                     --     ID = 'IconButtonSplitBuffer',
                     --     Flat = true,
                     --     IconSize = {16,16},
-                    --     Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/PT_SplitBuffer.png'},
+                    --     Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_SplitBuffer.png'},
                     --     MinimumSize = iconsMedium,
                     --     Checkable = true,
                     -- },
@@ -158,7 +163,7 @@ if view and viewer then
                     --     ID = 'IconButtonBBuffer',
                     --     Flat = true,
                     --     IconSize = {16,16},
-                    --     Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/PT_BBuffer.png'},
+                    --     Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_BBuffer.png'},
                     --     MinimumSize = iconsMedium,
                     --     Checkable = true,
                     -- },
@@ -166,7 +171,7 @@ if view and viewer then
                         ID = 'IconButtonStereo',
                         Flat = true,
                         IconSize = {16,16},
-                        Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/PT_Stereo.png'},
+                        Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_Stereo.png'},
                         MinimumSize = iconsMedium,
                         Checkable = true,
                         Checked = view:IsStereoEnabled()
@@ -182,7 +187,7 @@ if view and viewer then
                     --     ID = 'IconButtonColour',
                     --     Flat = true,
                     --     IconSize = {16,16},
-                    --     Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/PT_Colour.png'},
+                    --     Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_Colour.png'},
                     --     MinimumSize = iconsMedium,
                     --     Checkable = true,
                     --     Checked = true,
@@ -192,7 +197,7 @@ if view and viewer then
                         Text = 'LUT',
                         Flat = true,
                         IconSize = {5,10},
-                        -- Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/TriangleUp.png'},
+                        -- Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/TriangleUp.png'},
                         MinimumSize = iconsMediumLong,
                         Checkable = true,
                         Checked = lut_state or false
@@ -202,7 +207,7 @@ if view and viewer then
                     --     Text = '360°',
                     --     Flat = true,
                     --     IconSize = {10,10},
-                    --     Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/TriangleUp.png'},
+                    --     Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/TriangleUp.png'},
                     --     MinimumSize = iconsMediumLong,
                     --     Checkable = true,
                     -- },
@@ -211,7 +216,7 @@ if view and viewer then
                         Text = 'RoI',
                         Flat = true,
                         IconSize = {5,10},
-                        -- Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/TriangleUp.png'},
+                        -- Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/TriangleUp.png'},
                         MinimumSize = iconsMediumLong,
                         Checkable = true,
                         Checked = roi_state or false 
@@ -228,7 +233,7 @@ if view and viewer then
                         ID = 'IconButtonLockCold',
                         Flat = true,
                         IconSize = {16,16},
-                        Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/PT_LockCold.png'},
+                        Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_LockCold.png'},
                         MinimumSize = iconsMedium,
                         Checkable = true,
                         Checked = locked_state or false
@@ -237,7 +242,7 @@ if view and viewer then
                         ID = 'IconButtonControls',
                         Flat = true,
                         IconSize = {16,16},
-                        Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/PT_Controls.png'},
+                        Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_Controls.png'},
                         MinimumSize = iconsMedium,
                         Checkable = true,
                         Checked = controls_state or false
@@ -246,7 +251,7 @@ if view and viewer then
                         ID = 'IconButtonChequers',
                         Flat = true,
                         IconSize = {16,16},
-                        Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/PT_Chequers.png'},
+                        Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_Chequers.png'},
                         MinimumSize = iconsMedium,
                         Checkable = true,
                     },
@@ -262,7 +267,7 @@ if view and viewer then
                     --     ID = 'IconButtonOne2One',
                     --     Flat = true,
                     --     IconSize = {16,16},
-                    --     Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/PT_One2One.png'},
+                    --     Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_One2One.png'},
                     --     MinimumSize = iconsMedium,
                     --     Checkable = true,
                     -- },
@@ -270,7 +275,7 @@ if view and viewer then
                     --     ID = 'IconButtonNormalise',
                     --     Flat = true,
                     --     IconSize = {16,16},
-                    --     Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/PT_Normalise.png'},
+                    --     Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_Normalise.png'},
                     --     MinimumSize = iconsMedium,
                     --     Checkable = true,
                     -- },
@@ -278,7 +283,7 @@ if view and viewer then
                     --     ID = 'IconButtonSliders',
                     --     Flat = true,
                     --     IconSize = {16,16},
-                    --     Icon = ui:Icon{File = 'Scripts:/Comp/UI Manager/Toolbar/Icons.zip/PT_Sliders.png'},
+                    --     Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_Sliders.png'},
                     --     MinimumSize = iconsMedium,
                     --     Checkable = true,
                     --     Checked = gg_state 
@@ -295,11 +300,24 @@ if view and viewer then
                         Checkable = false
                     },
                     ui.HGap(0.25,0),
+                --     ui:Button{
+                --         ID = 'showHideFrame',
+                --         Text = 'hide frame',
+                --         Flat = false,
+                --         IconSize = {12,16},
+                --         Checkable = false
+                --     },
                 },
             },
 
         },
     })
+    
+
+    function win.On.showHideFrame.Clicked(ev)
+        -- win:SetAttribute('WA_FramelessWindowHint', true)
+        -- win:Close()
+    end
 
     -- The window was closed
     function win.On.ToolbarWin.Close(ev)
@@ -316,7 +334,6 @@ if view and viewer then
     --     state = itm.IconButtonSubV.Checked
     --     print('[SubV][Button State] ', state)
     -- end
-
 
 
 
@@ -502,7 +519,7 @@ if view and viewer then
             Hotkeys {
                 Target = 'ToolbarWin',
                 Defaults = true,
-                
+                ESCAPE = 'Execute{cmd = [[app.UIManager:QueueEvent(obj, "Close", {})]]}',
                 SHIFT_CONTROL_W = 'Execute{cmd = [[app.UIManager:QueueEvent(obj, "Close", {})]]}',
                 SHIFT_CONTROL_F4 = 'Execute{cmd = [[app.UIManager:QueueEvent(obj, "Close", {})]]}',
             },
@@ -518,7 +535,7 @@ if view and viewer then
     collectgarbage()
     print('[Done]')
 -- checker_state = viewer:IsCheckerEnabled()
-else print('Please load the node to the Viewer')
+else print('Please load 2D node to the Viewer')
 end
 
 
