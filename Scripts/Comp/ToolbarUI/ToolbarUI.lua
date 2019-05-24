@@ -43,6 +43,7 @@ if view and viewer and viewer:GetID() == 'GLImageViewer' then
         ID = 'ToolbarWin',
         TargetID = 'ToolbarWin',
         WindowTitle = 'Viewer Toolbar for Fusion16',
+        WindowFlags = {FramelessWindowHint = true, },
         -- WindowFlags = {FramelessWindowHint = true, },
         -- WindowFlags = {WA_NoSystemBackground = true, WA_TranslucentBackground = true},
         Geometry = {x-(width)/2, y+20, width, height},
@@ -313,6 +314,11 @@ if view and viewer and viewer:GetID() == 'GLImageViewer' then
         },
     })
     
+
+    -- win:SetAttribute('WA_FramelessWindowHint', true)
+    -- win:SetAttribute('WA_NoSystemBackground', true)
+    -- win:SetAttribute('WA_TransparentForMouseEvents', true)
+
 
     function win.On.showHideFrame.Clicked(ev)
         -- win:SetAttribute('WA_FramelessWindowHint', true)
