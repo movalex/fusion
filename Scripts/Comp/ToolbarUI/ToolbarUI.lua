@@ -10,7 +10,6 @@ Web: www.andrewhazelden.com
 
 ]]
 
-
 function get_viewer(is_view)
     if fu.Version == 16 then
         glview = comp:GetPreviewList().LeftView.View
@@ -20,11 +19,8 @@ function get_viewer(is_view)
     return glview
 end
 
-
 view = get_viewer()
 viewer = view.CurrentViewer
-
-
 
 if view and viewer and viewer:GetID() == 'GLImageViewer' then
     roi_state = viewer:IsEnableRoI()
@@ -36,21 +32,18 @@ if view and viewer and viewer:GetID() == 'GLImageViewer' then
     disp = bmd.UIDispatcher(ui)
     width,height = 650,26
     iconsMedium = {16,26}
-    iconsMediumLong = {50,26}
+    iconsMediumLong = {32,26}
 	local x = fu:GetMousePos()[1]
 	local y = fu:GetMousePos()[2]
     win = disp:AddWindow({
         ID = 'ToolbarWin',
         TargetID = 'ToolbarWin',
         WindowTitle = 'Viewer Toolbar for Fusion16',
-        WindowFlags = {FramelessWindowHint = true, },
         -- WindowFlags = {FramelessWindowHint = true, },
-        -- WindowFlags = {WA_NoSystemBackground = true, WA_TranslucentBackground = true},
         Geometry = {x-(width)/2, y+20, width, height},
         -- Geometry = {0, 0, width, height},
         Spacing = 0,
         Margin = 0,
-        
         ui:VGroup{
             ID = 'root',
             
@@ -246,7 +239,7 @@ if view and viewer and viewer:GetID() == 'GLImageViewer' then
                         Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_Controls.png'},
                         MinimumSize = iconsMedium,
                         Checkable = true,
-                        Checked = controls_state or false
+                        Checked = controls_state or true
                     },
                     ui:Button{
                         ID = 'IconButtonChequers',
@@ -255,8 +248,8 @@ if view and viewer and viewer:GetID() == 'GLImageViewer' then
                         Icon = ui:Icon{File = 'Scripts:/Comp/ToolbarUI/Icons.zip/PT_Chequers.png'},
                         MinimumSize = iconsMedium,
                         Checkable = true,
+                        Checked = true,
                     },
-                    --
                     -- ui:Button{
                     --     ID = 'IconButtonSmR',
                     --     Text = 'SmR',
@@ -288,7 +281,6 @@ if view and viewer and viewer:GetID() == 'GLImageViewer' then
                     --     MinimumSize = iconsMedium,
                     --     Checkable = true,
                     --     Checked = gg_state 
-
                     -- },
                 },
                 ui:HGroup{
@@ -411,16 +403,28 @@ if view and viewer and viewer:GetID() == 'GLImageViewer' then
     --     itm.IconButtonABuffer.Checked = false
     --     itm.IconButtonBBuffer.Checked = false
     --     print('[SplitBuffer][Button State] ', state)
-    --     viewer = get_viewer()
     -- end
 
     -- function win.On.IconButtonBBuffer.Clicked(ev)
     --     state = itm.IconButtonBBuffer.Checked
-        
     --     itm.IconButtonABuffer.Checked = false
     --     itm.IconButtonSplitBuffer.Checked = false
     --     print('[BBuffer][Button State] ', state)
-    --     viewer = get_viewer()
+    -- end
+
+    -- function win.On.IconButtonSnap.Clicked(ev)
+    --     state = itm.IconButtonSnap.Checked
+    --     print('[Snap][Button State] ', state)
+    -- end
+
+    -- function win.On.IconButtonColour.Clicked(ev)
+    --     state = itm.IconButtonColour.Checked
+    --     print('[Colour][Button State] ', state)
+    -- end
+
+    -- function win.On.IconButton360.Clicked(ev)
+    --     state = itm.IconButton360.Checked
+    --     print('[360][Button State] ', state)
     -- end
 
     function win.On.IconButtonStereo.Clicked(ev)
@@ -429,18 +433,6 @@ if view and viewer and viewer:GetID() == 'GLImageViewer' then
         view:EnableStereo()
     end
 
-    -- function win.On.IconButtonSnap.Clicked(ev)
-    --     state = itm.IconButtonSnap.Checked
-    --     print('[Snap][Button State] ', state)
-    --     viewer = get_viewer()
-    -- end
-
-    -- function win.On.IconButtonColour.Clicked(ev)
-    --     state = itm.IconButtonColour.Checked
-    --     print('[Colour][Button State] ', state)
-    --     viewer = get_viewer()
-    -- end
-
     function win.On.IconButtonLUT.Clicked(ev)
         state = itm.IconButtonLUT.Checked
         print('[LUT][Button State] ', state)
@@ -448,12 +440,6 @@ if view and viewer and viewer:GetID() == 'GLImageViewer' then
         viewer:EnableLUT(set_lut)
         viewer:Redraw()
     end
-
-    -- function win.On.IconButton360.Clicked(ev)
-    --     state = itm.IconButton360.Checked
-    --     print('[360][Button State] ', state)
-    --     viewer = get_viewer()
-    -- end
 
     function win.On.IconButtonROI.Clicked(ev)
         state = itm.IconButtonROI.Checked

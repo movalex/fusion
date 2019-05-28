@@ -54,8 +54,10 @@
   Hotkeys
   {
     Target = "GraphView",
-    Q = "Time_Step_PrevKey",
-    W = "Time_Step_NextKey"  
+    -- Q = "Time_Step_PrevKey",
+    -- W = "Time_Step_NextKey"  
+    Q = "Time_Goto_Key_Prev",
+    W = "Time_Goto_Key_Next"  
   },
   -- Hotkeys
   -- {
