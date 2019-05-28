@@ -16,30 +16,38 @@ def create_bg_from_loader(tool):
         aspect_x = attrs["TOOLN_ImageAspectX"]
         aspect_y = attrs["TOOLN_ImageAspectY"]
         aspect_list = [aspect_x, aspect_y]
+        if aspect_list == [1.0, 2.0]:
+            print('\nThe loader is probably interlaced, setting BG aspect to 1')
+            aspect_list[1] = 1.0
         image_depth = attrs["TOOLI_ImageDepth"]
     except KeyError:
-        comp.CurrentFrame.ViewOn(tool, 1)
         print(
             "\nWARNING: image was not loaded to the viewer, aspect and depth could not be set"
         )
+        if tool.GetAttrs()['TOOLBT_Clip_Loop'][1] == True:
+            tool.Loop = 1
+            comp.CurrentFrame.ViewOn(tool, 1)
+            tool.Loop = 0
+        else:
+            comp.CurrentFrame.ViewOn(tool, 1)
+        print("\nTo get proper BG please run the script once again")
+
+    new_bg = comp.AddTool("Background", int(posx) + 1, int(posy) + 1)
+    new_bg.Width = width
+    new_bg.Height = height
+    comp.SetActiveTool()
+    flow.Select(tool)
+    flow.Select(new_bg)
 
     if aspect_list and image_depth:
         depth_list = ["Default", "int8", "int16", "float16", "float32"]
-        new_bg = comp.AddTool("Background", int(posx) + 2, int(posy) + 1)
         new_bg.PixelAspect = aspect_list
         new_bg.Depth = image_depth - 4
-        new_bg.Width = width
-        new_bg.Height = height
-        comp.SetActiveTool()
-        flow.Select(tool)
-        flow.Select(new_bg)
         print(
             "Created BG with Aspect {}:{} and Depth {}".format(
                 aspect_list[0], aspect_list[1], depth_list[int(image_depth-4)]
             )
         )
-    else:
-        print("\nPlease run the script once again")
 
 
 if __name__ == "__main__":

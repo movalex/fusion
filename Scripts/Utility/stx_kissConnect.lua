@@ -23,15 +23,15 @@ function main(tool)
     distances = {}
         
 
-    -- for i, n in pairs(allNodes) do
-    --     tempX, tempY = flow:GetPos(n)
-    --     if tempX and tempY then
-    --         local tempDist = math.sqrt((selX-tempX)*(selX-tempX)+(selY-tempY)*(selY-tempY))
-    --         table.insert(distances,{n, tempDist})
-    --     end
-    -- end
+    for i, n in pairs(allNodes) do
+        tempX, tempY = flow:GetPos(n)
+        if tempX and tempY then
+            local tempDist = math.sqrt((selX-tempX)*(selX-tempX)+(selY-tempY)*(selY-tempY))
+            table.insert(distances,{n, tempDist})
+        end
+    end
 
-    -- table.sort(distances, function(b, a) return a[2] > b[2] end)
+    table.sort(distances, function(b, a) return a[2] > b[2] end)
 
     -- for k,v in ipairs(distances) do
     --     print(v[1].Name, ' == ', v[2])
