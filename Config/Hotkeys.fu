@@ -73,14 +73,14 @@
      Q = "My_ShowHideControls",
   },
 
-  Hotkeys
-  {
-     Target = "FuFrame",
+  -- Hotkeys
+  -- {
+  --    Target = "FuFrame",
 
-     J = "Playback_Mode{ play = true, reverse = true}",
-     K = "Playback_Mode{ play = false }",
-     L = "Playback_Mode{ play = true }", -- can leave out play = true if you want toggle.
-  },
+  --    J = "Playback_Mode{ play = true, reverse = true}",
+  --    K = "Playback_Mode{ play = false }",
+  --    L = "Playback_Mode{ play = true }", can leave out play = true if you want toggle.
+  -- },
 }
 
 
