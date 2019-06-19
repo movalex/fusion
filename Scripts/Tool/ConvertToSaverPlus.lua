@@ -39,5 +39,13 @@ ctrls.ML = {
 tool.UserControls = ctrls
 refresh = tool:Refresh()
 
-comp:Unlock()
-comp:Unlock()
+
+function unlock(cmp)
+    cmp:Unlock()
+    print('comp unlocked')
+    if cmp:IsLocked() then
+        unlock(cmp)
+    end
+end
+
+unlock(comp)
