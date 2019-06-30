@@ -544,7 +544,7 @@ class FusionInput(object):
 
         # Some debugging values
         if value == "p":
-            print(self.attributes.values())
+            print(self.attributes.keys())
             return
 
         if self.GetExpression() or value[0] == "=":
@@ -967,8 +967,8 @@ class MainWindow(QMainWindow):
             return
         if isinstance(value, float):
             self.progressBar.setValue(value)
-        # if isinstance(value, (str, unicode)):
-        # self.statusBar().showMessage(value)
+        if isinstance(value, str):
+            self.statusBar().showMessage(value)
 
     def loadFusionData(self):
         # self._tm = TableModel(self)
@@ -1115,11 +1115,12 @@ if __name__ == "__main__":
         raise Exception("No instance of Fusion found running.")
     comp = fu.GetCurrentComp()
 
-QApplication.setStyle(
-    "Plastique"
-)  # Vista tablewidget header backgroundcolor bug workaround
-# This workaround is need as QApplication can only have 1 instance, at all times, and PySide2 will not release the
-# object when the window closes (PySide2 claims this is 'feature', not a bug, so does not need fixing.)
+# QApplication.setStyle(
+#     "Plastique"
+# )
+# Vista tablewidget header backgroundcolor bug workaround
+# This workaround is need as QApplication can only have 1 instance, at all times, and PySide will not release the
+# object when the window closes (PySide claims this is 'feature', not a bug, so does not need fixing.)
 app = QApplication.instance()  # checks if QApplication already exists
 if not app:  # create QApplication if it doesnt exist
     app = QApplication([])
