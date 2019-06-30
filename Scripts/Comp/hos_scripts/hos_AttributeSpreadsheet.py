@@ -5,6 +5,7 @@
         A spreadsheet script to edit the input parameters of multiple Fusion tools at once.
 
     Requires:
+        Python 3.6
         Fusion 9/16 (needs testing)
         PySide2, installed automatically
     Notice:
@@ -88,11 +89,20 @@ try:
 
 except ImportError:
     print("No Pyside2 module found, trying to install...")
-    from pip._internal import main as pipmain
+    try:
+        if sys.version_info.major == 3:
+            from pip._internal import main as pipmain
+        else:
+            print('The autoinstall tool is tested with Python3 pip')
+            sys.exit()
 
-    pipmain(["install", "PySide2", "--no-warn-script-location"])
-    print("Done", "\nNow try to launch the script again")
-    sys.exit()
+        pipmain(["install", "PySide2", "--no-warn-script-location"])
+        print("Done", "\nNow try to launch the script again")
+        sys.exit()
+    except ImportError:
+        print('The autoinstall tool is tested with Python3 pip',
+              '\nTo use it with Python2, ensure pip v10+ is installed')
+        sys.exit()
 
 
 class FUIDComboDelegate(QItemDelegate):
