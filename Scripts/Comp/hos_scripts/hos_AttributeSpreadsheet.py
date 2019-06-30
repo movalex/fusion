@@ -88,20 +88,18 @@ try:
     from PySide2.QtGui import QBrush, QPainter, QColor
 
 except ImportError:
+    if sys.version_info.major == 2:
+        print('Python 3.6 is required')
+        sys.exit()
     print("No Pyside2 module found, trying to install...")
     try:
-        if sys.version_info.major == 3:
-            from pip._internal import main as pipmain
-        else:
-            print('The autoinstall tool is tested with Python3 pip')
-            sys.exit()
+        from pip._internal import main as pipmain
 
         pipmain(["install", "PySide2", "--no-warn-script-location"])
         print("Done", "\nNow try to launch the script again")
         sys.exit()
     except ImportError:
-        print('The autoinstall tool is tested with Python3 pip',
-              '\nTo use it with Python2, ensure pip v10+ is installed')
+        print('Check if pip version 10+ is installed, installation failed')
         sys.exit()
 
 
