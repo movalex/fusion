@@ -5,8 +5,8 @@
         A spreadsheet script to edit the input parameters of multiple Fusion tools at once.
 
     Requires:
-        Fusion 9/16 (not sure, needs testing) or later
-        PySide2
+        Fusion 9/16 (needs testing)
+        PySide2, installed automatically
     Notice:
         Written by Sven Neve (sven[AT]houseofsecrets[DOT]nl)
         Copyright (c) 2013 House of Secrets
@@ -85,6 +85,7 @@ try:
     )
 
     from PySide2.QtGui import QBrush, QPainter, QColor
+
 except ImportError:
     print("No Pyside2 module found, trying to install...")
     from pip._internal import main as pipmain
