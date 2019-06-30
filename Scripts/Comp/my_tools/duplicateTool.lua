@@ -1,4 +1,5 @@
--- 22.02.2019 fix compatibility with Fusion 9
+-- 1.08.2014 release of initial script for Fusion 7 by House of Secrets
+-- 22.02.2019 script simplification, fix compatibility with Fusion 9
 -- 15.05.2019 fix slow copy/paste issue
 
 local originalToolList = comp:GetToolList(true)
