@@ -5,9 +5,16 @@ local originalToolList = comp:GetToolList(true)
 flow = comp.CurrentFrame.FlowView
 composition:StartUndo("Duplicate")
 comp:Copy(originalToolList)
--- comp:SetActiveTool()
 flow:Select()
+comp:SetActiveTool()
 comp:Paste()
+
+if #originalToolList == 1 then
+    local x, y = flow:GetPos(originalToolList[1])
+    local newTool = comp.ActiveTool
+    flow:SetPos(newTool, x+1, y)
+end
+
 local duplicateToolList = comp:GetToolList(true)
 
 for i, tool in pairs(originalToolList) do
