@@ -5,9 +5,8 @@
         A spreadsheet script to edit the input parameters of multiple Fusion tools at once.
 
     Requires:
-        Fusion 5.2 (not sure, needs testing) or later
-        PySide2 1.x.x
-
+        Fusion 9/16 (not sure, needs testing) or later
+        PySide2
     Notice:
         Written by Sven Neve (sven[AT]houseofsecrets[DOT]nl)
         Copyright (c) 2013 House of Secrets
@@ -34,6 +33,11 @@
         THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, AND THE AUTHORS AND
         DISTRIBUTORS HAVE NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT,
         UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+
+        updated for Fusion 9/16, python3 and PySide2 compatibility
+        by Alex Bogomolov
+        https://abogomolov.com
+        2019/6/30
 """
 
 __version__ = 6
@@ -80,17 +84,16 @@ try:
         QSortFilterProxyModel,
     )
 
-    from PySide2.QtGui import (
-        QBrush,
-        QPainter,
-        QColor,
-    )
+    from PySide2.QtGui import QBrush, QPainter, QColor
 except ImportError:
-    print('No Pyside2 module found, trying to install...')
+    print("No Pyside2 module found, trying to install...")
     from pip._internal import main as pipmain
-    pipmain(['install', 'PySide2', '--no-warn-script-location'])
-    print('Done', '\nNow try to launch the script again')
+
+    pipmain(["install", "PySide2", "--no-warn-script-location"])
+    print("Done", "\nNow try to launch the script again")
     sys.exit()
+
+
 class FUIDComboDelegate(QItemDelegate):
     """
     A delegate that places a fully functioning QComboBox in every
@@ -956,7 +959,7 @@ class MainWindow(QMainWindow):
         if isinstance(value, float):
             self.progressBar.setValue(value)
         # if isinstance(value, (str, unicode)):
-            # self.statusBar().showMessage(value)
+        # self.statusBar().showMessage(value)
 
     def loadFusionData(self):
         # self._tm = TableModel(self)
