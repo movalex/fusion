@@ -12,13 +12,13 @@ comp:Paste()
 local duplicateToolList = comp:GetToolList(true)
 
 for i, tool in ipairs(originalToolList) do
-	for j, input in ipairs(tool:GetInputList()) do
-		if input:GetAttrs().INPB_Connected then
+    for j, input in ipairs(tool:GetInputList()) do
+        if input:GetAttrs().INPB_Connected then
             local currentInput = duplicateToolList[i]:GetInputList()[j]
             if not currentInput:GetAttrs().INPB_Connected then
                 currentInput:ConnectTo(input:GetConnectedOutput())
             end
-		end
-	end
+        end
+    end
 end
 composition:EndUndo("Duplicate")
