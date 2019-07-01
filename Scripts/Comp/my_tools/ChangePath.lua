@@ -80,8 +80,8 @@ d[1] = {"Loaders", "Checkbox", Name = "Loaders", NumAcross = 3,  Default = doLoa
 d[2] = {"Proxy", "Checkbox", Name = "Proxy", NumAcross = 3, Default = doProxy}
 d[3] = {"Savers", "Checkbox", Name = "Savers", NumAcross = 3, Default = doSavers}
 d[4] = {"GeoLoaders", "Checkbox", Name = "GeoLoaders", NumAcross = 3, Default = doGeoLoaders}
-d[5] = {"Source", "Text", Name = "Enter pattern to search for", Default = lastSource}
-d[6] = {"Replacement", "Text", Name = "Enter the replacement path", Default = lastReplacement}
+d[5] = {"Source", "Text", Name = "search", Default = lastSource}
+d[6] = {"Replacement", "Text", Name = "replace", Default = lastReplacement}
 d[7] = {"Valid", "Checkbox", Name = "Check If New Path is Valid", Default = doValid}
 d[8] = {"ProcessSelected", "Checkbox", Name = "Process only selected nodes", Default = doProcessSelected}
 d[9] = {"Remember", "Checkbox", Name = "Remember options for next time", Default = 1}

@@ -1,11 +1,11 @@
 -- 22.02.2019 fix compatibility with Fusion 9
 -- 15.05.2019 fix slow copy/paste issue
-
+comp = fu:GetCurrentComp()
 local originalToolList = comp:GetToolList(true)
 flow = comp.CurrentFrame.FlowView
 composition:StartUndo("Duplicate")
 comp:Copy(originalToolList)
--- comp:SetActiveTool()
+comp:SetActiveTool()
 flow:Select()
 comp:Paste()
 local duplicateToolList = comp:GetToolList(true)
