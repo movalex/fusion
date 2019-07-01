@@ -1017,16 +1017,6 @@ class MainWindow(QMainWindow):
         during sorting and filtering.
         """
 
-        # syntax_nr = self.filterSyntaxComboBox.itemData(self.filterSyntaxComboBox.currentIndex())
-        # syntax = QRegExp.PatternSyntax(syntax_nr)
-        #
-        # if self.filterCaseSensitivityCheckBox.isChecked():
-        #    caseSensitivity = Qt.CaseSensitive
-        # else:
-        #    caseSensitivity = Qt.CaseInsensitive
-
-        # regExp = QRegExp(self.filterPatternLineEdit.text(),
-        #        caseSensitivity, syntax)
         regExp = self.lineEdit.text()
 
         self.proxyModel.filteredKeys = []
@@ -1085,29 +1075,6 @@ QHeaderView::up-arrow {\
 }\
 "
 
-# class AttributeSpreadsheet():
-#    def __init__(self):
-#        QApplication.setStyle("Plastique") # Vista tablewidget header backgroundcolor bug workaround
-#        #app = QApplication(sys.argv)
-#        app = QApplication([])
-#        #css = QFile('darkorange.stylesheet')
-#        #css.open(QIODevice.ReadOnly)
-#        #if css.isOpen():
-#        #    app.setStyleSheet(str(css.readAll()))
-#        #css.close()
-#        app.setStyleSheet(css)
-#        #MainWindow._init()
-#        main = MainWindow()
-#        main.setWindowTitle('Attribute Editor 0.1.r%s' % __version__)
-#        main.setMinimumSize(QSize(640,200))
-#        #main.setWindowFlags(Qt.FramelessWindowHint)
-#        #main.show()
-#        main.show()
-#        main.loadFusionData()
-#        app.exec_()
-#        app = None
-#        sys.exit(0)
-
 # We define fu and comp as globals so we can basically run the same script from console as well from within Fusion
 if __name__ == "__main__":
     fu = bmd.scriptapp("Fusion")
@@ -1115,12 +1082,6 @@ if __name__ == "__main__":
         raise Exception("No instance of Fusion found running.")
     comp = fu.GetCurrentComp()
 
-# QApplication.setStyle(
-#     "Plastique"
-# )
-# Vista tablewidget header backgroundcolor bug workaround
-# This workaround is need as QApplication can only have 1 instance, at all times, and PySide will not release the
-# object when the window closes (PySide claims this is 'feature', not a bug, so does not need fixing.)
 app = QApplication.instance()  # checks if QApplication already exists
 if not app:  # create QApplication if it doesnt exist
     app = QApplication([])
