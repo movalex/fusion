@@ -37,29 +37,48 @@
 --          %s represents all white space characters such as Tab, Carr.Return, Linefeed, Space, etc
 --          %w represents all alphanumeric characters A-Z and a-z and 0-9
 --      More: https://www.fhug.org.uk/wiki/wiki/doku.php?id=plugins:understanding_lua_patterns
---
+-- v 4.2 2019-06-25
+--      add option for pattern search, use simple string replacement by default
 ------------------------------------------------------
 
-function conform(filepath)
-    local matched = string.match(filepath, srchFor)
-    print("found pattern: ", matched)
-    if matched == nil then
-        return nil
+
+function conform(filepath, patternState)
+    if patternState == 1 then
+        local matched = string.match(filepath, srchFor)
+        if matched == nil then
+            print('no pattern found')
+            return nil
+        end
+        print("found pattern: ", matched)
+        -- build the new filename using gsub
+        newclip = string.gsub(filepath, srchFor, srchTo)
+        print("New file path is: \n", newclip)            
+        return newclip
+    else
+        local findStart, findEnd = string.find( filepath, srchFor, 1, true )
+        if findStart == nil then
+            print('no match found')
+            return nil
+        end
+        -- build the new filename using strStart
+        local newclip =	string.sub(filepath, 1, findStart - 1) .. 
+                        srchTo ..
+                        string.sub(filepath, findEnd + 1)
+        print("New file path is: \n", newclip)
+        return newclip
     end
-    -- build the new filename using gsub
-    newclip = string.gsub(filepath, srchFor, srchTo)
-    print("New file path is: ", newclip)            
-    return newclip
 end
 
 -- restore settings from globals (if available)
+
 local prefs = fusion:GetData("changePath")
 if prefs then
-	lastSource = prefs.Source or ""
-	lastReplacement = prefs.Replacement or ""
-	doLoaders = prefs.Loaders or 1
-	doSavers = prefs.Savers or 0
-	doProxy = prefs.Proxy or 0
+    lastSource = prefs.Source or ""
+    lastReplacement = prefs.Replacement or ""
+    doLoaders = prefs.Loaders or 1
+    doSavers = prefs.Savers or 0
+    doProxy = prefs.Proxy or 0
+    usePattern = prefs.Pattern or 0
     doValid = prefs.Valid or 0
     doProcessSelected = prefs.ProcessSelected or 0
     doGeoLoaders = prefs.GeoLoaders or 0
@@ -70,6 +89,7 @@ else
     doSavers = 0
     doProxy = 0
     doValid = 0
+    usePattern = 0
     doProcessSelected = 0
     doGeoLoaders = 0
 end
@@ -80,14 +100,23 @@ d[1] = {"Loaders", "Checkbox", Name = "Loaders", NumAcross = 3,  Default = doLoa
 d[2] = {"Proxy", "Checkbox", Name = "Proxy", NumAcross = 3, Default = doProxy}
 d[3] = {"Savers", "Checkbox", Name = "Savers", NumAcross = 3, Default = doSavers}
 d[4] = {"GeoLoaders", "Checkbox", Name = "GeoLoaders", NumAcross = 3, Default = doGeoLoaders}
+<<<<<<< HEAD
 d[5] = {"Source", "Text", Name = "search", Default = lastSource}
 d[6] = {"Replacement", "Text", Name = "replace", Default = lastReplacement}
 d[7] = {"Valid", "Checkbox", Name = "Check If New Path is Valid", Default = doValid}
 d[8] = {"ProcessSelected", "Checkbox", Name = "Process only selected nodes", Default = doProcessSelected}
 d[9] = {"Remember", "Checkbox", Name = "Remember options for next time", Default = 1}
+=======
+d[5] = {"Source", "Text", Name = "Search for", Default = lastSource}
+d[6] = {"Replacement", "Text", Name = "Replace to", Default = lastReplacement}
+d[7] = {"Pattern", "Checkbox", Name = "Use pattern search", Default = usePattern}
+d[8] = {"Valid", "Checkbox", Name = "Check if new path is valid", Default = doValid}
+d[9] = {"ProcessSelected", "Checkbox", Name = "Process only selected nodes", Default = doProcessSelected}
+d[10] = {"Remember", "Checkbox", Name = "Remember options for next time", Default = 1}
+>>>>>>> 7a858b0924060beeccc907c221962934df4e8bcd
 
 
-x = composition:AskUser("Repath Tool", d)
+x = comp:AskUser("Change Path Tool", d)
 
 -- did we get a response, or did they cancel
 if bmd.trim then
@@ -127,6 +156,7 @@ if x.Remember == 1 then
 	fusion:SetData("changePath.Savers", x.Savers)
 	fusion:SetData("changePath.Proxy", x.Proxy)
 	fusion:SetData("changePath.Valid", x.Valid)
+	fusion:SetData("changePath.Pattern", x.Pattern)
     fusion:SetData("changePath.ProcessSelected", x.ProcessSelected)
 	fusion:SetData("changePath.GeoLoaders", x.GeoLoaders)
 end
@@ -134,12 +164,12 @@ end
 -------------------------
 -- lock the flow
 -------------------------
-composition:Lock()
+comp:Lock()
 
 -------------------------
 -- start an undo event
 -------------------------
-composition:StartUndo("Path Remap - " .. srchFor .. " to " ..srchTo)
+comp:StartUndo("Path Remap - " .. srchFor .. " to " ..srchTo)
 
 -------------------------
 -- get table of tools in flow
@@ -147,14 +177,12 @@ composition:StartUndo("Path Remap - " .. srchFor .. " to " ..srchTo)
 
 function selected_checked()
    if x.ProcessSelected == 1 then
-      -- print "checked"
       return true
    end
    return false
 end
 
-
-toollist = composition:GetToolList(selected_checked())
+toollist = comp:GetToolList(selected_checked())
 
 -------------------------
 -- main loop
@@ -162,8 +190,8 @@ toollist = composition:GetToolList(selected_checked())
 
 
 for i, tool in ipairs(toollist) do
-    tool_a = tool:GetAttrs()
-
+    local tool_a = tool:GetAttrs()
+    usePattern = x.Pattern
     if tool_a.TOOLS_RegID == "Loader" then
         
         clipTable = tool_a.TOOLST_Clip_Name
@@ -176,15 +204,21 @@ for i, tool in ipairs(toollist) do
 
         if x.Loaders == 1 then
             for i = 1, table.getn(clipTable) do
-                newclip = conform(clipTable[i])
+                newclip = conform(clipTable[i], usePattern)
                 
                 if newclip then
-                    if fileexists(composition:MapPath(newclip)) == false and x.Valid == 1 then
+                    if fileexists(comp:MapPath(newclip)) == false and x.Valid == 1 then
                         print( "FAILED : New clip does not exist; skipping sequence.\n")
                     else
                         tool.Clip[startTime[i]] = newclip
                         tool.ClipTimeStart[startTime[i]] = trimIn[i]
                         tool.ClipTimeEnd[startTime[i]] = trimOut[i]
+                        
+                        -- check if clip length is bigger than trim out
+                        clipLength = tool:GetAttrs().TOOLIT_Clip_Length[1] - 1
+                        if clipLength > trimOut[1] then
+                            tool.ClipTimeEnd[startTime[i]] = clipLength
+                        end
                     end
                 end
             end
@@ -195,10 +229,10 @@ for i, tool in ipairs(toollist) do
         if x.Proxy == 1 then
             for i = 1, table.getn(altclipTable) do
                 if altclipTable[i] ~= "" then
-                newclip = conform(altclipTable[i])
+                newclip = conform(altclipTable[i], usePattern)
         
                 if newclip then
-                    if fileexists(composition:MapPath(newclip) == false) and x.Valid == 1 then
+                    if fileexists(comp:MapPath(newclip) == false) and x.Valid == 1 then
                         print("FAILED : New proxy clip does not exist; skipping sequence.\n")
                     else
                         tool.ProxyFilename[startTime[i]] = newclip
@@ -212,7 +246,7 @@ for i, tool in ipairs(toollist) do
     if tool_a.TOOLS_RegID == "Saver" and x.Savers == 1 then
         saverTable = tool_a.TOOLST_Clip_Name 
         for i = 1, table.getn(saverTable) do
-            newsaver = conform(tool_a.TOOLST_Clip_Name[i])
+            newsaver = conform(tool_a.TOOLST_Clip_Name[i], usePattern)
             if newsaver ~= nil then
                 tool.Clip[fu.TIME_UNDEFINED] = newsaver
             end
@@ -223,7 +257,7 @@ for i, tool in ipairs(toollist) do
 
     if tool_a.TOOLS_RegID == "SurfaceFBXMesh" and x.GeoLoaders == 1 then   
         old_name = tool.ImportFile[1]
-        newclip = conform(old_name)
+        newclip = conform(old_name, usePattern)
         if newclip ~= nil then
             tool.ImportFile[fu.TIME_UNDEFINED] = newclip
         end
@@ -237,9 +271,13 @@ end
 -------------------------
 -- close the undo event
 -------------------------
-composition:EndUndo(true)
+comp:EndUndo(true)
 
 -------------------------
 -- unlock the comp
 -------------------------
-composition:Unlock()
+comp:Unlock()
+if comp:IsLocked() then
+    comp:Unlock()
+end
+collectgarbage()
