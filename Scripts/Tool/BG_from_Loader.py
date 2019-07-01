@@ -30,7 +30,8 @@ def create_bg_from_loader(tool):
             tool.Loop = 0
         else:
             comp.CurrentFrame.ViewOn(tool, 1)
-        print("\nTo get proper BG aspect and depth please run the script once again")
+            print("\nCurrent tool is loaded to the viewer now"
+                "\nTo get proper BG aspect and depth please run the script once again")
 
     new_bg = comp.AddTool("Background", int(posx) + 1, int(posy) + 1)
     new_bg.Width = width

@@ -1,0 +1,178 @@
+{
+	Tools = ordered() {
+		red_reflection = MacroOperator {
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Reflect1",
+					Source = "MaterialOutput",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			Tools = ordered() {
+				Loader1 = Loader {
+					Clips = {
+						Clip {
+							ID = "Clip1",
+							Filename = "E:\\MEDIA Library\\ENV_MAPS\\22472915011_3aa1c059d8_o.jpg",
+							FormatID = "JpegFormat",
+							StartFrame = -1,
+							LengthSetManually = true,
+							TrimIn = 0,
+							TrimOut = 0,
+							ExtendFirst = 0,
+							ExtendLast = 0,
+							Loop = 0,
+							AspectMode = 0,
+							Depth = 0,
+							TimeCode = 0,
+							GlobalStart = 0,
+							GlobalEnd = 0
+						}
+					},
+					Inputs = {
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -678.222, 392.017 } },
+				},
+				Reflect1 = MtlReflect {
+					Inputs = {
+						BackgroundMaterial = Input {
+							SourceOp = "Blinn1",
+							Source = "MaterialOutput",
+						},
+						["Reflection.GlancingStrength"] = Input { Value = 1, },
+						["Reflection.FaceOnStrength"] = Input { Value = 0.023, },
+						["Reflection.Falloff"] = Input { Value = 2.27, },
+						["Reflection.Color.Material"] = Input {
+							SourceOp = "SphereMap1",
+							Source = "MaterialOutput",
+						},
+						["Refraction.Nest"] = Input { Value = 0, },
+						MaterialID = Input { Value = 6, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -915.182, 271.357 } },
+				},
+				Blinn1 = MtlBlinn {
+					Inputs = {
+						["Diffuse.Color.Green"] = Input { Value = 0.0588235294118, },
+						["Diffuse.Color.Blue"] = Input { Value = 0.0588235294118, },
+						["Specular.Nest"] = Input { Value = 1, },
+						["Specular.Color.Green"] = Input { Value = 0.9529411764706, },
+						["Specular.Color.Blue"] = Input { Value = 0.6627450980392, },
+						["Specular.Intensity"] = Input { Value = 1.944, },
+						["Specular.Exponent"] = Input { Value = 9.07, },
+						["Bumpmap.Material"] = Input {
+							SourceOp = "BumpMap1",
+							Source = "MaterialOutput",
+						},
+						ReceivesShadows = Input { Value = 0, },
+						MaterialID = Input { Value = 4, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -720.392, 140.601 } },
+				},
+				BumpMap1 = BumpMap {
+					Inputs = {
+						FilterSize = Input { Value = FuID { "5" }, },
+						Input = Input {
+							SourceOp = "Merge9",
+							Source = "Output",
+						},
+						HeightScale = Input { Value = 0.21, },
+						BumpmapTextureDepth = Input { Value = 3, },
+						MaterialID = Input { Value = 5, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -389.733, 140.601 } },
+				},
+				Merge9 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "Background4",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "FastNoise1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -389.733, 259.567 } },
+				},
+				Background4 = Background {
+					Inputs = {
+						Width = Input { Value = 2000, },
+						Height = Input { Value = 2000, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -477.431, 350.981 } },
+				},
+				FastNoise1 = FastNoise {
+					CtrlWZoom = false,
+					Inputs = {
+						Width = Input { Value = 2000, },
+						Height = Input { Value = 2000, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Detail = Input { Value = 10, },
+						Contrast = Input { Value = 1.957, },
+						XScale = Input { Value = 100, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -326.52, 296.757 } },
+				},
+				SphereMap1 = SphereMap {
+					Inputs = {
+						Rotation = Input { Value = 1, },
+						["Rotate.Y"] = Input { Value = -301.5, },
+						Image = Input {
+							SourceOp = "Blur1",
+							Source = "Output",
+						},
+						MaterialID = Input { Value = 8, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -678.222, 271.357 } },
+				},
+				Blur1 = Blur {
+					Inputs = {
+						XBlurSize = Input { Value = 2, },
+						Input = Input {
+							SourceOp = "ColorCorrector6",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -678.222, 328.464 } },
+				},
+				ColorCorrector6 = ColorCorrector {
+					Inputs = {
+						ColorRanges = Input {
+							Value = ColorCurves {
+								Curves = {
+									{
+										Points = {
+											{ 0, 1 },
+											{ 0.4, 0.2 },
+											{ 0.6, 0 },
+											{ 1, 0 }
+										}
+									},
+									{
+										Points = {
+											{ 0, 0 },
+											{ 0.4, 0 },
+											{ 0.6, 0.2 },
+											{ 1, 1 }
+										}
+									}
+								}
+							},
+						},
+						HistogramIgnoreTransparent = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "Loader1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -678.222, 361.464 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "red_reflection"
+}
