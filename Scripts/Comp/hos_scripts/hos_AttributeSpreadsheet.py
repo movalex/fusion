@@ -7,7 +7,7 @@
     Requires:
         Python 3.6
         Fusion 9/16 (needs testing)
-        PySide2, installed automatically
+        PySide2, installed automatically on MacOs or Linux (PySide2 on Windows should be installed manually)
     Notice:
         Written by Sven Neve (sven[AT]houseofsecrets[DOT]nl)
         Copyright (c) 2013 House of Secrets
@@ -45,6 +45,8 @@ __version__ = 6
 
 import datetime
 import sys
+import platform
+
 
 # import PbmdScript as eyeon
 try:
@@ -90,6 +92,11 @@ try:
 except ImportError:
     if sys.version_info.major == 2:
         print('Python 3.6 is required')
+        sys.exit()
+    if platform.system() == 'Windows':
+        print('Please unstall PySide2 manually',
+              '\nuse `python.exe -m pip install -U --force-reinstall pip`',
+              '\nthen `python.exe -m pip install pyside2`')
         sys.exit()
     print("No Pyside2 module found, trying to install...")
     try:
