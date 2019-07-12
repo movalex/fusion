@@ -6,10 +6,6 @@ local originalToolList = comp:GetToolList(true)
 flow = comp.CurrentFrame.FlowView
 composition:StartUndo("Duplicate")
 comp:Copy(originalToolList)
-<<<<<<< HEAD
-comp:SetActiveTool()
-=======
->>>>>>> 7a858b0924060beeccc907c221962934df4e8bcd
 flow:Select()
 comp:Paste()
 
