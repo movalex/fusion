@@ -4,6 +4,16 @@ local width, height = 220,110
 
 comp = fu:GetCurrentComp()
 
+app:AddConfig("RRanger", {
+    Target {
+        ID = "RRanger",
+    },
+    Hotkeys {
+        Target = "RRanger",
+        Defaults = true,
+        ESCAPE = "Execute{cmd = [[app.UIManager:QueueEvent(obj, 'Close', {})]]}",
+    },
+})
 function getBounds()
     compAttrs = comp:GetAttrs()
     rStart = compAttrs.COMPN_RenderStart
@@ -33,9 +43,9 @@ function showUI()
     end
 
     win = disp:AddWindow({
-        ID = "roffset",
-        TargetID = "roffset",
-        WindowTitle = "Offsettr",
+        ID = "RRanger",
+        TargetID = "RRanger",
+        WindowTitle = "Render Ranger",
         Geometry = {x+20, y, width, height},
         Spacing = 10,
         
@@ -67,12 +77,15 @@ function showUI()
                     
                 }
             },
-            ui:HGroup{
+            ui:VGroup{
                 VMargin = 3,
                 -- ui:VGap(20),
                 ui:Button{
-                    ID = 'close', Text = 'close'
+                    ID = 'reset', Text = 'reset globals',
                 },
+                -- ui:Button{
+                --     ID = 'close', Text = 'close'
+                -- },
             },
         }
     })
@@ -95,10 +108,22 @@ function showUI()
     function win.On.close.Clicked(ev)
         disp:ExitLoop()
     end
-    
-    function win.On.roffset.Close(ev)
+   
+    function win.On.reset.Clicked(ev)
+        gStart = comp:GetAttrs().COMPN_GlobalStart
+        if gStart < 0 then
+            gStart = 0
+            comp:SetAttrs({COMPN_GlobalStart = 0})
+        end
+        gEnd = comp:GetAttrs().COMPN_GlobalEnd
+        comp:SetAttrs({COMPN_RenderStart = gStart})
+        comp:SetAttrs({COMPN_RenderEnd = gEnd})
+    end
+
+    function win.On.RRanger.Close(ev)
         disp:ExitLoop()
     end
+
 
     win:Show()
     disp:RunLoop()
