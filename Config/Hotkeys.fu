@@ -27,6 +27,44 @@
       },
    },
 
+
+       Action
+   {
+        ID = "SetRenderIn",
+        Category = "My Stuff",
+        ShortName = "IN",
+   Targets = 
+   {
+       FlowView = 
+       {
+           Execute = 
+            [[
+            local cmp = fu:GetCurrentComp()
+            cmp:SetAttrs({COMPN_RenderStart = cmp.CurrentTime})
+            ]],
+        },
+      },
+    },
+
+
+       Action
+   {
+        ID = "SetRenderOut",
+        Category = "My Stuff",
+        ShortName = "OUT",
+   Targets = 
+   {
+       FlowView = 
+       {
+           Execute = 
+            [[
+            local cmp = fu:GetCurrentComp()
+            cmp:SetAttrs({COMPN_RenderEnd = cmp.CurrentTime})
+            ]],
+        },
+      },
+    },
+
   Hotkeys
   {
     Target = "FlowView",
@@ -43,27 +81,34 @@
     R = "AddTool{ id = 'Loader' }",
     S = "AddTool{ id = 'Saver' }",
     SHIFT_M = "RunScript{filename = 'Scripts:/Utility/stx_merge3DConnect.lua'}",
+    SHIFT_C = "AddTool{ id = 'Camera2D' }",
+    SHIFT_R = "AddTool{ id = 'Renderer3D' }",
+    SHIFT_I = "AddTool{ id = 'ImagePlane3D' }",
+    SHIFT_T = "AddTool{ id = 'Transform3D' }",
+    SHIFT_E = "AddTool{ id = 'pEmitter' }",
+    SHIFT_P = "AddTool{ id = 'pRender' }",
     M = "RunScript{filename = 'Scripts:/Utility/stx_mergeConnect.lua'}",
     K = "RunScript{filename = 'Scripts:/Utility/stx_kissConnect.lua'}",
     OEM_PERIOD = "AddTool{ id = 'PipeRouter' }",
     LEFT  = "Time_Step_Back",
     RIGHT = "Time_Step_Forward",
+    -- set render in/outs
+    I = "SetRenderIn",
+    O = "SetRenderOut",
    
   },
   
   Hotkeys
   {
     Target = "GraphView",
-    -- Q = "Time_Step_PrevKey",
-    -- W = "Time_Step_NextKey"  
     Q = "Time_Goto_Key_Prev",
     W = "Time_Goto_Key_Next"  
   },
   -- Hotkeys
   -- {
   --   Target = "FuFrame",
-  --   Q = "Time_Step_PrevKey",
-  --   W = "Time_Step_NextKey"  
+  --   SHIFT_Q = "Time_Step_PrevKey",
+  --   SHIFT_W = "Time_Step_NextKey"  
   -- },
 
   Hotkeys
@@ -76,65 +121,8 @@
   -- Hotkeys
   -- {
   --    Target = "FuFrame",
-
   --    J = "Playback_Mode{ play = true, reverse = true}",
   --    K = "Playback_Mode{ play = false }",
   --    L = "Playback_Mode{ play = true }", can leave out play = true if you want toggle.
   -- },
 }
-
-
-
--- {
-
-
---   Hotkeys
---   {
---      Target = "FlowView", -- Only one Target per Hotkeys { ... } definition.
-
---      B = "AddTool{ id = 'Blur' }",
---      C = "AddTool{ id = 'ColorCorrector' }",
---      G = "AddTool{ id = 'BrightnessContrast' }",
- 
---      W = "AddTool{ id = 'Saver' }",
---      -- O = "AddTool{ id = 'Polygon' }",
---      P = "AddTool{ id = 'PolylineMask' }",
---      X = "AddTool{ id = 'Background' }",
---      A = "AddTool{ id = 'MatteControl' }",
---      OEM_PERIOD = "AddTool{ id = 'PipeRouter' }",
-
---      SHIFT_M = "RunScript{filename = 'Scripts:/Utility/stx_merge3DConnect.lua'}",
---      SHIFT_C = "AddTool{ id = 'Camera3D' }",
---      SHIFT_R = "AddTool{ id = 'Renderer3D' }",
---      SHIFT_I = "AddTool{ id = 'ImagePlane3D' }",
---      SHIFT_T = "AddTool{ id = 'Transform3D' }",
---      SHIFT_E = "AddTool{ id = 'pEmitter' }",
---      SHIFT_P = "AddTool{ id = 'pRender' }",
-
---      TAB = "Comp_Choose_Tool",
-
---      -- Putting these in FlowView (and any other specific targets) still allows arrows to 'nudge'
---      -- controls in view and control view, but does limit them to only functioning
---      -- in certain places.
-
---      LEFT  = "Time_Step_Back",
---      RIGHT = "Time_Step_Forward",
---   },
-
---   Hotkeys
---   {
---      Target = "GLView",
-
---      F = "Viewer_Scale_Abs{ scale=0 }",
---      Q = "My_ShowHideControls",
---   },
-
---   Hotkeys
---   {
---      Target = "FuFrame",
-
---      J = "Playback_Mode{ play = true, reverse = true}",
---      K = "Playback_Mode{ play = false }",
---      L = "Playback_Mode{ play = true }", -- can leave out play = true if you want toggle.
---   },
--- }
