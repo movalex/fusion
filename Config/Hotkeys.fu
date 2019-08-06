@@ -63,6 +63,44 @@
     },
 
 
+
+       Action
+   {
+        ID = "SetRenderIn",
+        Category = "My Stuff",
+        ShortName = "IN",
+   Targets = 
+   {
+       FlowView = 
+       {
+           Execute = 
+            [[
+            local cmp = fu:GetCurrentComp()
+            cmp:SetAttrs({COMPN_RenderStart = cmp.CurrentTime})
+            ]],
+        },
+      },
+    },
+
+
+       Action
+   {
+        ID = "SetRenderOut",
+        Category = "My Stuff",
+        ShortName = "OUT",
+   Targets = 
+   {
+       FlowView = 
+       {
+           Execute = 
+            [[
+            local cmp = fu:GetCurrentComp()
+            cmp:SetAttrs({COMPN_RenderEnd = cmp.CurrentTime})
+            ]],
+        },
+      },
+    },
+
   Hotkeys
   {
     Target = "FlowView",
@@ -90,6 +128,10 @@
     OEM_PERIOD = "AddTool{ id = 'PipeRouter' }",
     LEFT  = "Time_Step_Back",
     RIGHT = "Time_Step_Forward",
+    -- set render in/outs
+    -- I = "SetRenderIn",
+    -- O = "SetRenderOut",
+   
   },
   
   Hotkeys
@@ -101,8 +143,8 @@
   -- Hotkeys
   -- {
   --   Target = "FuFrame",
-  --   Q = "Time_Step_PrevKey",
-  --   W = "Time_Step_NextKey"  
+  --   SHIFT_Q = "Time_Step_PrevKey",
+  --   SHIFT_W = "Time_Step_NextKey"  
   -- },
 
   Hotkeys
@@ -123,3 +165,10 @@
   },
 }
 
+  -- Hotkeys
+  -- {
+  --    Target = "FuFrame",
+  --    J = "Playback_Mode{ play = true, reverse = true}",
+  --    K = "Playback_Mode{ play = false }",
+  --    L = "Playback_Mode{ play = true }", can leave out play = true if you want toggle.
+  -- },
