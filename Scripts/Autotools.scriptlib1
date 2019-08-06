@@ -1,0 +1,66 @@
+globals.ev = AddEventSuite("Composition")
+
+-- check to see if the composition variable has been initialized.
+if composition ~= nil and composition:GetAttrs().COMPS_FileName == "" then
+    -- Enable AutoTools on new Comps
+    composition:SetData("AutoTools.Enabled", true)
+end
+
+globals.ev = AddEventSuite("Composition")
+
+function ev:OnActivateTool(event)
+
+        -- ---------------------------------------------------------------------------------------------------- 
+        -- Add Tools to newly created tools
+        --
+        -- Install to your Scprit: folder as .scriptlib
+        -- Uses "data" to set metadata for the first time tools
+        -- have been activated for a certain tool. Compare:
+        -- www.vfxpedia.com/index.php?title=Eyeon:Script/Reference/Applications/Fusion/Classes/Object/SetData
+        --
+        -- In order to not create the tools on comps with loaders without the metadata one could set a data
+        -- tag to the comp at a facility to make sure only facility wide comps are affected.
+        --
+        -- Written by B.Floch at eyeon Software Inc.
+        -- ----------------------------------------------------------------------------------------------------   
+
+        -- Get the seleted tools
+        local toollist=comp:GetToolList(true)
+        
+        -- Care only if have a facility comp and we selected one tool
+        if comp:GetData("AutoTools.Enabled") == true and table.getn(toollist) == 1 then
+
+            -- Check if selected a Loader
+            tool = toollist[1]
+            if tool.ID == "Loader" then
+                if tool:GetData("AutoTools.DivideGamma") == nil then
+                    -- Set the metadata so that we don't add the tools again
+                    tool:SetData("AutoTools.DivideGamma", true)
+
+                    -- Prevent updating
+                    comp:Lock()
+
+                    -- Create AlphaDivide and Gamma Tools
+                    -- XY set to -32768 makes them been added as if clicked
+                    -- on the toolbar (next to current tool, with connections)
+                    alphadivide = comp:AddTool("AlphaDivide", -32768, -32768)
+                    bc = comp:AddTool("BrightnessContrast", -32768, -32768)
+                    bc.Gamma[TIME_UNDEFINED] = 0.454
+
+                    -- Rename
+                    alphadivide:SetAttrs({TOOLS_Name = "DivideByAlpha"})
+                    bc:SetAttrs({TOOLS_Name = "GammaDown"})
+
+                    -- Select the loader
+                    comp:SetActiveTool(tool)
+
+                    -- Allow updating
+                    comp:Unlock()
+                end 
+            end
+        end
+
+        -- Call default implementation
+        self:Default(event)
+end
+
