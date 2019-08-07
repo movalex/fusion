@@ -1,0 +1,55 @@
+{
+	Tools = ordered() {
+		CompOffset = MacroOperator {
+			Inputs = ordered() {
+				MainInput1 = InstanceInput {
+					SourceOp = "TimeStretcher1_1",
+					Source = "Input",
+				},
+				Input1 = InstanceInput {
+					SourceOp = "TimeStretcher1_1",
+					Source = "offset",
+					Name = "Frames to Offset",
+					MaxScale = 1000,
+					Page = "Controls",
+					Default = 0,
+				},
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "TimeStretcher1_1",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			Tools = ordered() {
+				TimeStretcher1_1 = TimeStretcher {
+					CtrlWZoom = false,
+					Inputs = {
+						SourceTime = Input {
+							Value = 29,
+							Expression = "iif(time<offset, 0, time-offset)",
+						},
+						InterpolateBetweenFrames = Input { Value = 0, },
+						SampleSpread = Input { Disabled = true, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 2133.43, 563.339 } },
+					UserControls = ordered() {
+						offset = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = true,
+							INPID_InputControl = "SliderControl",
+							INP_MaxScale = 500,
+							INP_MinScale = 0,
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							LINKS_Name = "offset"
+						}
+					}
+				}
+			},
+		}
+	},
+	ActiveTool = "CompOffset"
+}
