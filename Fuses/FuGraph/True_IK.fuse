@@ -1,0 +1,456 @@
+
+
+version = "version 1.0"
+
+-- change this to "CrosshairControl" if you want to adjust the positions with
+-- a bigger transform widget.
+previewControl = "PointControl"
+
+
+FuRegisterClass("True_IK", CT_Tool, {
+	REGS_Name = "True_IK",
+	REGS_Category = "Fuses",
+	REGS_OpIconString = "IK",
+	REGS_OpDescription = "Draws straight lines and calculates their intersection point.",
+	REGS_Company = "Stefan Ihringer",
+	REGS_URL = "http://www.bildfehler.de",
+	REG_Fuse_NoEdit = true,
+	REG_Fuse_NoReload = true,
+	})
+
+function Create()
+	InStartPos1 = self:AddInput("Start 1", "StartPos1", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_ViewControl   = "CrosshairControl",
+		INPID_PreviewControl = "CrosshairControl",
+		CHC_Style = "DiagonalCross",
+		INP_DefaultX         = 0.5,
+		INP_DefaultY         = 0.5,
+		INP_DoNotifyChanged  = true,
+		})
+	InStartAngle = self:AddInput("Start Angle", "StartAngle", {
+		LINKID_DataType      = "Number",
+		INPID_InputControl   = "SliderControl",
+		INP_MinAllowed     = -360,
+		INP_MaxScale       = 360,
+		INP_Default        = 0,
+		INP_DoNotifyChanged  = true,
+		})
+	InMidPos1 = self:AddInput("Mid 1", "MidPos1", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_ViewControl   = "CrosshairControl",
+		INPID_PreviewControl = "CrosshairControl",
+		CHC_Style = "DiagonalCross",
+		INP_DefaultX         = 0.5,
+		INP_DefaultY         = 0.5,
+		INP_DoNotifyChanged = true,
+		})
+	InMidAngle = self:AddInput("Mid Angle", "MidAngle", {
+		LINKID_DataType      = "Number",
+		INPID_InputControl   = "SliderControl",
+		INP_MinAllowed     = -360,
+		INP_MaxScale       = 360,
+		INP_Default        = 0,
+		INP_DoNotifyChanged  = true,
+		})
+	InEndPos1 = self:AddInput("End 1", "EndPos1", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_ViewControl   = "CrosshairControl",
+		INPID_PreviewControl = "CrosshairControl",
+		CHC_Style = "DiagonalCross",
+		INP_DefaultX         = 0.9,
+		INP_DefaultY         = 0.5,
+		INP_DoNotifyChanged  = true,
+		})
+	InDrawSecondLine = self:AddInput("Draw a second line", "DrawSecondLine", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "CheckboxControl",
+		INP_Default         = 0,
+		INP_DoNotifyChanged = true,
+		})
+	InStartPos2 = self:AddInput("Start 2", "StartPos2", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_PreviewControl = previewControl,
+		INP_DefaultX         = 0.5,
+		INP_DefaultY         = 0.25,
+		IC_Visible           = false,
+		PC_Visible           = false,
+		INP_DoNotifyChanged  = true,
+		})
+	InEndPos2 = self:AddInput("End 2", "EndPos2", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_PreviewControl = previewControl,
+		INP_DefaultX         = 0.5,
+		INP_DefaultY         = 0.75,
+		IC_Visible           = false,
+		PC_Visible           = false,
+		INP_DoNotifyChanged  = true,
+		})
+
+	InShowVanishingPoint = self:AddInput("Show Vanishing Point", "ShowVanishingPoint", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "CheckboxControl",
+		INP_Default         = 0,
+		INP_External        = false,
+		INP_Passive         = true,		-- doesn't affect rendering
+		INP_DoNotifyChanged = true,
+		})
+	-- hidden input control, only used to display crosshairs in viewer. Updated by NotifyChanged
+	InVanishingPoint = self:AddInput("Vanishing Point", "VanishingPointHidden", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		CHC_Style            = "DiagonalCross",
+		INP_DefaultX         = 0.5,
+		INP_DefaultY         = 0.5,
+		IC_Visible           = false,
+		PC_Visible           = false,
+		INP_External         = false,	-- don't allow connections
+		INP_Passive          = true,	-- doesn't affect rendering (doesn't invalidate caches)
+		INP_Disabled         = true,	-- prevent user from dragging preview control
+		})
+
+	self:BeginControlNest("Line Style", "LineStyle", false, {})
+	InLineType = self:AddInput("Type", "Type", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "MultiButtonControl",
+		INP_Default        = 0.0,
+		MBTNC_ShowName     = false,
+		{MBTNC_AddButton   = "Solid", MBTNCD_ButtonWidth = 0.33, },
+		{MBTNC_AddButton   = "Dash",  MBTNCD_ButtonWidth = 0.34, },
+		{MBTNC_AddButton   = "Dot",   MBTNCD_ButtonWidth = 0.33, },
+		{MBTNC_AddButton   = "Dash Dot",     MBTNCD_ButtonWidth = 0.5, },
+		{MBTNC_AddButton   = "Dash Dot Dot", MBTNCD_ButtonWidth = 0.5, },
+		})
+
+	InThickness = self:AddInput("Thickness", "Thickness", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed     = 0,
+		INP_MaxScale       = 0.1,
+		INP_Default        = 0.001,
+		})
+
+	InFilter = self:AddInput("Filter", "Filter", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "MultiButtonControl",
+		INP_Default        = 3.0,
+		{MBTNC_AddButton   = "Box",       MBTNCD_ButtonWidth = 0.25, },
+		{MBTNC_AddButton   = "Bartlett",  MBTNCD_ButtonWidth = 0.25, },
+		{MBTNC_AddButton   = "Multi-box", MBTNCD_ButtonWidth = 0.25, },
+		{MBTNC_AddButton   = "Gaussian",  MBTNCD_ButtonWidth = 0.25, },
+		})
+
+	InSoftness = self:AddInput("Softness", "Softness", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed     = 0.0,
+		INP_MaxScale       = 100,
+		INP_Default        = 0.0,
+		ICD_Center         = 10,
+		})
+
+	-- color wheel
+	InRed = self:AddInput("Red", "Red", {
+		ICS_Name            = "Line Color",
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 1.0,
+		INP_MaxScale        = 1.0,
+		CLRC_ShowWheel      = false,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 0,
+		})
+	InGreen = self:AddInput("Green", "Green", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 1.0,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 1,
+		})
+	InBlue = self:AddInput("Blue", "Blue", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 1.0,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 2,
+		})
+	InAlpha = self:AddInput("Alpha", "Alpha", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 1.0,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 3,
+		})
+
+	InOnBlack = self:AddInput("Draw lines on black image", "OnBlack", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "CheckboxControl",
+		INP_Default         = 0,
+		})
+	self:EndControlNest()
+	
+	InLabel = self:AddInput("Lines "..version, "version", {
+		LINKID_DataType    = "Text",
+		INPID_InputControl = "LabelControl",
+		INP_External       = false,
+		INP_Passive        = true,
+		})
+
+	-- image input
+	InImage = self:AddInput("Input", "Input", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})
+
+	-- outputs
+	OutImage = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})
+	OutVanishingPoint = self:AddOutput("Vanishing Point", "VanishingPoint", {
+		LINKID_DataType = "Point",
+		})
+end
+
+
+-- Find intersection of two lines, taken from http://paulbourke.net/geometry/lineline2d/
+-- Returns a Point object or nil if the lines don't intersect.
+function LineIntersect(x1,y1,x2,y2,x3,y3,x4,y4)
+	local denom  = (y4-y3) * (x2-x1) - (x4-x3) * (y2-y1)
+	local numera = (x4-x3) * (y1-y3) - (y4-y3) * (x1-x3)
+	local numerb = (x2-x1) * (y1-y3) - (y2-y1) * (x1-x3)
+	if math.abs(denom) < 0.00001 then
+		return nil
+	else
+		local mua = numera/denom
+		return Point(x1 + mua*(x2 - x1), y1 + mua*(y2 - y1))
+	end
+end
+
+
+function NotifyChanged(inp, param, time)
+	-- update vanishing point whenever a line has been moved
+	if inp == InStartPos1 or inp == InEndPos1 or inp == InStartPos2 or inp == InEndPos2 then
+		local p1 = InStartPos1:GetSource(time)
+		local p2 = InEndPos1:GetSource(time)
+		local p3 = InStartPos2:GetSource(time)
+		local p4 = InEndPos2:GetSource(time)
+		local vp = LineIntersect(p1.X, p1.Y, p2.X, p2.Y, p3.X, p3.Y, p4.X, p4.Y)
+		if vp == nil then
+			vp = p2
+		end
+		-- temporary enable the input, then disable again to prevent user from dragging the crosshairs
+		InVanishingPoint:SetAttrs({INP_Disabled = false})
+		InVanishingPoint:SetSource(vp, time, 0)
+		InVanishingPoint:SetAttrs({INP_Disabled = true})
+	end
+	
+	-- show/hide vanishing point crosshairs
+	if inp == InShowVanishingPoint then
+		if (param.Value < 0.5) then
+			InVanishingPoint:SetAttrs({PC_Visible = false})
+			showCrosshairs = false
+		else
+			InVanishingPoint:SetAttrs({PC_Visible = true})
+			showCrosshairs = true
+		end
+	end
+
+	-- draw second line
+	if inp == InDrawSecondLine then
+		if (param.Value < 0.5) then
+			-- disable
+			InStartPos2:SetAttrs({IC_Visible = false, PC_Visible = false})
+			InEndPos2:SetAttrs({IC_Visible = false, PC_Visible = false})
+			InShowVanishingPoint:SetAttrs({IC_Visible = false})
+			InVanishingPoint:SetAttrs({PC_Visible = false})
+		else
+			-- enable
+			InStartPos2:SetAttrs({IC_Visible = true, PC_Visible = true})
+			InEndPos2:SetAttrs({IC_Visible = true, PC_Visible = true})
+			InShowVanishingPoint:SetAttrs({IC_Visible = true})
+			InVanishingPoint:SetAttrs({PC_Visible = showCrosshairs})
+		end
+	end
+end
+
+
+-- converts y-coordinates for use in matrix math, trigonometry and Shape object functions
+-- where, vertically, 1.0 isn't the image height but equals the image's width.
+function convertY(y, ref_img)
+	return y * (ref_img.Height * ref_img.YScale) / (ref_img.Width * ref_img.XScale)
+end
+
+
+-- PreCalcProcess. If not implemented, only the main output will be handled,
+-- which would cause tools connected to the vanishing output to fail.
+function PreCalcProcess(req)
+	-- set auxilliary output first
+	OutVanishingPoint:Set(req, InVanishingPoint:GetValue(req))
+	-- output image with no data
+	local img = InImage:GetValue(req)
+	local out = Image({IMG_Like = img, IMG_NoData = true})
+	OutImage:Set(req, out)
+end
+
+arm = {0.2,0.2} -- trail point ouside of process function so it doesn't reset
+arm2 = {0.3,0.3}
+
+function Process(req)
+	local img        = InImage:GetValue(req)
+	local start1     = InStartPos1:GetValue(req)
+	local end1       = InEndPos1:GetValue(req)
+	local start2     = InStartPos2:GetValue(req)
+	local end2       = InEndPos2:GetValue(req)
+	local dosecond   = (InDrawSecondLine:GetValue(req).Value > 0.5)
+	local linetype   = math.floor(InLineType:GetValue(req).Value + 0.5) + 1
+	local thickness  = InThickness:GetValue(req).Value
+	local blur       = InSoftness:GetValue(req).Value
+	local filter     = math.floor(InFilter:GetValue(req).Value + 0.5) + 1
+	local gain_r     = InRed:GetValue(req).Value
+	local gain_g     = InGreen:GetValue(req).Value
+	local gain_b     = InBlue:GetValue(req).Value
+	local gain_a     = InAlpha:GetValue(req).Value
+	local onblack    = (InOnBlack:GetValue(req).Value > 0.5)
+
+	
+
+	-- set auxilliary output first
+	OutVanishingPoint:Set(req, InVanishingPoint:GetValue(req))
+	
+	local out = img:CopyOf()
+	if onblack then
+		out:Fill(Pixel({R = 0, G = 0, B = 0, A = 0}))
+	end
+	local outlinetypes = {"OLT_Solid", "OLT_Dash", "OLT_Dot", "OLT_DashDot", "OLT_DashDotDot",}
+	local blurfilters  = {"BT_Box", "BT_Bartless", "BT_MultiBox", "BT_Gaussian", }
+
+	-- draw a line
+	local line1 = Shape()
+
+	function calcIK(x,y) -- Forearm
+		 -- First point
+		target = {x,y} -- First point
+		length = 0.2
+		--angle = 0.5
+
+		angle = math.atan2(target[2]-arm[2],target[1]-arm[1]) -- sets rotation angle to target
+
+		thisX = target[1] - math.cos(angle) * length  -- base point
+		thisY = target[2] - math.sin(angle) * length
+
+		--thisXback = (start1.X - thisX) - thisX
+
+		getEndX =  thisX + math.cos(angle) * length -- Tip point
+		getEndY =  thisY  + math.sin(angle) * length
+		arm = {thisX,thisY} -- increments arm on each iteration
+	end
+
+	function calcIK2(x,y) -- Upperarm
+		 -- First point
+		target = {x,y} -- First point
+		length = 0.2
+		--angle = 0.5
+
+		angle = math.atan2(target[2]-arm2[2],target[1]-arm2[1]) -- sets rotation angle to target
+
+		thisX2 = target[1] - math.cos(angle) * length  -- base point
+		thisY2 = target[2] - math.sin(angle) * length
+
+
+
+		getEndX2 =  thisX + math.cos(angle) * length -- -- Tip point
+		getEndY2 =  thisY  + math.sin(angle) * length
+		
+	end
+
+	-- IK functions
+	calcIK(end1.X,end1.Y)
+	calcIK2(thisX,thisY)
+
+
+	offsetX = (thisX2 - start1.X) -- calc offset to move arms back
+	offsetY = (thisY2 - start1.Y)
+
+	arm = {thisX-offsetX,thisY-offsetY} -- add the offset the arm update on
+	arm2 = {thisX2-offsetX,thisY2-offsetY}
+	
+
+
+	-- DRAW LINES
+	line1:MoveTo(thisX2-offsetX, thisY2-offsetY) 
+	line1:LineTo(thisX-offsetX, thisY-offsetY)
+	line1:LineTo(getEndX-offsetX, getEndY-offsetY)
+	
+	
+
+	-- Update UI controls
+	midPntX = thisX-offsetX
+	midPntY	= thisY-offsetY
+
+	endPntX = getEndX-offsetX
+	endPntY = getEndY-offsetY
+
+	InMidPos1:SetSource(Point(midPntX,midPntY),0)
+
+
+	startAngle = math.atan2(midPntY-(thisY2-offsetY),midPntX-(thisX2-offsetX))
+	startDeg = (math.deg(startAngle+360)%360-197)*-1 -- convert to degrees and also remap values as atan2 flips and inverts the sign *-1
+	InStartAngle:SetSource(Number(startDeg),0)
+
+
+	midAngle = math.atan2(endPntY-(thisY-offsetY),endPntX-(thisX-offsetX))
+	midDeg = (math.deg(midAngle+360)%360-197)*-1 -- convert to degrees and also remap values as atan2 flips and inverts the sign *-1
+	InMidAngle:SetSource(Number(midDeg),0)
+
+
+
+
+
+	--[[function NotifyChanged(inp, param, time)
+ 		--InMidPos1:SetSource(InMidPos1:GetSource(time), time, 0)
+ 		InMidPos1:SetSource(Number(rLow),0)
+
+	end
+	]]
+	
+---- https://www.youtube.com/watch?v=sEKNoWyKUA0
+	
+
+   
+
+
+
+	-- create outline using chosen "OutlineType" and desired thickness
+	line1 = line1:OutlineOfShape(thickness, outlinetypes[linetype], "OJT_Round", (req:IsQuick() and 8 or 16))
+	
+	if dosecond then
+		-- add second line
+		local line2 = Shape()
+		line2:MoveTo(start2.X, convertY(start2.Y, img))
+		line2:LineTo(end2.X, convertY(end2.Y, img))
+		line1:AddShape( line2:OutlineOfShape(thickness, outlinetypes[linetype], "OJT_Round", (req:IsQuick() and 8 or 16)) )
+	end
+	
+	-- put shape to image
+	local ic = ImageChannel(out, 8)
+	local fs = FillStyle()
+	ic:SetStyleFill(fs)
+	ic:ShapeFill(line1)
+	local cs = ChannelStyle()
+	cs.Color = Pixel({R = gain_r, G = gain_g, B = gain_b, A = gain_a})
+	cs.BlurType = blurfilters[filter]
+	cs.SoftnessX = blur
+	cs.SoftnessY = blur
+	if self.Status == "OK" then
+		ic:PutToImage("CM_Merge", cs)
+	end
+	
+	OutImage:Set(req, out)
+end
