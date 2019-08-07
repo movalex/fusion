@@ -1,0 +1,381 @@
+
+
+version = "2"
+
+-- change this to "CrosshairControl" if you want to adjust the positions with
+-- a bigger transform widget.
+previewControl = "PointControl"
+
+
+FuRegisterClass("FlexyRig", CT_Tool, {
+	REGS_Name = "FlexyRig",
+	REGS_Category = "Fuses",
+	REGS_OpIconString = "Lin",
+	REGS_OpDescription = "Draws straight lines and calculates their intersection point.",
+	REGS_Company = "Stefan Ihringer",
+	REGS_URL = "http://www.bildfehler.de",
+	REG_Fuse_NoEdit = true,
+	REG_Fuse_NoReload = true,
+	})
+
+function Create()
+	InStartPos1 = self:AddInput("Start 1", "StartPos1", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_ViewControl   = "CrosshairControl",
+		INPID_PreviewControl = "CrosshairControl",
+		CHC_Style = "DiagonalCross",
+		INP_DefaultX         = 0.25,
+		INP_DefaultY         = 0.5,
+		INP_DoNotifyChanged  = true,
+		})
+	InEndPos1 = self:AddInput("End 1", "EndPos1", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		CHC_Style = "DiagonalCross",
+		INP_DefaultX         = 0.75,
+		INP_DefaultY         = 0.5,
+		INP_DoNotifyChanged  = true,
+		})
+	InEndPos3 = self:AddInput("Middle", "Middle", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_PreviewControl = previewControl,
+		INP_DefaultX         = 0.5,
+		INP_DefaultY         = 0.5,
+		INP_DoNotifyChanged  = true,
+		})
+	InBendDirection = self:AddInput("Bend Direction", "BendDirection", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed     = -1,
+		INP_MaxScale       = 1,
+		INP_Default        = 0.2,
+		})
+	InSegments = self:AddInput("Segments", "Segments", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed     = 0,
+		INP_MaxScale       = 100,
+		INP_Default        = 20,
+		})
+	IntrimEnd = self:AddInput("Trim End", "trimEnd", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed     = 0,
+		INP_MaxScale       = 1,
+		INP_Default        = 1,
+		})
+	InJointBias = self:AddInput("Joint Bias", "JointBias", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed     = 0,
+		INP_MaxScale       = 1,
+		INP_Default        = 0.5,
+		})
+	InStiffness = self:AddInput("Stiffness", "Stiffness", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed     = 0,
+		INP_MaxScale       = 5,
+		INP_Default        = 3,
+		})
+		
+		
+	
+		
+
+	
+
+	self:BeginControlNest("Line Style", "LineStyle", false, {})
+	InLineType = self:AddInput("Type", "Type", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "MultiButtonControl",
+		INP_Default        = 0.0,
+		MBTNC_ShowName     = false,
+		{MBTNC_AddButton   = "Solid", MBTNCD_ButtonWidth = 0.33, },
+		{MBTNC_AddButton   = "Dash",  MBTNCD_ButtonWidth = 0.34, },
+		{MBTNC_AddButton   = "Dot",   MBTNCD_ButtonWidth = 0.33, },
+		{MBTNC_AddButton   = "Dash Dot",     MBTNCD_ButtonWidth = 0.5, },
+		{MBTNC_AddButton   = "Dash Dot Dot", MBTNCD_ButtonWidth = 0.5, },
+		})
+
+	InThickness = self:AddInput("Thickness", "Thickness", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed     = 0,
+		INP_MaxScale       = 0.1,
+		INP_Default        = 0.01,
+		})
+
+	InFilter = self:AddInput("Filter", "Filter", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "MultiButtonControl",
+		INP_Default        = 3.0,
+		{MBTNC_AddButton   = "Box",       MBTNCD_ButtonWidth = 0.25, },
+		{MBTNC_AddButton   = "Bartlett",  MBTNCD_ButtonWidth = 0.25, },
+		{MBTNC_AddButton   = "Multi-box", MBTNCD_ButtonWidth = 0.25, },
+		{MBTNC_AddButton   = "Gaussian",  MBTNCD_ButtonWidth = 0.25, },
+		})
+
+	InSoftness = self:AddInput("Softness", "Softness", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed     = 0.0,
+		INP_MaxScale       = 100,
+		INP_Default        = 0.0,
+		ICD_Center         = 10,
+		})
+
+	-- color wheel
+	InRed = self:AddInput("Red", "Red", {
+		ICS_Name            = "Line Color",
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 1.0,
+		INP_MaxScale        = 1.0,
+		CLRC_ShowWheel      = false,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 0,
+		})
+	InGreen = self:AddInput("Green", "Green", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 1.0,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 1,
+		})
+	InBlue = self:AddInput("Blue", "Blue", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 1.0,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 2,
+		})
+	InAlpha = self:AddInput("Alpha", "Alpha", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 1.0,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 3,
+		})
+
+	InOnBlack = self:AddInput("Draw lines on black image", "OnBlack", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "CheckboxControl",
+		INP_Default         = 0,
+		})
+	self:EndControlNest()
+	
+	InLabel = self:AddInput("Lines "..version, "version", {
+		LINKID_DataType    = "Text",
+		INPID_InputControl = "LabelControl",
+		INP_External       = false,
+		INP_Passive        = true,
+		})
+
+	-- image input
+	InImage = self:AddInput("Input", "Input", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})
+
+
+	--local startOut  = InStartPos1:GetValue(req)
+	--local endOut  = InEndPos1:GetValue(req)
+
+	-- outputs
+	OutImage = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})
+
+	OutVanishingPoint = self:AddOutput("Vanishing Point", "VanishingPoint", {
+		LINKID_DataType = "Point",
+		})
+	OutStart = self:AddOutput("Start 1", "StartPos1", {
+		LINKID_DataType = "Point",
+		})
+	OutEnd = self:AddOutput("End 1", "EndPos1", {
+		LINKID_DataType = "Point",
+		})
+
+
+end
+
+
+
+
+
+
+
+
+-- converts y-coordinates for use in matrix math, trigonometry and Shape object functions
+-- where, vertically, 1.0 isn't the image height but equals the image's width.
+function convertY(y, ref_img)
+	return y * (ref_img.Height * ref_img.YScale) / (ref_img.Width * ref_img.XScale)
+end
+
+-- Calculate distance
+ function distance(from, to)
+  local pi = 3.14159
+  local distance = 0
+  local radius = 6367000
+  local radian = pi / 180
+  local deltaLatitude = sin(radian * (from.latitude - to.latitude) /2)
+  local deltaLongitude = sin(radian * (from.longitude - to.longitude) / 2)
+
+  local circleDistance = 2 * asin(min(1, sqrt(deltaLatitude * deltaLatitude +
+     cos(radian * from.latitude) * cos(radian * to.latitude) * deltaLongitude * deltaLongitude)))
+  distance = abs(radius * circleDistance)
+  return distance
+ end
+
+ print(distance)
+
+
+
+-- PreCalcProcess. If not implemented, only the main output will be handled,
+-- which would cause tools connected to the vanishing output to fail.
+
+
+
+function Process(req)
+	local img        = InImage:GetValue(req)
+	local start1     = InStartPos1:GetValue(req)
+	local end1       = InEndPos1:GetValue(req)
+	local BendDirection = InBendDirection:GetValue(req).Value
+	local sides = InSegments:GetValue(req).Value
+	local trimEnd = IntrimEnd:GetValue(req).Value
+
+	
+	
+	local linetype   = math.floor(InLineType:GetValue(req).Value + 0.5) + 1
+	local thickness  = InThickness:GetValue(req).Value
+	local blur       = InSoftness:GetValue(req).Value
+	local filter     = math.floor(InFilter:GetValue(req).Value + 0.5) + 1
+	local gain_r     = InRed:GetValue(req).Value
+	local gain_g     = InGreen:GetValue(req).Value
+	local gain_b     = InBlue:GetValue(req).Value
+	local gain_a     = InAlpha:GetValue(req).Value
+	local onblack    = (InOnBlack:GetValue(req).Value > 0.1)
+	local JointBias  = InJointBias:GetValue(req).Value
+	local stiffness  = InStiffness:GetValue(req).Value
+
+	-- set auxilliary output first
+
+	
+------- MIDDLE POINT 
+
+	print("bias"..JointBias)
+	
+
+	P1 = {start1.X,start1.Y} -- First Point
+
+	P2 = {end1.X,end1.Y} -- Second Point
+
+	distance = 1- math.sqrt(((P1[1] - P2[1]) ^ 2 + (P1[2] - P2[2]) ^ 2)) -- Distance between P1 and P2
+
+	
+
+	P3 = {((P2[1]-P1[1])*JointBias)+P1[1],((P2[2]-P1[2])*JointBias)+P1[2]} -- Middle Point between bottom points
+
+	V1 = {(P2[1]-P1[1])/2,(P2[2]-P1[2])/2} -- Vector from point 1 --> 2 then halfed
+
+	V2 = {V1[2],-V1[1]} -- Vector rotated by 90 deg by swapping the X and Y then -X or Y depending on the direction
+
+	Nlength = math.sqrt((V2[1] * V2[1]) + (V2[2] * V2[2])) -- Normalize vector length
+
+	V2N = {V2[1]/Nlength*BendDirection*distance*stiffness, V2[2]/Nlength*BendDirection*distance*stiffness} -- Normalize vector 
+
+	
+
+	V3 = {P3[1]+V2N[1], P3[2]+V2N[2]} -- Rotated vector added to the middle point for offset
+
+	--local Distance = math.floor(math.sqrt(((P1[1]-P2[1])*2) + ((P1[2]-P2[2])*2)))
+
+	
+
+	
+	--line2:AddShape( line2:OutlineOfShape(thickness, outlinetypes[linetype], "OJT_Round", (req:IsQuick() and 8 or 16)) )
+
+
+
+
+	
+
+
+	
+	 
+
+	local out = img:CopyOf()
+	if onblack then
+		out:Fill(Pixel({R = 0, G = 0, B = 0, A = 0}))
+	end
+	local outlinetypes = {"OLT_Solid", "OLT_Dash", "OLT_Dot", "OLT_DashDot", "OLT_DashDotDot",}
+	local blurfilters  = {"BT_Box", "BT_Bartless", "BT_MultiBox", "BT_Gaussian", }
+ 
+	-- draw a line
+	local line1 = Shape()
+	line1:MoveTo(P1[1], convertY(P1[2], img))
+
+	line1:LineTo(0,0, img) -- mid line point
+
+	line1:LineTo(P3[1],convertY(P3[2],img)) -- Line to Mid
+	line1:LineTo(P2[1],convertY(P2[2],img)) -- Line to end
+
+
+
+-- REFERENCE POINTS LINE
+	line1 = line1:OutlineOfShape(0.000, outlinetypes[linetype], "OJT_Square", (req:IsQuick() and 8 or 16)) -- Reference line
+
+	 -----------------
+
+	-- P1[1] is left bottom point X P1[2] is left bottom point Y
+	-- P2[1] is Right bottom point X P2[2] is Right bottom point Y
+	-- V3[1] is offset middle point X V3[2] is offset middle point Y
+
+	local line2 = Shape()
+	step = 0 -- Number off segments
+	step = 1/sides*trimEnd -- 1 is the total length / sides resamples the curve
+	slide = 0
+	line2:MoveTo(P1[1], convertY(P1[2], img)) -- Start Position
+
+	for i = 1,sides,1 -- Loop to slide middle point around
+	do  
+		slide = slide+step -- Length of each segment
+		LM = {((V3[1]-P1[1])*slide)+P1[1],((V3[2]-P1[2])*slide)+P1[2]} -- Vector left middle
+		RM = {((P2[1]-V3[1])*slide)+V3[1],((P2[2]-V3[2])*slide)+V3[2]} -- Vector right middle
+		MM = {((RM[1]-LM[1])*slide)+LM[1],((RM[2]-LM[2])*slide)+LM[2]} -- Vector Middle middle
+				
+		line2:LineTo(MM[1],convertY(MM[2],img)) -- draw line to End of segement
+		print("side: "..i) -- debug
+		print("slide: "..slide) -- debug	
+	end
+
+	print("step: "..step) -- debug
+	print("--------------") -- debug
+
+	line1:AddShape( line2:OutlineOfShape(thickness, outlinetypes[linetype], "OJT_Round", (req:IsQuick() and 8 or 16)) )
+
+	----------------------
+	
+	
+	
+	-- put shape to image
+	local ic = ImageChannel(out, 8)
+	local fs = FillStyle()
+	ic:SetStyleFill(fs)
+	ic:ShapeFill(line1)
+	local cs = ChannelStyle()
+	cs.Color = Pixel({R = gain_r, G = gain_g, B = gain_b, A = gain_a})
+	cs.BlurType = blurfilters[filter]
+	cs.SoftnessX = blur
+	cs.SoftnessY = blur
+	if self.Status == "OK" then
+		ic:PutToImage("CM_Merge", cs)
+	end
+	
+	OutImage:Set(req, out)
+end
