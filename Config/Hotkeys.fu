@@ -29,44 +29,6 @@
        Action
    {
         ID = "SetRenderIn",
-        Category = "MyStuff",
-        ShortName = "IN",
-   Targets = 
-   {
-       FlowView = 
-       {
-           Execute = 
-            [[
-            local cmp = fu:GetCurrentComp()
-            cmp:SetAttrs({COMPN_RenderStart = cmp.CurrentTime})
-            ]],
-        },
-      },
-    },
-
-       Action
-   {
-        ID = "SetRenderOut",
-        Category = "MyStuff",
-        ShortName = "OUT",
-   Targets = 
-   {
-       FlowView = 
-       {
-           Execute = 
-            [[
-            local cmp = fu:GetCurrentComp()
-            cmp:SetAttrs({COMPN_RenderEnd = cmp.CurrentTime})
-            ]],
-        },
-      },
-    },
-
-
-
-       Action
-   {
-        ID = "SetRenderIn",
         Category = "My Stuff",
         ShortName = "IN",
    Targets = 
@@ -128,9 +90,8 @@
     OEM_PERIOD = "AddTool{ id = 'PipeRouter' }",
     LEFT  = "Time_Step_Back",
     RIGHT = "Time_Step_Forward",
-    -- set render in/outs
-    -- I = "SetRenderIn",
-    -- O = "SetRenderOut",
+    I = "SetRenderIn",
+    O = "SetRenderOut",
    
   },
   
@@ -154,21 +115,13 @@
      Q = "My_ShowHideControls",
   },
 
-  Hotkeys
-  {
-    Target = "FuFrame",
-    I = "SetRenderIn",
-    O = "SetRenderOut", 
-    -- J = "Playback_Mode{ play = true, reverse = true}",
-    -- K = "Playback_Mode{ play = false }",
-    -- L = "Playback_Mode{ play = true }", -- can leave out play = true if you want toggle.
-  },
-}
-
   -- Hotkeys
   -- {
-  --    Target = "FuFrame",
-  --    J = "Playback_Mode{ play = true, reverse = true}",
-  --    K = "Playback_Mode{ play = false }",
-  --    L = "Playback_Mode{ play = true }", can leave out play = true if you want toggle.
+  --   Target = "FuFrame",
+  --   I = "SetRenderIn",
+  --   O = "SetRenderOut", 
+  --   -- J = "Playback_Mode{ play = true, reverse = true}",
+  --   -- K = "Playback_Mode{ play = false }",
+  --   -- L = "Playback_Mode{ play = true }", -- can leave out play = true if you want toggle.
   -- },
+}
