@@ -26,8 +26,6 @@
          },
       },
    },
-
-
        Action
    {
         ID = "SetRenderIn",
@@ -81,7 +79,7 @@
     R = "AddTool{ id = 'Loader' }",
     S = "AddTool{ id = 'Saver' }",
     SHIFT_M = "RunScript{filename = 'Scripts:/Utility/stx_merge3DConnect.lua'}",
-    SHIFT_C = "AddTool{ id = 'Camera2D' }",
+    SHIFT_C = "AddTool{ id = 'Camera3D' }",
     SHIFT_R = "AddTool{ id = 'Renderer3D' }",
     SHIFT_I = "AddTool{ id = 'ImagePlane3D' }",
     SHIFT_T = "AddTool{ id = 'Transform3D' }",
@@ -92,7 +90,6 @@
     OEM_PERIOD = "AddTool{ id = 'PipeRouter' }",
     LEFT  = "Time_Step_Back",
     RIGHT = "Time_Step_Forward",
-    -- set render in/outs
     I = "SetRenderIn",
     O = "SetRenderOut",
    
@@ -102,7 +99,7 @@
   {
     Target = "GraphView",
     Q = "Time_Goto_Key_Prev",
-    W = "Time_Goto_Key_Next"  
+    W = "Time_Goto_Key_Next", 
   },
   -- Hotkeys
   -- {
@@ -120,9 +117,11 @@
 
   -- Hotkeys
   -- {
-  --    Target = "FuFrame",
-  --    J = "Playback_Mode{ play = true, reverse = true}",
-  --    K = "Playback_Mode{ play = false }",
-  --    L = "Playback_Mode{ play = true }", can leave out play = true if you want toggle.
+  --   Target = "FuFrame",
+  --   I = "SetRenderIn",
+  --   O = "SetRenderOut", 
+  --   -- J = "Playback_Mode{ play = true, reverse = true}",
+  --   -- K = "Playback_Mode{ play = false }",
+  --   -- L = "Playback_Mode{ play = true }", -- can leave out play = true if you want toggle.
   -- },
 }

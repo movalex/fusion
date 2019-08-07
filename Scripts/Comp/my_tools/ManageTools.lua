@@ -1,8 +1,8 @@
 
 local ui = fu.UIManager
 local disp = bmd.UIDispatcher(ui)
-local width,height = 330,110
-checked_state = comp:GetData('check_enabled')
+local width,height = 330,140
+checked_state = comp:GetData('use_comments')
 
 function fetch_data()
     last_tool = comp:GetData('tool_id')
@@ -28,7 +28,6 @@ end
 
 function print_label()
     local tool = fetch_data()
-    -- print('tool is '.. tool)
     if tool then
         return 'last used: '..tool
     else return 'no tool selected'
@@ -54,27 +53,39 @@ win = disp:AddWindow({
       ui:Button{ID = 'Enable', Text = 'Enable',},
     },
     ui.HGroup{
-        ui:Label{ID = 'L', Weight = .7, Text = print_label(), 
+        ui:Label{ID = 'L', Weight = .6, Text = print_label(), 
                 Alignment = {AlignLeft = true,  AlignVCenter = true},},
-        ui:CheckBox{ID = 'checkbox', Weight = .1, Text = 'use comment:',
+        ui:CheckBox{ID = 'checkbox', Weight = .1, Text = 'with comment:',
                     Alignment = {AlignLeft = true,  AlignVCenter = true},
                     Checked = checked_state or false},
         ui.LineEdit{ID = 'Line', Weight = .2, 
                     Text = comp:GetData('comment') or '1',
-                    Events = {ReturnPressed = true}}
-    }, 
-    ui:HGroup{
-        ui.Button{ID = 'Toggle', Text = 'Toggle All Tools with Comment'},
-    }
-    
-  },
+                    Events = {ReturnPressed = true}},
+        }, 
+        ui:VGroup{
+            ui.Button{ID = 'SetComment',  Text = 'Set/Replace comment'},
+            ui.Button{ID = 'Toggle', Text = 'Toggle all tools with comment'},
+        },
+    },
 })
-
 
 itm = win:GetItems()
 
+function win.On.SetComment.Clicked(ev)
+    sel_tools = comp:GetToolList(true)
+    if #sel_tools == 0 then
+        return false
+    end
+    new_comment = itm['Line'].Text
+    for _, tool in pairs(sel_tools) do
+        tool.Comments = new_comment
+    end
+    comp:SetData('comment', new_comment)
+end
+
 
 function win.On.Toggle.Clicked(ev)
+    itm['checkbox'].Checked = true
     local comment = itm['Line'].Text
     local tools = comp:GetToolList(false)
     count = 0
@@ -95,13 +106,10 @@ end
 
 
 function win.On.Manage.Close(ev)
-    comp:SetData('check_enabled', itm['checkbox'].Checked)
+    comp:SetData('use_comments', itm['checkbox'].Checked)
     disp:ExitLoop()
 end
 
--- function win.On.checkbox.Clicked(ev)
---     print('clicked')
--- end
 
 function win.On.Line.ReturnPressed(ev)
     comp:SetData('comment', itm['Line'].Text)
@@ -109,17 +117,13 @@ function win.On.Line.ReturnPressed(ev)
 end
 
 
-function check_selected(tool)
-    return tool:GetAttrs('TOOLB_Selected')
-end
-
-function check_enabled(tool)
-    return tool:GetAttrs('TOOLB_PassThrough')
-end
-
-
 function operate(operation, report)
     cmp = fu:GetCurrentComp()
+    
+    if comp:GetData('tool_id') == nil and comp:GetData('use_comment') == nil then
+        print('select any tool to manage')
+    end
+
     if #cmp:GetToolList(true) == 0 then
         tool = fetch_data()
     else    
@@ -128,7 +132,7 @@ function operate(operation, report)
 
     if tool then
         cmp:SetData('tool_id', tool)
-        print(cmp:GetData('tool_id'))
+        print('currently managing ', cmp:GetData('tool_id'), 'tools')
         itm['L'].Text = 'tool:  '.. tool
         local allTools = cmp:GetToolList(false, tool)
         count = 0
@@ -153,7 +157,7 @@ end
 
 
 function win.On.Disable.Clicked(ev)
-operate(true, 'disabled ')
+    operate(true, 'disabled ')
 end
 
 
