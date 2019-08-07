@@ -1,15 +1,13 @@
 import sys
-import BlackmagicFusion as bmd
-print(sys.path)
-from fu9import import importNodeTreeTemplate as imp
-# sys.path.append(r'/Users/videopro/Documents/pymodules')
-# print(bmd)
-fusion = bmd.scriptapp("Fusion")
-print(fusion)
-# print(bmd.scriptapp("Fusion"))
-comp = fusion.GetCurrentComp()
-print(comp.GetAttrs())
+import os
 
+sys.path.append(os.path.expanduser("~/Downloads/pymodules"))
 
-test = imp(r'/Users/videopro/Downloads/test.comp')
-print('\nLoaded comp: {}'.format(test.GetAttrs()['COMPS_FileName']))
+try:
+    from fu9import import remote_task as rts
+except ImportError:
+    print('no module imported')
+
+test = rts(os.path.expanduser("~/Downloads/test1.comp"))
+if test:
+    print("\nLoaded comp: {}".format(test.GetAttrs()["COMPS_FileName"]))
