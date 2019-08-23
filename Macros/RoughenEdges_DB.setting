@@ -1,0 +1,109 @@
+{
+	Tools = ordered() {
+		RoughenEdges = GroupOperator {
+			CtrlWZoom = false,
+			NameSet = true,
+			Inputs = ordered() {
+				Input1 = InstanceInput {
+					SourceOp = "PipeRouter1_6",
+					Source = "Input",
+				}
+			},
+			Outputs = {
+				Output1 = InstanceOutput {
+					SourceOp = "Displace1_1",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Pos = { 3905, 940.5 },
+				Flags = {
+					AllowPan = false,
+					ForceSource = true,
+					GridSnap = true,
+					AutoSnap = true,
+					RemoveRouters = true
+				},
+				Size = { 365.5, 164.2, 182.75, 22 },
+				Direction = "Horizontal",
+				PipeStyle = "Direct",
+				Scale = 1,
+				Offset = { -2245.25, -401.8 }
+			},
+			Tools = ordered() {
+				BrightnessContrast1 = BrightnessContrast {
+					CtrlWShown = false,
+					Inputs = {
+						Brightness = Input { Value = -0.5, },
+						Input = Input {
+							SourceOp = "CreateBumpMap1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2365, 412.5 } },
+				},
+				Displace1_1 = Displace {
+					Inputs = {
+						Type = Input { Value = 1, },
+						XRefraction = Input { Value = 2, },
+						YRefraction = Input { Value = 2, },
+						Input = Input {
+							SourceOp = "ChangeDepth1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "BrightnessContrast1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2365, 511.5 } },
+				},
+				PipeRouter1_6 = PipeRouter {
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "Polygon5_3_1",
+							Source = "Mask",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { 2090, 511.5 } },
+				},
+				CreateBumpMap1_1 = CreateBumpMap {
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "FastNoise1_1",
+							Source = "Output",
+						},
+						HeightScale = Input { Value = 3.42, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 2255, 412.5 } },
+				},
+				FastNoise1_1 = FastNoise {
+					Inputs = {
+						GlobalOut = Input { Value = 88, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						Width = Input { Value = 2048, },
+						Height = Input { Value = 1536, },
+						PixelAspect = Input { Value = { 1, 0.5 }, },
+						Depth = Input { Value = 3, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						XScale = Input { Value = 10.26, },
+						YScale = Input { Value = 17.26, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 2145, 412.5 } },
+				},
+				ChangeDepth1 = ChangeDepth {
+					Inputs = {
+						Depth = Input { Value = 3, },
+						Input = Input {
+							SourceOp = "PipeRouter1_6",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2200, 511.5 } },
+				}
+			},
+		}
+	}
+}

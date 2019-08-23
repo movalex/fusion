@@ -1,0 +1,207 @@
+{
+	Tools = ordered() {
+		MediaOutUltra = MediaOut {
+			CtrlWZoom = false,
+			CustomData = { Settings = {
+				} },
+			Inputs = {
+				FilenamePrefix = Input { Value = "Previews:/Resolve/Output.0000.exr", },
+				RenderView = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 825, 214.5 } },
+			UserControls = ordered() {
+				RenderView = {
+					{ CCS_AddString = "Left View" },
+					{ CCS_AddString = "Right View" },
+					INP_MaxAllowed = 2,
+					INP_Integer = false,
+					INPID_InputControl = "ComboControl",
+					CC_LabelPosition = "Horizontal",
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					LINKS_Name = "Render View",
+					ICS_ControlPage = "Controls",
+				},
+				FilenamePrefix = {
+					LINKS_Name = "Filename",
+					LINKID_DataType = "Text",
+					INPID_InputControl = "FileControl",
+					ICS_ControlPage = "Controls",
+				},
+				Padding = {
+					LINKS_Name = "Padding",
+					LINKID_DataType = "Number",
+					INPID_InputControl = "ScrewControl",
+					INP_Default = 4,
+					INP_Integer = false,
+					INP_MinScale = 0,
+					INP_MaxScale = 10,
+					ICS_ControlPage = "Controls",
+				},
+				SequenceOffset = {
+					LINKS_Name = "Sequence Offset",
+					LINKID_DataType = "Number",
+					INPID_InputControl = "ScrewControl",
+					INP_Default = 0,
+					INP_Integer = false,
+					INP_MinScale = -300,
+					INP_MaxScale = 300,
+					ICS_ControlPage = "Controls",
+				},
+				PurgeCache = {
+					LINKS_Name = "Purge Cache",
+					LINKID_DataType = "Number",
+					INPID_InputControl = "CheckboxControl",
+					INP_Integer = true,
+					CBC_TriState = false,
+					ICS_ControlPage = "Controls",
+				},
+				RenderButton = {
+					LINKS_Name = "Render Through Viewer",
+					LINKID_DataType = "Number",
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+-- Find out the current operating system platform. The platform local variable should be set to either "Windows", "Mac", or "Linux".
+------------------------------------------------------------------------
+-- Check what platform this script is running on
+platform = (FuPLATFORM_WINDOWS and 'Windows') or (FuPLATFORM_MAC and 'Mac') or (FuPLATFORM_LINUX and 'Linux')
+
+------------------------------------------------------------------------
+-- Add the platform specific folder slash character
+osSeparator = package.config:sub(1,1)
+
+-- Find out the current directory from a file path
+-- Example: print(dirname("/Users/Shared/file.txt"))
+function dirname(mediaDirName)
+	return mediaDirName:match("(.*" .. osSeparator ..")")
+end
+
+-- Timeline frame range
+startFrame = comp:GetAttrs().COMPN_RenderStart
+endFrame = comp:GetAttrs().COMPN_RenderEnd
+
+-- Frame padding
+padding = '%0' .. tostring(tool:GetInput('Padding')) .. 'd'
+
+-- Purge Cache
+purge = tool:GetInput('PurgeCache')
+
+-- Render viewport (Left View/Right View)
+view = tool:GetInput('RenderView')
+if view == 0 then
+	viewName = 'Left View'
+elseif view == 1 then
+	viewName = 'Right View'
+end
+
+-- Frame numbering shift
+offset = tool:GetInput('SequenceOffset')
+
+function Render()
+	-- Generate the filename
+	currentFrame = comp:GetAttrs().COMPN_CurrentTime
+	filename = comp:MapPath(tool:GetInput('FilenamePrefix')):gsub(('%.%d*%.') , ('.' .. string.format(padding, currentFrame + offset) .. '.'))
+
+	-- Create the folder
+	folder = dirname(filename)
+	bmd.createdir(folder)
+
+	-- Save the image
+	if view == 0 then
+		result = comp:GetPreviewList().LeftView.View.CurrentViewer:SaveFile(filename)
+	else
+		result = comp:GetPreviewList().RightView.View.CurrentViewer:SaveFile(filename)
+	end
+	if result then
+		print('[Saved Frame] ' .. filename)
+	else
+		print('[Error Saving Frame] ' .. filename)
+	end
+end
+
+-- Print the status info
+print('[Render Range] ' .. startFrame .. '-' .. endFrame .. ' [Node] ' .. tostring(tool.Name) .. ' [Viewport] ' .. viewName)
+
+-- Purge the memory cache
+if purge == 1 and platform == 'Windows' then
+	print('[Purge Cache] ' .. purge)
+elseif purge == 1 and platform ~= 'Windows' then
+	print('[Purge Cache] Not available on the current platform')
+end
+
+-- Verify the viewport exists
+if view == 0 then
+	if not comp:GetPreviewList().LeftView.View.CurrentViewer then
+		print('[Viewer Error] ' .. viewName .. ' is empty. Please load a node into the view before rendering the sequence.')
+		return
+	end
+else
+	if not comp:GetPreviewList().RightView.View.CurrentViewer then
+		print('[Viewer Error] ' .. viewName .. ' is empty. Please load a node into the view before rendering the sequence.')
+		return
+	end
+end
+	
+for i = startFrame, endFrame do
+	comp:SetAttrs({COMPN_CurrentTime = i})
+	Render()
+
+	-- Purge the RAM cache
+	if purge == 1 and platform == 'Windows' then
+		app:PurgeCache()
+	end
+end
+]],
+					ICS_ControlPage = "Controls"
+				},
+				OpenContainingButton = {
+					LINKS_Name = "Open Containing Folder ",
+					LINKID_DataType = "Number",
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+currentFrame = comp:GetAttrs().COMPN_CurrentTime
+startFrame = comp:GetAttrs().COMPN_RenderStart
+endFrame = comp:GetAttrs().COMPN_RenderEnd
+
+-- Find out the current operating system platform. The platform local variable should be set to either "Windows", "Mac", or "Linux".
+------------------------------------------------------------------------
+-- Check what platform this script is running on
+platform = (FuPLATFORM_WINDOWS and 'Windows') or (FuPLATFORM_MAC and 'Mac') or (FuPLATFORM_LINUX and 'Linux')
+
+------------------------------------------------------------------------
+-- Add the platform specific folder slash character
+osSeparator = package.config:sub(1,1)
+
+-- Find out the current directory from a file path
+-- Example: print(dirname("/Users/Shared/file.txt"))
+function dirname(mediaDirName)
+	return mediaDirName:match("(.*" .. osSeparator ..")")
+end
+
+-- Open a folder window up using your desktop file browser
+function openDirectory(mediaDirName)
+	dir = dirname(mediaDirName)
+
+	if not bmd.fileexists(dir) then
+		print('[Create Directory] ', dir)
+		bmd.createdir(dir)
+	end
+	
+	if bmd.fileexists(dir) then
+		print('[Open Directory] ', dir)
+		bmd.openfileexternal('Open', dir)
+	end
+end
+
+filename = comp:MapPath(tool:GetInput('FilenamePrefix'))
+openDirectory(filename)
+]],
+					ICS_ControlPage = "Controls",
+				},
+			}
+		}
+	},
+	ActiveTool = "MediaOutUltra"
+}

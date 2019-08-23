@@ -1,0 +1,115 @@
+{
+	Tools = ordered() {
+		Disjoint_Conjoint_over1 = MacroOperator {
+			Inputs = ordered() {
+				Background = InstanceInput {
+					SourceOp = "Disjoint_Conjoint_over",
+					Source = "Image1",
+					Name = "Background",
+				},
+				Foreground = InstanceInput {
+					SourceOp = "Disjoint_Conjoint_over",
+					Source = "Image2",
+					Name = "Foreground",
+				},
+				Input2 = InstanceInput {
+					SourceOp = "Disjoint_Conjoint_over",
+					Source = "Operations",
+				},
+				EffectMask = InstanceInput {
+					SourceOp = "Disjoint_Conjoint_over",
+					Source = "EffectMask",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Disjoint_Conjoint_over",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Name = "Disjoint_Conjoint_over",
+				Pos = { 0, 0 }
+			},
+			Tools = ordered() {
+				Disjoint_Conjoint_over = Custom {
+					CtrlWZoom = false,
+					NameSet = true,
+					Inputs = {
+						NumberIn1 = Input { Expression = "Operations", },
+						LUTIn1 = Input {
+							SourceOp = "Disjoint_Conjoint_overLUTIn1",
+							Source = "Value",
+						},
+						LUTIn2 = Input {
+							SourceOp = "Disjoint_Conjoint_overLUTIn2",
+							Source = "Value",
+						},
+						LUTIn3 = Input {
+							SourceOp = "Disjoint_Conjoint_overLUTIn3",
+							Source = "Value",
+						},
+						LUTIn4 = Input {
+							SourceOp = "Disjoint_Conjoint_overLUTIn4",
+							Source = "Value",
+						},
+						RedExpression = Input { Value = "if(n1==0, if(a2+a1<1, c2+c1, c2 + c1 * (1-a2)/a1), if(a2>a1, c2, c2 + c1 * (1-a2/a1)))", },
+						GreenExpression = Input { Value = "if(n1==0, if(a2+a1<1, c2+c1, c2 + c1 * (1-a2)/a1), if(a2>a1, c2, c2 + c1 * (1-a2/a1)))", },
+						BlueExpression = Input { Value = "if(n1==0, if(a2+a1<1, c2+c1, c2 + c1 * (1-a2)/a1), if(a2>a1, c2, c2 + c1 * (1-a2/a1)))", },
+						AlphaExpression = Input { Value = "if(n1==0, if(a2+a1<1, c2+c1, c2 + c1 * (1-a2)/a1), if(a2>a1, c2, c2 + c1 * (1-a2/a1)))", },
+					},
+					ViewInfo = OperatorInfo { Pos = { -6389.18, -2640.8 } },
+					UserControls = ordered() {
+						Operations = {
+							{ CCS_AddString = "disjoint-over" },
+							{ CCS_AddString = "conjoint-over" },
+							INP_Integer = false,
+							INP_External = false,
+							LINKID_DataType = "Number",
+							CC_LabelPosition = "Horizontal",
+							INPID_InputControl = "ComboControl",
+							LINKS_Name = "Operations",
+						}
+					}
+				},
+				Disjoint_Conjoint_overLUTIn1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 0, Blue = 0 },
+				},
+				Disjoint_Conjoint_overLUTIn2 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 204, Blue = 0 },
+				},
+				Disjoint_Conjoint_overLUTIn3 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 0, Blue = 204 },
+				},
+				Disjoint_Conjoint_overLUTIn4 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 204, Blue = 204 },
+				}
+			},
+		}
+	},
+	ActiveTool = "Disjoint_Conjoint_over1"
+}

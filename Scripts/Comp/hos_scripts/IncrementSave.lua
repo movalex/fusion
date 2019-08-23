@@ -29,6 +29,11 @@ function findpattern(text, pattern, start)
 	return string.sub(text, string.find(text, pattern, start))
 end
 
+if not composition then
+    composition = fu:GetCurrentComp()
+end
+
+
 fa = composition:GetAttrs()
 if fa.COMPS_FileName == "" then
 	Save()

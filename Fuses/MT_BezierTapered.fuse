@@ -1,0 +1,327 @@
+--[[--
+MT_BezierTo.Fuse
+
+A Creator tool. This creates a Bezier curve with four control points and taper controls for the ends. First step in creating a generalized BezierTo() method for the Fuse drawing API.
+
+version 0.4
+2017-08-19
+Bryan Ray for Muse VFX
+
+--]]--
+
+
+FuRegisterClass("BezierTaper", CT_Tool, {
+	REGS_Name = "BezierTaper",
+	REGS_Category = "Fuses",
+	REGS_OpIconString = "bztp",
+	REGS_OpDescription = "Draws a tapered Bezier curve.",
+	REGS_Company = "MuseVFX",
+	REGS_URL = "http://www.musevfx.com",
+	})
+	
+function MakeRGBA(r,g,b,a)
+	return ((((a or 1) * 255)*256 + r*255)*256 + g*255)*256 + b*255
+end
+
+function Create()
+	InStartPos1 = self:AddInput("Point 1", "Point1", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		CHC_Style 			 = "Circle",
+		INP_DefaultX         = 0.15,
+		INP_DefaultY         = 0.2,
+		})
+	InEndPos1 = self:AddInput("Handle 1", "Handle1", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_PreviewControl = "PointControl",
+		PCID_PrevPoint 		 = "Point1",
+		INP_DefaultX         = 0.2,
+		INP_DefaultY         = 0.5,
+		})
+	InStartPos2 = self:AddInput("Handle 2", "Handle2", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_PreviewControl = "PointControl",
+		PCID_PrevPoint		 = "Point2",
+		INP_DefaultX         = 0.75,
+		INP_DefaultY         = 0.25,
+		})
+	InEndPos2 = self:AddInput("Point 2", "Point2", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		CHC_Style 			 = "Circle",		
+		INP_DefaultX         = 0.8,
+		INP_DefaultY         = 0.9,
+		})
+
+	InSubdivs = self:AddInput("Smoothness", "Smoothness", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 1,
+		INP_MaxScale = 50,
+		INP_Default = 20,
+		INP_Integer = true,
+	})
+
+	self:BeginControlNest("Line Style", "LineStyle", false, {})
+	-- Since the taper requires iterative lines, some features of the Shape
+	-- don't work as expected.
+	-- InLineType = self:AddInput("Type", "Type", {
+		-- LINKID_DataType    = "Number",
+		-- INPID_InputControl = "MultiButtonControl",
+		-- INP_Default        = 0.0,
+		-- MBTNC_ShowName     = false,
+		-- {MBTNC_AddButton   = "Solid", MBTNCD_ButtonWidth = 0.33, },
+		-- {MBTNC_AddButton   = "Dash",  MBTNCD_ButtonWidth = 0.34, },
+		-- {MBTNC_AddButton   = "Dot",   MBTNCD_ButtonWidth = 0.33, },
+		-- {MBTNC_AddButton   = "Dash Dot",     MBTNCD_ButtonWidth = 0.5, },
+		-- {MBTNC_AddButton   = "Dash Dot Dot", MBTNCD_ButtonWidth = 0.5, },
+		-- })
+
+	InThickness = self:AddInput("Thickness", "Thickness", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed     = 0,
+		INP_MaxScale       = 0.1,
+		INP_Default        = 0.01,
+		})
+		
+	InStartTaper1 = self:AddInput("Point 1 Taper", "Point1Start", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		INP_Default  = 0,
+		INP_MaxScale = 1,
+		IC_ControlGroup = 1,
+		IC_ControlID = 0,
+		})		
+		
+	InEndTaper1 = self:AddInput("End", "Point1End", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		INP_Default  = 0.25,
+		INP_MaxScale = 1,
+		IC_ControlGroup = 1,
+		IC_ControlID = 1,
+		})		
+		
+	InStartTaper2 = self:AddInput("Point 2 Taper", "Point2Start", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		INP_Default  = 0.75,
+		INP_MaxScale = 1,
+		IC_ControlGroup = 2,
+		IC_ControlID = 0,
+		})		
+		
+	InEndTaper2 = self:AddInput("End", "Point2End", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "RangeControl",
+		INP_Default  = 1,
+		INP_MaxScale = 1,
+		IC_ControlGroup = 2,
+		IC_ControlID = 1,
+		})	
+		
+	-- SplineContols don't work in v9, apparently.	
+	-- InTimeSplime = self:AddInput("Time Splime", "TimeSplime", {
+		-- LINKID_DataType = "LookUpTable",
+		-- INPID_InputControl = "SplineControl",
+		-- INPID_AddModifier = "LUTBezier",
+		-- ICS_Name = "",
+		-- --SPC_SplineColor = MakeRGBA(0.8,1,0.6, .4),
+		-- SPC_Show = true,
+		-- SPC_HorizontalGridLines = 5,
+		-- SPC_VerticalGridLines = 3,
+		-- --SPC_BarSize = 1,
+		-- SPC_Margin = 8,
+		-- SPCD_Height = .35,
+		-- SPC_ShowInOut = true,
+		-- })
+
+	-- Blurring is unacceptably slow when done iteratively.
+	-- InFilter = self:AddInput("Filter", "Filter", {
+		-- LINKID_DataType    = "Number",
+		-- INPID_InputControl = "MultiButtonControl",
+		-- INP_Default        = 3.0,
+		-- {MBTNC_AddButton   = "Box",       MBTNCD_ButtonWidth = 0.25, },
+		-- {MBTNC_AddButton   = "Bartlett",  MBTNCD_ButtonWidth = 0.25, },
+		-- {MBTNC_AddButton   = "Multi-box", MBTNCD_ButtonWidth = 0.25, },
+		-- {MBTNC_AddButton   = "Gaussian",  MBTNCD_ButtonWidth = 0.25, },
+		-- })
+
+	-- InSoftness = self:AddInput("Softness", "Softness", {
+		-- LINKID_DataType    = "Number",
+		-- INPID_InputControl = "SliderControl",
+		-- INP_MinAllowed     = 0.0,
+		-- INP_MaxScale       = 100,
+		-- INP_Default        = 0.0,
+		-- ICD_Center         = 10,
+		-- })
+
+	-- color wheel
+	InRed = self:AddInput("Red", "Red", {
+		ICS_Name            = "Line Color",
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 1.0,
+		INP_MaxScale        = 1.0,
+		CLRC_ShowWheel      = false,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 0,
+		})
+	InGreen = self:AddInput("Green", "Green", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 1.0,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 1,
+		})
+	InBlue = self:AddInput("Blue", "Blue", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 1.0,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 2,
+		})
+	InAlpha = self:AddInput("Alpha", "Alpha", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 1.0,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 3,
+		})
+
+	InOnBlack = self:AddInput("Draw lines on black image", "OnBlack", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "CheckboxControl",
+		INP_Default         = 0,
+		})
+	self:EndControlNest()
+	
+
+	-- image input
+	InImage = self:AddInput("Input", "Input", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})
+
+	-- outputs
+	OutImage = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})
+
+end
+
+-- De Casteljau's equation finds x,y coordinates for a given t
+-- p1 - p4 are point values: Tables with indices X and Y 
+-- The return value of p is a table in the same format.
+function solvePoint(p1, p2, p3, p4, t)
+	local p = {}
+	p.X = (1-t)^3*p1.X + 3*(1-t)^2*t*p2.X + 3*(1-t)*t^2*p3.X + t^3*p4.X
+	p.Y = (1-t)^3*p1.Y + 3*(1-t)^2*t*p2.Y + 3*(1-t)*t^2*p3.Y + t^3*p4.Y
+	
+	return p
+end
+
+
+-- converts y-coordinates for use in matrix math, trigonometry and Shape object functions
+-- where, vertically, 1.0 isn't the image height but equals the image's width.
+function convertY(y, ref_img)
+	return y * (ref_img.Height * ref_img.YScale) / (ref_img.Width * ref_img.XScale)
+end
+
+
+
+function Process(req)
+
+	-- Import variables from control panel
+	local img        = InImage:GetValue(req)
+	local P1   		 = InStartPos1:GetValue(req)
+	local P2   		 = InEndPos1:GetValue(req)
+	local P3  		 = InStartPos2:GetValue(req)
+	local P4   	     = InEndPos2:GetValue(req)
+	--local linetype   = math.floor(InLineType:GetValue(req).Value + 0.5) + 1
+	local thickness  = InThickness:GetValue(req).Value
+--	local blur       = InSoftness:GetValue(req).Value
+--	local filter     = math.floor(InFilter:GetValue(req).Value + 0.5) + 1
+	local gain_r     = InRed:GetValue(req).Value
+	local gain_g     = InGreen:GetValue(req).Value
+	local gain_b     = InBlue:GetValue(req).Value
+	local gain_a     = InAlpha:GetValue(req).Value
+	local onblack    = (InOnBlack:GetValue(req).Value > 0.5)
+	local subdivs    = InSubdivs:GetValue(req).Value
+	--local lut 		 = InTimeSplime:GetValue(req)
+	local startTaper1 = InStartTaper1:GetValue(req).Value
+	local endTaper1  = InEndTaper1:GetValue(req).Value
+	local startTaper2 = InStartTaper2:GetValue(req).Value
+	local endTaper2  = InEndTaper2:GetValue(req).Value
+	
+	--dump(lut)
+
+	-- Set up image
+	local out = img:CopyOf()
+	if onblack then
+		out:Fill(Pixel({R = 0, G = 0, B = 0, A = 0}))
+	end
+	
+	local outlinetypes = {"OLT_Solid", "OLT_Dash", "OLT_Dot", "OLT_DashDot", "OLT_DashDotDot",}
+	local blurfilters  = {"BT_Box", "BT_Bartless", "BT_MultiBox", "BT_Gaussian", }
+
+	-- draw the spline
+	local line1 = Shape()	
+	local s = {}
+	local r = {}
+	
+	local line = {}
+
+	-- Subdivide the curve
+	for i=1,subdivs do
+		local modthickness = 1
+		local t = i / subdivs
+		local t2 = (i-1) / subdivs -- Fix for taper hitting 0 prior to reaching P4.
+		-- Calculate the taper
+		
+		if t < 0.5 then --Point 1 taper
+			modthickness = thickness * math.min(t/endTaper1, 1)
+		else -- Point 2 taper
+			modthickness = thickness * math.min((1-t2)/(1-startTaper2), 1)
+		end
+		
+		if t < startTaper1 or t2 > endTaper2 then modthickness = 0 end
+
+		line[i] = Shape()
+		s = solvePoint(P1,P2,P3,P4, (i-1)/subdivs)
+		line[i]:MoveTo(s.X, convertY(s.Y, img))
+		r = solvePoint(P1,P2,P3,P4, t)
+		line[i]:LineTo(r.X, convertY(r.Y, img))
+		line[i] = line[i]:OutlineOfShape(modthickness, outlinetypes[1], "OJT_Round", (req:IsQuick() and 8 or 16))
+	end
+
+
+	-- create outline using chosen "OutlineType" and desired thickness
+	-- outline doesn't work with the iterative drawing. 
+	
+	
+	-- put shape to image
+	local ic = ImageChannel(out, 8)
+	local fs = FillStyle()
+	ic:SetStyleFill(fs)
+	local cs = ChannelStyle()
+	cs.Color = Pixel({R = gain_r, G = gain_g, B = gain_b, A = gain_a})
+	-- TODO: Replace with a full-image blur.
+	-- cs.BlurType = blurfilters[filter]
+	-- cs.SoftnessX = blur
+	-- cs.SoftnessY = blur
+	for i,item in ipairs(line) do
+		ic:ShapeFill(item)
+		if self.Status == "OK" then
+			ic:PutToImage("CM_Merge", cs)
+		end
+	end
+	
+	OutImage:Set(req, out)
+end
