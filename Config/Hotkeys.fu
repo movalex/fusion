@@ -77,7 +77,7 @@
     C = "AddTool{ id = 'ColorCorrector' }",
     G = "AddTool{ id = 'BrightnessContrast' }",
     R = "AddTool{ id = 'Loader' }",
-    S = "AddTool{ id = 'Saver' }",
+    W = "AddTool{ id = 'Saver' }",
     SHIFT_M = "RunScript{filename = 'Scripts:/Utility/stx_merge3DConnect.lua'}",
     SHIFT_C = "AddTool{ id = 'Camera3D' }",
     SHIFT_R = "AddTool{ id = 'Renderer3D' }",

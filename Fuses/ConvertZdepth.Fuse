@@ -1,0 +1,140 @@
+--[[--
+This Fuse converts Z-depth to camera point or camera plane.
+
+Requires   : Fusion 5.21 Build 23 or later
+Written By : Laurens Bekaert aliendesigns.be, Kristof Indeherberge
+Written On : November 17th, 2014
+
+Draft version - not very fast - needs to be optimized
+--]]--
+
+FuRegisterClass("ZcovertFuse", CT_Tool, {
+	REGS_Name = "ZconvertFuse",
+	REGS_Category = "LB_Tools\\DofTools",
+	REGS_OpIconString = "Zconv",
+	REGS_OpDescription = "Zdepth convert fuse",
+	REG_NoMotionBlurCtrls = true,
+	REG_NoBlendCtrls = true,
+	REG_OpNoMask = true,
+	})
+	
+	
+function Create()
+	InConvert = self:AddInput("Convert", "Convert", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "MultiButtonControl",
+		INP_Default = 0.0,
+		{MBTNC_AddButton = "Point To Plane", MBTNCD_ButtonWidth = 0.5, },
+		{MBTNC_AddButton = "Plane To Point", 	MBTNCD_ButtonWidth = 0.5, },
+		})
+		
+	InApertureWidth = self:AddInput("Aperture Width", "ApertureWidth", {
+		LINKS_Name = "Aperture Width (mm)",
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Default = 36.0,
+		})
+		
+	InApertureHeight = self:AddInput("Aperture Height", "ApertureHeight", {
+		LINKS_Name = "Aperture Height (mm)",
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Default = 24.0,
+		})
+		
+	InFocalLength = self:AddInput("Focal Length", "FocalLength", {
+		LINKS_Name = "Focal Length (mm)",
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Default = 50.0,
+		})
+
+	InImage = self:AddInput("Input", "Input", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})
+
+	OutImage = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})			
+end
+
+function chunk_y(y)
+	 
+	local p = Pixel()
+	for x=0,In.Width-1 do
+		In:GetPixel(x,y, p)
+			
+		if(convert == 1) then --PlaneToPoint
+					relX = x/(In.Width-1)
+					relY = y/(In.Height-1)
+					inter = p.R / math.cos(math.atan((math.sqrt(((0.5-relX)* ApertureW)^2 + ((0.5 - relY) * ApertureH)^2))/Focal))
+					p.R = inter
+					p.G = inter
+					p.B = inter
+					p.A = inter
+		else --pointToPlane	
+					relX = x/(In.Width-1)
+					relY = y/(In.Height-1)
+					inter = math.cos(math.atan((math.sqrt(((0.5-relX)*ApertureW)^2+((0.5-relY)*ApertureH)^2))/Focal))*p.R
+					p.R = inter
+					p.G = inter
+					p.B = inter
+					p.A = inter
+		end
+		Out:SetPixel(x,y, p)
+	end
+	 
+end 
+
+function Process(req) 
+	local img = InImage:GetValue(req)
+	local apertureW = InApertureWidth:GetValue(req).Value
+	local apertureH = InApertureHeight:GetValue(req).Value
+	local focal = InFocalLength:GetValue(req).Value
+	local Convert = InConvert:GetValue(req).Value
+
+	
+	local result = Image({IMG_Like = img})
+	
+	--local p = Pixel()
+ 
+	 
+	--[[--
+		for y=0,img.Height-1 do
+		if self.Status ~= "OK" then break end
+		
+		for x=0,img.Width-1 do
+			img:GetPixel(x,y, p)
+			if(convert == 1) then --PlaneToPoint
+				relX = x/(img.Width-1)
+				relY = y/(img.Height-1)
+				--getr1d(x,y)/cos(atan((sqrt(((0.5-x)*n1)^2+((0.5-y)*n2*s1)^2))/n3)) PlaneToPoint
+				inter = p.R / math.cos(math.atan((math.sqrt(((0.5-relX)* ApertureW)^2 + ((0.5 - relY) * ApertureH)^2))/Focal))
+				p.R = inter
+				p.G = inter
+				p.B = inter
+				p.A = inter
+			else --pointToPlane
+				relX = x/(img.Width-1)
+				relY = y/(img.Height-1)
+				--cos(atan((sqrt(((0.5-x)*n1)^2+((0.5-y)*n2*s1)^2))/n3))*getr1d(x,y)
+				inter = math.cos(math.atan((math.sqrt(((0.5-relX)*ApertureW)^2+((0.5-relY)*ApertureH)^2))/Focal))*p.R
+				p.R = inter
+				p.G = inter
+				p.B = inter
+				p.A = inter
+			end
+			
+			result:SetPixel(x,y, p)
+		end
+		self:SetProgress(y/img.Height)
+	end
+--]]--
+	self:DoMultiProcess(nil, { In = img, Out = result, convert = Convert, Focal = focal, ApertureW = apertureW, ApertureH = apertureH }, img.Height, chunk_y)
+	
+	OutImage:Set(req, result)
+
+end
+

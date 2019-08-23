@@ -40,18 +40,18 @@ version = "version .11 (Aug 28, 2016)"
 
 
 FuRegisterClass("NumberOperator", CT_Tool, {  
-   REGS_Category = "Fuses",
-   REGS_OpIconString = "fNOp",
-   REGS_OpDescription = "Number Operator Fuse",
-   REG_NoMotionBlurCtrls = true,
-   REG_OpNoMask = true,
-   REGID_DataType      = "Number",
-   REGID_InputDataType = "Number",
-   REG_NoBlendCtrls = true,
-   REG_NoObjMatCtrls = true,
-   REG_NoCommonCtrls = true,
-    --REG_Fuse_NoEdit = true,
-    --REG_Fuse_NoReload = true,
+    REGS_Category = "Fuses",
+    REGS_OpIconString = "fNOp",
+    REGS_OpDescription = "Number Operator Fuse",
+    REG_NoMotionBlurCtrls = true,
+    REG_OpNoMask = true,
+    REGID_DataType      = "Number",
+    REGID_InputDataType = "Number",
+    REG_NoBlendCtrls = true,
+    REG_NoObjMatCtrls = true,
+    REG_NoCommonCtrls = true,
+    REG_Fuse_NoEdit = true,
+    REG_Fuse_NoReload = true,
    --REG_Fuse_TilePic = NumberOperatorFusepic
    })
 
