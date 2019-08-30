@@ -1,3 +1,8 @@
+# Use this script to fix pathmaps for imported fbx and alembic files
+# MIT License
+# Alex Bogomolov, mail@abogomolov.com
+# 29-08-2019
+
 all_tools = comp.GetToolList()
 
 all_abc = comp.GetToolList(False, "SurfaceAlembicMesh")
