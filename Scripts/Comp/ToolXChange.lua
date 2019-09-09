@@ -1,8 +1,11 @@
-_VERSION = [[Version 1.3 - August 18, 2019]]
+_VERSION = [[Version 1.4 - Septembre 2, 2019]]
 --[[  HEADER :
 
-      Fusion 9.0.2 build 15 on windows 10 x64, jeremy bepoix - jeremy.bepoix@gmail.com
-      v1.3 - 2019-08-18
+      Fusion 9.0.2 build 15 | windows 10 x64, jeremy bepoix - jeremy.bepoix@gmail.com
+      Fusion 9.0.2 build 15 | ubuntu 18.04 & centOS 7
+      Fusion 16 on MacOSX
+
+      v1.4 - 2019-09-02
 
       =====Overview======
 
@@ -12,6 +15,11 @@ _VERSION = [[Version 1.3 - August 18, 2019]]
 ]]--
 
 --[[  VERSIONING :
+
+	  v1.4
+	  feedback : Movalex (wsl forum > www.steakunderwater.com )
+	  	- On mac use "USER" environment
+	  	- get current comp : pasting to any comp opened
 
 	  v1.3
 	  add delete button
@@ -36,8 +44,7 @@ _VERSION = [[Version 1.3 - August 18, 2019]]
 
 --[[  TODO :
 
-      - populate ROOT tree initializing
-      - first start repository
+    - submit by enter  
 
 ]]--
 
@@ -120,32 +127,47 @@ win = disp:AddWindow({
 
 --========================================================================================================================
 --
--- MAIN FUNC
+-- FIRST START & REPOSITIRY SETUP
 --
 --========================================================================================================================
 
 
---[[	REPOSITORY_FOLDER	]]--
---	put your repository here
-REPOSITORY_FOLDER = '/Users/videopro/gitlab/toolXchange/' 
-
-
-
-
+---------------------------------------------------------------------------------------------------------
+-- repoPath()
+-- 
+-- search if ".config" file present in "Profile:" directory
+--
+---------------------------------------------------------------------------------------------------------
+fuProfile = comp:MapPath('Profile:\\')
 platform = (FuPLATFORM_WINDOWS and "Windows") or (FuPLATFORM_MAC and "Mac") or (FuPLATFORM_LINUX and "Linux")
 searchFilterText = ""
 itm = win:GetItems()
 
---[[
-function firstStart()
-	print(arg[0])
-	-- find if config file present near script location
-	-- if 
-			-- put path to "REPOSITORY_FOLDER"
 
-	-- else
-			-- run fileBrowser user
-			-- keep path & creat toolXchange.config
+function repoPath()
+	-- find if ".config" file present in "Profile:"
+	repodir = bmd.readdir(fuProfile .. "*.config")
+	for i, f in ipairs(repodir) do
+		filename = tostring(f.Name)
+		print(filename)
+	end
+	-- if not create config file wih firstStart() function
+	if filename == nil then
+		firstStart()
+	else
+		repofile = io.open(fuProfile.."toolXchange.config", "r")
+		ret = repofile:read("*all")
+		REPOSITORY_FOLDER = comp:MapPath(ret)
+	end
+end
+
+---------------------------------------------------------------------------------------------------------
+-- firstStart()
+-- 
+-- Run window for path request, and create "toolXchange.config" file
+--
+---------------------------------------------------------------------------------------------------------
+function firstStart()
 	local width,height = 800,120
 	first_start_win = disp:AddWindow({
 		ID = 'firststart',
@@ -194,20 +216,19 @@ function firstStart()
 	function first_start_win.On.FolderButton.Clicked(ev)
 		selectedPath = tostring(fu:RequestDir('Scripts:/Comp'))
 		itm_fs.FolderTxt.Text = selectedPath
-	end
 
-	function createConf()
-		conf_file = io.open(selectedPath..toolXchange.config, "w")
-		conf_file:write(tostring(selectedPath))
+		-- create file "toolXchange.config" with path inside
+		conf_file = io.open(fuProfile.."toolXchange.config", "w")
+		conf_file:write(tostring(selectedPath:gsub("\\","/")))
 		io.close(conf_file)
+
+		REPOSITORY_FOLDER = selectedPath:gsub("\\","/")
+
+		disp:ExitLoop()
 	end
 
-	function readConf()
-		file = io.open(jsonPath, "r")
-		ret = file:read("*all")
-	end
 
-
+	
 	first_start_win:Show()
 	disp:RunLoop()
 	first_start_win:Hide()
@@ -216,7 +237,14 @@ function firstStart()
 end
 
 
-]]
+--========================================================================================================================
+--
+-- MAIN FUNC
+--
+--========================================================================================================================
+
+
+
 ---------------------------------------------------------------------------------------------------------
 -- findSys()
 -- 
@@ -403,8 +431,8 @@ function get_time_difference(jsonTime)
 	timeStamp = os.time({month=month, day=day, year=year, hour=hour, min=min, sec=sec})
 	elapsedSeconds = os.time(os.date('*t')) - timeStamp	
 	et = ConvertSeconds(elapsedSeconds)	
-	if et.days == 1 then daysText = ' day, ' else daysText = ' days, ' end
-	if et.hours == 1 then hoursText = ' hour, ' else hoursText = ' hours, ' end
+	if et.days == 1 then daysText = ' day ' else daysText = ' days ' end
+	if et.hours == 1 then hoursText = ' hour ' else hoursText = ' hours ' end
 	if et.mins == 1 then minsText = ' minute ' else minsText = ' minutes ' end
 	
 	if et.days > 0 then
@@ -578,7 +606,7 @@ end
 --
 -----------------------------------------------------------------------------------------------------------
 function Main()
-	--firstStart()
+	repoPath()
 	findSys()
 	ReadJson()
 	populateTree()
