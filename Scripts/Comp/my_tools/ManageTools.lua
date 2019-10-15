@@ -4,8 +4,8 @@ local disp = bmd.UIDispatcher(ui)
 local width,height = 330,140
 checked_state = comp:GetData('use_comments')
 
-function fetch_data()
-    last_tool = comp:GetData('tool_id')
+function fetch_data(cmp)
+    last_tool = cmp:GetData('tool_id')
     if last_tool then
         return last_tool
     else 
@@ -14,9 +14,10 @@ function fetch_data()
 end
 
 function get_selected_tool()
-    active = comp.ActiveTool
+    cmp = fu:GetCurrentComp()
+    active = cmp.ActiveTool
     if not active then
-        selected_nodes = comp:GetToolList(true)
+        selected_nodes = cmp:GetToolList(true)
         if #selected_nodes == 0 then
             print('select or activate node')
             return None
@@ -27,7 +28,8 @@ function get_selected_tool()
 end
 
 function print_label()
-    local tool = fetch_data()
+    local cmp = fu:GetCurrentComp()    
+    local tool = fetch_data(cmp)
     if tool then
         return 'last used: '..tool
     else return 'no tool selected'
@@ -72,7 +74,8 @@ win = disp:AddWindow({
 itm = win:GetItems()
 
 function win.On.SetComment.Clicked(ev)
-    sel_tools = comp:GetToolList(true)
+    local cmp = fu:GetCurrentComp()
+    sel_tools = cmp:GetToolList(true)
     if #sel_tools == 0 then
         return false
     end
@@ -80,14 +83,15 @@ function win.On.SetComment.Clicked(ev)
     for _, tool in pairs(sel_tools) do
         tool.Comments = new_comment
     end
-    comp:SetData('comment', new_comment)
+    cmp:SetData('comment', new_comment)
 end
 
 
 function win.On.Toggle.Clicked(ev)
+    local cmp = fu:GetCurrentComp()
     itm['checkbox'].Checked = true
     local comment = itm['Line'].Text
-    local tools = comp:GetToolList(false)
+    local tools = cmp:GetToolList(false)
     count = 0
     for _, tool in pairs(tools) do
         if tool.Comments[fu.TIME_UNDEFINED] == comment then
@@ -106,30 +110,29 @@ end
 
 
 function win.On.Manage.Close(ev)
-    comp:SetData('use_comments', itm['checkbox'].Checked)
+    local cmp = fu:GetCurrentComp()
+    cmp:SetData('use_comments', itm['checkbox'].Checked)
     disp:ExitLoop()
 end
 
 
 function win.On.Line.ReturnPressed(ev)
-    comp:SetData('comment', itm['Line'].Text)
-    print('now searching for comment "'..comp:GetData('comment')..'"')
+    local cmp = fu:GetCurrentComp()
+    cmp:SetData('comment', itm['Line'].Text)
+    print('now searching for comment "'..cmp:GetData('comment')..'"')
 end
 
 
 function operate(operation, report)
     cmp = fu:GetCurrentComp()
-    
-    if comp:GetData('tool_id') == nil and comp:GetData('use_comment') == nil then
+    if cmp:GetData('tool_id') == nil and cmp:GetData('use_comment') == nil then
         print('select any tool to manage')
     end
-
     if #cmp:GetToolList(true) == 0 then
-        tool = fetch_data()
+        tool = fetch_data(cmp)
     else    
         tool = get_selected_tool()
     end
-
     if tool then
         cmp:SetData('tool_id', tool)
         print('currently managing ', cmp:GetData('tool_id'), 'tools')

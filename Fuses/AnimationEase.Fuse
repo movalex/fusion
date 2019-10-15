@@ -1,0 +1,131 @@
+FuRegisterClass("AnimationEaseModifier", CT_Modifier, {
+	REGS_Name = "AnimationEase Modifier",
+	REGS_Category = "Fuses\\nativeSTUDIO\\Animation",
+	REGS_OpIconString = "AEM",
+	REGS_OpDescription = "AnimationEase Modifier",
+	REG_OpNoMask = true,
+	REG_NoBlendCtrls = true,
+	REG_NoObjMatCtrls = true,
+	REG_NoMotionBlurCtrls = true,
+	REG_TimeVariant = true,
+	REGID_DataType = "Number",
+	})
+
+
+
+
+function Create()
+
+
+	----------------RANGE  --------------------------------------
+
+	InStartAt= self:AddInput("StartAt", "StartAt", {
+			LINKS_Name = "StartAt",
+		LINKID_DataType =		"Number",
+		INPID_InputControl =	"SliderControl",
+		INP_Default =			0.5,
+		INP_MinAllowed =		-100.0,
+		INP_MaxScale =			50.0,
+
+
+		})
+	InEndAt= self:AddInput("EndAt", "EndAt", {
+		LINKS_Name = "EndAt",
+		LINKID_DataType =		"Number",
+		INPID_InputControl =	"SliderControl",
+		INP_Default =			0.5,
+		INP_MinAllowed =		0.0,
+		INP_MaxScale =			50.0,
+
+
+		})
+
+
+
+	InBounce= self:AddInput("Bounce", "Bounce", {
+		LINKID_DataType =		"Number",
+		INPID_InputControl =	"SliderControl",
+		INP_Default =			0.5,
+		INP_MinAllowed =		0.0,
+		INP_MaxScale =			50.0,
+				})
+
+
+	InMass= self:AddInput("Mass", "Mass", {
+		LINKID_DataType =		"Number",
+		INPID_InputControl =	"SliderControl",
+		INP_Default =			0.50,
+		INP_MinAllowed =		0.0,
+		INP_MaxScale =			50.0,
+				})
+
+
+
+
+
+	InDelayTime= self:AddInput("DELAY", "DelayTime", {
+		LINKID_DataType =		"Number",
+		INPID_InputControl =	"SliderControl",
+		INP_Default =			0,
+		INP_MinAllowed =		0,
+		INP_MaxScale =			500,
+		INP_Integer        = true,
+				})
+	---------------------------------------------------------
+
+
+
+	OutResult = self:AddOutput("Result", "Result", {
+		LINKID_DataType = "Number",
+		LINK_Main = 1,
+		})
+end
+
+
+
+function Process(req)
+
+	local t = req.Time
+
+
+	local sin = math.sin
+	local cos = math.cos
+	local exp = math.exp
+	local pi = math.pi
+	local abs = math.abs
+	local sqrt= math.sqrt
+
+
+	----------------- EASE ANIMATION-------------------------
+	---------------------------------------------------------
+
+
+
+	local Bounce = InBounce:GetValue(req).Value
+	local Mass = InMass:GetValue(req).Value
+	local Delay_Time = InDelayTime:GetValue(req).Value
+	local StartAt	= InStartAt:GetValue(req).Value
+	local EndAt	= InEndAt:GetValue(req).Value
+	local change,Duration_Pos;
+	local MCAL = abs(Mass * 0.01 - 0.01)
+	local BCAL = (0.05 + abs(Bounce* 0.01 - 0.01))
+
+	local r=StartAt
+
+
+
+
+if (t >= Delay_Time) then
+
+r =(1-(cos((t-Delay_Time)*MCAL)/exp(BCAL*(t-Delay_Time))))
+r=(EndAt* r) + StartAt*(1- r)
+
+else
+
+r=StartAt
+
+end
+
+
+	OutResult:Set(req, Number(r))
+end
