@@ -1,7 +1,7 @@
 ------------------------------------
 -- V2.4
+-- cleaned up and updated for Fusion9/16 by Alex Bogomolov (mail@abogomolov.com)
 -- now the script works with mapped paths
--- cleaned up and updated for Fusion9 compatibiilty by Alex Bogomolov (mail@abogomolov.com)
 
 -- V2.3 Update Log:
 -- + Updated syntax to work in Fusion 8

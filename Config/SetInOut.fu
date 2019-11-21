@@ -1,0 +1,51 @@
+{
+   Action
+   {
+       ID = "SetRenderIn",
+       Category = "My Stuff",
+       ShortName = "IN",
+   Targets = 
+   {
+       Composition = 
+       {
+           Execute = 
+            [[
+            local cmp = fu:GetCurrentComp()
+            cmp:SetAttrs({COMPN_RenderStart = cmp.CurrentTime})
+            ]],
+        },
+      },
+    },
+
+
+   Action
+   {
+        ID = "SetRenderOut",
+        Category = "My Stuff",
+        ShortName = "OUT",
+   Targets = 
+   {
+       Composition = 
+       {
+           Execute = 
+            [[
+            local cmp = fu:GetCurrentComp()
+            cmp:SetAttrs({COMPN_RenderEnd = cmp.CurrentTime})
+            ]],
+        },
+      },
+    },
+
+  Hotkeys
+  {
+    Target = "TimeView",
+    I = "SetRenderIn",
+    O = "SetRenderOut", 
+  },
+  -- Hotkeys
+  -- {
+  --   Target = "FlowView",
+  --   I = "SetRenderIn",
+  --   O = "SetRenderOut", 
+  -- },
+}

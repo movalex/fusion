@@ -1,16 +1,16 @@
--- 1.08.2014 release of initial script for Fusion 7 by House of Secrets
--- 22.02.2019 script simplification, fix compatibility with Fusion 9
+-- 1.08.2014 initial release for Fusion 7 by Sven Neve (House of Secrets) http://www.svenneve.com/?p=922
+-- 22.02.2019 general simplification, fix compatibility issues with Fusion 9 by Alex Bogomolov (mail@abogomolov.com)
 -- 15.05.2019 fix slow copy/paste issue
 comp = fu:GetCurrentComp()
 local originalToolList = comp:GetToolList(true)
 flow = comp.CurrentFrame.FlowView
-composition:StartUndo("Duplicate")
 comp:Copy(originalToolList)
 flow:Select()
 comp:Paste()
 
 local duplicateToolList = comp:GetToolList(true)
 
+composition:StartUndo("Duplicate")
 for i, tool in ipairs(originalToolList) do
     for j, input in ipairs(tool:GetInputList()) do
         if input:GetAttrs().INPB_Connected then

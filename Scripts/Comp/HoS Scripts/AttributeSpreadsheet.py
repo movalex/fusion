@@ -659,21 +659,20 @@ class TableModel(QAbstractTableModel):
     def load_fusion_data(self):
         self.communicate.send("loading tools and inputs")
         startTime = datetime.datetime.now()
-
+        
         comp = fu.GetCurrentComp()
         self.toolDict.clear()
         self.toolDict = comp.GetToolList(True)
-
         self.attributeNameKeys = []  # List of unique attribute name keys
         self.attributeDataTypes = []  # this list is coupled to the key list
 
         self.toolsInputs = []
         self.toolsAttributes = []
         progress = 0
-        for tool in list(self.toolDict.values()):
+        for tool in self.toolDict.values():
             toolInputs = {}
             toolInputsAttributes = {}
-            for v in list(tool.GetInputList().values()):
+            for v in tool.GetInputList().values():
                 f = FusionInput(v)
                 # if f.Name not in self.inputsToSkip:
                 if f.attributes["INPS_DataType"] not in self.data_types_to_skip:

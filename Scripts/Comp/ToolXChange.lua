@@ -44,7 +44,10 @@ _VERSION = [[Version 1.4 - Septembre 2, 2019]]
 
 --[[  TODO :
 
-    - submit by enter  
+    - submit new entry by pressing enter
+    - fix date sorting issue
+    - fix search
+    - add edit button
 
 ]]--
 
@@ -75,9 +78,7 @@ win = disp:AddWindow({
 		ui:Button
 		{
 			Weight = 0,
-
 			MinimumSize = { 24, 24 },
-
 			Text = "\xF0\x9F\x94\x8D",
 			Flat = true,
 			ID = "SearchButton",
