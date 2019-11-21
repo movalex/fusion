@@ -1,0 +1,520 @@
+{
+	Tools = ordered() {
+		SpotRemover1 = MacroOperator {
+			Inputs = ordered() {
+				Input1 = InstanceInput {
+					SourceOp = "Controls",
+					Source = "Depth",
+					Default = 3,
+				},
+				Input2 = InstanceInput {
+					SourceOp = "Controls",
+					Source = "Dither",
+					Default = 0,
+				},
+				Input3 = InstanceInput {
+					SourceOp = "Controls",
+					Source = "Source",
+					Page = "Controls",
+				},
+				Input4 = InstanceInput {
+					SourceOp = "Controls",
+					Source = "Destination",
+					Page = "Controls",
+				},
+				Input5 = InstanceInput {
+					SourceOp = "Controls",
+					Source = "Width",
+					Page = "Controls",
+					Default = 0.0700000002980232,
+				},
+				Input6 = InstanceInput {
+					SourceOp = "Controls",
+					Source = "Height",
+					Page = "Controls",
+					Default = 0.0700000002980232,
+				},
+				Input7 = InstanceInput {
+					SourceOp = "Controls",
+					Source = "Size",
+					MinScale = 0.0010000000475,
+					Page = "Controls",
+					Default = 1,
+				},
+				Input8 = InstanceInput {
+					SourceOp = "Controls",
+					Source = "Angle",
+					Page = "Controls",
+					Default = 0,
+				},
+				Input9 = InstanceInput {
+					SourceOp = "Controls",
+					Source = "Softness",
+					MaxScale = 0.019999999553,
+					Page = "Controls",
+					Default = 0,
+				},
+				Input10 = InstanceInput {
+					SourceOp = "Controls",
+					Source = "Opacity",
+					Page = "Controls",
+					Default = 1,
+				},
+				Input11 = InstanceInput {
+					SourceOp = "Controls",
+					Source = "PreBlur",
+					Page = "Controls",
+					Default = 5,
+				},
+				MainInput1 = InstanceInput {
+					SourceOp = "IN_",
+					Source = "Input",
+				},
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "OUT",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			Tools = ordered() {
+				OUT = PipeRouter {
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "CustomTool1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { 716.03, 194.085 } },
+				},
+				Ellipse = EllipseMask {
+					CtrlWShown = false,
+					Inputs = {
+						SoftEdge = Input { Expression = "Controls.Softness*2", },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input {
+							Value = { 0.6, 0.5 },
+							Expression = "Controls.Destination",
+						},
+						Width = Input {
+							Value = 0.07,
+							Expression = "Controls.Width",
+						},
+						Height = Input {
+							Value = 0.07,
+							Expression = "Controls.Height",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 433.053, 41.9282 } },
+				},
+				Instance_Blur1_1 = Blur {
+					CtrlWShown = false,
+					SourceOp = "Blur1_1",
+					Inputs = {
+						StartEndRenderScripts = Input { },
+						EffectMask = Input { },
+						XBlurSize = Input {
+							Value = 10,
+							Expression = "Controls.PreBlur*2"
+						},
+						Input = Input {
+							SourceOp = "PipeRouter1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 434.939, 6.33002 } },
+				},
+				Blur2_1 = Blur {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Ellipse",
+							Source = "Mask",
+						},
+						Filter = Input { Value = FuID { "Box" }, },
+						XBlurSize = Input {
+							Value = 10,
+							Expression = "Blur1_1.XBlurSize",
+						},
+						Input = Input {
+							SourceOp = "Instance_Blur1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 578.609, 6.33002 } },
+				},
+				CustomTool1_1 = Custom {
+					CtrlWShown = false,
+					Inputs = {
+						LUTIn1 = Input {
+							SourceOp = "CustomTool1_1LUTIn1",
+							Source = "Value",
+						},
+						LUTIn2 = Input {
+							SourceOp = "CustomTool1_1LUTIn2",
+							Source = "Value",
+						},
+						LUTIn3 = Input {
+							SourceOp = "CustomTool1_1LUTIn3",
+							Source = "Value",
+						},
+						LUTIn4 = Input {
+							SourceOp = "CustomTool1_1LUTIn4",
+							Source = "Value",
+						},
+						RedExpression = Input { Value = "c1+2*c2-1", },
+						GreenExpression = Input { Value = "c1+2*c2-1", },
+						BlueExpression = Input { Value = "c1+2*c2-1", },
+						Image1 = Input {
+							SourceOp = "Blur2_1",
+							Source = "Output",
+						},
+						Image2 = Input {
+							SourceOp = "BrightnessContrast1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 735.959, 6.33002 } },
+				},
+				CustomTool1_1LUTIn1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 0, Blue = 0 },
+					CtrlWShown = false,
+				},
+				CustomTool1_1LUTIn2 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 204, Blue = 0 },
+					CtrlWShown = false,
+				},
+				CustomTool1_1LUTIn3 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 0, Blue = 204 },
+					CtrlWShown = false,
+				},
+				CustomTool1_1LUTIn4 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 204, Blue = 204 },
+					CtrlWShown = false,
+				},
+				Controls = ChangeDepth {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					Inputs = {
+						Depth = Input { Value = 3, },
+						Input = Input {
+							SourceOp = "IN_",
+							Source = "Output",
+						},
+						SourceControls = Input { Value = 1, },
+						Source = Input { Value = { 0.4, 0.5 }, },
+						W = Input {
+							Value = 0.07,
+							Expression = "Width",
+						},
+						H = Input {
+							Value = 0.07,
+							Expression = "Height",
+						},
+						DestinationControls = Input { Value = 1, },
+						Destination = Input { Value = { 0.6, 0.5 }, },
+						Width = Input { Value = 0.07, },
+						Height = Input { Value = 0.07, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 190.714, 6.33002 } },
+					UserControls = ordered() {
+						SourceControls = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = false,
+							LBLC_DropDownButton = true,
+							INPID_InputControl = "LabelControl",
+							LBLC_NumInputs = 3,
+							INP_MaxScale = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							LBLC_NestLevel = 1,
+							ICS_ControlPage = "Controls",
+							LINKS_Name = "Source Controls"
+						},
+						Source = {
+							INPID_PreviewControl = "CrosshairControl",
+							LINKID_DataType = "Point",
+							ICS_ControlPage = "Controls",
+							INPID_InputControl = "OffsetControl",
+							CHC_Style = "DiagonalCross",
+							LINKS_Name = "Source"
+						},
+						W = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = false,
+							INPID_InputControl = "SliderControl",
+							ICS_ControlPage = "Controls",
+							INP_MaxScale = 1,
+							INP_Default = 0.0700000002980232,
+							ECID_Center = "Source",
+							INPID_PreviewControl = "EllipseControl",
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							PC_ControlGroup = 1,
+							PC_ControlID = 0,
+							INP_MinScale = 0,
+							LINKS_Name = "W"
+						},
+						H = {
+							INP_Integer = false,
+							INPID_InputControl = "SliderControl",
+							INP_MaxScale = 1,
+							INP_Default = 0.0700000002980232,
+							ICS_ControlPage = "Controls",
+							INPID_PreviewControl = "EllipseControl",
+							ECID_Center = "Source",
+							LINKID_DataType = "Number",
+							PC_ControlGroup = 1,
+							PC_ControlID = 1,
+							INP_MinScale = 0,
+							LINKS_Name = "H"
+						},
+						DestinationControls = {
+							ICS_ControlPage = "Controls",
+							INP_Integer = false,
+							LBLC_DropDownButton = true,
+							LINKID_DataType = "Number",
+							LBLC_NumInputs = 3,
+							LBLC_NestLevel = 2,
+							INPID_InputControl = "LabelControl",
+							LINKS_Name = "Destination Controls"
+						},
+						Destination = {
+							INPID_PreviewControl = "CrosshairControl",
+							LINKID_DataType = "Point",
+							ICS_ControlPage = "Controls",
+							INPID_InputControl = "OffsetControl",
+							CHC_Style = "NormalCross",
+							LINKS_Name = "Destination"
+						},
+						Width = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = false,
+							INPID_InputControl = "SliderControl",
+							ICS_ControlPage = "Controls",
+							INP_MaxScale = 1,
+							INP_Default = 0.0700000002980232,
+							ECID_Center = "Destination",
+							INPID_PreviewControl = "EllipseControl",
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							PC_ControlGroup = 2,
+							PC_ControlID = 0,
+							INP_MinScale = 0,
+							LINKS_Name = "Width"
+						},
+						Height = {
+							INP_Integer = false,
+							INPID_InputControl = "SliderControl",
+							INP_MaxScale = 1,
+							INP_Default = 0.0700000002980232,
+							ICS_ControlPage = "Controls",
+							INPID_PreviewControl = "EllipseControl",
+							ECID_Center = "Destination",
+							LINKID_DataType = "Number",
+							PC_ControlGroup = 2,
+							PC_ControlID = 1,
+							INP_MinScale = 0,
+							LINKS_Name = "Height"
+						},
+						Size = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = false,
+							INPID_InputControl = "SliderControl",
+							INP_MaxScale = 5,
+							INP_Default = 1,
+							INP_MinScale = 0.00100000004749745,
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							ICD_Center = 1,
+							LINKS_Name = "Size"
+						},
+						Angle = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = false,
+							INPID_InputControl = "ScrewControl",
+							INP_MaxScale = 90,
+							INP_Default = 0,
+							INPID_PreviewControl = "AngleControl",
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							INP_MinScale = 0,
+							ACID_Center = "Destination",
+							LINKS_Name = "Angle"
+						},
+						Softness = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = false,
+							INPID_InputControl = "SliderControl",
+							INP_MaxScale = 0.0199999995529652,
+							INP_Default = 0,
+							INP_MinScale = 0,
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							LINKS_Name = "Softness"
+						},
+						Opacity = {
+							INP_Default = 1,
+							INP_Integer = false,
+							ICS_ControlPage = "Controls",
+							LINKID_DataType = "Number",
+							INP_MinScale = 0,
+							INPID_InputControl = "SliderControl",
+							INP_MaxScale = 1,
+							LINKS_Name = "Opacity"
+						},
+						PreBlur = {
+							INP_Default = 5,
+							INP_Integer = false,
+							ICS_ControlPage = "Controls",
+							LINKID_DataType = "Number",
+							INP_MinScale = 1,
+							INPID_InputControl = "SliderControl",
+							INP_MaxScale = 100,
+							LINKS_Name = "Pre Blur"
+						}
+					}
+				},
+				PipeRouter1_1 = PipeRouter {
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "Controls",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { 294.439, 6.33002 } },
+				},
+				Paint1 = Paint {
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "ChannelBooleans1_1",
+							Source = "Output",
+						},
+						Paint = Input {
+							SourceOp = "CopyEllipse1",
+							Source = "Out",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 573.959, -58.672 } },
+				},
+				CopyEllipse1 = CopyEllipse {
+					IsThreaded = false,
+					Brushes = {
+					},
+					ApplyModes = { "PaintApplyStamp" },
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					Inputs = {
+						Center = Input {
+							Value = { 0.6, 0.5 },
+							Expression = "Controls.Destination",
+						},
+						Source = Input {
+							Value = { 0.4, 0.5 },
+							Expression = "Controls.Source",
+						},
+						Width = Input {
+							Value = 0.035,
+							Expression = "Controls.Width/2",
+						},
+						Height = Input {
+							Value = 0.035,
+							Expression = "Controls.Height/2",
+						},
+						Angle = Input { Expression = "Controls.Angle", },
+						Size = Input { Expression = "Controls.Size", },
+						Softness = Input { Expression = "Controls.Softness", },
+						Opacity = Input { Expression = "Controls.Opacity", },
+						ShowSource = Input { Value = 1, },
+						ApplyMode = Input { Value = FuID { "PaintApplyStamp" }, },
+					},
+				},
+				BrightnessContrast1_1 = BrightnessContrast {
+					CtrlWShown = false,
+					Inputs = {
+						Lift = Input { Value = 0.5, },
+						ClipBlack = Input { Value = 1, },
+						ClipWhite = Input { Value = 1, },
+						PreDividePostMultiply = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "Paint1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 735.959, -58.672 } },
+				},
+				ChannelBooleans1_1 = ChannelBoolean {
+					CtrlWShown = false,
+					Inputs = {
+						Operation = Input { Value = 2, },
+						ToAlpha = Input { Value = 4, },
+						Background = Input {
+							SourceOp = "PipeRouter1_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Blur1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 434.959, -58.672 } },
+				},
+				IN_ = PipeRouter {
+					CtrlWShown = false,
+					ViewInfo = PipeRouterInfo { Pos = { 19.9105, -60.5508 } },
+				},
+				Blur1_1 = Blur {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Gaussian" }, },
+						XBlurSize = Input {
+							Value = 10,
+							Expression = "Controls.PreBlur*2",
+						},
+						Input = Input {
+							SourceOp = "PipeRouter1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 434.959, -127.095 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "SpotRemover1"
+}

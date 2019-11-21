@@ -83,15 +83,7 @@ comp:Paste()
 
 --TODO : Add some error handling, newTool and tool could be nil, so GetAttrs() could error out.
 newTool = comp.ActiveTool
-print(newTool.Name)
-print(attrs.TOOLI_Number_o_Inputs)
-newToolAttrs = newTool:GetAttrs()
-print(newToolAttrs.TOOLI_Number_o_Inputs)
--- if attrs.TOOLI_Number_o_Inputs ~= newToolAttrs.TOOLI_Number_o_Inputs then
---     print('this works? According to documentation, TOOLI_Number_o_Inputs is implemented for Merge3D only')
---     fixNrOfInputs(attrs.TOOLI_Number_o_Inputs, newToolAttrs.TOOLI_Number_o_Inputs, tool, newTool)
---     print('fixNrOfInputs function is not implemented')
--- end
+
 for j, input in pairs(tool:GetInputList()) do
     if input:GetAttrs().INPB_Connected then
         if newTool:GetInputList()[j] ~= nil then
