@@ -26,28 +26,32 @@ if (#savers) == 0 then
     print('select some savers')
 else
     comp:Lock()
-    -- comp:StartUndo('loader from saver script')
+    comp:StartUndo('loader from saver')
     for _, tool in ipairs(savers) do
         selected_clipname = tool:GetAttrs()["TOOLST_Clip_Name"][1]
-        seq = string.match(selected_clipname, '(%d+)%..+$')
-        -- if pattern 0000.ext$ is found set selected name
-        -- otherwice replace extention with 0000-extention
-        if seq then
-            place_loader(selected_clipname, tool)
+        if selected_clipname == "" then
+            print("saver's " .. tool.Name .. " filename is empty!")
         else
-            name, ext = string.match(selected_clipname,'([^/]-([^.]+))$')
-            local file_exts = Set{'mp4', 'mov', 'avi', 'mxf'}
-            -- if saver file format is container, use original name
-            if file_exts[ext] then
+            seq = string.match(selected_clipname, '(%d+)%..+$')
+            -- if pattern 0000.ext$ is found set selected name
+            -- otherwice replace extention with 0000-extention
+            if seq then
                 place_loader(selected_clipname, tool)
-            -- append zero padding for sequence filename 
             else
-                local new_name = selected_clipname:gsub('.'..ext, '0000.'..ext)
-                place_loader(new_name, tool)
+                name, ext = string.match(selected_clipname,'([^/]-([^.]+))$')
+                local file_exts = Set{'mp4', 'mov', 'avi', 'mxf'}
+                -- if saver file format is container, use original name
+                if file_exts[ext] then
+                    place_loader(selected_clipname, tool)
+                -- append zero padding for sequence filename 
+                else
+                    local new_name = selected_clipname:gsub('.'..ext, '0000.'..ext)
+                    place_loader(new_name, tool)
+                end
             end
         end
     end
-    -- comp:EndUndo()
+    comp:EndUndo()
     comp:Unlock()
 end
 
