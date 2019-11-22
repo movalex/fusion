@@ -88,6 +88,7 @@ end
 
 function win.On.CreateLoaders.Clicked(ev)
     local cmp = fu:GetCurrentComp()
+    Scripts/Comp/my_tools/SaverTools/Saver_Manager.lua
     cmp:RunScript('Scripts:Comp/my_tools/SaverTools/LoaderFromSaver.lua')
 end
 
