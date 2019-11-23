@@ -1,0 +1,81 @@
+FuRegisterClass("Linger", CT_Tool, {
+	REGS_Name = "Linger",
+	REGS_Category = "Effect",
+	REGS_OpIconString = "Lgr",
+	REGS_OpDescription = "Like trails. A bit.",
+	
+	REG_TimeVariant     = true,			-- required to disable caching of the current time parameter
+	REGB_Temporal 		= true,			-- ensures reliability in Resolve 15
+	
+	REGS_Company = "Pieter Van Houte",
+	REGS_URL = "www.secondman.com",
+	
+	REGS_HelpTopic = "",
+	REG_NoMotionBlurCtrls = true,
+	
+	REG_Version = 020,
+})
+
+function Create()
+
+	InBackground = self:AddInput("Background", "Background", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})
+	
+	InLinger = self:AddInput("Linger", "Linger", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Default = 0.5,
+		})
+	
+	InFrames = self:AddInput("Frames", "Frames", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_Integer = true,
+		INP_MinAllowed = 1,
+		INP_MaxScale = 10,
+		INP_Default = 5,
+		})
+
+
+	OutImage = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})
+	
+end -- end Create()
+
+function Process(req)
+	
+	-- get tool inputs
+	local bg = InBackground:GetValue(req)
+	local linger = InLinger:GetValue(req).Value
+	local frames = InFrames:GetValue(req).Value
+
+	-- create output image
+	local out = bg:Copy()
+	
+	-- get all my images
+	local img = {}
+		
+	for i = 1, frames do
+		img[i] = InBackground:GetSource(req.Time-i, req:GetFlags())
+		local m = ColorMatrixFull()
+		m:Scale(linger,linger,linger,linger)
+		img[i] = img[i]:ApplyMatrixOf(m, {})
+	end
+	
+	-- merge the images together (I think)
+	for i = 1, frames do
+		if img[i] then
+			out:Merge(img[i], {
+			MO_ApplyMode = "Merge",
+			MO_ApplyOperator = "Over",
+			})
+		end
+	end
+		
+	OutImage:Set(req, out)
+	
+end -- end Process(req)

@@ -36,16 +36,16 @@
       },
     },
 
+  -- Hotkeys
+  -- {
+    -- Target = "TimeLineView",
+    -- I = "SetRenderIn",
+    -- O = "SetRenderOut", 
+  -- },
   Hotkeys
   {
-    Target = "TimeView",
+    Target = "FlowView",
     I = "SetRenderIn",
     O = "SetRenderOut", 
   },
-  -- Hotkeys
-  -- {
-  --   Target = "FlowView",
-  --   I = "SetRenderIn",
-  --   O = "SetRenderOut", 
-  -- },
 }
