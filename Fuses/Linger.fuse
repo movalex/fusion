@@ -1,81 +1,140 @@
+--[[
+
+Linger Fuse
+
+-------------------------------------------------------------------
+Copyright (c) 2019,  Pieter Van Houte
+<pieter[at]secondman[dot]com>
+-------------------------------------------------------------------
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+-------------------------------------------------------------------
+
+with thanks to Peter Loveday and Eric Westphal for support and inspiration.
+
+--]]
+
+version = "Linger v0.3 - 19 June 2019"
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+
 FuRegisterClass("Linger", CT_Tool, {
 	REGS_Name = "Linger",
 	REGS_Category = "Effect",
 	REGS_OpIconString = "Lgr",
-	REGS_OpDescription = "Like trails. A bit.",
-	
+	REGS_OpDescription = "Like trails. A bit. And a bit more.",
 	REG_TimeVariant     = true,			-- required to disable caching of the current time parameter
 	REGB_Temporal 		= true,			-- ensures reliability in Resolve 15
-	
 	REGS_Company = "Pieter Van Houte",
 	REGS_URL = "www.secondman.com",
-	
 	REGS_HelpTopic = "",
 	REG_NoMotionBlurCtrls = true,
-	
-	REG_Version = 020,
+	REG_Fuse_NoEdit     = true,
+	REG_Fuse_NoReload   = true,
+	REG_Version = 030,
 })
+
+
 
 function Create()
 
 	InBackground = self:AddInput("Background", "Background", {
 		LINKID_DataType = "Image",
 		LINK_Main = 1,
+		INP_AcceptsGPUImages = true,
+		INP_AcceptsCLImages = true,
 		})
-	
+
 	InLinger = self:AddInput("Linger", "Linger", {
 		LINKID_DataType = "Number",
 		INPID_InputControl = "SliderControl",
 		INP_Default = 0.5,
 		})
-	
+
 	InFrames = self:AddInput("Frames", "Frames", {
 		LINKID_DataType = "Number",
 		INPID_InputControl = "ScrewControl",
 		INP_Integer = true,
-		INP_MinAllowed = 1,
+		INP_MinAllowed = 0,
 		INP_MaxScale = 10,
 		INP_Default = 5,
 		})
 
+	InFutureLinger = self:AddInput("Future Linger (FTL)", "FutureLinger", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Default = 0.0,
+		})
+
+	InFutureFrames = self:AddInput("Future Frames (FFS)", "FutureFrames", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_Integer = true,
+		INP_MinAllowed = 0,
+		INP_MaxScale = 10,
+		INP_Default = 0,
+		})
+		
+	InLabel = self:AddInput(version, "version", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "LabelControl",
+		INP_External = false,
+		INP_Passive = true,
+		})
 
 	OutImage = self:AddOutput("Output", "Output", {
 		LINKID_DataType = "Image",
 		LINK_Main = 1,
 		})
-	
+
 end -- end Create()
 
 function Process(req)
-	
 	-- get tool inputs
 	local bg = InBackground:GetValue(req)
 	local linger = InLinger:GetValue(req).Value
 	local frames = InFrames:GetValue(req).Value
+	local futurelinger = InFutureLinger:GetValue(req).Value
+	local futureframes = InFutureFrames:GetValue(req).Value
 
 	-- create output image
-	local out = bg:Copy()
-	
-	-- get all my images
-	local img = {}
-		
-	for i = 1, frames do
-		img[i] = InBackground:GetSource(req.Time-i, req:GetFlags())
-		local m = ColorMatrixFull()
-		m:Scale(linger,linger,linger,linger)
-		img[i] = img[i]:ApplyMatrixOf(m, {})
-	end
-	
-	-- merge the images together (I think)
-	for i = 1, frames do
-		if img[i] then
-			out:Merge(img[i], {
-			MO_ApplyMode = "Merge",
-			MO_ApplyOperator = "Over",
-			})
+	local out = Image({
+		IMG_Like       = bg,
+		IMG_NoData     = req:IsPreCalc(),
+		IMG_DeferAlloc = true,
+		})
+
+	if not req:IsPreCalc() then
+		out:Fill(Pixel(0,0,0,0))
+
+		-- merge the images together (I think)
+		for i = frames, -futureframes, -1 do
+			local img = (i==0) and bg or InBackground:GetSource(req.Time-i, req:GetFlags(), { RQA_Request = req })
+
+			if img then
+				local gain = ((i > 0) and linger or futurelinger) ^ math.abs(i)
+
+				out:Merge(img, {
+					IMGPR_GPURequested = true,
+					IMGPR_SourceReq    = req,
+					MO_ApplyMode       = "Merge",
+					MO_ApplyOperator   = "Over",
+					MO_FgRedGain       = gain,
+					MO_FgGreenGain     = gain,
+					MO_FgBlueGain      = gain,
+					MO_FgAlphaGain     = gain,
+					})
+				collectgarbage()
+			end
 		end
 	end
-		
+
 	OutImage:Set(req, out)
+	collectgarbage()
 	
 end -- end Process(req)
