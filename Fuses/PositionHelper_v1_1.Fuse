@@ -1,0 +1,276 @@
+--[[--
+PositionHelper Fuse
+
+A modifier to scale, smooth or change the reference frame of a 2D path.
+The reference frame is defined as the time where the path is equal to Fusion's null position for
+transformation offsets (0.5/0.5). The tracker doesn't make it easy to pick an arbitrary reference
+frame and the Locator3D doesn't provide this option at all. Without this Fuse you need to modify
+a path with an Offset modifier and type in appropriate numbers.
+With PositionHelper you can just pick a reference frame (defaults to current one) and you're done.
+When the track has been created for a different resolution than the image that is to be transformed,
+you can use this modifier to do the conversion for you. The filtering option allows you to
+average the keyframes of a path and to calculate the jitter component (original minus smoothed path).
+
+----------------------------------------------------------------------
+Copyright (c) 2012, Stefan Ihringer <stefan@bildfehler.de>
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+----------------------------------------------------------------------
+
+version 1.1,  2013-02-28: fixed error messages due to lack of precalc handling
+                          and when smoothing a path beyond the frame range
+version 1.0,  2012-10-21: allow smoothing and scaling of path
+version 0.5,  2012-10-18: initial release (reference frame only)
+--]]--
+
+FuRegisterClass("PositionHelper", CT_Modifier, {
+	REGS_Category       = "Fuses",
+	REGS_OpIconString   = "PHlp",
+	REGS_OpDescription  = "Offset, Scale or Smooth a 2D Path",
+	REGS_Name           = "Position Helper",
+	REGID_DataType      = "Point",
+	REGID_InputDataType = "Point",
+	REG_TimeVariant     = true,			-- necessary since Fuses can't modify their valid time range (yet?)
+	REGS_HelpTopic      = "http://www.vfxpedia.com/index.php?title=Third_Party_Fuses/PositionHelper_Description",
+	REG_Fuse_NoEdit     = true,
+	REG_Fuse_NoReload   = true,
+	REG_NoPreCalcProcess= true,
+	})
+
+
+function Create()
+	InPosition = self:AddInput("Position", "Position", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		INP_DefaultX = 0.4,
+		INP_DefaultY = 0.6,
+		LINK_Main = 1,
+	})
+
+	InDoReferenceFrame = self:AddInput("Define Reference Frame (where output will be 0.5/0.5)", "DefineReferenceFrame", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "CheckboxControl",
+		INP_Integer         = true,
+		INP_Default         = 0,
+		INP_DoNotifyChanged = true,
+	})
+
+	self:BeginControlNest("Nest1", "Nest1", true, {IC_Visible = false})
+	BtnCurrentFrame = self:AddInput("Current", "SetCurrentFrame", {
+		INPID_InputControl  = "ButtonControl",
+		ICD_Width           = 0.2,
+		INP_DoNotifyChanged = true,
+		IC_Visible          = false,
+		})
+
+	InReferenceFrame = self:AddInput("Reference Frame", "ReferenceFrame", {
+		INPID_InputControl = "SliderControl",
+		INP_MinScale       = 0,
+		INP_MaxScale       = 100,
+		INP_Integer        = true,
+		INP_DelayDefault   = true,
+		LINK_ForceSave     = true,
+		IC_Visible         = false,
+		ICD_Width          = 0.8,
+	})
+	self:EndControlNest()
+
+	InDoConversion = self:AddInput("Convert Between Image Resolutions", "ConvertResolutions", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "CheckboxControl",
+		INP_Integer         = true,
+		INP_Default         = 0,
+		INP_DoNotifyChanged = true,
+	})
+
+	self:BeginControlNest("Nest2", "Nest2", true, {IC_Visible = false})	
+	InOriginalWidth = self:AddInput("Original Width", "OriginalWidth", {
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed     = 1,
+		INP_MaxAllowed     = 32767,
+		INP_MaxScale       = 2048,
+		INP_Integer        = true,
+		INP_DelayDefault   = true,
+		LINK_ForceSave     = true,
+		IC_Visible         = false,
+	})
+	InOriginalHeight = self:AddInput("Original Height", "OriginalHeight", {
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed     = 2,
+		INP_MaxAllowed     = 32767,
+		INP_MaxScale       = 2048,
+		INP_Integer        = true,
+		INP_DelayDefault   = true,
+		LINK_ForceSave     = true,
+		IC_Visible         = false,
+	})
+	InIntendedWidth = self:AddInput("Intended Width", "IntendedWidth", {
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed     = 1,
+		INP_MaxAllowed     = 32767,
+		INP_MaxScale       = 2048,
+		INP_Integer        = true,
+		INP_DelayDefault   = true,
+		LINK_ForceSave     = true,
+		IC_Visible         = false,
+	})
+	InIntendedHeight = self:AddInput("Intended Height", "IntendedHeight", {
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed     = 2,
+		INP_MaxAllowed     = 32767,
+		INP_MaxScale       = 2048,
+		INP_Integer        = true,
+		INP_DelayDefault   = true,
+		LINK_ForceSave     = true,
+		IC_Visible         = false,
+	})
+	self:EndControlNest()
+
+	InReturnValue = self:AddInput("Return Value", "ReturnValue", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ComboControl",
+		{ CCS_AddString = "Regular Path" },
+		{ CCS_AddString = "Smoothed Path" },
+		{ CCS_AddString = "Jitter (Path - Smoothed Path)" },
+		{ CCS_AddString = "Inverted Jitter"  },
+		CC_LabelPosition    = "Horizontal",
+		INP_DoNotifyChanged = true,
+		INP_Default         = 0.0,
+	})
+
+	InFilterWidth = self:AddInput("Filter Width (Frames)", "FilterWidth", {
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed     = 0,
+		INP_MaxScale       = 10,
+		INP_Integer        = true,
+		INP_Default        = 2,
+		IC_Visible         = false,
+	})
+
+
+	OutValue = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "Point",
+		LINK_Main = 1,
+		})
+end
+
+
+function OnAddToFlow()
+	-- set defaults for reference frame slider
+	InReferenceFrame:SetAttrs({ INP_Default = self.Comp.CurrentTime, INP_MinScale = self.Comp.GlobalStart, INP_MaxScale = self.Comp.GlobalEnd })
+	-- and image dimensions
+	local formatPrefs = self.Comp:GetPrefs("Comp.FrameFormat")
+	InOriginalWidth:SetAttrs({ INP_Default = formatPrefs.Width })
+	InOriginalHeight:SetAttrs({ INP_Default = formatPrefs.Height })
+	InIntendedWidth:SetAttrs({ INP_Default = formatPrefs.Width })
+	InIntendedHeight:SetAttrs({ INP_Default = formatPrefs.Height })
+end
+
+
+function NotifyChanged(inp, param, time)
+	if param ~= nil then
+		if inp == InReturnValue then
+			local vis = math.floor(param.Value + 0.5) > 0
+			InFilterWidth:SetAttrs({ IC_Visible = vis })
+		elseif inp == InDoReferenceFrame then
+			local vis = (param.Value > 0.5)
+			InReferenceFrame:SetAttrs({ IC_Visible = vis })
+			BtnCurrentFrame:SetAttrs({ IC_Visible = vis })
+		elseif inp == InDoConversion then
+			local vis = (param.Value > 0.5)
+			InOriginalWidth:SetAttrs({ IC_Visible = vis })
+			InOriginalHeight:SetAttrs({ IC_Visible = vis })
+			InIntendedWidth:SetAttrs({ IC_Visible = vis })
+			InIntendedHeight:SetAttrs({ IC_Visible = vis })
+		elseif inp == BtnCurrentFrame and param.Value > 0.5 then
+			InReferenceFrame:SetSource(Number(self.Comp.CurrentTime), time, 0)
+		end
+	end
+end
+
+
+-- returns the value of the input path at a certain frame but takes smoothing into account
+-- as well as different input/output resolutions. 'mode' determines whether the path, smoothed
+-- path, jitter component or inverted jitter is returned.
+function getPos(time, mode, filterwidth, sx, sy)
+	local result
+	if mode == 0 then
+		-- no smoothing
+		result = InPosition:GetSource(time, REQF_SecondaryTime)
+		if result == nil then
+			return nil
+		end
+	else
+		local n = 0
+		local sum_x = 0
+		local sum_y = 0
+		for t = time - filterwidth, time + filterwidth do
+			local p = InPosition:GetSource(t, REQF_SecondaryTime)
+			if p ~= nil then
+				sum_x = sum_x + p.X
+				sum_y = sum_y + p.Y
+				n = n + 1
+			end
+		end
+		result = Point(sum_x / n, sum_y / n)
+
+		-- output jitter instead?
+		if mode > 1 then
+			local orgpos = InPosition:GetSource(time, REQF_SecondaryTime)
+			local jitterx = orgpos.X - result.X
+			local jittery = orgpos.Y - result.Y
+			if mode == 3 then
+				jitterx = -jitterx
+				jittery = -jittery
+			end
+			result = Point(jitterx + 0.5, jittery + 0.5)
+		end
+	end
+	return Point((result.X - 0.5) * sx + 0.5, (result.Y - 0.5) * sy + 0.5)
+end
+
+
+function Process(req)
+	local mode = InReturnValue:GetValue(req).Value
+	local filter = (mode == 0 and 0 or InFilterWidth:GetValue(req).Value)
+	local doref = InDoReferenceFrame:GetValue(req).Value > 0.5
+	local reftime = InReferenceFrame:GetValue(req).Value
+	local scalex = 1.0
+	local scaley = 1.0
+	if InDoConversion:GetValue(req).Value > 0.5 then
+		scalex = InOriginalWidth:GetValue(req).Value / InIntendedWidth:GetValue(req).Value
+		scaley = InOriginalHeight:GetValue(req).Value / InIntendedHeight:GetValue(req).Value
+	end
+
+	-- calculate current position including filtering and scaling
+	local pos = getPos(req.Time, mode, filter, scalex, scaley)
+	
+	-- offset curve?
+	if doref and pos then
+		local refpos = getPos(reftime, mode, filter, scalex, scaley)
+		if refpos then
+			pos = Point(pos.X - refpos.X + 0.5, pos.Y - refpos.Y + 0.5)
+		end
+	end
+
+	OutValue:Set(req, pos)
+end
+
