@@ -1,0 +1,95 @@
+--[[
+
+Word Write On Fuse
+
+-------------------------------------------------------------------
+Copyright (c) 2019,  Pieter Van Houte
+<pieter[at]secondman[dot]com>
+-------------------------------------------------------------------
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+-------------------------------------------------------------------
+
+version 0.1 - initial test version
+
+--]]
+
+version = "Word Write On v0.1 - 14 November 2019"
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+FuRegisterClass("WordWriteOn", CT_Modifier, {
+	REGS_Category       = "Fuses",
+	REGS_OpIconString   = "WWO",
+	REGS_OpDescription  = "Write text one word at a time",
+	REGS_Name           = "Word Write On",
+	REGID_DataType      = "Text",
+	REGID_InputDataType = "Text",
+	REGS_Company 		= "Pieter Van Houte",
+	REGS_URL 			= "https://www.secondman.com",
+	REGS_HelpTopic      = "",
+--	REG_Fuse_NoEdit     = true,
+--	REG_Fuse_NoReload   = true,
+	REG_Version			= 010,
+	})
+	
+function Create()
+	
+	InStyledText = self:AddInput("Styled Text", "StyledText", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "TextEditControl",
+		LINK_Main = 1,
+		})
+	InWords = self:AddInput("Words", "Words", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_Integer = true,
+		INP_MinAllowed = 0,
+		INP_MaxScale = 10,
+		INP_Default = 5,
+		})
+	InLabel = self:AddInput(version, "version", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "LabelControl",
+		INP_External = false,
+		INP_Passive = true,
+		})
+	OutText = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "Text",
+		LINK_Main = 1,
+		})
+	
+end
+
+function Process(req)
+
+	local intext = InStyledText:GetValue(req).Value
+	local words = InWords:GetValue(req).Value
+	local cutpoint = 1
+	
+--	print("|"..intext.."|")
+	local temp,wordcount = intext:gsub("%S+","")
+--	print(wordcount)
+	
+	if words > 0 and words < wordcount then
+		for i = 1,words do
+			local x,y = intext:find("%s+", cutpoint+1)
+			cutpoint = y
+		end
+	elseif words >= wordcount then
+		cutpoint = string.len(intext)+1
+	end
+	
+--	print(cutpoint)
+	
+	outtext = intext:sub(1, cutpoint-1)
+	
+--	print("|"..outtext.."|")
+
+	OutText:Set(req, Text(outtext))
+
+end

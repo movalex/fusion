@@ -38,7 +38,7 @@
 
   -- Hotkeys
   -- {
-    -- Target = "TimeLineView",
+    -- Target = "TimeView",
     -- I = "SetRenderIn",
     -- O = "SetRenderOut", 
   -- },
