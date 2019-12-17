@@ -1030,7 +1030,7 @@ class MainWindow(QMainWindow):
 
 
 css = "*, QTableCornerButton::section {\
-    font: 11pt 'tahoma';\
+    font: 8pt 'tahoma';\
     color: rgb(192, 192, 192);\
     background-color: rgb(52, 52, 52);\
 }\
@@ -1051,7 +1051,7 @@ QTableView {\
 }\
 \
 QHeaderView::section {\
-    color: rgb(192, 192, 192);\
+    color: rgb(0,0,0);\
     padding: 0;\
 }\
 QTableView::item {\

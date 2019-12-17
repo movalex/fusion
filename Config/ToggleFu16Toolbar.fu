@@ -1,0 +1,25 @@
+{
+   Action
+   {
+        ID = "ToggleToolBar",
+        Category = "My Stuff",
+        ShortName = "TT",
+   Targets = 
+   {
+       Composition = 
+       {
+           Execute = 
+            [[
+            local cmp = fu:GetCurrentComp()
+            cmp:DoAction("Fusion_View_Show", {view = "ActionStrip"})
+            ]],
+        },
+      },
+    },
+
+  Hotkeys
+  {
+    Target = "FlowView",
+    SHIFT_CONTROL_T = "ToggleToolBar",
+  },
+}
