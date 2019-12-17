@@ -76,7 +76,6 @@ function win.On.LaunchPrefs.Clicked(ev)
 end
 
 
-
 function win.On.WindowTest_Main.Close(ev)
 	disp:ExitLoop()
 end

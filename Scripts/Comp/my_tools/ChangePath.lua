@@ -38,7 +38,7 @@
 --          %w represents all alphanumeric characters A-Z and a-z and 0-9
 --      More: https://www.fhug.org.uk/wiki/wiki/doku.php?id=plugins:understanding_lua_patterns
 -- v 4.2 2019-06-25
---      add option for pattern search, use simple string replacement by default
+--      add option for pattern search, use string replacement by default
 ------------------------------------------------------
 
 
@@ -55,7 +55,7 @@ function conform(filepath, patternState)
         print("New file path is: \n", newclip)            
         return newclip
     else
-        local findStart, findEnd = string.find( filepath, srchFor, 1, true )
+        local findStart, findEnd = string.find(filepath, srchFor, 1, true)
         if findStart == nil then
             print('no match found')
             return nil

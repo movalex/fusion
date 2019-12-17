@@ -150,11 +150,13 @@ function connectAll()
         print("error")
         return
     end
+    comp:StartUndo('Connect multiple tools')
     for k1, outputtool in pairs(outputtools) do
         for k2, inputtool in pairs(inputtools) do
             getNextInput(inputtool):ConnectTo(outputtool:FindMainOutput(1))
         end
     end
+    comp:EndUndo()
 end
 
 -----------------------
