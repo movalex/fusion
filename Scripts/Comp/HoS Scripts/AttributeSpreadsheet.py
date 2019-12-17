@@ -35,16 +35,18 @@
         DISTRIBUTORS HAVE NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT,
         UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-        updated for Fusion 9/16, python3 and PySide2 compatibility
-        by Alex Bogomolov
-        https://abogomolov.com
         2019/6/30
+        v.6 updated for Fusion 9/16, python3 and PySide2 compatibility
+        by Alex Bogomolov https://abogomolov.com
+        v.7 2019/12/17 implement automatic PySide2 package install for Windows and MacOs
 """
 
-__version__ = 6
+__version__ = 7
 
 import datetime
 import sys
+import os
+import subprocess
 import platform
 
 
@@ -94,19 +96,28 @@ except ImportError:
         print('Python 3.6 is required')
         sys.exit()
     if platform.system() == 'Windows':
-        print('Please unstall PySide2 manually',
-              '\nuse `python.exe -m pip install -U --force-reinstall pip`',
-              '\nthen `python.exe -m pip install pyside2`')
-        sys.exit()
+        python_executable = os.path.join(os.__file__.split("lib")[0],"python.exe")
+    #    print('Please unstall PySide2 manually',
+    #          '\npython.exe -m pip install -U --force-reinstall pip',
+    #          '\npython.exe -m pip install pyside2')
+    #    sys.exit()
+    elif platform.system() in ["Darwin", "Linux"]:
+        python_executable = os.path.join(os.__file__.split("lib/")[0],"bin","python3")
     print("No Pyside2 module found, trying to install...")
     try:
-        from pip._internal import main as pipmain
-
-        pipmain(["install", "PySide2", "--no-warn-script-location"])
+        import pip
+        pip_version = int(pip.__version__.split('.')[0])
+        if pip_version < 19:
+            print('updating pip')
+            subprocess.call([python_executable, '-m', 'pip', 'install', '-U', 'pip'])
+        pkg = "PySide2"
+        version = "5.13.2"
+        subprocess.call([python_executable, '-m', 'pip', 'install', '{}>={}'.format(pkg, version)])
+        print('Pyside2 installation successful')
         print("Done", "\nNow try to launch the script again")
         sys.exit()
     except ImportError:
-        print('Check if pip version 10+ is installed, installation failed')
+        print('Check if pip version 10+ is installed, then launch the script again')
         sys.exit()
 
 
@@ -457,24 +468,12 @@ class TableSortFilterProxyModel(QSortFilterProxyModel):
         attrName = self.sourceModel().data(index, Qt.UserRole)
         dataType = self.sourceModel().data(index, Qt.UserRole + 1)
 
-        # matches = 0
-
         for key in keys:
             if not key:
                 return False
             if key.lower() in attrName.lower():
-                # return True
-                # matches = matches + 1
                 self.filteredKeys.append(dataType)
                 return True
-        # print(self.filteredKeys)
-
-        # print(matches, len(keys))
-        # if matches == len(keys):
-        #    return True
-        # if len(self.filteredKeys):
-        #    return True
-
         return False
 
 
@@ -659,7 +658,7 @@ class TableModel(QAbstractTableModel):
     def load_fusion_data(self):
         self.communicate.send("loading tools and inputs")
         startTime = datetime.datetime.now()
-        
+
         comp = fu.GetCurrentComp()
         self.toolDict.clear()
         self.toolDict = comp.GetToolList(True)
@@ -1031,7 +1030,7 @@ class MainWindow(QMainWindow):
 
 
 css = "*, QTableCornerButton::section {\
-    font: 8pt 'tahoma';\
+    font: 11pt 'tahoma';\
     color: rgb(192, 192, 192);\
     background-color: rgb(52, 52, 52);\
 }\
