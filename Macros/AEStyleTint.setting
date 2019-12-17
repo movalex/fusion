@@ -1,0 +1,230 @@
+{
+	Tools = ordered() {
+		AEStyleTint = MacroOperator {
+			Inputs = ordered() {
+				MainInput1 = InstanceInput {
+					SourceOp = "MapInput",
+					Source = "Input",
+				},
+				Input2 = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Type",
+					Default = 0,
+				},
+				Input3 = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Color1Red",
+					Name = "Map To Black",
+					ControlGroup = 4,
+					Default = 0,
+				},
+				Input4 = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Color1Green",
+					ControlGroup = 4,
+					Default = 0,
+				},
+				Input5 = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Color1Blue",
+					ControlGroup = 4,
+					Default = 0,
+				},
+				Input6 = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Color1Alpha",
+					ControlGroup = 4,
+					Default = 1,
+				},
+				Input7 = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Color2Red",
+					Name = "Map to White",
+					ControlGroup = 5,
+					Default = 1,
+				},
+				Input8 = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Color2Green",
+					ControlGroup = 5,
+					Default = 1,
+				},
+				Input9 = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Color2Blue",
+					ControlGroup = 5,
+					Default = 1,
+				},
+				Input10 = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Color2Alpha",
+					ControlGroup = 5,
+					Default = 1,
+				},
+				Input11 = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "GradientType",
+				},
+				Input12 = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Start",
+					Name = "Map To Black",
+					DefaultX = 0,
+					DefaultY = 0.5,
+				},
+				Input13 = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "End",
+					Name = "Map To White",
+					DefaultX = 1,
+					DefaultY = 0.5,
+				},
+				Input14 = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Gradient",
+				},
+				Input15 = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "GradientInterpolationMethod",
+				},
+				Input16 = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Offset",
+					Default = 0,
+				},
+				Input17 = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "Repeat",
+					Default = 0,
+				},
+				Input18 = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "SubPixel",
+					Default = 0,
+				},
+				Input19 = InstanceInput {
+					SourceOp = "Merge1_1",
+					Source = "ApplyMode",
+				},
+				Input20 = InstanceInput {
+					SourceOp = "Merge1_1",
+					Source = "Operator",
+				},
+				Input21 = InstanceInput {
+					SourceOp = "Merge1_1",
+					Source = "SubtractiveAdditive",
+					Name = "Subtractive",
+					Default = 1,
+				},
+				Input22 = InstanceInput {
+					SourceOp = "Merge1_1",
+					Source = "Gain",
+					Default = 1,
+				},
+				Input23 = InstanceInput {
+					SourceOp = "Merge1_1",
+					Source = "BurnIn",
+					Default = 0,
+				},
+				Input24 = InstanceInput {
+					SourceOp = "Merge1_1",
+					Source = "BlendClone",
+					Name = "Amount to Tint",
+					Default = 1,
+				},
+				Input1 = InstanceInput {
+					SourceOp = "FastNoise1_1_1",
+					Source = "EffectMask",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Merge1_1",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Name = "AEStyleTint1",
+				Pos = { 0, 0 }
+			},
+			Tools = ordered() {
+				MapInput = BrightnessContrast {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Value = 0, },
+						Red = Input { Value = 0, },
+						Green = Input { Value = 0, },
+						Blue = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 636, 208.5 } },
+				},
+				Bitmap1_1 = BitmapMask {
+					CtrlWShown = false,
+					Inputs = {
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Image = Input {
+							SourceOp = "MapInput",
+							Source = "Output",
+						},
+						Channel = Input { Value = FuID { "Luminance" }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 743, 346.5 } },
+				},
+				FastNoise1_1_1 = FastNoise {
+					CtrlWShown = false,
+					Inputs = {
+						GlobalOut = Input { Value = 100, },
+						Width = Input {
+							Value = 1920,
+							Expression = "MapInput.Input.Width",
+						},
+						Height = Input {
+							Value = 1080,
+							Expression = "MapInput.Input.Height",
+						},
+						Depth = Input { Value = 4, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Detail = Input { Value = 0, },
+						Brightness = Input { Value = 1, },
+						XScale = Input { Value = 1, },
+						Color1Alpha = Input { Value = 1, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+						NoiseBrightnessMap = Input {
+							SourceOp = "Bitmap1_1",
+							Source = "Mask",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 926, 345.5 } },
+				},
+				Merge1_1 = Merge {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "MapInput",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "FastNoise1_1_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 1107, 349.5 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "AEStyleTint"
+}

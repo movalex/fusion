@@ -19,7 +19,7 @@ _VERSION = [[Version 1.4 - Septembre 2, 2019]]
 	  v1.4
 	  feedback : Movalex (wsl forum > www.steakunderwater.com )
 	  	- On mac use "USER" environment
-	  	- get current comp : pasting to any comp opened
+	  	- get current comp: pasting to any comp opened
 
 	  v1.3
 	  add delete button
@@ -43,12 +43,10 @@ _VERSION = [[Version 1.4 - Septembre 2, 2019]]
 
 
 --[[  TODO :
-
     - submit new entry by pressing enter
     - fix date sorting issue
     - fix search
     - add edit button
-
 ]]--
 
 json = require "dkjson"
