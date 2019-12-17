@@ -1,0 +1,833 @@
+{
+	Tools = ordered() {
+		SkinCorrector = MacroOperator {
+			CtrlWZoom = false,
+			Inputs = ordered() {
+				CommentsNest = Input { Value = 0, },
+				Comments = Input { Value = "Macro by Emilio Sapia - Millolab\nhttps://emiliosapia.myportfolio.com", },
+				Background = InstanceInput {
+					SourceOp = "ChangeDepth",
+					Source = "Input",
+				},
+				Display = InstanceInput {
+					SourceOp = "ChangeDepth",
+					Source = "Display",
+					Default = 2,
+				},
+				SkinSoftness = InstanceInput {
+					SourceOp = "SkinSoftness",
+					Source = "XBlurSize",
+					Name = "Skin Softness",
+					Default = 30,
+				},
+				SkinDetails = InstanceInput {
+					SourceOp = "SkinDetails",
+					Source = "XBlurSize",
+					Name = "Skin Details",
+					MaxScale = 5,
+					Default = 2.5,
+				},
+				Mix = InstanceInput {
+					SourceOp = "MIX",
+					Source = "BlendClone",
+					Name = "Mix",
+					Default = 0.65,
+				},
+				Input5 = InstanceInput {
+					SourceOp = "ChromaKeyer",
+					Source = "RedLow",
+					Name = "Low",
+					ControlGroup = 6,
+					Page = "Skin Selection",
+					Default = 0.533,
+				},
+				Input6 = InstanceInput {
+					SourceOp = "ChromaKeyer",
+					Source = "RedHigh",
+					Name = "High",
+					ControlGroup = 6,
+					Default = 1,
+				},
+				Input7 = InstanceInput {
+					SourceOp = "ChromaKeyer",
+					Source = "GreenLow",
+					Name = "Low",
+					ControlGroup = 7,
+					Default = 0.4406,
+				},
+				Input8 = InstanceInput {
+					SourceOp = "ChromaKeyer",
+					Source = "GreenHigh",
+					Name = "High",
+					ControlGroup = 7,
+					Default = 1,
+				},
+				Input9 = InstanceInput {
+					SourceOp = "ChromaKeyer",
+					Source = "BlueLow",
+					Name = "Low",
+					ControlGroup = 8,
+					Default = 0.349,
+				},
+				Input10 = InstanceInput {
+					SourceOp = "ChromaKeyer",
+					Source = "BlueHigh",
+					Name = "High",
+					ControlGroup = 8,
+					Default = 1,
+				},
+				Input11 = InstanceInput {
+					SourceOp = "ChromaKeyer",
+					Source = "LuminanceLow",
+					Name = "Low",
+					ControlGroup = 9,
+					Default = 0.114,
+				},
+				Input12 = InstanceInput {
+					SourceOp = "ChromaKeyer",
+					Source = "LuminanceHigh",
+					Name = "High",
+					ControlGroup = 9,
+					Default = 1,
+				},
+				Input13 = InstanceInput {
+					SourceOp = "ChromaKeyer",
+					Source = "SoftRange",
+				},
+				Input14 = InstanceInput {
+					SourceOp = "ChromaKeyer",
+					Source = "ResetColorRanges",
+				},
+				MatteBlur = InstanceInput {
+					SourceOp = "ChromaKeyer",
+					Source = "MatteBlur",
+					Default = 10,
+				},
+				MatteContractExpand = InstanceInput {
+					SourceOp = "ChromaKeyer",
+					Source = "MatteContractExpand",
+					Default = 0.6,
+				},
+				MatteGamma = InstanceInput {
+					SourceOp = "ChromaKeyer",
+					Source = "MatteGamma",
+					Default = 1.3,
+				},
+				SoftEdge = InstanceInput {
+					SourceOp = "Bitmap",
+					Source = "SoftEdge",
+					Page = "Skin Details",
+				},
+				Input19 = InstanceInput {
+					SourceOp = "BrightnessContrast3",
+					Source = "Low",
+					ControlGroup = 16,
+					Default = 0,
+				},
+				Input20 = InstanceInput {
+					SourceOp = "BrightnessContrast3",
+					Source = "High",
+					ControlGroup = 16,
+					Default = 1,
+				},
+				ClipBlack = InstanceInput {
+					SourceOp = "BrightnessContrast3",
+					Source = "ClipBlack",
+					Name = "Black",
+					Default = 1,
+				},
+				ClipWhite = InstanceInput {
+					SourceOp = "BrightnessContrast3",
+					Source = "ClipWhite",
+					Name = "White",
+					Default = 1,
+				},
+				Blend = InstanceInput {
+					SourceOp = "Common",
+					Source = "Blend",
+					Page = "Common",
+					Default = 1,
+				},
+				Input26 = InstanceInput {
+					SourceOp = "Common",
+					Source = "ProcessWhenBlendIs00",
+					Default = 0,
+				},
+				Input27 = InstanceInput {
+					SourceOp = "Common",
+					Source = "ProcessRed",
+					Name = "Process",
+					ControlGroup = 23,
+					Default = 1,
+				},
+				Input28 = InstanceInput {
+					SourceOp = "Common",
+					Source = "ProcessGreen",
+					ControlGroup = 23,
+					Default = 1,
+				},
+				Input29 = InstanceInput {
+					SourceOp = "Common",
+					Source = "ProcessBlue",
+					ControlGroup = 23,
+					Default = 1,
+				},
+				Input30 = InstanceInput {
+					SourceOp = "Common",
+					Source = "ProcessAlpha",
+					ControlGroup = 23,
+					Default = 1,
+				},
+				Input31 = InstanceInput {
+					SourceOp = "Common",
+					Source = "Blank1",
+				},
+				Input32 = InstanceInput {
+					SourceOp = "Common",
+					Source = "ApplyMaskInverted",
+					Default = 0,
+				},
+				Input33 = InstanceInput {
+					SourceOp = "Common",
+					Source = "MultiplyByMask",
+					Default = 0,
+				},
+				Input34 = InstanceInput {
+					SourceOp = "Common",
+					Source = "FitMask",
+				},
+				Input35 = InstanceInput {
+					SourceOp = "Common",
+					Source = "Blank2",
+				},
+				Input36 = InstanceInput {
+					SourceOp = "Common",
+					Source = "MaskChannel",
+					Default = 3,
+				},
+				Input37 = InstanceInput {
+					SourceOp = "Common",
+					Source = "MaskLow",
+					ControlGroup = 30,
+					Default = 0,
+				},
+				Input38 = InstanceInput {
+					SourceOp = "Common",
+					Source = "MaskHigh",
+					ControlGroup = 30,
+					Default = 1,
+				},
+				Input39 = InstanceInput {
+					SourceOp = "Common",
+					Source = "MaskClipBlack",
+					Name = "Black",
+					Default = 1,
+				},
+				Input40 = InstanceInput {
+					SourceOp = "Common",
+					Source = "MaskClipWhite",
+					Name = "White",
+					Default = 1,
+				},
+				Input41 = InstanceInput {
+					SourceOp = "Common",
+					Source = "Blank4",
+				},
+				Input42 = InstanceInput {
+					SourceOp = "Common",
+					Source = "UseObject",
+					Default = 0,
+				},
+				Input43 = InstanceInput {
+					SourceOp = "Common",
+					Source = "UseMaterial",
+					Default = 0,
+				},
+				Input44 = InstanceInput {
+					SourceOp = "Common",
+					Source = "CorrectEdges",
+				},
+				Input45 = InstanceInput {
+					SourceOp = "Common",
+					Source = "ObjectID",
+					ControlGroup = 37,
+					Default = 0,
+				},
+				Input46 = InstanceInput {
+					SourceOp = "Common",
+					Source = "MaterialID",
+					ControlGroup = 37,
+					Default = 0,
+				},
+				Input47 = InstanceInput {
+					SourceOp = "Common",
+					Source = "Blank5",
+				},
+				Input48 = InstanceInput {
+					SourceOp = "Common",
+					Source = "MotionBlur",
+					Default = 0,
+				},
+				Input49 = InstanceInput {
+					SourceOp = "Common",
+					Source = "Quality",
+					Default = 2,
+				},
+				Input50 = InstanceInput {
+					SourceOp = "Common",
+					Source = "ShutterAngle",
+					Default = 180,
+				},
+				Input51 = InstanceInput {
+					SourceOp = "Common",
+					Source = "CenterBias",
+					Default = 0,
+				},
+				Input52 = InstanceInput {
+					SourceOp = "Common",
+					Source = "SampleSpread",
+					Default = 1,
+				},
+				Input53 = InstanceInput {
+					SourceOp = "Common",
+					Source = "Blank6",
+				},
+				Input54 = InstanceInput {
+					SourceOp = "Common",
+					Source = "UseGPU",
+					Default = 1,
+				},
+				Input55 = InstanceInput {
+					SourceOp = "Common",
+					Source = "HideInputs",
+					Default = 0,
+				},
+				Input56 = InstanceInput {
+					SourceOp = "Common",
+					Source = "Comments",
+				},
+				Input57 = InstanceInput {
+					SourceOp = "Common",
+					Source = "FrameRenderScript",
+				},
+				Input58 = InstanceInput {
+					SourceOp = "Common",
+					Source = "StartRenderScript",
+				},
+				Input59 = InstanceInput {
+					SourceOp = "Common",
+					Source = "EndRenderScript",
+				},
+				GarbageMatte = InstanceInput {
+					SourceOp = "ChromaKeyer",
+					Source = "Garbage.Matte",
+				},
+				EffectMask = InstanceInput {
+					SourceOp = "Common",
+					Source = "EffectMask",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Common",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 387.381, 55.2566 } },
+			Tools = ordered() {
+				ChangeDepth = ChangeDepth {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Depth = Input { Value = 4, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -302.662, 182.324 } },
+					UserControls = ordered() {
+						Display = {
+							{ CCS_AddString = "Skin Selection" },
+							{ CCS_AddString = "Skin Details" },
+							{ CCS_AddString = "Final Result" },
+							INP_Integer = false,
+							LINKID_DataType = "Number",
+							INP_Default = 2,
+							CC_LabelPosition = "Horizontal",
+							INPID_InputControl = "ComboControl",
+							LINKS_Name = "Display",
+						}
+					}
+				},
+				SkinSoftness = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						XBlurSize = Input { Value = 30, },
+						Input = Input {
+							SourceOp = "ChangeDepth",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -142.807, 132.598 } },
+				},
+				SkinDetails = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						XBlurSize = Input { Value = 2.5, },
+						Input = Input {
+							SourceOp = "ChangeDepth",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -145.584, 8.45107 } },
+				},
+				ChromaKeyer = ChromaKeyer {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						ColorRange = Input { Value = 1, },
+						RedLow = Input { Value = 0.533, },
+						GreenLow = Input { Value = 0.4406, },
+						BlueLow = Input { Value = 0.349, },
+						LuminanceLow = Input { Value = 0.114, },
+						FringeSize = Input { Value = 0, },
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						MatteBlur = Input { Value = 10, },
+						MatteContractExpand = Input { Value = 0.6, },
+						MatteGamma = Input { Value = 1.3, },
+						Input = Input {
+							SourceOp = "ChangeDepth",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -118.497, 283.766 } },
+				},
+				Bitmap = BitmapMask {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						Invert = Input { Value = 1, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						Image = Input {
+							SourceOp = "ChannelBooleans",
+							Source = "Output",
+						},
+						Channel = Input { Value = FuID { "Luminance" }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 174.709, 182.324 } },
+				},
+				BrightnessContrast3 = BrightnessContrast {
+					CtrlWShown = false,
+					Inputs = {
+						Alpha = Input { Value = 1, },
+						ClipBlack = Input { Value = 1, },
+						ClipWhite = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "Bitmap",
+							Source = "Mask",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 174.709, 225.201 } },
+				},
+				ChannelBooleans = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Operation = Input { Value = 13, },
+						ToAlpha = Input { Value = 4, },
+						Background = Input {
+							SourceOp = "ChangeDepth",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "SkinSoftness",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -36.807, 182.324 } },
+				},
+				BrightnessContrast2 = BrightnessContrast {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Brightness = Input { Value = 0.5, },
+						ClipBlack = Input { Value = 1, },
+						ClipWhite = Input { Value = 1, },
+						PreDividePostMultiply = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "Subtract",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 49.321, 67.8308 } },
+				},
+				LinearLight = Custom {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						LUTIn1 = Input {
+							SourceOp = "LinearLightLUTIn1",
+							Source = "Value",
+						},
+						LUTIn2 = Input {
+							SourceOp = "LinearLightLUTIn2",
+							Source = "Value",
+						},
+						LUTIn3 = Input {
+							SourceOp = "LinearLightLUTIn3",
+							Source = "Value",
+						},
+						LUTIn4 = Input {
+							SourceOp = "LinearLightLUTIn4",
+							Source = "Value",
+						},
+						RedExpression = Input { Value = "c1+2*c2-1", },
+						GreenExpression = Input { Value = "c1+2*c2-1", },
+						BlueExpression = Input { Value = "c1+2*c2-1", },
+						AuxChannelNest = Input { Value = 1, },
+						Image1 = Input {
+							SourceOp = "SkinSoftness",
+							Source = "Output",
+						},
+						Image2 = Input {
+							SourceOp = "BrightnessContrast2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 49.321, 134.402 } },
+				},
+				LinearLightLUTIn1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 0, Blue = 0 },
+					CtrlWShown = false,
+				},
+				LinearLightLUTIn2 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 204, Blue = 0 },
+					CtrlWShown = false,
+				},
+				LinearLightLUTIn3 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 0, Blue = 204 },
+					CtrlWShown = false,
+				},
+				LinearLightLUTIn4 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 204, Blue = 204 },
+					CtrlWShown = false,
+				},
+				BrightnessContrast = BrightnessContrast {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "BrightnessContrast3",
+							Source = "Output",
+						},
+						MultiplyByMask = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "LinearLight",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 49.321, 240.311 } },
+				},
+				MIX = Merge {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "ChromaKeyer",
+							Source = "Output",
+						},
+						Blend = Input { Value = 0.65, },
+						ApplyMaskInverted = Input { Value = 1, },
+						Background = Input {
+							SourceOp = "ChangeDepth",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "BrightnessContrast",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 49.321, 283.766 } },
+				},
+				Subtract = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Operation = Input { Value = 2, },
+						ToAlpha = Input { Value = 4, },
+						Background = Input {
+							SourceOp = "ChangeDepth",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "SkinDetails",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -145.584, 67.8308 } },
+				},
+				Display2 = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Mix = Input {
+							Value = 0,
+							Expression = "iif(ChangeDepth.Display==1,1,0)",
+						},
+						Background = Input {
+							SourceOp = "Display1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Merge1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 298.473, 283.766 } },
+				},
+				Display1 = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Mix = Input {
+							Value = 0,
+							Expression = "iif(ChangeDepth.Display==0,1,0)",
+						},
+						Background = Input {
+							SourceOp = "MIX",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Merge2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 174.709, 283.766 } },
+				},
+				Common = Merge {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Background = Input {
+							SourceOp = "ChangeDepth",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Display2",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -121.263, 465.064 } },
+				},
+				Merge2 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "ChangeDepth",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Selection",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -118.497, 389.409 } },
+				},
+				Selection = Custom {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "ChromaKeyer",
+							Source = "Output",
+						},
+						ApplyMaskInverted = Input { Value = 1, },
+						LUTIn1 = Input {
+							SourceOp = "SelectionLUTIn1",
+							Source = "Value",
+						},
+						LUTIn2 = Input {
+							SourceOp = "SelectionLUTIn2",
+							Source = "Value",
+						},
+						LUTIn3 = Input {
+							SourceOp = "SelectionLUTIn3",
+							Source = "Value",
+						},
+						LUTIn4 = Input {
+							SourceOp = "SelectionLUTIn4",
+							Source = "Value",
+						},
+						RedExpression = Input { Value = "0", },
+						GreenExpression = Input { Value = ".2", },
+						BlueExpression = Input { Value = ".5", },
+						AlphaExpression = Input { Value = ".6", },
+						Image1 = Input {
+							SourceOp = "ChangeDepth",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -118.497, 346.532 } },
+				},
+				SelectionLUTIn1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 0, Blue = 0 },
+					CtrlWShown = false,
+				},
+				SelectionLUTIn2 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 204, Blue = 0 },
+					CtrlWShown = false,
+				},
+				SelectionLUTIn3 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 0, Blue = 204 },
+					CtrlWShown = false,
+				},
+				SelectionLUTIn4 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 204, Blue = 204 },
+					CtrlWShown = false,
+				},
+				CustomTool1 = Custom {
+					CtrlWShown = false,
+					Inputs = {
+						LUTIn1 = Input {
+							SourceOp = "CustomTool1LUTIn1",
+							Source = "Value",
+						},
+						LUTIn2 = Input {
+							SourceOp = "CustomTool1LUTIn2",
+							Source = "Value",
+						},
+						LUTIn3 = Input {
+							SourceOp = "CustomTool1LUTIn3",
+							Source = "Value",
+						},
+						LUTIn4 = Input {
+							SourceOp = "CustomTool1LUTIn4",
+							Source = "Value",
+						},
+						RedExpression = Input { Value = "0", },
+						GreenExpression = Input { Value = "0", },
+						BlueExpression = Input { Value = "0", },
+						Image1 = Input {
+							SourceOp = "ChangeDepth",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 301, 207.696 } },
+				},
+				Merge1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "CustomTool1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "BrightnessContrast3",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 301, 245.66 } },
+				}
+			},
+		},
+		CustomTool1LUTIn1 = LUTBezier {
+			KeyColorSplines = {
+				[0] = {
+					[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+					[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+				}
+			},
+			SplineColor = { Red = 204, Green = 0, Blue = 0 },
+		},
+		CustomTool1LUTIn2 = LUTBezier {
+			KeyColorSplines = {
+				[0] = {
+					[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+					[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+				}
+			},
+			SplineColor = { Red = 0, Green = 204, Blue = 0 },
+		},
+		CustomTool1LUTIn3 = LUTBezier {
+			KeyColorSplines = {
+				[0] = {
+					[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+					[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+				}
+			},
+			SplineColor = { Red = 0, Green = 0, Blue = 204 },
+		},
+		CustomTool1LUTIn4 = LUTBezier {
+			KeyColorSplines = {
+				[0] = {
+					[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+					[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+				}
+			},
+			SplineColor = { Red = 204, Green = 204, Blue = 204 },
+		}
+	},
+	ActiveTool = "SkinCorrector"
+}
