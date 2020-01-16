@@ -33,12 +33,11 @@ end
 if not comp then
     comp = fu:GetCurrentComp()
 end
-recursive = ''
+mkdir_recursive = ''
 split_path = '\\'
 platform = (FuPLATFORM_WINDOWS and "Windows") or (FuPLATFORM_MAC and "Mac") or (FuPLATFORM_LINUX and "Linux")
-if planform == 'Mac' or 'Linux' then
-    print('mac or linux')
-    recursive = '-p '
+if platform == 'Mac' or platform == 'Linux' then
+    mkdir_recursive = '-p '
     split_path = '/'
 end
 fa = comp:GetAttrs()
@@ -48,18 +47,17 @@ else
 	pf = bmd.parseFilename(comp:MapPath(fa.COMPS_FileName))
 
 	if not direxists(pf.Path .. "incrementalSave") then
-		print("creating dir : " .. pf.Path .. "incrementalSave")
-		os.execute("mkdir ".. recursive .. pf.Path .. "incrementalSave" ..split_path.. pf.Name)
+		print("creating dir : " .. pf.Path .. "incrementalSave" .. split_path.. pf.Name)
+		os.execute("mkdir ".. mkdir_recursive .. pf.Path .. "incrementalSave" .. split_path.. pf.Name)
     end
 
-    if not direxists(pf.Path .. "incrementalSave\\" .. pf.Name .. pf.Extension) then
-        print("creating dir : " .. pf.Path .. "incrementalSave\\" .. pf.Name .. pf.Extension)
-		os.execute("mkdir ".. recursive .. pf.Path .. "incrementalSave" ..split_path.. pf.Name)
-        -- os.execute("mkdir \"" .. pf.Path .. "incrementalSave\\" .. pf.Name .. pf.Extension .. "\"")
+    if not direxists(pf.Path .. "incrementalSave".. split_path .. pf.Name) then
+        print("creating dir : " .. pf.Path .. "incrementalSave" .. split_path .. pf.Name)
+		os.execute("mkdir ".. mkdir_recursive .. pf.Path .. "incrementalSave" .. split_path .. pf.Name)
     end
 
 	-- search inc saves
-	path = pf.Path .. "incrementalSave" ..split_path .. pf.Name .. split_path.."*.comp"
+	path = pf.Path .. "incrementalSave" .. split_path .. pf.Name .. split_path .."*.comp"
 	dir = bmd.readdir(path)
 	num = table.getn(dir)
 	currentVersion = 0
@@ -69,9 +67,6 @@ else
 			fileExtension = string.gsub(dir[i].Name, "[.][^.]+$", "")
 			fileNumberString = string.sub(fileExtension, string.find(fileExtension, "(%d+)$", 0))
 			fileNumber = tonumber(fileNumberString)
-            -- print(fileExtension)
-            -- print(fileNumber)
-            -- print(fileNumberString)
 			if currentVersion < fileNumber then
 				currentVersion = fileNumber
 			end
