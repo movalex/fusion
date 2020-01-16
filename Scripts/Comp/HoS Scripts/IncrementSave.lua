@@ -33,8 +33,14 @@ end
 if not comp then
     comp = fu:GetCurrentComp()
 end
-
-
+recursive = ''
+split_path = '\\'
+platform = (FuPLATFORM_WINDOWS and "Windows") or (FuPLATFORM_MAC and "Mac") or (FuPLATFORM_LINUX and "Linux")
+if planform == 'Mac' or 'Linux' then
+    print('mac or linux')
+    recursive = '-p '
+    split_path = '/'
+end
 fa = comp:GetAttrs()
 if fa.COMPS_FileName == "" then
 	comp:Save()
@@ -43,16 +49,17 @@ else
 
 	if not direxists(pf.Path .. "incrementalSave") then
 		print("creating dir : " .. pf.Path .. "incrementalSave")
-		os.execute("mkdir " .. pf.Path .. "incrementalSave\\".. pf.Name .. pf.Extension)
-	end
+		os.execute("mkdir ".. recursive .. pf.Path .. "incrementalSave" ..split_path.. pf.Name)
+    end
 
     if not direxists(pf.Path .. "incrementalSave\\" .. pf.Name .. pf.Extension) then
         print("creating dir : " .. pf.Path .. "incrementalSave\\" .. pf.Name .. pf.Extension)
-        os.execute("mkdir \"" .. pf.Path .. "incrementalSave\\" .. pf.Name .. pf.Extension .. "\"")
+		os.execute("mkdir ".. recursive .. pf.Path .. "incrementalSave" ..split_path.. pf.Name)
+        -- os.execute("mkdir \"" .. pf.Path .. "incrementalSave\\" .. pf.Name .. pf.Extension .. "\"")
     end
 
 	-- search inc saves
-	path = pf.Path .. "incrementalSave\\" .. pf.Name .. pf.Extension .. "\\*.comp"
+	path = pf.Path .. "incrementalSave" ..split_path .. pf.Name .. split_path.."*.comp"
 	dir = bmd.readdir(path)
 	num = table.getn(dir)
 	currentVersion = 0
@@ -74,7 +81,8 @@ else
 	currentVersionString = string.sub(currentVersionString, string.len(currentVersionString) - 3 , string.len(currentVersionString))
 
     src =  pf.Path .. pf.Name .. pf.Extension
-	dest =  pf.Path .. "incrementalSave\\" .. pf.Name .. pf.Extension .. "\\" .. pf.Name .. "." .. currentVersionString .. ".comp"
-	os.rename(src, dest) -- this seems to work in Lightwave, and does the same in Fusion, much cleaner isn't it?
+	dest =  pf.Path .. "incrementalSave" .. split_path .. pf.Name .. split_path .. pf.Name .. "." .. currentVersionString .. ".comp"
+    -- print(dest)
+    os.rename(src, dest) -- this seems to work in Lightwave, and does the same in Fusion, much cleaner isn't it?
 	comp:Save(src)
 end
