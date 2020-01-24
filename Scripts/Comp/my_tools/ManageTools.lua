@@ -52,6 +52,7 @@ win = disp:AddWindow({
     ID = 'root',
     ui:HGroup{
       ui:Button{ID = 'Disable', Text = 'Disable',},
+      ui:Button{ID = 'Select', Text = 'select'}
       ui:Button{ID = 'Enable', Text = 'Enable',},
     },
     ui.HGroup{
