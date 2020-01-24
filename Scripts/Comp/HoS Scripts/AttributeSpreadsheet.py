@@ -6,8 +6,8 @@
 
     Requires:
         Python 3.6
-        Fusion 9/16 (needs testing)
-        PySide2, installed automatically on MacOs or Linux (PySide2 on Windows should be installed manually)
+        Fusion 9/16
+        PySide2, installed automatically on Windows, MacOs or (not tested) Linux
     Notice:
         Written by Sven Neve (sven[AT]houseofsecrets[DOT]nl)
         Copyright (c) 2013 House of Secrets
@@ -36,12 +36,20 @@
         UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
         2019/6/30
-        v.6 updated for Fusion 9/16, python3 and PySide2 compatibility
-        by Alex Bogomolov https://abogomolov.com
-        v.7 2019/12/17 implement automatic PySide2 package install for Windows and MacOs
+        updates by Alex Bogomolov mail@abogomolov.com
+        v.6:
+            -- update for Fusion 9/16
+            -- Python3 (dropped Python2 support completely, sorry for that)
+            -- update to PySide2 compatibility
+        2019/12/17
+        v.7:
+            -- automatic PySide2 package installation for Windows and MacOs (Linux to be tested)
+        2020/1/24
+        v.8
+            -- cleanup, add some useful logs
 """
 
-__version__ = 7
+__VERSION__ = 8
 
 import datetime
 import sys
@@ -92,15 +100,11 @@ try:
     from PySide2.QtGui import QBrush, QPainter, QColor
 
 except ImportError:
-    if sys.version_info.major == 2:
+    if sys.version_info.major < 3:
         print('Python 3.6 is required')
         sys.exit()
     if platform.system() == 'Windows':
         python_executable = os.path.join(os.__file__.split("lib")[0],"python.exe")
-    #    print('Please unstall PySide2 manually',
-    #          '\npython.exe -m pip install -U --force-reinstall pip',
-    #          '\npython.exe -m pip install pyside2')
-    #    sys.exit()
     elif platform.system() in ["Darwin", "Linux"]:
         python_executable = os.path.join(os.__file__.split("lib/")[0],"bin","python3")
     print("No Pyside2 module found, trying to install...")
@@ -113,9 +117,14 @@ except ImportError:
         pkg = "PySide2"
         version = "5.13.2"
         subprocess.call([python_executable, '-m', 'pip', 'install', '{}>={}'.format(pkg, version)])
-        print('Pyside2 installation successful')
-        print("Done", "\nNow try to launch the script again")
-        sys.exit()
+        try:
+            import PySide2.QtCore
+            print('Pyside2 installation successful')
+            print("Done", "\nNow try to launch the script again")
+            sys.exit()
+        except ImportError:
+            print("Pyside2 installation failed, please try again... Or not.")
+            sys.exit()
     except ImportError:
         print('Check if pip version 10+ is installed, then launch the script again')
         sys.exit()
@@ -328,22 +337,20 @@ class TableView(QTableView):
             self.mouseIsDown = False
             QTableView.mousePressEvent(self, event)
 
+    def create_value(self, sm, idxs):
+        value = "={}.{}".format(
+            sm.toolDict[idxs.row() + 1].Name,
+            sm.toolsInputs[idxs.row()].get(sm.attributeNameKeys[idxs.column()]).ID,
+        )
+        self.commitDataDo(value)
+
     def mouseReleaseEvent(self, event):
-        # TODO, clean this up, so much duplicate code, it's embarrassing.
         if self.mouseIsDown:
             self.mouseIsDown = False
             idxs = self.model().mapToSource(self.indexAt(self.center))
-            idxt = self.model().mapToSource(self.indexAt(self.startCenter))
             sm = self.model().sourceModel()
-            if len(self.selectionModel().selection().indexes()) > 1:
-                value = "=" + "%s.%s" % (
-                    sm.toolDict[idxs.row() + 1].Name,
-                    sm.toolsInputs[idxs.row()]
-                    .get(sm.attributeNameKeys[idxs.column()])
-                    .ID,
-                )
-                self.commitDataDo(value)
-            else:
+            if len(self.selectionModel().selection().indexes()) <= 1:
+                idxt = self.model().mapToSource(self.indexAt(self.startCenter))
                 if (
                     idxs.row() > -1
                     and idxs.column() > -1
@@ -356,18 +363,13 @@ class TableView(QTableView):
                     fusionOutput = sm.toolsInputs[idxs.row()].get(
                         sm.attributeNameKeys[idxs.column()]
                     )
-                    # Select the first cell by sampling the area under the first clicked mouse center
+                    # Select the first cell by sampling the area
+                    # under the first clicked mouse center
                     self.setSelection(
                         QRect(self.startCenter, self.startCenter),
                         QItemSelectionModel.SelectCurrent,
                     )
-                    value = "=" + "%s.%s" % (
-                        sm.toolDict[idxs.row() + 1].Name,
-                        sm.toolsInputs[idxs.row()]
-                        .get(sm.attributeNameKeys[idxs.column()])
-                        .ID,
-                    )
-                    self.commitDataDo(value)
+            self.create_value(sm, idxs)
             self.viewport().repaint()
         QTableView.mouseReleaseEvent(self, event)
 
@@ -423,15 +425,15 @@ class TableView(QTableView):
         self.commitDataDo(value)
 
     def commitDataDo(self, value):
+        print(f'got value: {value}')
         tm = self.model().sourceModel()
         # value = tm.data(self.currentIndex(), Qt.EditRole)
         # self.model().sourceModel().comp.StartUndo("Attribute Spreadsheet")
         comp.StartUndo("Attribute Spreadsheet")
         try:
-            # print('tableview commit : ', value)
             for isr in self.selectionModel().selection():
                 for s in isr.indexes():
-                    print("multi commit ", s)
+                    print(f"setting value {value} at row {s.row()+1}, column {s.column()+1}")
                     tm.setData(self.model().mapToSource(s), value, Qt.EditRole)
             # self.model().sourceModel().comp.EndUndo(True)
             comp.EndUndo(True)
@@ -487,24 +489,12 @@ class FusionInput(object):
         self.cache = False
         self.keyFrames = fusionInput.GetKeyFrames()
         self.keyFrameValues = dict()
-        # for k, v in self.keyFrames.items():
-        #    self.keyFrameValues[k] = fusionInput[v]
         self.hasKeyFrames = len(self.keyFrames) > 0
-        # self.value = fusionInput
         self.expression = fusionInput.GetExpression()
         self.attributes = fusionInput.GetAttrs()
         self.Name = self.attributes["INPS_Name"]
         self.ID = self.attributes["INPS_ID"]
 
-    # def __del__(self):
-    #    print('deleting')
-    #    del self.attributes
-    #    del self.keyFrames
-    #    self.fusionInput = None
-    #    del self.fusionInput
-    #    del self.keyFrameValues
-    #    del self.Name
-    #    del self.ID
 
     def Refresh(self):
         self.GetAttrs()
@@ -557,7 +547,7 @@ class FusionInput(object):
             if value == "=-x":
                 self.SetExpression(None)
             else:
-                print("settings expression")
+                # print("settings expression")
                 self.SetExpression(value.lstrip("="))
             return
 
@@ -817,7 +807,7 @@ class TableModel(QAbstractTableModel):
                 self.attributeNameKeys[index.column()], None
             )
             if r:
-                print("tablemodel editrole", str(value))
+                # print("tablemodel editrole", str(value))
                 r[comp.CurrentTime] = str(value)
         return True
 
@@ -1092,7 +1082,7 @@ if not app:  # create QApplication if it doesnt exist
     app = QApplication([])
 app.setStyleSheet(css)
 main = MainWindow()
-main.setWindowTitle("Attribute Spreadsheet 0.1.r%s" % __version__)
+main.setWindowTitle("Attribute Spreadsheet 0.1.r{}".format(__VERSION__))
 main.setMinimumSize(QSize(640, 200))
 main.show()
 main.loadFusionData()
