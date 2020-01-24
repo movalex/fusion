@@ -4,26 +4,23 @@
   by S.Neve / House of Secrets
 
   some small updates from the inital release:
-  v1.4 fix macOs compatibility WIP
-  v1.3 Fusion 9/16 support
+  v1.4:
+  - add MacOS compatibility by Alex Bogomolov -- 2019/01/16
+  v1.3:
+  - add Fusion 9/16 support
   v1.2 changes:
-    - Changed the way the postfix increment number for the incremental backup comp
-	is searched for, as in the older version a name like 'vfx_shot_01_31-448.comp
-	would break the gsub expression for some unknown reason, returning a nil value.
-	
+  - Changed the way the postfix increment number for the incremental backup comp
+    is searched for, as in the older version a name like 'vfx_shot_01_31-448.comp
+    would break the gsub expression for some unknown reason, returning a nil value.
   v1.1 changes:
-	- creating the backup incremental file now uses the os.rename function to move
+  - creating the backup incremental file now uses the os.rename function to move
     the file, this worked in Lightwave and seems to behave the same in Fusion,
     this prevents the DOS box popup on saving.
-	
   - renamed the script to match our other script and plugin naming conventions.
-
   - encapsulated the DOS file names in quotation marks to make creation in and
     of directories with spaces possible.
-		
   v1.0 changes:
   - Initial release
-	
 ]]--
 	
 function findpattern(text, pattern, start)
@@ -77,7 +74,6 @@ else
 
     src =  pf.Path .. pf.Name .. pf.Extension
 	dest =  pf.Path .. "incrementalSave" .. split_path .. pf.Name .. split_path .. pf.Name .. "." .. currentVersionString .. ".comp"
-    -- print(dest)
     os.rename(src, dest) -- this seems to work in Lightwave, and does the same in Fusion, much cleaner isn't it?
 	comp:Save(src)
 end
