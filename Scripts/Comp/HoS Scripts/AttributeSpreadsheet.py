@@ -64,8 +64,8 @@ import platform
 
 
 def run_comand(command):
-    process = subprocess.Popen(command, stdout=subprocess.PIPE)
-    # stdout, err = process.communicate()
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    err = process.communicate()[1]
     while True:
         output = process.stdout.readline().decode()
         if output == '' or process.poll() is not None:
@@ -74,7 +74,7 @@ def run_comand(command):
             print(output.strip())
     rc = process.poll()
     print('code returned: {}'.format(rc))
-    return rc
+    return rc, err
 
 
 try:
@@ -132,7 +132,7 @@ except ImportError:
             print("updating pip")
             run_comand([python_executable, "-m", "pip", "install", "-U", "pip"])
         pyside_cmd = [python_executable, "-m", "pip", "install", "{}>={}".format(PKG, PKG_VERSION)]
-        rc = run_comand(pyside_cmd)
+        rc, err = run_comand(pyside_cmd)
         if rc == 0:
             print("Pyside2 installation successful")
             print("Done", "\nNow try to launch the script again")
