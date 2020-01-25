@@ -65,7 +65,7 @@ import platform
 
 def run_comand(command):
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    err = process.communicate()[1]
+    # err = process.communicate()[1]
     while True:
         output = process.stdout.readline().decode()
         if output == '' or process.poll() is not None:
@@ -73,8 +73,8 @@ def run_comand(command):
         if output:
             print(output.strip())
     rc = process.poll()
-    print('code returned: {}'.format(rc))
-    return rc, err
+    # print('code returned: {}'.format(rc))
+    return rc
 
 
 try:
@@ -116,7 +116,7 @@ try:
     )
     from PySide2.QtGui import QBrush, QPainter, QColor
 
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     if sys.version_info.major < 3:
         print("Python 3.6 is required")
         sys.exit()
@@ -132,16 +132,15 @@ except ImportError:
             print("updating pip")
             run_comand([python_executable, "-m", "pip", "install", "-U", "pip"])
         pyside_cmd = [python_executable, "-m", "pip", "install", "{}>={}".format(PKG, PKG_VERSION)]
-        rc, err = run_comand(pyside_cmd)
-        if rc == 0:
+        rc = run_comand(pyside_cmd)
+        if not rc:
             print("Pyside2 installation successful")
-            print("Done", "\nNow try to launch the script again")
+            print("Now try to launch the script again")
             sys.exit()
         else:
             print(
                 "Pyside2 installation has failed for some reason, please try again... Or not."
             )
-            print("Error Message: {}".format(err))
             sys.exit()
     except ImportError:
         print("Check if pip version 10+ is installed, then launch the script again")
