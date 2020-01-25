@@ -65,9 +65,9 @@ import platform
 
 def run_comand(command):
     process = subprocess.Popen(command, stdout=subprocess.PIPE)
-    stdout, err = process.communicate()
+    # stdout, err = process.communicate()
     while True:
-        output = process.stdout.readline()
+        output = process.stdout.readline().decode()
         if output == '' or process.poll() is not None:
             break
         if output:
