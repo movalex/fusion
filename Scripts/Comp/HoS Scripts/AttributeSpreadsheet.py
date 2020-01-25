@@ -57,24 +57,15 @@ import datetime
 import sys
 import os
 import subprocess
-
-# from subprocess import Popen, PIPE
 import platform
+import builtins
 
 
 
-def run_comand(command):
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    # err = process.communicate()[1]
-    while True:
-        output = process.stdout.readline().decode()
-        if output == '' or process.poll() is not None:
-            break
-        if output:
-            print(output.strip())
-    rc = process.poll()
-    # print('code returned: {}'.format(rc))
-    return rc
+def print(*args, **kwargs):
+    """custom print() function"""
+    builtins.print('[AttributeSpreadsheet] : ', end = '')
+    return builtins.print(*args, **kwargs)
 
 
 try:
@@ -117,6 +108,18 @@ try:
     from PySide2.QtGui import QBrush, QPainter, QColor
 
 except (ImportError, ModuleNotFoundError):
+
+    def run_comand(command):
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        while True:
+            output = process.stdout.readline().decode()
+            if output == '' or process.poll() is not None:
+                break
+            if output:
+                print(output.strip())
+        rc = process.poll()
+        return rc
+    
     if sys.version_info.major < 3:
         print("Python 3.6 is required")
         sys.exit()
@@ -135,7 +138,7 @@ except (ImportError, ModuleNotFoundError):
         rc = run_comand(pyside_cmd)
         if not rc:
             print("Pyside2 installation successful")
-            print("Now try to launch the script again")
+            print("Now try to launch the script again!")
             sys.exit()
         else:
             print(
@@ -177,43 +180,7 @@ class FUIDComboDelegate(QItemDelegate):
     def setModelData(self, editor, model, index):
         model.setData(index, editor.currentIndex())
 
-    # @QtCore.pyqtSlot()
     def currentIndexChanged(self):
-        self.commitData.emit(self.sender())
-
-
-class IntDelegate(QItemDelegate):
-    """
-    A delegate that places a fully functioning QSpinBox in every
-    cell of the column to which it's applied
-    """
-
-    def __init__(self, parent):
-
-        QItemDelegate.__init__(self, parent)
-
-    def createEditor(self, parent, option, index):
-        spinBox = QSpinBox(parent)
-        spinBox.setMinimum(-100000)
-        spinBox.setMaximum(100000)
-        self.connect(spinBox, SIGNAL("valueChanged(int)"), self, SLOT("valueChanged()"))
-        return spinBox
-
-    def setEditorData(self, editor, index):
-        # print('editor:', index)
-        editor.blockSignals(True)
-        # print('setEditorData', editor,index)
-        # print(index.model().data(index))
-        editor.setValue(float(index.model().data(index)))
-        editor.blockSignals(False)
-
-    def setModelData(self, editor, model, index):
-        # print('setModelData', editor,index)
-        # print(editor.value())
-        model.setData(index, editor.value(), Qt.EditRole)
-
-    # @QtCore.pyqtSlot()
-    def valueChanged(self):
         self.commitData.emit(self.sender())
 
 
@@ -224,7 +191,6 @@ class NumberDelegate(QItemDelegate):
     """
 
     def __init__(self, parent):
-
         QItemDelegate.__init__(self, parent)
 
     def createEditor(self, parent, option, index):
@@ -244,43 +210,7 @@ class NumberDelegate(QItemDelegate):
         # Rather, we set what the value from the editor is as the data that the FusionInput needs to use to process the
         # actual values. This allows us to do things like compound assignments or setting/editing expressions.
         model.sourceModel().stored_edit_role_data = editor.text()
-        # model.setData(index, editor.text(), Qt.EditRole)
         pass
-
-    # @QtCore.pyqtSlot()
-    def valueChanged(self):
-        self.commitData.emit(self.sender())
-
-
-class FloatDelegate(QItemDelegate):
-    """
-    A delegate that places a fully functioning QDoubleSpinBox in every
-    cell of the column to which it's applied
-    """
-
-    def __init__(self, parent):
-
-        QItemDelegate.__init__(self, parent)
-
-    def createEditor(self, parent, option, index):
-        doubleSpinBox = QDoubleSpinBox(parent)
-        doubleSpinBox.setDecimals(5)
-        doubleSpinBox.setMinimum(-100000)
-        doubleSpinBox.setMaximum(100000)
-        self.connect(
-            doubleSpinBox, SIGNAL("valueChanged(float)"), self, SLOT("valueChanged()")
-        )
-        return doubleSpinBox
-
-    def setEditorData(self, editor, index):
-        editor.blockSignals(True)
-        # print('setEditorData', editor,index)
-        # print(index.model().data(index))
-        editor.setValue(float(index.model().data(index)))
-        editor.blockSignals(False)
-
-    def setModelData(self, editor, model, index):
-        model.setData(index, editor.value(), Qt.EditRole)
 
     def valueChanged(self):
         self.commitData.emit(self.sender())
@@ -296,7 +226,7 @@ class PointDelegate(QItemDelegate):
         QItemDelegate.__init__(self, parent)
 
     def createEditor(self, parent, option, index):
-        combo = QTableWidget(1, 3, parent)
+        combo = QTableWidget(1, 2, parent)
         combo.verticalHeader().setVisible(False)
         combo.horizontalHeader().setVisible(False)
         combo.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -306,9 +236,11 @@ class PointDelegate(QItemDelegate):
             self,
             SLOT("currentIndexChanged()"),
         )
+        print('combo: ', combo)
         return combo
 
     def setEditorData(self, editor, index):
+        print('index', index)
         editor.blockSignals(True)
         editor.setCurrentIndex(int(index.model().data(index)))
         editor.blockSignals(False)
@@ -324,7 +256,6 @@ class TableView(QTableView):
     """
     We inherit the QTableView so we can write our own item delegation and multi select editing data commit.
     """
-
     def __init__(self, parent):
         QTableView.__init__(self, parent)
         self.resizeRowsToContents()
@@ -348,7 +279,6 @@ class TableView(QTableView):
         if event.buttons() == Qt.MiddleButton:
             self.mouseIsDown = True
             self.center = self.startCenter = QPoint(event.pos().x(), event.pos().y())
-            # self.viewport().repaint()
 
         elif event.buttons() == Qt.LeftButton:
             self.mouseIsDown = False
@@ -357,8 +287,7 @@ class TableView(QTableView):
     def create_value(self, sm, idxs):
         value = "={}.{}".format(
             sm.toolDict[idxs.row() + 1].Name,
-            sm.toolsInputs[idxs.row()].get(sm.attributeNameKeys[idxs.column()]).ID,
-        )
+            sm.toolsInputs[idxs.row()].get(sm.attributeNameKeys[idxs.column()]).ID,)
         self.commitDataDo(value)
 
     def mouseReleaseEvent(self, event):
@@ -409,20 +338,16 @@ class TableView(QTableView):
         alternative.)
         """
         tm = self.model()
+        # print(tm.filteredKeys)
 
         # filteredKeys contains the column data types with the indices properly sorted after filtering.
         for k, v in enumerate(tm.filteredKeys):
             if v == "Point":
                 self.setItemDelegateForColumn(k, PointDelegate(self))
-            # elif v == 'Float':
-            #    self.setItemDelegateForColumn(k, FloatDelegate(self))
-            # elif v == 'Int':
-            #    self.setItemDelegateForColumn(k, IntDelegate(self))
             elif v == "FuID":
                 self.setItemDelegateForColumn(k, FUIDComboDelegate(self))
             elif v in ["Number", "Float", "Int"]:
                 self.setItemDelegateForColumn(k, NumberDelegate(self))
-
         pass
         self.resizeColumnsToContents()
 
@@ -461,7 +386,6 @@ class TableSortFilterProxyModel(QSortFilterProxyModel):
 
     def __init__(self, parent=None):
         QSortFilterProxyModel.__init__(self, parent)
-
         self.filteredKeys = []
 
     def filterAcceptsRow(self, source_row, source_parent):
@@ -469,18 +393,15 @@ class TableSortFilterProxyModel(QSortFilterProxyModel):
 
     def filterAcceptsColumn(self, source_column, source_parent):
         pattern = self.filterRegExp().pattern()
-
         if pattern == "":
             self.filteredKeys = self.sourceModel().attributeDataTypes
             return True
 
-        keys = pattern.split(" ")
-        self.filteredKeys = []
-
         index = self.sourceModel().createIndex(0, source_column)
         attrName = self.sourceModel().data(index, Qt.UserRole)
         dataType = self.sourceModel().data(index, Qt.UserRole + 1)
-
+        
+        keys = pattern.split(" ") 
         for key in keys:
             if not key:
                 return False
@@ -540,9 +461,6 @@ class FusionInput(object):
         self.Refresh()
 
     def __getitem__(self, item):
-        # if not self.cache:
-        #    self.keyFrameValues[item] = self.fusionInput[item]
-        # return self.keyFrameValues.get(item, self.value)
         return self.fusionInput[item]
 
     def __setitem__(self, key, value):
@@ -634,9 +552,6 @@ class TableModel(QAbstractTableModel):
 
         self.communicate = Communicate()
 
-        # self.fu = bmd.scriptapp("Fusion")
-        # comp = self.fu.GetCurrentComp()
-
         self.inputsToSkip = {}
         self.data_types_to_skip = {}
 
@@ -722,16 +637,11 @@ class TableModel(QAbstractTableModel):
         if role == Qt.DisplayRole:
             if not r or r.attributes.get("INPID_InputControl") == "SplineControl":
                 return None
-            # else:
-            #    r = self.toolsInputs[index.row()].get(self.attributeNameKeys[index.column()], None)
-            #    return str(r[comp.CurrentTime]) if r else r # force it to be string so it shows EVERYTHING
-            # r = self.toolsInputs[index.row()].get(self.attributeNameKeys[index.column()], None)
             return (
                 str(r[comp.CurrentTime]) if r else r
             )  # force it to be string so it shows EVERYTHING
 
         elif role == Qt.EditRole:
-            # r = self.toolsInputs[index.row()].get(self.attributeNameKeys[index.column()], None)
             return r[comp.CurrentTime] if r else r
         elif role == Qt.UserRole:
             return self.attributeNameKeys[index.column()]
@@ -739,20 +649,7 @@ class TableModel(QAbstractTableModel):
             return self.attributeDataTypes[index.column()]
         elif role == Qt.BackgroundRole:
             return self.backgroundRoleMethod(index, role)
-            # r = self.toolsInputs[index.row()].get(self.attributeNameKeys[index.column()], None)
-            # if r:
-            #    #if r.GetAttrs('INPB_Connected'):
-            #    if(r.GetExpression()):
-            #        b = QBrush()
-            #        b.setStyle(Qt.Dense6Pattern)
-            #        b.setColor(QColor('purple'))
-            #        return b
-            #    if r.GetAttrs('INPB_Connected'):
-            #        b = QBrush()
-            #        b.setStyle(Qt.Dense6Pattern)
-            #        b.setColor(QColor('green'))
-            #        #return QColor('green')
-            #        return b
+
         else:
             return
 
@@ -764,7 +661,6 @@ class TableModel(QAbstractTableModel):
             self.attributeNameKeys[index.column()], None
         )
         if r:
-            # if r.GetAttrs('INPB_Connected'):
             b = QBrush()
             b.setStyle(Qt.SolidPattern)
             if r.attributes.get("INPID_InputControl", None) == "SplineControl":
@@ -774,23 +670,12 @@ class TableModel(QAbstractTableModel):
                 b.setColor(QColor(92, 64, 92, 180))
                 return b
             if r.GetAttrs("INPB_Connected"):
-                # keyFrames = r.GetKeyFrames()
-                # b = QBrush()
-                # b.setStyle(Qt.Dense4Pattern)
-                # b.setStyle(Qt.SolidPattern)
-                # print(keyFrames)
-                # print(comp.CurrentTime, r.keyFrames.values())
                 if comp.CurrentTime in list(r.keyFrames.values()):
                     b.setColor(QColor(62, 92, 62, 180))
                 else:
                     b.setColor(QColor(64, 78, 120, 180))
-
-                # return QColor('green')
                 return b
         return None
-
-    # def setModelData(self, editor, model, index):
-    #    model.setData(index, editor.currentIndex())
 
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole:
@@ -812,7 +697,6 @@ class TableModel(QAbstractTableModel):
         if not index.isValid():
             return
         elif role == Qt.EditRole:
-            # print(self.toolsAttributes[index.row()].get(self.attributeNameKeys[index.column()], []))
             r = self.toolsInputs[index.row()].get(
                 self.attributeNameKeys[index.column()], None
             )
@@ -868,31 +752,22 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(
             self.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint
         )
-        # self.show()
-        # self.loadFusionData()
 
     def createWidgets(self):
         self._tm = TableModel(self)
         self._tm.inputsToSkip = self.inputsToSkip
         self._tm.data_types_to_skip = self.data_types_to_skip
         self._tv = TableView(self)
-        # selectionModel = QItemSelectionModel(self._tm)
-
-        # self._tv.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        # self._tv.setSelectionBehavior(QAbstractItemView.MultiSelection)
-
         self.alwaysOnTop = QCheckBox("Always on top")
         self.alwaysOnTop.setChecked(True)
         self.drawInputInfoColors = QToolButton()
         self.drawInputInfoColors.setCheckable(True)
         self.drawInputInfoColors.setChecked(True)
         self.drawInputInfoColors.setText("Draw Color Info")
-        # self.drawInputInfoColors.setFixedSize(QSize(20,20))
         self.pushButton = QPushButton()
         self.pushButton.setText("Refresh")
         self.pushButton.setFixedSize(QSize(128, 20))
         self.lineEdit = QLineEdit(self)
-        # self.lineEdit.setFixedSize(QSize(256, 20))
         self.lineEdit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.statusBar().showMessage("System Status | Normal")
         self.cacheButton = QToolButton()
@@ -976,28 +851,17 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(value)
 
     def loadFusionData(self):
-        # self._tm = TableModel(self)
-        # self._tm.communicate.broadcast.connect(self.progressBar.setValue)
         self._tm.load_fusion_data()
         self.proxyModel.setSourceModel(self._tm)
-        # self.proxyModel.filteredKeys = self._tm.attributeNameKeys
-        # self._tv.setModel(self.proxyModel)
         self._tv.setSortingEnabled(True)
-        # self._tv.horizontalHeader().setSortIndicatorShown(False)
         self._tv.updateColumns()
 
     def reloadFusionData(self):
-        # self._tm = TableModel(self)
-        # self.report_memory_usage()
         self.proxyModel.setSourceModel(None)
-        # self.proxyModel.blockSignals(True)
         self._tm.load_fusion_data()
         self.proxyModel.setSourceModel(self._tm)
-        # self.proxyModel.filteredKeys = self._tm.attributeNameKeys
-        # self.proxyModel.blockSignals(False)
         self._tv.setSortingEnabled(True)
         self._tv.updateColumns()
-        # self.report_memory_usage()
 
     def changeCacheMode(self):
         # Not sure where this goes, is it a method for the TableModel? or should we inherit the dict that has all
