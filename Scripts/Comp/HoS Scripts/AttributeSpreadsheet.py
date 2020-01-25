@@ -61,7 +61,22 @@ import subprocess
 # from subprocess import Popen, PIPE
 import platform
 
-# import PbmdScript as eyeon
+
+
+def run_comand(command):
+    process = subprocess.Popen(command, stdout=subprocess.PIPE)
+    stdout, err = process.communicate()
+    while True:
+        output = process.stdout.readline()
+        if output == '' or process.poll() is not None:
+            break
+        if output:
+            print(output.strip())
+    rc = process.poll()
+    print('code returned: {}'.format(rc))
+    return rc
+
+
 try:
     from PySide2.QtWidgets import (
         QMainWindow,
@@ -99,7 +114,6 @@ try:
         QItemSelectionModel,
         QSortFilterProxyModel,
     )
-
     from PySide2.QtGui import QBrush, QPainter, QColor
 
 except ImportError:
@@ -109,7 +123,6 @@ except ImportError:
     print("No Pyside2 module found, trying to install...")
     if platform.system() == "Windows":
         python_executable = os.path.join(os.__file__.split("lib")[0], "python.exe")
-        # subprocess.call([python_executable, '-m', 'pip', 'install', '{}>={}'.format(PKG, PKG_VERSION)])
     elif platform.system() in ["Darwin", "Linux"]:
         python_executable = os.path.join(os.__file__.split("lib/")[0], "bin", "python3")
     try:
@@ -117,19 +130,9 @@ except ImportError:
         pip_version = int(pip.__version__.split(".")[0])
         if pip_version < 19:
             print("updating pip")
-            subprocess.call([python_executable, "-m", "pip", "install", "-U", "pip"])
-        cmd = [
-            python_executable,
-            "-m",
-            "pip",
-            "install",
-            "{}>={}".format(PKG, PKG_VERSION),
-        ]
-        p = subprocess.Popen(
-            cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        output, err = p.communicate()
-        rc = p.returncode
+            run_comand([python_executable, "-m", "pip", "install", "-U", "pip"])
+        pyside_cmd = [python_executable, "-m", "pip", "install", "{}>={}".format(PKG, PKG_VERSION)]
+        rc = run_comand(pyside_cmd)
         if rc == 0:
             print("Pyside2 installation successful")
             print("Done", "\nNow try to launch the script again")
@@ -141,7 +144,7 @@ except ImportError:
             print("Error Message: {}".format(err))
             sys.exit()
     except ImportError:
-        print("Check if pip PKG_VERSION 10+ is installed, then launch the script again")
+        print("Check if pip version 10+ is installed, then launch the script again")
         sys.exit()
 
 
