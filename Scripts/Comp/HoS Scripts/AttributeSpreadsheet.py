@@ -106,19 +106,18 @@ except ImportError:
     if sys.version_info.major < 3:
         print("Python 3.6 is required")
         sys.exit()
+    print("No Pyside2 module found, trying to install...")
     if platform.system() == "Windows":
         python_executable = os.path.join(os.__file__.split("lib")[0], "python.exe")
+        # subprocess.call([python_executable, '-m', 'pip', 'install', '{}>={}'.format(PKG, PKG_VERSION)])
     elif platform.system() in ["Darwin", "Linux"]:
         python_executable = os.path.join(os.__file__.split("lib/")[0], "bin", "python3")
-    print("No Pyside2 module found, trying to install...")
     try:
         import pip
-
         pip_version = int(pip.__version__.split(".")[0])
         if pip_version < 19:
             print("updating pip")
             subprocess.call([python_executable, "-m", "pip", "install", "-U", "pip"])
-        # subprocess.call([python_executable, '-m', 'pip', 'install', '{}>={}'.format(PKG, PKG_VERSION)])
         cmd = [
             python_executable,
             "-m",
@@ -1050,6 +1049,7 @@ QTableView {\
 }\
 \
 QHeaderView::section {\
+    background-color: rgb(100, 100, 100);\
     color: rgb(0,0,0);\
     padding: 0;\
 }\
