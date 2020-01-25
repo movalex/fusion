@@ -50,13 +50,16 @@
 """
 
 __VERSION__ = 8
+PKG = "PySide2"
+PKG_VERSION = "5.13.2"
 
 import datetime
 import sys
 import os
 import subprocess
-import platform
 
+# from subprocess import Popen, PIPE
+import platform
 
 # import PbmdScript as eyeon
 try:
@@ -101,32 +104,45 @@ try:
 
 except ImportError:
     if sys.version_info.major < 3:
-        print('Python 3.6 is required')
+        print("Python 3.6 is required")
         sys.exit()
-    if platform.system() == 'Windows':
-        python_executable = os.path.join(os.__file__.split("lib")[0],"python.exe")
+    if platform.system() == "Windows":
+        python_executable = os.path.join(os.__file__.split("lib")[0], "python.exe")
     elif platform.system() in ["Darwin", "Linux"]:
-        python_executable = os.path.join(os.__file__.split("lib/")[0],"bin","python3")
+        python_executable = os.path.join(os.__file__.split("lib/")[0], "bin", "python3")
     print("No Pyside2 module found, trying to install...")
     try:
         import pip
-        pip_version = int(pip.__version__.split('.')[0])
+
+        pip_version = int(pip.__version__.split(".")[0])
         if pip_version < 19:
-            print('updating pip')
-            subprocess.call([python_executable, '-m', 'pip', 'install', '-U', 'pip'])
-        pkg = "PySide2"
-        version = "5.13.2"
-        subprocess.call([python_executable, '-m', 'pip', 'install', '{}>={}'.format(pkg, version)])
-        try:
-            import PySide2.QtCore
-            print('Pyside2 installation successful')
+            print("updating pip")
+            subprocess.call([python_executable, "-m", "pip", "install", "-U", "pip"])
+        # subprocess.call([python_executable, '-m', 'pip', 'install', '{}>={}'.format(PKG, PKG_VERSION)])
+        cmd = [
+            python_executable,
+            "-m",
+            "pip",
+            "install",
+            "{}>={}".format(PKG, PKG_VERSION),
+        ]
+        p = subprocess.Popen(
+            cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        output, err = p.communicate()
+        rc = p.returncode
+        if rc == 0:
+            print("Pyside2 installation successful")
             print("Done", "\nNow try to launch the script again")
             sys.exit()
-        except ImportError:
-            print("Pyside2 installation failed, please try again... Or not.")
+        else:
+            print(
+                "Pyside2 installation has failed for some reason, please try again... Or not."
+            )
+            print("Error Message: {}".format(err))
             sys.exit()
     except ImportError:
-        print('Check if pip version 10+ is installed, then launch the script again')
+        print("Check if pip PKG_VERSION 10+ is installed, then launch the script again")
         sys.exit()
 
 
@@ -414,31 +430,25 @@ class TableView(QTableView):
         commitData makes sure all multiselecteed cells get the same values applied as the edited cell.
         """
         super(TableView, self).commitData(editor)
-
         # We need to remap the model index from the filtered proxymodel indices to the source model indices
         tm = self.model().sourceModel()  # mapToSource(self.currentIndex()).model()
-
-        # value = tm.data(self.model().mapToSource(self.currentIndex()), Qt.EditRole)
-
         # Use a stored edit role text
         value = tm.stored_edit_role_data
         self.commitDataDo(value)
 
     def commitDataDo(self, value):
-        print(f'got value: {value}')
+        # print(f'got value: {value}')
         tm = self.model().sourceModel()
-        # value = tm.data(self.currentIndex(), Qt.EditRole)
-        # self.model().sourceModel().comp.StartUndo("Attribute Spreadsheet")
         comp.StartUndo("Attribute Spreadsheet")
         try:
             for isr in self.selectionModel().selection():
                 for s in isr.indexes():
-                    print(f"setting value {value} at row {s.row()+1}, column {s.column()+1}")
+                    print(
+                        f"setting value {value} at row {s.row()+1}, column {s.column()+1}"
+                    )
                     tm.setData(self.model().mapToSource(s), value, Qt.EditRole)
-            # self.model().sourceModel().comp.EndUndo(True)
             comp.EndUndo(True)
         except Exception as e:
-            # self.model().sourceModel().comp.EndUndo(True)
             comp.EndUndo(True)
             raise e
 
@@ -494,7 +504,6 @@ class FusionInput(object):
         self.attributes = fusionInput.GetAttrs()
         self.Name = self.attributes["INPS_Name"]
         self.ID = self.attributes["INPS_ID"]
-
 
     def Refresh(self):
         self.GetAttrs()
@@ -1020,7 +1029,7 @@ class MainWindow(QMainWindow):
 
 
 css = "*, QTableCornerButton::section {\
-    font: 8pt 'tahoma';\
+    font: 9pt 'tahoma';\
     color: rgb(192, 192, 192);\
     background-color: rgb(52, 52, 52);\
 }\

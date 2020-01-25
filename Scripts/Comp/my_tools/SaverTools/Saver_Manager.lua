@@ -25,11 +25,11 @@ win = disp:AddWindow({
         
         -- Add your GUI elements here:
         ui:HGroup{VMargin = 10,
-          ui:Button{ID = 'Disable', Text = 'Solo Selected',},
-          ui:Button{ID = 'Enable', Text = 'Enable All',},
+          ui:Button{ID = 'Solo', Text = 'Solo Selected',},
         },
-        ui:VGroup{
-          ui.Button{ID= 'SelectAll', Text = 'Select All Savers'}
+        ui:HGroup{
+          ui.Button{ID= 'SelectAll', Text = 'Select All'},
+          ui:Button{ID = 'Enable', Text = 'Enable All',},
         },
         ui:VGroup{
           ui.Button{ID= 'CreateLoaders', Text = 'Create Loaders'}
@@ -53,7 +53,7 @@ function check_enabled(tool)
     return tool:GetAttrs('TOOLB_PassThrough')
 end
 
-function win.On.Disable.Clicked(ev)
+function win.On.Solo.Clicked(ev)
     local cmp = fu:GetCurrentComp()
     local selectedSavers = cmp:GetToolList(true, "Saver")
     local allSavers = cmp:GetToolList(false, "Saver")
@@ -88,7 +88,6 @@ end
 
 function win.On.CreateLoaders.Clicked(ev)
     local cmp = fu:GetCurrentComp()
-    Scripts/Comp/my_tools/SaverTools/Saver_Manager.lua
     cmp:RunScript('Scripts:Comp/my_tools/SaverTools/LoaderFromSaver.lua')
 end
 
