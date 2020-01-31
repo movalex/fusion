@@ -40,7 +40,6 @@ local win = disp:AddWindow({
 	TargetID = 'Layouter',
 	Geometry = {originX, originY, minWidth, minHeight},
 	WindowTitle = 'Layouter',
-    -- WindowFlags = {SplashScreen = true},
     Events = {Close = true, KeyPress = true, KeyRelease = true, },
     ui:VGroup{
 		ui:HGroup{
@@ -65,7 +64,6 @@ function win.On.Close.Clicked(ev)
     disp:ExitLoop()
 end
 
--- If the shift key is pressed, set our flag
 function win.On.Win.KeyPress(ev)
 	if ev.Key == 16777248 then
 		shiftdown = true
@@ -76,7 +74,6 @@ function win.On.Win.KeyPress(ev)
 	end
 end
 
--- If the shift key is released, reset our flag
 function win.On.Win.KeyRelease(ev)
 	if ev.Key == 16777248 then
 		shiftdown = false
@@ -102,6 +99,7 @@ function win.On.LL.Clicked(ev)
 		print("don't push that shift button!")
 	else
 		print("Load existing layout")
+        fu:SetData("Layouter.Set", true)
 		get_cf():LoadLayout()
 	end
 end
@@ -116,6 +114,7 @@ function win.On.reset.Clicked(ev)
 		comp:DoAction("Fusion_View_Show", {view = "Nodes", show = true})
 		comp:DoAction("Fusion_View_Show", {view = "Time", show = true})
 		comp:DoAction("Fusion_View_Show", {view = "Inspector", show = true})
+        fu:SetData("Layouter.Set", false)
 	end
 end
 
