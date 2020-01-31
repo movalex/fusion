@@ -35,7 +35,7 @@ function get_cf()
 	return cf
 end
 
-local win = disp:AddWindow({
+win = disp:AddWindow({
 	ID = 'Win',
 	TargetID = 'Layouter',
 	Geometry = {originX, originY, minWidth, minHeight},
@@ -44,14 +44,84 @@ local win = disp:AddWindow({
     ui:VGroup{
 		ui:HGroup{
 			ui:Button{ID = "LL", Text = "Load Layout",Weight = .3, MinimumSize = {5,10},},
-			ui:Button{ID = "reset", Text = "reset", Weight = .2, MinimumSize = {5,10},},
+			ui:Button{ID = "reset", Text = "RESET", Weight = .2, MinimumSize = {5,10},},
 			ui:Button{ID = "SL", Text = "Save Layout", Weight = .3, MinimumSize = {5,10},},
 		},
-        ui:Button{ID = "Close", Text = "Close"},
-        },
-    })
+ui:HGroup{
+        ui:Button{ID = "Close", Text = "Close", Weight = .9},
+        ui:Button{ID = "Info", Text = 'i', Weight = .1, MinimumSize={3,12}, Flat = false}
+        }
+    },
+})
 
 local itm = win:GetItems()
+
+
+function AboutWindow()
+	local URL = 'https://abogomolov.com'
+
+	local width,height = 500,250
+	aboutWin = disp:AddWindow({
+		ID = "AboutWin",
+		WindowTitle = 'About Dialog',
+		WindowFlags = {Window = true, WindowStaysOnTopHint = true,},
+		Geometry = {200, 200, width, height},
+
+		ui:VGroup{
+			ID = 'root',
+
+			-- Add your GUI elements here:
+			ui:TextEdit{ID = 'AboutText', ReadOnly = true, Alignment = {AlignHCenter = true, AlignTop = true}, HTML = '<h1>Layouter</h1>\n<p>Version 0.1 - January 31, 2020</p>\n<p>Use this script to quickly switch between layouts in Fusion 16. This is undocumented feature. Make sure you are using correct layout presets (installed separately)<p>\n<p>Copyright &copy; 2020 Alexey Bogomolov (MIT License)</p>',},
+
+			ui:VGroup{
+				Weight = 0,
+
+                ui:Label{
+					ID = "EMAIL",
+					Text = 'Email: <a href="' .. 'mailto:mail@abogomolov.com' .. '">' .. 'mail@abogomolov.com' .. '</a>',
+					Alignment = {
+						AlignHCenter = true,
+						AlignTop = true,
+					},
+					WordWrap = true,
+					OpenExternalLinks = true,
+				},
+                ui:Label{
+					ID = "Donate",
+					Text = 'Donate: <a href="' .. 'https://paypal.me/aabogomolov/5usd' .. '">' .. 'https://paypal.me/aabogomolov/' .. '</a>',
+					Alignment = {
+						AlignHCenter = true,
+						AlignTop = true,
+					},
+					WordWrap = true,
+					OpenExternalLinks = true,
+				},
+
+			},
+		},
+	})
+	itm = aboutWin:GetItems()
+
+	-- The window was closed
+	function aboutWin.On.AboutWin.Close(ev)
+		disp:ExitLoop()
+        win:Show()
+	end
+
+	aboutWin:Show()
+	disp:RunLoop()
+	aboutWin:Hide()
+
+	return aboutWin,aboutWin:GetItems()
+end
+
+
+function win.On.Info.Clicked(ev)
+    win:Hide()
+    AboutWindow()
+end
+
+
 
 function win.On.Win.Close(ev)
 	disp:ExitLoop()
@@ -84,6 +154,8 @@ function win.On.Win.KeyRelease(ev)
 
 	end
 end
+
+
 function win.On.SL.Clicked(ev)
 	if shiftdown then
 		print("don't push that shift button!")
@@ -121,3 +193,4 @@ end
 win:Show()
 disp:RunLoop()
 win:Hide()
+
