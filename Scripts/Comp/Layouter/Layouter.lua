@@ -23,44 +23,48 @@ if not mainWindow or mainWindow.Width == -1 then
 end
 
 local minWidth, minHeight = 265, 75
-local originX, originY = mainWindow.Left + (mainWindow.Width/2) - (minWidth/2), mainWindow.Top + (mainWindow.Height/2) - (minHeight/2)
+local originX, originY = mainWindow.Left + (mainWindow.Width/2) - (minWidth/2), mainWindow.Top + ((mainWindow.Height/2) - (minHeight/2)+50)
 
 print(string.format("[Layouter] - v%s %s ", _VERSION, _date))
 print(string.format("[Created By] %s\n\n", _author))
 
 
 function get_cf()
-	local comp = fu:GetCurrentComp()
+	comp = fu:GetCurrentComp()
 	local cf = comp.CurrentFrame
 	return cf
 end
 
+layouterWin = ui:FindWindow("Layouter")
+if layouterWin then
+    layouterWin:Raise()
+    layouterWin:ActivateWindow()
+    return
+end
 win = disp:AddWindow({
-	ID = 'Win',
-	TargetID = 'Layouter',
-	Geometry = {originX, originY, minWidth, minHeight},
-	WindowTitle = 'Layouter',
-    Events = {Close = true, KeyPress = true, KeyRelease = true, },
+    ID = 'Layouter',
+    TargetID = 'Layouter',
+    Geometry = {originX, originY, minWidth, minHeight},
+    WindowTitle = 'Layouter',
+    Events = {KeyPress = true, KeyRelease = true, },
     ui:VGroup{
-		ui:HGroup{
-			ui:Button{ID = "LL", Text = "Load Layout",Weight = .3, MinimumSize = {5,10},},
-			ui:Button{ID = "reset", Text = "RESET", Weight = .2, MinimumSize = {5,10},},
-			ui:Button{ID = "SL", Text = "Save Layout", Weight = .3, MinimumSize = {5,10},},
-		},
-ui:HGroup{
+        ui:HGroup{
+            ui:Button{ID = "LL", Text = "Load Layout",Weight = .3, MinimumSize = {5,10},},
+            ui:Button{ID = "reset", Text = "RESET", Weight = .2, MinimumSize = {5,10},},
+            ui:Button{ID = "SL", Text = "Save Layout", Weight = .3, MinimumSize = {5,10},},
+        },
+    ui:HGroup{
         ui:Button{ID = "Close", Text = "Close", Weight = .9},
         ui:Button{ID = "Info", Text = 'i', Weight = .1, MinimumSize={3,12}, Flat = false}
         }
     },
 })
-
-local itm = win:GetItems()
-
+itm = win:GetItems()
 
 function AboutWindow()
 	local URL = 'https://abogomolov.com'
 
-	local width,height = 500,250
+	local width, height = 500, 250
 	aboutWin = disp:AddWindow({
 		ID = "AboutWin",
 		WindowTitle = 'About Dialog',
@@ -71,7 +75,7 @@ function AboutWindow()
 			ID = 'root',
 
 			-- Add your GUI elements here:
-			ui:TextEdit{ID = 'AboutText', ReadOnly = true, Alignment = {AlignHCenter = true, AlignTop = true}, HTML = '<h1>Layouter</h1>\n<p>Version 0.1 - January 31, 2020</p>\n<p>Use this script to quickly switch between layouts in Fusion 16. This is undocumented feature. Make sure you are using correct layout presets (installed separately)<p>\n<p>Copyright &copy; 2020 Alexey Bogomolov (MIT License)</p>',},
+			ui:TextEdit{ID = 'AboutText', ReadOnly = true, Alignment = {AlignHCenter = true, AlignTop = true}, HTML = '<h1>Layouter</h1>\n<p>Version 0.1 - January 31, 2020</p>\n<p>Use this script to quickly switch between layouts in Fusion 16. This is undocumented feature. Most reliably works on MacOS. Sorry for that :)</p> <p>Make sure you are using correct layout presets (installed separately)<p>\n<p>Copyright &copy; 2020 Alexey Bogomolov (MIT License)</p>',},
 
 			ui:VGroup{
 				Weight = 0,
@@ -121,9 +125,7 @@ function win.On.Info.Clicked(ev)
     AboutWindow()
 end
 
-
-
-function win.On.Win.Close(ev)
+function win.On.Layouter.Close(ev)
 	disp:ExitLoop()
 end
 
@@ -182,10 +184,10 @@ function win.On.reset.Clicked(ev)
 	else
 		print("resetting to default layout")
 		get_cf():ResetLayout()
-		comp:DoAction("Fusion_View_Show", {view = "Nodes", show = false})
-		comp:DoAction("Fusion_View_Show", {view = "Nodes", show = true})
-		comp:DoAction("Fusion_View_Show", {view = "Time", show = true})
-		comp:DoAction("Fusion_View_Show", {view = "Inspector", show = true})
+        comp:DoAction("Fusion_View_Show", {view = "Nodes", show = false})
+        comp:DoAction("Fusion_View_Show", {view = "Nodes", show = true})
+		-- comp:DoAction("Fusion_View_Show", {view = "Time", show = true})
+		-- comp:DoAction("Fusion_View_Show", {view = "Inspector", show = true})
         fu:SetData("Layouter.Set", false)
 	end
 end
