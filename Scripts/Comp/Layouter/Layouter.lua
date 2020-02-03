@@ -175,7 +175,6 @@ function win.On.LL.Clicked(ev)
 		print("don't push that shift button!")
 	else
 		print("Load existing layout")
-        fu:SetData("Layouter.Set", true)
 		get_cf():LoadLayout()
 	end
 end
@@ -190,7 +189,6 @@ function win.On.reset.Clicked(ev)
         comp:DoAction("Fusion_View_Show", {view = "Nodes", show = true})
 		-- comp:DoAction("Fusion_View_Show", {view = "Time", show = true})
 		-- comp:DoAction("Fusion_View_Show", {view = "Inspector", show = true})
-        fu:SetData("Layouter.Set", false)
 	end
 end
 
