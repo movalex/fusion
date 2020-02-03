@@ -23,7 +23,7 @@ if not mainWindow or mainWindow.Width == -1 then
 end
 
 local minWidth, minHeight = 265, 75
-local originX, originY = mainWindow.Left + (mainWindow.Width/2) - (minWidth/2), mainWindow.Top + ((mainWindow.Height/2) - (minHeight/2)+50)
+local originX, originY = mainWindow.Left + (mainWindow.Width/2) - (minWidth/2), mainWindow.Top + ((mainWindow.Height/2) - (minHeight/2)-100)
 
 print(string.format("[Layouter] - v%s %s ", _VERSION, _date))
 print(string.format("[Created By] %s\n\n", _author))
@@ -35,18 +35,20 @@ function get_cf()
 	return cf
 end
 
-layouterWin = ui:FindWindow("Layouter")
+layouterWin = ui:FindWindow("LT")
 if layouterWin then
     layouterWin:Raise()
     layouterWin:ActivateWindow()
     return
 end
+
+
 win = disp:AddWindow({
-    ID = 'Layouter',
+    ID = 'LT',
     TargetID = 'Layouter',
     Geometry = {originX, originY, minWidth, minHeight},
     WindowTitle = 'Layouter',
-    Events = {KeyPress = true, KeyRelease = true, },
+    Events = {Close = true, KeyPress = true, KeyRelease = true, },
     ui:VGroup{
         ui:HGroup{
             ui:Button{ID = "LL", Text = "Load Layout",Weight = .3, MinimumSize = {5,10},},
@@ -54,7 +56,7 @@ win = disp:AddWindow({
             ui:Button{ID = "SL", Text = "Save Layout", Weight = .3, MinimumSize = {5,10},},
         },
     ui:HGroup{
-        ui:Button{ID = "Close", Text = "Close", Weight = .9},
+        ui:Button{ID = "LClose", Text = "Close", Weight = .9},
         ui:Button{ID = "Info", Text = 'i', Weight = .1, MinimumSize={3,12}, Flat = false}
         }
     },
@@ -125,33 +127,33 @@ function win.On.Info.Clicked(ev)
     AboutWindow()
 end
 
-function win.On.Layouter.Close(ev)
-	disp:ExitLoop()
+function win.On.LT.Close(ev)
+    disp:ExitLoop()
 end
 
 -- A flag to track shift state
 local shiftdown = false
 
-function win.On.Close.Clicked(ev)
+function win.On.LClose.Clicked(ev)
     disp:ExitLoop()
 end
 
-function win.On.Win.KeyPress(ev)
+function win.On.LT.KeyPress(ev)
 	if ev.Key == 16777248 then
 		shiftdown = true
 		itm.LL.Text = "Wow!"
 		itm.SL.Text = "Such Script!"
-		itm.Close.Text = "Many Useful!"
+		itm.LClose.Text = "Many Useful!"
 		itm.reset.Text = "Wow!"
 	end
 end
 
-function win.On.Win.KeyRelease(ev)
+function win.On.LT.KeyRelease(ev)
 	if ev.Key == 16777248 then
 		shiftdown = false
 		itm.LL.Text = "Load Layout"
 		itm.SL.Text = "Save layout"
-		itm.Close.Text = "Close"
+		itm.LClose.Text = "Close"
 		itm.reset.Text = "reset"
 
 	end
