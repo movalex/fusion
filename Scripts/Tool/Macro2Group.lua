@@ -8,8 +8,7 @@ A Tool script that converts a Macro to a Group and vice versa, depending on
 Change log:
 v0.3        Alex Bogomolov      refactoring
                                 add check if clipboard did not copy the last symbol (MacOS issue?)
-                                comment redundant function
-                                remove House of Secrets prefix from file name, move to tool's root directory (May 1, 2019)
+                                remove unused fixNrOfInputs function
 
 v0.2		Pieter Van Houte	changed getclipboard() to bmd.getclipboard() for Fusion 9
 								changed setclipboard() to bmd.setclipboard() for Fusion 9
@@ -18,7 +17,7 @@ v0.2		Pieter Van Houte	changed getclipboard() to bmd.getclipboard() for Fusion 9
 v0.1		Sven Neve			initial release: version 0.1 (July 10, 2012)
 	
 --]]--
-version = "version 0.3 (March 06, 2018)"
+version = "version 0.3 (February 04, 2020)"
 --[[
 
  Written by Sven Neve (sven[AT]houseofsecrets[DOT]nl)
@@ -49,6 +48,11 @@ version = "version 0.3 (March 06, 2018)"
 
 --]]
 
+if not tool then
+    print('this is a tool script')
+    return
+end
+
 function convert(tool, conv_srting)
     comp:Copy(tool)
     clipboard = bmd.getclipboard()
@@ -75,13 +79,13 @@ elseif attrs.TOOLS_RegID == "GroupOperator" then
     output = convert(tool, 'MacroOperator')
 else
     print("Select Macro or Group")
+    return
 end
 
 bmd.setclipboard(output)
 comp:SetActiveTool()
 comp:Paste()
 
---TODO : Add some error handling, newTool and tool could be nil, so GetAttrs() could error out.
 newTool = comp.ActiveTool
 
 for j, input in pairs(tool:GetInputList()) do
