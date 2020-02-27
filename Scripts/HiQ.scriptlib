@@ -1,5 +1,0 @@
-if not comp then
-    print('setting HQ')
-elseif comp:GetAttrs().COMPS_FileName == "" then
-   comp:SetAttrs{COMPB_HiQ = true}
-end
