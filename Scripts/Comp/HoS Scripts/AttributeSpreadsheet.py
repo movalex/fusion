@@ -947,18 +947,21 @@ QHeaderView::up-arrow {\
 
 # We define fu and comp as globals so we can basically run the same script from console as well from within Fusion
 if __name__ == "__main__":
-    fu = bmd.scriptapp("Fusion")
+    # fu = bmd.scriptapp("Fusion")
+    # if fu.GetResolve():
+    #     print('This script works only with standalone Fusion')
+    #     sys.exit()
     if not fu:
         raise Exception("No instance of Fusion found running.")
     comp = fu.GetCurrentComp()
 
-app = QApplication.instance()  # checks if QApplication already exists
-if not app:  # create QApplication if it doesnt exist
-    app = QApplication([])
-app.setStyleSheet(css)
+main_app = QApplication.instance()  # checks if QApplication already exists
+if not main_app:  # create QApplication if it doesnt exist
+    main_app = QApplication([])
+main_app.setStyleSheet(css)
 main = MainWindow()
 main.setWindowTitle("Attribute Spreadsheet 0.1.r{}".format(__VERSION__))
 main.setMinimumSize(QSize(640, 200))
 main.show()
 main.loadFusionData()
-app.exec_()
+main_app.exec_()
