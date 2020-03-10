@@ -1,6 +1,6 @@
 local ui = fu.UIManager
 local disp = bmd.UIDispatcher(ui)
-local width, height = 220,110
+local width, height = 220,160
 
 comp = fu:GetCurrentComp()
 
@@ -35,12 +35,13 @@ end
 
 
 function showUI()
-    
-    local x = fu:GetMousePos()[1]
-    local y = fu:GetMousePos()[2]
-    if y < 90 then
-        y = 130
-    end
+    local x = 500
+    local y = 600
+    -- local x = fu:GetMousePos()[1]
+    -- local y = fu:GetMousePos()[2]
+    -- if y < 90 then
+    --     y = 130
+    -- end
 
     win = disp:AddWindow({
         ID = "RRanger",
@@ -68,7 +69,6 @@ function showUI()
             },
             ui:HGroup{
                 VMargin = 3,
-                -- ui:VGap(20),
                 ui:Button{
                     ID = 'minus', Text = '-',
                 },
@@ -77,15 +77,20 @@ function showUI()
                     
                 }
             },
+            ui:HGroup{
+                VMargin = 3,
+                ui:Button{
+                    ID = 'setIn', Text = 'saver IN',
+                },
+                    ui:Button{
+                    ID = 'setOut', Text = 'saver out',
+                }
+            },
             ui:VGroup{
                 VMargin = 3,
-                -- ui:VGap(20),
                 ui:Button{
                     ID = 'reset', Text = 'reset globals',
                 },
-                -- ui:Button{
-                --     ID = 'close', Text = 'close'
-                -- },
             },
         }
     })
@@ -109,6 +114,18 @@ function showUI()
         disp:ExitLoop()
     end
    
+    function win.On.setIn.Clicked (ev)
+        tool = comp.ActiveTool
+        if tool and tool.ID == 'Saver' then
+            tool:SetAttrs({TOOLNT_EnabledRegion_Start = comp.CurrentTime})
+        end
+    end
+    function win.On.setOut.Clicked (ev)
+        tool = comp.ActiveTool
+        if tool and tool.ID == 'Saver' then
+            tool:SetAttrs({TOOLNT_EnabledRegion_End = comp.CurrentTime})
+        end
+    end
     function win.On.reset.Clicked(ev)
         gStart = comp:GetAttrs().COMPN_GlobalStart
         if gStart < 0 then
