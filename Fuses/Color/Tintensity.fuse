@@ -1,0 +1,364 @@
+--[[--
+Tintensity by Learn Now FX.
+
+This fuse adds intense colorization and an alpha channel to images.
+This fuse also uses DCTL for GPU acceleration, and because of this
+only works in Resolve/Fusion 16+.  
+
+I would like to give a huge thanks Bryan Ray, for helping this fuse.
+I couldn't have done it without you!!
+
+I would also like to thank June Yu and the entire WSL community,
+for their/your help and support!!
+
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sub-license, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+----------------------------------------------------------------------
+
+It you have any issues with this fuse, or would like to report a bug,
+Please don't hesitate to contact me via Email @ namos737@gmail.com
+Thank you.
+
+Changelog:
+version 1.0, 11/03/2020:
+
+version 1.0, 11/03/2020:
+* Initial release
+
+--]]--
+
+
+
+
+
+
+FuRegisterClass("Tintensity", CT_Tool, {
+  REGS_Category = "Fuses\\Color",
+  REGS_OpIconString = "TNT",
+  REGS_OpDescription = "Tintensity",
+  REG_OpNoMask = true,
+  REG_NoBlendCtrls = true,
+  REG_NoObjMatCtrls = true,
+  REG_NoMotionBlurCtrls = true,
+})
+ 
+ 
+TintensityParams = [[
+    float red;
+    float green;
+    float blue;
+    float vibrance;
+    float saturation;
+    float gain;
+    float gamma;
+    int unmult;
+    int invert;
+    float again;
+    int clip;
+    int srcCompOrder;
+]]
+ 
+TintensityKernel = [[
+    __KERNEL__ void TintensityKernel(__CONSTANTREF__ TintensityParams *params, __TEXTURE2D__ src, __TEXTURE2D_WRITE__ dst)
+    {
+        DEFINE_KERNEL_ITERATORS_XY(x, y);
+        const float4 col = _tex2DVecN(src, x, y, params->srcCompOrder);
+               
+                // The Invert Control math goes here:
+                if (params->invert == 1) {
+                col.x = 1 - col.x;
+                col.y = 1 - col.y;
+                col.z = 1 - col.z;
+                }
+               
+           // The Color Picker math goes here:
+           col.x *= params->red;
+           col.y *= params->green;
+           col.z *= params->blue;
+                             
+										 
+                //The Vibrance math goes here:
+                float channelaverage = (col.x + col.y + col.z) / 3;
+                float channelm = _fmaxf(col.x, _fmaxf(col.y, col.z));
+                float amount = (channelm - channelaverage) * (-params->vibrance * 3);
+               
+               
+               
+                 col.x *= (1-amount);
+                 col.y *= (1-amount);
+                 col.z *= (1-amount);
+								 
+								 col.x += + (channelm * amount);
+								 col.y += + (channelm * amount);
+								 col.z += + (channelm * amount);
+                
+                 
+            // The Saturation math goes here:
+           float Luma = col.x * 0.299f + col.y * 0.587f + col.z * 0.114f;
+                 
+           col.x = params->saturation * col.x + (1-params->saturation) * Luma;
+           col.y = params->saturation * col.y + (1-params->saturation) * Luma;
+           col.z = params->saturation * col.z + (1-params->saturation) * Luma;
+ 
+                 
+                 
+                 
+              // The Gain control math goes here:
+              col.x *=  params->gain;
+              col.y *=  params->gain;
+              col.z *=  params->gain;
+               
+                                 
+        // The Gamma control math goes here:
+        col.x = pow(col.x, 1/params->gamma);
+        col.y = pow(col.y, 1/params->gamma);
+        col.z = pow(col.z, 1/params->gamma);
+               
+               
+            // The UnMultiply math goes here:
+            if (params->unmult == 1)
+            {col.w *= (Luma + params->again);
+            }
+             
+             
+ 
+             
+               
+               
+ 
+           
+        //the Clip negative Pixels math goes here:        
+        if (params->clip == 1)
+        {  
+        if (col.x < 0) { col.x = 0;}
+           
+        if (col.y < 0) { col.y = 0;}
+   
+        if (col.z < 0) { col.z = 0;}          
+        }
+ 
+ 
+ 
+        _tex2DVec4Write(dst, x, y, col);
+    }
+]]
+ 
+function Create()
+ self:BeginControlNest("Color", "Color", true, {})
+  InColorR= self:AddInput("Red", "Red", {
+    ICS_Name            = "Color",
+    LINKID_DataType     = "Number",
+    INPID_InputControl  = "ColorControl",
+    INP_Default         = 0,
+    INP_MaxScale        = 1.0,
+    ICD_Center          = 1.0,
+    INP_DoNotifyChanged = true,
+    CLRC_ShowWheel      = False,
+    IC_ControlGroup     = 1,
+    IC_ControlID        = 0,
+    IC_Visible          = true,
+  })
+ 
+  InColorG = self:AddInput("Green", "Green", {
+    LINKID_DataType     = "Number",
+    INPID_InputControl  = "ColorControl",
+    INP_Default         = 0.5,
+    INP_DoNotifyChanged = true,
+    IC_ControlGroup     = 1,
+    IC_ControlID        = 1,
+  })
+ 
+  InColorB = self:AddInput("Blue", "Blue", {
+    LINKID_DataType     = "Number",
+    INPID_InputControl  = "ColorControl",
+    INP_Default         = 1,
+    INP_DoNotifyChanged = true,
+    IC_ControlGroup     = 1,
+    IC_ControlID        = 2,
+  })
+    self:EndControlNest()
+   
+    self:BeginControlNest("Intensity", "Intensity", true, {})
+   InVibrance = self:AddInput("Vibrance", "Vibrance", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_MinScale = 0,
+    INP_MaxScale = 3,
+    INP_Default = 1,
+  })
+   
+  InSaturation = self:AddInput("Saturation", "Saturation", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_MinScale = 0,
+    INP_MaxScale = 2,
+    INP_Default = 1,
+  })
+ 
+  InGain = self:AddInput("Gain", "Gain", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_MinScale = -0,
+    INP_MaxScale = 5,
+    INP_Default = 1,
+  })
+   
+ 
+   InGamma = self:AddInput("Gamma", "Gamma", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_MinScale = 0,
+    INP_MaxScale = 2,
+    INP_Default = 1,
+  })
+    self:EndControlNest()
+   
+    self:BeginControlNest("Alpha", "Alpha", true, {})
+  InUnMultiply = self:AddInput("UnMultiply", "UnMultiply", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "CheckboxControl",
+    INP_Integer = true,
+    INP_Default = 0,
+  })
+   
+   
+  InInvert = self:AddInput("Invert", "Invert", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "CheckboxControl",
+    INP_Integer = true,
+    ICD_Width = 0.5,
+    INP_Default = 0,
+  })
+   
+  InAlphaGain = self:AddInput("Alpha Gain", "Alpha Gain", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_MinScale = 0,
+    INP_MaxScale = 1,
+    INP_Default = 0,
+  })
+    self:EndControlNest()
+   
+ self:BeginControlNest("Advanced", "Advanced", false, {})
+  InDepth = self:AddInput("Depth", "Depth", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "ComboControl",
+    INP_Default = 2.0,
+    INP_Integer = true,
+    ICD_Width = 1.0,
+    CC_LabelPosition = "Vertical",
+    INP_DoNotifyChanged = true,
+    { CCS_AddString = "int8", },
+    { CCS_AddString = "int16", },
+    { CCS_AddString = "float 16", },
+    { CCS_AddString = "float 32", },
+   })
+ 
+  InClip = self:AddInput("Clip Negative Pixels", "Clip Negative Pixels", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "CheckboxControl",
+    INP_Integer = true,
+    ICD_Width = 1.0,
+    INP_Default = 1,
+  })
+	
+  DemoButton = self:AddInput("Demo", "Demo", {
+		LINKS_Name = "Demo",
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ButtonControl",
+		BTNCS_Execute = [[
+------------------------------------------------------------------------
+-- Open a webpage window up using your default web browser
+					platform = (FuPLATFORM_WINDOWS and "Windows") or (FuPLATFORM_MAC and "Mac") or (FuPLATFORM_LINUX and "Linux")
+					function OpenURL(siteName, path)
+						if platform == "Windows" then
+							-- Running on Windows
+							command = "explorer \"" .. path .. "\""
+						elseif platform == "Mac" then
+							-- Running on Mac
+							command = "open \"" .. path .. "\" &"
+						 elseif platform == "Linux" then
+							-- Running on Linux
+							command = "xdg-open \"" .. path .. "\" &"
+						else
+							print("[Error] There is an invalid Fusion platform detected")
+							return
+						end
+						os.execute(command)
+						-- print("[Launch Command] ", command)
+						print("[Opening URL] [" .. siteName .. "] " .. path)
+					end
+
+					OpenURL("Demo", "https://youtube.com/LearnNowFX")
+]],
+    })
+    self:EndControlNest()
+   
+  InImage = self:AddInput("Image", "Image", {
+    LINKID_DataType = "Image",
+    LINK_Main = 1,
+    INP_AcceptsGPUImages = true,
+    })
+ 
+  OutImage = self:AddOutput("Output", "Output", {
+    LINKID_DataType = "Image",
+    LINK_Main = 1,
+    })
+end
+ 
+ 
+ 
+function Process(req)
+    local src = InImage:GetValue(req)
+    local depth = InDepth:GetValue(req).Value
+    local dst = Image{ IMG_Like = src, IMG_Depth = depth + 1, IMG_DeferAlloc = true }
+ 
+    local node = DVIPComputeNode(req, "TintensityKernel", TintensityKernel, "TintensityParams", TintensityParams)
+    local params = node:GetParamBlock(TintensityParams)
+ 
+    params.red = InColorR:GetValue(req).Value
+    params.green = InColorG:GetValue(req).Value
+    params.blue = InColorB:GetValue(req).Value
+    params.vibrance = InVibrance:GetValue(req).Value
+    params.saturation = InSaturation:GetValue(req).Value
+    params.gain = InGain:GetValue(req).Value
+    params.gamma = InGamma:GetValue(req).Value
+    params.unmult = InUnMultiply:GetValue(req).Value
+    params.again = InAlphaGain:GetValue(req).Value
+    params.invert = InInvert:GetValue(req).Value
+    params.clip = InClip:GetValue(req).Value
+    params.srcCompOrder = src:IsMask() and 1 or 15
+ 
+    node:SetParamBlock(params)
+ 
+    node:AddInput("src", src)
+    node:AddOutput("dst", dst)
+ 
+    local ok = node:RunSession(req)
+ 
+    if not ok then
+    dst = nil
+    end
+       
+ 
+       
+       
+    OutImage:Set(req, dst)
+end

@@ -28,7 +28,7 @@ The hos_SplitEXR script will then generate a series of Loader nodes in your comp
 RELEASE NOTES
 -------------------------------------------------------------------------------
 * v2.3 Ultra 2020-3-09 by Bryan Ray and Alex Bogomolov
-    - add multipart EXR splitting option
+    - add multipart EXR splitting
     - add Undo splitting
 * v2.2 Ultra 2019-10-01 by bfloch
 	- Fix for Blender support with "local channel = string.match(channelName, "[.]([^.]+)$")"
@@ -233,6 +233,9 @@ end
 function getLoaderChannels(loader)
 	-- Get all loader channel and filter out the ones to skip
 	local sourceChannels = loader.Clip1.OpenEXRFormat.RedName:GetAttrs().INPIDT_ComboControl_ID
+    if #sourceChannels < 6 then
+        return false
+    end
 	local channels = {}
 	
 	for i, channelName in ipairs(sourceChannels) do
@@ -277,16 +280,161 @@ function getChannelData(loaderChannels)
 	end
 	return channelData
 end
+function get_loader_clip(tool)
+	local loader_clip = tool.Clip[comp.CurrentTime]
+	if not loader_clip then
+		logError("Loader contains no clips to explore")
+		return
+	end
+    print('clip: ', loader_clip)
+    return loader_clip
+end
+
+function process_channels(channelData, tool)
+	-- Ensure loader clip is valid
+    -- Update the loader node channel settings
+    for prefix, channels in pairs(channelData) do
+        -- Debug print the loader list
+        logDebug("[EXR Check 5] Loader List " .. prefix, verbose)
+
+        LDR = comp.Loader({Clip = get_loader_clip(tool)})
+
+        -- Force an initial (invalid) EXR channel name value into the OpenEXRFormat setting
+        LDR:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = prefix})
+        LDR.Clip1.OpenEXRFormat.RedName = CHANNEL_NO_MATCH
+        LDR.Clip1.OpenEXRFormat.GreenName = CHANNEL_NO_MATCH
+        LDR.Clip1.OpenEXRFormat.BlueName = CHANNEL_NO_MATCH
+        LDR.Clip1.OpenEXRFormat.AlphaName = CHANNEL_NO_MATCH
+        LDR.Clip1.OpenEXRFormat.XName = CHANNEL_NO_MATCH
+        LDR.Clip1.OpenEXRFormat.YName = CHANNEL_NO_MATCH
+        LDR.Clip1.OpenEXRFormat.ZName = CHANNEL_NO_MATCH
+        -- Refresh the OpenEXRFormat setting using real channel name data in a 2nd stage
+        for i, channelName in ipairs(channels) do
+            local channel = string.match(channelName, "[.]([^.]+)$")
+            local _channelLower = channel:lower()
+            -- Perform a channel match for renderers that use a single letter character at the end of the channel name to define the red/green/blue channels
+            -- Example: Vray names its channels like "lighting.R"
+            if (_channelLower == "r") or (_channelLower == "red") then
+                -- Red channel found
+            
+                LDR.Clip1.OpenEXRFormat.RedName = channelName
+                logDebug("[EXR Check 6] [Red Channel Assignment] " .. channelName, verbose)
+
+            elseif (_channelLower == "g") or (_channelLower == "green") then
+                -- Green channel found
+
+                LDR.Clip1.OpenEXRFormat.GreenName = channelName
+                logDebug("[EXR Check 6] [Green Channel Assignment] " .. channelName, verbose)
+            
+            elseif (_channelLower == "b") or (_channelLower == "blue") then
+                -- Blue channel found
+                
+                LDR.Clip1.OpenEXRFormat.BlueName = channelName
+                logDebug("[EXR Check 6] [Blue Channel Assignment] " .. channelName, verbose)
+            
+            elseif (_channelLower == "a") or (_channelLower == "alpha") then
+                -- Alpha channel found
+                if (skipAlpha == 0) then
+                    -- Load the regular alpha channel
+            
+                    LDR.Clip1.OpenEXRFormat.AlphaName = channelName
+                    logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. channelName, verbose)
+                
+                else
+                    -- The Skip Importing Alpha Channels checkbox was enabled in the AskUser dialog
+                
+                    LDR.Clip1.OpenEXRFormat.AlphaName = CHANNEL_NO_MATCH
+                    logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. CHANNEL_NO_MATCH, verbose)
+                
+                end
+            elseif (_channelLower == "x") then
+                -- X channel found
+                
+                LDR.Clip1.OpenEXRFormat.RedName = channelName
+                logDebug("[EXR Check 6] [X Channel Assignment] " .. channelName, verbose)
+           
+            elseif (_channelLower == "y") then
+                -- Y channel found
+               
+                LDR.Clip1.OpenEXRFormat.GreenName = channelName
+                logDebug("[EXR Check 6] [Y Channel Assignment] " .. channelName, verbose)
+           
+            elseif (_channelLower == "z") then
+                -- Z channel found
+               
+                LDR.Clip1.OpenEXRFormat.BlueName = channelName
+                logDebug("[EXR Check 6] [Z Channel Assignment] " .. channelName, verbose)
+           
+            else
+                ------------------------------------------------------------------------
+                -- Check if a Cinema4D (C4D) style EXR channel name is in use
+                -- Perform a channel match for renderers that use a phrase at the end of the channel name to define the red/green/blue channels
+                -- Example: C4D names its channels like "#0005#diffuse_direct.red"
+
+                -- Create a new empty table
+                myTableOfPhrases = {}
+                myIndex = 1
+
+                -- Break a channel name string down into individual phrases using Lua's gmatch function and the . delimiter character
+                for myPhrase in string.gmatch(channelName, "[^%.]+") do
+                    -- Add each phrase to the existing table
+                    myTableOfPhrases[myIndex] = myPhrase
+
+                        -- Iterate up the index
+                    myIndex = myIndex + 1
+                end
+
+                -- Scan through the "myTableOfPhrases" Lua table to find final phrase 
+                -- Example: The phrase "red" would be extracted from a "#0005#diffuse_direct.red" channel name.
+                tableLength = table.getn(myTableOfPhrases)
+                lastItem = myTableOfPhrases[tableLength]
+
+                -- Debug print the C4D channel assignment
+                logDebug("[EXR Check 7] [C4D Channel Phrase] " .. tostring(lastItem), verbose)
+
+                if (lastItem == "red") then
+                    -- C4D red channel found
+                    LDR.Clip1.OpenEXRFormat.RedName = channelName
+                    logDebug("[EXR Check 6] [Red Channel Assignment] " .. channelName, verbose)
+                elseif (lastItem == "green") then
+                    -- C4D green channel found
+                    LDR.Clip1.OpenEXRFormat.GreenName = channelName
+                    logDebug("[EXR Check 6] [Green Channel Assignment] " .. channelName, verbose)
+                elseif (lastItem == "blue") then
+                    -- C4D blue channel found
+                    LDR.Clip1.OpenEXRFormat.BlueName = channelName
+                    logDebug("[EXR Check 6] [Blue Channel Assignment] " .. channelName, verbose)
+                elseif (lastItem == "alpha") then
+                    -- C4D alpha channel found
+                    if (skipAlpha == 0) then
+                        -- Load the regular alpha channel
+                        LDR.Clip1.OpenEXRFormat.AlphaName = channelName
+                        logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. channelName, verbose)
+                    else
+                        -- the Skip Importing Alpha Channels checkbox was enabled in the AskUser dialog
+                        LDR.Clip1.OpenEXRFormat.AlphaName = CHANNEL_NO_MATCH
+                        logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. CHANNEL_NO_MATCH, verbose)
+                    end
+                end
+            end
+        end
+        loaders_list[counter] = LDR
+        counter = counter + 1
+    end
+    print('total loaders ' .. tostring(#loaders_list))
+    if #loaders_list > 0 then
+        return loaders_list
+    end
+end
+
 
 
 function getLoader(verbose, dialogResult, tool)
-	-- Process an individual loader node
+   	-- Process an individual loader node
 	-- Get node attributes
-    loaders_list = {}
-    counter = 0
-	local attrs = tool:GetAttrs()
+  	local attrs = tool:GetAttrs()
     flow = comp.CurrentFrame.FlowView
-    local org_x_pos, org_y_pos = flow:GetPos(tool)
+    org_x_pos, org_y_pos = flow:GetPos(tool)
 	-- Ensure node is a loader
 	local node_type = attrs.TOOLS_RegID
 	if node_type ~= "Loader" then
@@ -294,12 +442,7 @@ function getLoader(verbose, dialogResult, tool)
 		return
 	end
 
-	-- Ensure loader clip is valid
-	local loader_clip = tool.Clip[comp.CurrentTime]
-	if not loader_clip then
-		logError("Loader contains no clips to explore")
-		return
-	end
+
 
 	-- Ensure loader clip is of format EXR
 	local loader_clip_format = attrs.TOOLST_Clip_FormatName[1]
@@ -313,153 +456,64 @@ function getLoader(verbose, dialogResult, tool)
 	logDebug("[EXR Check 2] [Loader Node Atttributes]", verbose)
 	logDump(attrs, verbose)
 
-
-	-- If the Skip Importing Alpha Channels checkbox was enabled then set the alpha channel to "None" on the orignal Loader node
-	local skipAlpha = dialogResult.skipAlpha
-	if (skipAlpha == 1) then
-		tool.Clip1.OpenEXRFormat.AlphaName = CHANNEL_NO_MATCH
-	end
 	-- Filter out None,R,G,B and A as these are already used by the original Loader
 	-- If the Skip Importing Alpha Channels checkbox was enabled in the AskUser dialog then keep the alpha channel separate as an extra loader item
+    loaders_list = {}
+    counter = 0 
+    loaderChannels = getLoaderChannels(tool)
+    if not loaderChannels then
+       if tool.Clip1.OpenEXRFormat.Part then
+        comp:Lock()
+        comp:StartUndo('SplitEXR')
+        for i, exr_part in ipairs(tool.Clip1.OpenEXRFormat.Part:GetAttrs().INPIDT_ComboControl_ID) do
+            print(exr_part)
+            tool.Clip1.OpenEXRFormat.Part = exr_part
+            local LDR = comp.Loader({Clip = get_loader_clip(tool)})
+            LDR.Clip1.OpenEXRFormat.Part = exr_part
+            print(tool)
+            if not LDR then
+                print('no loader found')
+                comp:Unlock()
+                comp:EndUndo()
+                return
+            end
+            loaders_list[counter] = LDR
+            counter = counter + 1
+        end
+
+        comp:Unlock()
+        move_loaders(org_x_pos, org_y_pos, loaders_list)
+        comp:EndUndo()
+        return
+      end
+    end
+
+    -- Debug print the channel list
+    logDebug("[EXR Check 3] [Sorted Channel List]", verbose)
+    logDump(loaderChannels, verbose)
+
+    -- Get list of unique channel prefixes to know how many loaders to create
+    channelData = getChannelData(loaderChannels)
+
+    -- Debug print the loader node list
+    logDebug("[EXR Check 4] [Loader Node List]", verbose)
+    logDump(channelData, verbose)
+
+    -- process
+
+	-- If the Skip Importing Alpha Channels checkbox was enabled then set the alpha channel to "None" on the orignal Loader node
+    local skipAlpha = dialogResult.skipAlpha
+    if (skipAlpha == 1) then
+        tool.Clip1.OpenEXRFormat.AlphaName = CHANNEL_NO_MATCH
+    end
     comp:Lock()
     comp:StartUndo('SplitEXR')
-    for i, exr_part in ipairs(tool.Clip1.OpenEXRFormat.Part:GetAttrs().INPIDT_ComboControl_ID) do
-		tool.Clip1.OpenEXRFormat.Part = exr_part
-		local loaderChannels = getLoaderChannels(tool)
 
-		-- Debug print the channel list
-		logDebug("[EXR Check 3] [Sorted Channel List]", verbose)
-		logDump(loaderChannels, verbose)
-
-		-- Get list of unique channel prefixes to know how many loaders to create
-		local channelData = getChannelData(loaderChannels)
-
-		-- Debug print the loader node list
-		logDebug("[EXR Check 4] [Loader Node List]", verbose)
-		logDump(channelData, verbose)
-
-
-		-- Update the loader node channel settings
-
-		for prefix, channels in pairs(channelData) do
-			-- Debug print the loader list
-			logDebug("[EXR Check 5] Loader List " .. prefix, verbose)
-
-			-- Resolve the Loader clip name
-			-- loader = Loader({Clip = loader_clip})
-
-			loader = comp.Loader({Clip = loader_clip})
-
-			-- Force an initial (invalid) EXR channel name value into the OpenEXRFormat setting
-			loader:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = prefix})
-			loader.Clip1.OpenEXRFormat.RedName = CHANNEL_NO_MATCH
-			loader.Clip1.OpenEXRFormat.GreenName = CHANNEL_NO_MATCH
-			loader.Clip1.OpenEXRFormat.BlueName = CHANNEL_NO_MATCH
-			loader.Clip1.OpenEXRFormat.AlphaName = CHANNEL_NO_MATCH
-			loader.Clip1.OpenEXRFormat.XName = CHANNEL_NO_MATCH
-			loader.Clip1.OpenEXRFormat.YName = CHANNEL_NO_MATCH
-			loader.Clip1.OpenEXRFormat.ZName = CHANNEL_NO_MATCH
-            loader.Clip1.OpenEXRFormat.Part = exr_part
-			-- Refresh the OpenEXRFormat setting using real channel name data in a 2nd stage
-			for i, channelName in ipairs(channels) do
-				local channel = string.match(channelName, "[.]([^.]+)$")
-				local _channelLower = channel:lower()
-				-- Perform a channel match for renderers that use a single letter character at the end of the channel name to define the red/green/blue channels
-				-- Example: Vray names its channels like "lighting.R"
-				if (_channelLower == "r") or (_channelLower == "red") then
-					-- Red channel found
-					loader.Clip1.OpenEXRFormat.RedName = channelName
-					logDebug("[EXR Check 6] [Red Channel Assignment] " .. channelName, verbose)
-				elseif (_channelLower == "g") or (_channelLower == "green") then
-					-- Green channel found
-					loader.Clip1.OpenEXRFormat.GreenName = channelName
-					logDebug("[EXR Check 6] [Green Channel Assignment] " .. channelName, verbose)
-				elseif (_channelLower == "b") or (_channelLower == "blue") then
-					-- Blue channel found
-					loader.Clip1.OpenEXRFormat.BlueName = channelName
-					logDebug("[EXR Check 6] [Blue Channel Assignment] " .. channelName, verbose)
-				elseif (_channelLower == "a") or (_channelLower == "alpha") then
-					-- Alpha channel found
-					if (skipAlpha == 0) then
-						-- Load the regular alpha channel
-						loader.Clip1.OpenEXRFormat.AlphaName = channelName
-						logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. channelName, verbose)
-					else
-						-- The Skip Importing Alpha Channels checkbox was enabled in the AskUser dialog
-						loader.Clip1.OpenEXRFormat.AlphaName = CHANNEL_NO_MATCH
-						logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. CHANNEL_NO_MATCH, verbose)
-					end
-				elseif (_channelLower == "x") then
-					-- X channel found
-					loader.Clip1.OpenEXRFormat.RedName = channelName
-					logDebug("[EXR Check 6] [X Channel Assignment] " .. channelName, verbose)
-				elseif (_channelLower == "y") then
-					-- Y channel found
-					loader.Clip1.OpenEXRFormat.GreenName = channelName
-					logDebug("[EXR Check 6] [Y Channel Assignment] " .. channelName, verbose)
-				elseif (_channelLower == "z") then
-					-- Z channel found
-					loader.Clip1.OpenEXRFormat.BlueName = channelName
-					logDebug("[EXR Check 6] [Z Channel Assignment] " .. channelName, verbose)
-				else
-					------------------------------------------------------------------------
-					-- Check if a Cinema4D (C4D) style EXR channel name is in use
-					-- Perform a channel match for renderers that use a phrase at the end of the channel name to define the red/green/blue channels
-					-- Example: C4D names its channels like "#0005#diffuse_direct.red"
-
-					-- Create a new empty table
-					myTableOfPhrases = {}
-					myIndex = 1
-
-					-- Break a channel name string down into individual phrases using Lua's gmatch function and the . delimiter character
-					for myPhrase in string.gmatch(channelName, "[^%.]+") do
-						-- Add each phrase to the existing table
-						myTableOfPhrases[myIndex] = myPhrase
-
-							-- Iterate up the index
-						myIndex = myIndex + 1
-					end
-
-					-- Scan through the "myTableOfPhrases" Lua table to find final phrase 
-					-- Example: The phrase "red" would be extracted from a "#0005#diffuse_direct.red" channel name.
-					tableLength = table.getn(myTableOfPhrases)
-					lastItem = myTableOfPhrases[tableLength]
-
-					-- Debug print the C4D channel assignment
-					logDebug("[EXR Check 7] [C4D Channel Phrase] " .. tostring(lastItem), verbose)
-
-					if (lastItem == "red") then
-						-- C4D red channel found
-						loader.Clip1.OpenEXRFormat.RedName = channelName
-						logDebug("[EXR Check 6] [Red Channel Assignment] " .. channelName, verbose)
-					elseif (lastItem == "green") then
-						-- C4D green channel found
-						loader.Clip1.OpenEXRFormat.GreenName = channelName
-						logDebug("[EXR Check 6] [Green Channel Assignment] " .. channelName, verbose)
-					elseif (lastItem == "blue") then
-						-- C4D blue channel found
-						loader.Clip1.OpenEXRFormat.BlueName = channelName
-						logDebug("[EXR Check 6] [Blue Channel Assignment] " .. channelName, verbose)
-					elseif (lastItem == "alpha") then
-						-- C4D alpha channel found
-						if (skipAlpha == 0) then
-							-- Load the regular alpha channel
-							loader.Clip1.OpenEXRFormat.AlphaName = channelName
-							logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. channelName, verbose)
-						else
-							-- the Skip Importing Alpha Channels checkbox was enabled in the AskUser dialog
-							loader.Clip1.OpenEXRFormat.AlphaName = CHANNEL_NO_MATCH
-							logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. CHANNEL_NO_MATCH, verbose)
-						end
-					end
-				end
-			end
-        end
-        loaders_list[counter] = loader
-        counter = counter + 1
-    end
+    loaders_list = process_channels(channelData, tool)
+    
     comp:Unlock()
     comp:EndUndo()
+
     move_loaders(org_x_pos, org_y_pos, loaders_list)
 end
 
@@ -569,3 +623,4 @@ print(string.format("[Processing Time] %.3f s", os.difftime(os.time(), t_start))
 --     comp:Unlock()
 -- end
 print("[Done]")
+collectgarbage()
