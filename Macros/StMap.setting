@@ -1,0 +1,231 @@
+{
+	Tools = ordered() {
+		StMap = MacroOperator {
+			CtrlWZoom = false,
+			Inputs = ordered() {
+				Background = InstanceInput {
+					SourceOp = "ImageIn",
+					Source = "Input",
+				},
+				Soften = InstanceInput {
+					SourceOp = "Displace",
+					Source = "Spread",
+					Name = "Soften",
+					MaxScale = 1,
+					Default = 0.5,
+				},
+				Foreground = InstanceInput {
+					SourceOp = "UVIn",
+					Source = "Input",
+				},
+				EffectMask = InstanceInput {
+					SourceOp = "Merge3",
+					Source = "EffectMask",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "SetDomain2",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Pos = { 622.204, 231.939 },
+				Flags = {
+					Expanded = true,
+					AllowPan = false,
+					ConnectedSnap = true,
+					AutoSnap = true,
+					AspectPics = false,
+					ShowInstance = false,
+					Thumbnails = false,
+					RemoveRouters = true
+				},
+				Size = { 1148.51, 267.92, 574.253, 24.2424 },
+				Direction = "Horizontal",
+				PipeStyle = "Direct",
+				Scale = 1,
+				Offset = { 0, -3.03676 }
+			},
+			Tools = ordered() {
+				ImageIn = PipeRouter {
+					CtrlWShown = false,
+					NameSet = true,
+					ViewInfo = PipeRouterInfo { Pos = { -104.141, 209.536 } },
+				},
+				ImageResize = BetterResize {
+					CtrlWShown = false,
+					Inputs = {
+						Width = Input {
+							Value = 4594,
+							Expression = "UVIn.Input.OriginalWidth",
+						},
+						Height = Input {
+							Value = 2424,
+							Expression = "UVIn.Input.OriginalHeight",
+						},
+						HiQOnly = Input { Value = 0, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						FilterMethod = Input { Value = 5, },
+						Input = Input {
+							SourceOp = "ImageIn",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -71.3569, 144.081 } },
+				},
+				Displace = Displace {
+					Inputs = {
+						Type = Input { Value = 1, },
+						XRefraction = Input { Value = 1, },
+						YRefraction = Input {
+							Value = 0.527644754026992,
+							Expression = "XRefraction*self.Input.OriginalHeight/self.Input.OriginalWidth",
+						},
+						Spread = Input { Value = 0.5, },
+						Input = Input {
+							SourceOp = "ImageResize",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "UVMap",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 196.893, 144.081 } },
+				},
+				Merge3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "ImageIn",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Displace",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 196.893, 209.536 } },
+				},
+				UVReference = Custom {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						LUTIn1 = Input {
+							SourceOp = "Baseline_UV_1LUTIn1",
+							Source = "Value",
+						},
+						LUTIn2 = Input {
+							SourceOp = "Baseline_UV_1LUTIn2",
+							Source = "Value",
+						},
+						LUTIn3 = Input {
+							SourceOp = "Baseline_UV_1LUTIn3",
+							Source = "Value",
+						},
+						LUTIn4 = Input {
+							SourceOp = "Baseline_UV_1LUTIn4",
+							Source = "Value",
+						},
+						RedExpression = Input { Value = "x", },
+						GreenExpression = Input { Value = "y", },
+						BlueExpression = Input { Value = "0", },
+						Image1 = Input {
+							SourceOp = "ImageResize",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 70.7751, 77.4136 } },
+				},
+				Baseline_UV_1LUTIn1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 0, Blue = 0 },
+					CtrlWShown = false,
+				},
+				Baseline_UV_1LUTIn2 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 204, Blue = 0 },
+					CtrlWShown = false,
+				},
+				Baseline_UV_1LUTIn3 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 0, Blue = 204 },
+					CtrlWShown = false,
+				},
+				Baseline_UV_1LUTIn4 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 204, Blue = 204 },
+					CtrlWShown = false,
+				},
+				UVMap = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Operation = Input { Value = 2, },
+						ToUTexture = Input { Value = 0, },
+						ToVTexture = Input { Value = 1, },
+						Background = Input {
+							SourceOp = "ChangeDepth1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "UVReference",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 196.893, 77.4136 } },
+				},
+				ChangeDepth1 = ChangeDepth {
+					CtrlWShown = false,
+					Inputs = {
+						Depth = Input { Value = 4, },
+						Dither = Input { Value = 2, },
+						Input = Input {
+							SourceOp = "UVIn",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 196.893, 7.97958 } },
+				},
+				UVIn = PipeRouter {
+					CtrlWShown = false,
+					NameSet = true,
+					ViewInfo = PipeRouterInfo { Pos = { 54.2651, 7.97958 } },
+				},
+				SetDomain2 = SetDomain {
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "Merge3",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 511, 209.536 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "StMap"
+}
