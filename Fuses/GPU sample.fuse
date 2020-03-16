@@ -1,0 +1,214 @@
+--------------------------------
+-- Registry declaration
+
+FuRegisterClass("GPUSampleFuse", CT_SourceTool, {
+	REGS_Category = "Sample",
+	REGS_OpIconString = "GFu",
+	REGS_OpDescription = "GPU Sample Fuse",
+
+	REG_NoObjMatCtrls = true,
+	REG_NoMotionBlurCtrls = true,
+
+	REG_Source_GlobalCtrls = true,
+	REG_Source_SizeCtrls = true,
+	REG_Source_AspectCtrls = true,
+	REG_Source_DepthCtrls = true,
+	})
+
+--------------------------------
+-- Description of kernel parameters
+
+GradientParams = [[
+	float col[4];
+	int dstsize[2];
+]]
+
+CircleParams = [[
+	float amp;
+	float damp;
+	float freq;
+	float phase;
+	float center[2];
+	int srcsize[2];
+	int compOrder;
+]]
+
+--------------------------------
+-- source of kernel
+
+	
+GradientSource = [[
+__KERNEL__ void GradientKernel(__CONSTANTREF__ GradientParams *params,
+	__TEXTURE2D_WRITE__ dst)
+{
+	DEFINE_KERNEL_ITERATORS_XY(x, y)
+	if (x < params->dstsize[0] && y < params->dstsize[1])
+	{
+		float2 pos = to_float2(x, y) / to_float2(params->dstsize[0] - 1, params->dstsize[1] - 1);
+
+		float4 col = to_float4_v(params->col);
+		col *= to_float4(pos.x, pos.y, 0.0f, 1.0f);
+
+		_tex2DVec4Write(dst, x, y, col);			// image, x, y, float4 colour
+	}
+}
+]]
+
+CircleSource = [[
+#define _length(a,b) _sqrtf(((a).x-(b).x)*((a).x-(b).x) + ((a).y-(b).y)*((a).y-(b).y))
+
+__KERNEL__ void CircleKernel(__CONSTANTREF__ CircleParams *params,
+	 __TEXTURE2D__ src,
+	 __TEXTURE2D_WRITE__ dst)
+{
+	DEFINE_KERNEL_ITERATORS_XY(x, y)
+	if (x < params->srcsize[0] && y < params->srcsize[1])
+	{
+		float2 pos = to_float2(x, y) / to_float2(params->srcsize[0] - 1, params->srcsize[1] - 1);
+
+		float2 center = to_float2_v(params->center);
+		float d = _length(pos, center);
+		float vl = fmax(params->amp - params->damp * d, 0.0f);
+		vl = 1.0f + sin(d * params->freq + params->phase) * vl;
+
+		float2 frompos = vl * (pos - center) + center;
+
+		float4 col = _tex2DVecN(src, frompos.x, frompos.y, params->compOrder);	// source image, x & y coords, component mask
+
+		_tex2DVec4Write(dst, x, y, col);
+	}
+}
+]]
+
+
+function Create()
+	InCenter = self:AddInput("Center", "Center", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		})
+
+	InAmplitude = self:AddInput("Amplitude", "Amplitude", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Default = 0.5,
+		})
+
+	InDamping = self:AddInput("Damping", "Damping", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Default = 0.0,
+		})
+
+	InFrequency = self:AddInput("Frequency", "Frequency", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Default = 20,
+		INP_MaxScale = 100.0,
+		})
+
+	InPhase = self:AddInput("Phase", "Phase", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_Default = 0.0,
+		INP_MaxScale = 10.0,
+		})
+
+	-- OutImage is automatically created for us, as we're a CT_SourceTool
+end
+
+function Process(req) 
+	local center  = InCenter:GetValue(req)
+	local amp = InAmplitude:GetValue(req).Value
+	local damp = InDamping:GetValue(req).Value
+	local freq = InFrequency:GetValue(req).Value
+	local phase = InPhase:GetValue(req).Value
+
+	local realwidth = Width;
+	local realheight = Height;
+
+	-- We'll handle proxy ourselves
+	Width = Width / Scale
+	Height = Height / Scale
+	Scale = 1
+	
+	local imgattrs = {
+		IMG_Document = self.Comp,
+		IMG_Width = Width,
+		IMG_Height = Height,
+		IMG_XScale = XAspect,
+		IMG_YScale = YAspect,
+		IMAT_OriginalWidth = realwidth,
+		IMAT_OriginalHeight = realheight,
+		IMG_Quality = not req:IsQuick(),
+		IMG_MotionBlurQuality = not req:IsNoMotionBlur(),
+		}
+	
+	if not req:IsStampOnly() then
+		imgattrs.IMG_ProxyScale = 1
+	end
+	
+	if SourceDepth ~= 0 then
+		imgattrs.IMG_Depth = SourceDepth
+	end
+	
+	local img = Image(imgattrs)
+	local out
+	local success = false
+
+	if img then
+		local node = DVIPComputeNode(req, "GradientKernel", GradientSource, "GradientParams", GradientParams)
+
+		if node then
+			-- create image
+			local params = node:GetParamBlock(GradientParams)
+	 
+			params.col[0] = 1.0
+			params.col[1] = 1.0
+			params.col[2] = 1.0
+			params.col[3] = 1.0
+			params.dstsize[0] = img.DataWindow:Width()
+			params.dstsize[1] = img.DataWindow:Height()
+
+			node:SetParamBlock(params)
+
+			node:AddOutput("dst", img)
+
+			success = node:RunSession(req)
+		end
+
+		-- and warp it
+		if success then
+			out = Image({IMG_Like = img })
+
+			local node = DVIPComputeNode(req, "CircleKernel", CircleSource, "CircleParams", CircleParams)
+
+			if node then
+				-- create image
+				local params = node:GetParamBlock(CircleParams)
+	 
+				params.amp = amp
+				params.damp = damp
+				params.freq = freq
+				params.phase = phase
+				params.center[0] = center.X
+				params.center[1] = center.Y
+				params.compOrder = 15
+				params.srcsize[0] = out.DataWindow:Width()
+				params.srcsize[1] = out.DataWindow:Height()
+
+				node:SetParamBlock(params)
+
+				node:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR, TEX_ADDRESS_MODE_CLAMP, TEX_NORMALIZED_COORDS_TRUE)
+				node:AddInput("src", img)
+				node:AddOutput("dst", out)
+
+				success = node:RunSession(req)
+			else
+				out = nil
+			end
+		end
+	end
+
+	OutImage:Set(req, out)
+end
