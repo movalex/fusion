@@ -6,7 +6,7 @@
 
     Requires:
         Python 3.6
-        Fusion 9/16
+        Fusion 9/16, Davinci Resolve 16
         PySide2, installed automatically on Windows, MacOs or (not tested) Linux
     Notice:
         Written by Sven Neve (sven[AT]houseofsecrets[DOT]nl)
