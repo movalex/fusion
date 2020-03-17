@@ -107,7 +107,7 @@ RELEASE NOTES
 	- Initial prototype.
 --]]--
 
-VERSION = [[v2.2 "Ultra" (2018-09-16)]]
+VERSION = [[v2.3 "Ultra" (2018-09-16)]]
 AUTHOR = [[S.Neve / House of Secrets]]
 CONTRIBUTORS = {"Tim Little", "Andrew Hazelden", "Cedric Duriau", "Bryan Ray", "Alex Bogomolov"
 }
@@ -117,7 +117,6 @@ CHANNELS_TO_SKIP = {r = true, red = true,
                 b = true, blue = true,
                 a = true, alpha = true,
                 somethingthatwontmatchhopefully = true}
-
 
 -------------------------------------------------------------------------------
 -- Set a fusion specific preference value
@@ -188,7 +187,7 @@ function buildDialog()
 	placementsList = {"Vertical Layout", "Horizontal Layout"}
 	dialog = {
 		{"", "Text", Lines = 1, Default = VERSION, ReadOnly = true, Width = 1.0},
-		{"Description", "Text", Lines = 3, Wrap = false, Default = "This script will split a multi-part EXR image out into multiple Loader nodes.", ReadOnly = true, Width = 1.0},
+		{"Description", "Text", Lines = 3, Wrap = false, Default = "This script will split a multi-pass\nEXR image out into multiple\nLoader nodes.", ReadOnly = true, Width = 1.0},
 		{"cdir", Name = "Placement", "Dropdown", Default = (cdir or 0), Options = placementsList, Width = 1.0},
 		{"grid", Name = "Grid Placement", "Slider", Integer = true, Default = (grid or 0), Min = 0, Max = 25, Width = 1.0},
 		{"splitAllSelectedNodes", Name = "Split All Selected Nodes", "Checkbox", Default = (splitAllSelectedNodes or 1), Width = 1.0},
@@ -198,7 +197,10 @@ function buildDialog()
         {"mergeall", Name = "Merge Loaders", "Checkbox", Default = (mergeall or 0), Width = 1.0},
 		{"verbose", Name = "Verbose Logging", "Checkbox", Default = (verbose or 0), Width = 1.0},
 	}
-
+    platform = (FuPLATFORM_WINDOWS and "Windows") or (FuPLATFORM_MAC and "Mac") or (FuPLATFORM_LINUX and "Linux")
+    if platform == 'Windows' then
+        table.remove(dialog, 8)
+    end
 	return dialog
 end
 
