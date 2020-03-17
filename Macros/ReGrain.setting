@@ -1,0 +1,659 @@
+{
+	Tools = ordered() {
+		ReGrain = MacroOperator {
+			CtrlWZoom = false,
+			Inputs = ordered() {
+				CommentsNest = Input { Value = 0, },
+				Comments = Input { Value = "Macro by Emilio Sapia - Millolab\nhttps://emiliosapia.myportfolio.com", },
+				Background = InstanceInput {
+					SourceOp = "AminusB",
+					Source = "Background",
+				},
+				DenoisedIn = InstanceInput {
+					SourceOp = "ChangeDepth1",
+					Source = "Input",
+					Name = "DenoisedInput",
+				},
+				CompIn = InstanceInput {
+					SourceOp = "PipeRouter2",
+					Source = "Input",
+					Name = "CompInput",
+				},
+				Display = InstanceInput {
+					SourceOp = "Dissolve1",
+					Source = "Mix",
+					Name = "Display",
+					Page = "Controls",
+					Default = 0,
+				},
+				Blank10 = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "Blank1",
+				},
+				Depth = InstanceInput {
+					SourceOp = "ChangeDepth1",
+					Source = "Depth",
+					Default = 0,
+				},
+				Blank11 = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "Blank1",
+				},
+				Frame = InstanceInput {
+					SourceOp = "RefFrame",
+					Source = "SourceTime",
+					Name = "Refernece Frame",
+					Default = 0,
+				},
+				GrainSample = InstanceInput {
+					SourceOp = "ChangeDepth1",
+					Source = "NoiseSample",
+					Name = "Grain Sample",
+				},
+				Center = InstanceInput {
+					SourceOp = "Sample",
+					Source = "Center",
+				},
+				Width = InstanceInput {
+					SourceOp = "Sample",
+					Source = "Width",
+					Default = 0.08,
+				},
+				Height = InstanceInput {
+					SourceOp = "Sample",
+					Source = "Height",
+					Default = 0.08,
+				},
+				RefineGrain = InstanceInput {
+					SourceOp = "ChangeDepth1",
+					Source = "RefineGrain",
+				},
+				LumaNoise = InstanceInput {
+					SourceOp = "LumaNoise",
+					Source = "Blend",
+					Name = "Luma Mix",
+					Default = 0,
+				},
+				CompMix = InstanceInput {
+					SourceOp = "CompMix",
+					Source = "Blend",
+					Name = "Comp Mix",
+					Default = 1,
+				},
+				Invert = InstanceInput {
+					SourceOp = "LumaNoise",
+					Source = "Invert",
+					Name = "Luma Invert",
+					Default = 0,
+				},
+				Gain = InstanceInput {
+					SourceOp = "NoiseRefine",
+					Source = "Gain",
+					Name = "Grain Gain",
+					MinScale = 1,
+					MaxScale = 2,
+					Default = 1.5,
+				},
+				Gamma = InstanceInput {
+					SourceOp = "NoiseRefine",
+					Source = "Gamma",
+					Name = "Grain Gamma",
+					MinScale = 1,
+					MaxScale = 2,
+					Default = 1.2,
+				},
+				Saturation = InstanceInput {
+					SourceOp = "NoiseRefine",
+					Source = "Saturation",
+					Default = 1,
+				},
+				GrainBlur = InstanceInput {
+					SourceOp = "ChangeDepth1",
+					Source = "GrainBlur",
+				},
+				Filter = InstanceInput {
+					SourceOp = "NoiseBlur",
+					Source = "Filter",
+				},
+				LockXY = InstanceInput {
+					SourceOp = "NoiseBlur",
+					Source = "LockXY",
+					Default = 1,
+				},
+				XBlurSize = InstanceInput {
+					SourceOp = "NoiseBlur",
+					Source = "XBlurSize",
+					MaxScale = 0.5,
+					Default = 0.1,
+				},
+				YBlurSize = InstanceInput {
+					SourceOp = "NoiseBlur",
+					Source = "YBlurSize",
+					Default = 1,
+				},
+				Blend = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "Blend",
+					Page = "Common",
+					Default = 1,
+				},
+				ProcessWhenBlendIs00 = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "ProcessWhenBlendIs00",
+					Default = 0,
+				},
+				ProcessRed = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "ProcessRed",
+					Name = "Process",
+					ControlGroup = 8,
+					Default = 1,
+				},
+				ProcessGreen = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "ProcessGreen",
+					ControlGroup = 8,
+					Default = 1,
+				},
+				ProcessBlue = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "ProcessBlue",
+					ControlGroup = 8,
+					Default = 1,
+				},
+				ProcessAlpha = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "ProcessAlpha",
+					ControlGroup = 8,
+					Default = 1,
+				},
+				Blank1 = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "Blank1",
+				},
+				ApplyMaskInverted = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "ApplyMaskInverted",
+					Default = 0,
+				},
+				MultiplyByMask = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "MultiplyByMask",
+					Default = 0,
+				},
+				FitMask = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "FitMask",
+				},
+				Blank2 = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "Blank2",
+				},
+				MaskChannel = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "MaskChannel",
+					Default = 3,
+				},
+				MaskLow = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "MaskLow",
+					ControlGroup = 15,
+					Default = 0,
+				},
+				MaskHigh = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "MaskHigh",
+					ControlGroup = 15,
+					Default = 1,
+				},
+				Black = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "MaskClipBlack",
+					Name = "Black",
+					Default = 1,
+				},
+				Input19 = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "MaskClipWhite",
+					Name = "White",
+					Default = 1,
+				},
+				Blank4 = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "Blank4",
+				},
+				UseObject = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "UseObject",
+					Default = 0,
+				},
+				UseMaterial = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "UseMaterial",
+					Default = 0,
+				},
+				CorrectEdges = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "CorrectEdges",
+				},
+				ObjectID = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "ObjectID",
+					ControlGroup = 22,
+					Default = 0,
+				},
+				MaterialID = InstanceInput {
+					SourceOp = "CompositIn",
+					Source = "MaterialID",
+					ControlGroup = 22,
+					Default = 0,
+				},
+				EffectMask = InstanceInput {
+					SourceOp = "PipeRouter1",
+					Source = "Input",
+					Name = "Effect Mask",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Dissolve1",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Pos = { 1327.35, 204.599 },
+				Flags = {
+					AllowPan = false,
+					ConnectedSnap = true,
+					AutoSnap = true,
+					AspectPics = false,
+					ShowInstance = false,
+					Thumbnails = false,
+					RemoveRouters = true
+				},
+				Size = { 1144.77, 307.75, 572.385, 24.2424 },
+				Direction = "Horizontal",
+				PipeStyle = "Direct",
+				Scale = 1,
+				Offset = { 0, 0 }
+			},
+			Tools = ordered() {
+				ChangeDepth1 = ChangeDepth {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					Inputs = {
+						NoiseSample = Input { Value = 1, },
+						RefineGrain = Input { Value = 1, },
+						GrainBlur = Input { Value = 1, }
+					},
+					ViewInfo = OperatorInfo { Pos = { -509.771, 7.26913 } },
+					UserControls = ordered() {
+						NoiseSample = {
+							INP_Integer = false,
+							LBLC_DropDownButton = true,
+							LINKID_DataType = "Number",
+							LBLC_NumInputs = 6,
+							INPID_InputControl = "LabelControl",
+							LINKS_Name = "NoiseSample",
+						},
+						RefineGrain = {
+							INP_Integer = false,
+							LBLC_DropDownButton = true,
+							LINKID_DataType = "Number",
+							LBLC_NumInputs = 4,
+							INPID_InputControl = "LabelControl",
+							LINKS_Name = "Refine Grain",
+						},
+						GrainBlur = {
+							INP_Integer = false,
+							LBLC_DropDownButton = true,
+							LINKID_DataType = "Number",
+							LBLC_NumInputs = 3,
+							INPID_InputControl = "LabelControl",
+							LINKS_Name = "Grain Blur",
+						}
+					}
+				},
+				CompositIn = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "PipeRouter1",
+							Source = "Output",
+						},
+						Background = Input {
+							SourceOp = "ChangeDepth1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "PipeRouter2",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -257.399, 7.26913 } },
+				},
+				LumaNoise = LumaKeyer {
+					Inputs = {
+						Blend = Input { Value = 0, },
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						Input = Input {
+							SourceOp = "CompMix",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -49.9028, 73.2574 } },
+				},
+				RefFrame = TimeStretcher {
+					CtrlWShown = false,
+					Inputs = {
+						SourceTime = Input { Value = 0, },
+						InterpolateBetweenFrames = Input { Value = 0, },
+						SampleSpread = Input { Disabled = true, },
+						Input = Input {
+							SourceOp = "AminusB",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -257.6, 143.909 } },
+				},
+				AminusB = ChannelBoolean {
+					CtrlWShown = false,
+					Inputs = {
+						Operation = Input { Value = 2, },
+						Foreground = Input {
+							SourceOp = "ChangeDepth1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -462.267, 179.075 } },
+				},
+				Crop1 = Crop {
+					CtrlWShown = false,
+					Inputs = {
+						XOffset = Input {
+							Value = 883,
+							Expression = "Sample.Center.X*(Crop1.Input.OriginalWidth)-XSize/2",
+						},
+						YOffset = Input {
+							Value = 497,
+							Expression = "Sample.Center.Y*(Crop1.Input.OriginalHeight)-YSize/2",
+						},
+						XSize = Input {
+							Value = 154,
+							Expression = "Crop1.Input.OriginalWidth*Sample.Width",
+						},
+						YSize = Input {
+							Value = 86,
+							Expression = "Crop1.Input.OriginalHeight*Sample.Height",
+						},
+						Input = Input {
+							SourceOp = "RefFrame",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -257.6, 217.59 } },
+				},
+				UV = Custom {
+					CtrlWShown = false,
+					Inputs = {
+						LUTIn1 = Input {
+							SourceOp = "CustomTool1LUTIn1",
+							Source = "Value",
+						},
+						LUTIn2 = Input {
+							SourceOp = "CustomTool1LUTIn2",
+							Source = "Value",
+						},
+						LUTIn3 = Input {
+							SourceOp = "CustomTool1LUTIn3",
+							Source = "Value",
+						},
+						LUTIn4 = Input {
+							SourceOp = "CustomTool1LUTIn4",
+							Source = "Value",
+						},
+						RedExpression = Input { Value = "x", },
+						GreenExpression = Input { Value = "y", },
+						BlueExpression = Input { Value = "0", },
+						AlphaExpression = Input { Value = "1", },
+						Image1 = Input {
+							SourceOp = "Crop2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 211.07, 136.517 } },
+				},
+				CustomTool1LUTIn1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 0, Blue = 0 },
+					CtrlWShown = false,
+				},
+				CustomTool1LUTIn2 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 204, Blue = 0 },
+					CtrlWShown = false,
+				},
+				CustomTool1LUTIn3 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 0, Blue = 204 },
+					CtrlWShown = false,
+				},
+				CustomTool1LUTIn4 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 204, Blue = 204 },
+					CtrlWShown = false,
+				},
+				Crop2 = Crop {
+					CtrlWShown = false,
+					Inputs = {
+						XSize = Input {
+							Value = 1920,
+							Expression = "RefFrame.Input.OriginalWidth",
+						},
+						YSize = Input {
+							Value = 1080,
+							Expression = "RefFrame.Input.OriginalHeight",
+						},
+						Input = Input {
+							SourceOp = "Transform1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 59.02, 217.59 } },
+				},
+				Displace1 = Displace {
+					CtrlWShown = false,
+					Inputs = {
+						Type = Input { Value = 1, },
+						XRefraction = Input { Value = 5, },
+						YRefraction = Input {
+							Value = 5,
+							Expression = "XRefraction",
+						},
+						Input = Input {
+							SourceOp = "UV",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "AminusB",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 211.07, 179.075 } },
+				},
+				Transform1 = Transform {
+					CtrlWShown = false,
+					Inputs = {
+						Edges = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "Crop1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -91.58, 217.59 } },
+				},
+				NoiseScatter = Texture {
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "Displace1",
+							Source = "Output",
+						},
+						Texture = Input {
+							SourceOp = "Crop2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 211.07, 217.59 } },
+				},
+				Sample = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						OutputSize = Input { Value = FuID { "Custom" }, },
+						MaskWidth = Input {
+							Value = 1920,
+							Expression = "Crop1.Input.OriginalWidth",
+						},
+						MaskHeight = Input {
+							Value = 1080,
+							Expression = "Crop1.Input.OriginalHeight",
+						},
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Width = Input { Value = 0.08, },
+						Height = Input { Value = 0.08, },
+						CornerRadius = Input { Expression = "0.0", },
+						Angle = Input { Expression = "0.0", },
+					},
+					ViewInfo = OperatorInfo { Pos = { -255.183, 250.246 } },
+				},
+				AplusB = ChannelBoolean {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "PipeRouter1",
+							Source = "Output",
+						},
+						Operation = Input { Value = 1, },
+						ToAlpha = Input { Value = 4, },
+						Background = Input {
+							SourceOp = "CompositIn",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "NoiseBlur",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 387.07, 7.26913 } },
+				},
+				NoiseBlur = Blur {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "LumaNoise",
+							Source = "Output",
+						},
+						MultiplyByMask = Input { Value = 1, },
+						Filter = Input { Value = FuID { "Gaussian" }, },
+						XBlurSize = Input { Value = 0.1, },
+						Input = Input {
+							SourceOp = "NoiseRefine",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 387.07, 73.2574 } },
+				},
+				NoiseRefine = BrightnessContrast {
+					Inputs = {
+						Gain = Input { Value = 1.5, },
+						Gamma = Input { Value = 1.2, },
+						Input = Input {
+							SourceOp = "NoiseScatter",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 387.07, 217.59 } },
+				},
+				Dissolve1 = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "AplusB",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "NoiseBlur",
+							Source = "Output",
+						},
+						Mix = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 509, 7.26913 } },
+					UserControls = ordered() {
+						Mix = {
+							{ CCS_AddString = "Final Result" },
+							{ CCS_AddString = "Grain Only" },
+							INP_MaxAllowed = 1,
+							INP_Integer = false,
+							INPID_InputControl = "ComboControl",
+							CC_LabelPosition = "Horizontal",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							LINKS_Name = "Background/Foreground"
+						}
+					}
+				},
+				PipeRouter1 = PipeRouter {
+					ViewInfo = PipeRouterInfo { Pos = { -0.642849, 137.808 } },
+				},
+				CompMix = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "ChangeDepth1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "PipeRouter2",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -237.058, 73.2574 } },
+				},
+				PipeRouter2 = PipeRouter {
+					ViewInfo = PipeRouterInfo { Pos = { -182.557, 36.1196 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "ReGrain"
+}
