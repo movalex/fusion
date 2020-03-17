@@ -30,6 +30,7 @@ RELEASE NOTES
 * v2.3 Ultra 2020-3-09 by Bryan Ray and Alex Bogomolov
     - add multipart EXR support
     - add Undo splitting
+    - add merge loaders option
 * v2.2 Ultra 2019-10-01 by bfloch
 	- Fix for Blender support with "local channel = string.match(channelName, "[.]([^.]+)$")"
 
@@ -111,6 +112,11 @@ AUTHOR = [[S.Neve / House of Secrets]]
 CONTRIBUTORS = {"Tim Little", "Andrew Hazelden", "Cedric Duriau", "Bryan Ray", "Alex Bogomolov"
 }
 CHANNEL_NO_MATCH = "SomethingThatWontMatchHopefully"
+CHANNELS_TO_SKIP = {r = true, red = true,
+                g = true, green = true,
+                b = true, blue = true,
+                a = true, alpha = true,
+                somethingthatwontmatchhopefully = true}
 
 
 -------------------------------------------------------------------------------
@@ -176,6 +182,7 @@ function buildDialog()
 	skipAlpha = getPreferenceData("hos_SplitEXR.skipAlpha", 0, verbose)
 	tiles = getPreferenceData("hos_SplitEXR.tiles", getPreferenceData("Comp.FlowView.ForceSource", 0, verbose), verbose)
 	grid = getPreferenceData("hos_SplitEXR.grid", 0, verbose)
+    mergeall = getPreferenceData('hos_SplitEXR.mergeall', 0, verbose)
 	-- cxyz = getPreferenceData("hos_SplitEXR.cxyz", 1, verbose)
 
 	placementsList = {"Vertical Layout", "Horizontal Layout"}
@@ -188,6 +195,7 @@ function buildDialog()
 		{"skipAlpha", Name = "Skip Importing Alpha Channels", "Checkbox", Default = (skipAlpha or 0), Width = 1.0},
 		{"tiles", Name = "Show Source Tiles ", "Checkbox", Default = tiles, Width = 1.0},
 		-- {"cxyz", Name = "Map X,Y,Z channels to RGB channels", "Checkbox", Default = (cxyz or 1), Width = 1.0},
+        {"mergeall", Name = "Merge Loaders", "Checkbox", Default = (mergeall or 0), Width = 1.0},
 		{"verbose", Name = "Verbose Logging", "Checkbox", Default = (verbose or 0), Width = 1.0},
 	}
 
@@ -229,13 +237,7 @@ end
 function getLoaderChannels(tool)
 	-- Get all loader channel and filter out the ones to skip
 	sourceChannels = tool.Clip1.OpenEXRFormat.RedName:GetAttrs().INPIDT_ComboControl_ID
-    dump(sourceChannels)
 	allChannels = { }
-    CHANNELS_TO_SKIP = {r = true, red = true,
-					g = true, green = true,
-					b = true, blue = true,
-					a = true, alpha = true,
-					somethingthatwontmatchhopefully = true}
 	for i, channelName in pairs(sourceChannels) do
         if not CHANNELS_TO_SKIP[channelName:lower()] then
             table.insert(allChannels, channelName)
@@ -304,8 +306,12 @@ function process_channels(tool)
     for prefix, channels in pairs(channelData) do
         -- Debug print the loader list
         logDebug("[EXR Check 5] Loader List " .. prefix, verbose)
-
-        LDR = comp.Loader({Clip = get_loader_clip(tool)})
+        if mergeall == 1.0 then
+           LDR = comp:AddTool("Loader", -32768, -32768)
+           LDR.Clip = get_loader_clip(tool)
+        else
+           LDR = comp.Loader({Clip = get_loader_clip(tool)})
+        end
 
         -- Force an initial (invalid) EXR channel name value into the OpenEXRFormat setting
         LDR:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = prefix})
@@ -426,14 +432,10 @@ function process_channels(tool)
                 end
             end
         end
-        if LDR then
-            table.insert(loaders_list, LDR)
-        end
+        table.insert(loaders_list, LDR)
     end
-    -- print('total loaders ' .. tostring(#loaders_list))
-    if loaders_list then
-        return loaders_list
-    end
+    print('total loaders created: ' .. tostring(#loaders_list))
+    return loaders_list
 end
 
 
@@ -473,22 +475,31 @@ function getLoader(verbose, dialogResult, tool)
         comp:Lock()
         comp:StartUndo('SplitEXR MultiPart')
         local loaders_list = {}
-        local counter = 0 
+        -- local counter = 0 
         for i, exr_part in pairs(tool.Clip1.OpenEXRFormat.Part:GetAttrs().INPIDT_ComboControl_ID) do
             tool.Clip1.OpenEXRFormat.Part = exr_part
             local channelName = tool.Clip1.OpenEXRFormat.RedName:GetAttrs().INPIDT_ComboControl_ID[2]
-            channelName = string.match(channelName, '(.+)%..+$') or 'Z'
+            if not CHANNELS_TO_SKIP[channelName:lower()] then
+                parsedChannelName = string.match(channelName, '(.+)%..+$') or Z
+            end
             -- print('parsed channel ', channelName)
-            if channelName then
-               loader = comp.Loader({Clip = get_loader_clip(tool)})
-               loader:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = channelName})
+            if parsedChannelName then
+               if mergeall == 1.0 then
+                   loader = comp:AddTool("Loader", -32768, -32768)
+                   loader.Clip = get_loader_clip(tool)
+               else
+                   loader = comp.Loader({Clip = get_loader_clip(tool)})
+               end
+               loader:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = parsedChannelName})
                loader.Clip1.OpenEXRFormat.Part = exr_part
-               loaders_list[counter] = loader
-               counter = counter + 1
+               loaders_list[i] = loader
             end
         end
         comp:Unlock()
-        move_loaders(org_x_pos, org_y_pos, loaders_list)
+        if #loaders_list > 0 then
+            print('total loaders created: ' .. tostring(#loaders_list))
+            move_loaders(org_x_pos, org_y_pos, loaders_list)
+        end
         comp:EndUndo()
         return
     end
@@ -560,6 +571,7 @@ function main()
 	skipAlpha = dialogResult.skipAlpha
 	tiles = dialogResult.tiles
 	grid = dialogResult.grid
+    mergeall = dialogResult.mergeall
 
 	-- Save the updated preferences
 	setPreferenceData("hos_SplitEXR.verbose", verbose, verbose)
@@ -568,6 +580,7 @@ function main()
 	setPreferenceData("hos_SplitEXR.skipAlpha", skipAlpha, verbose)
 	setPreferenceData("hos_SplitEXR.tiles", tiles, verbose)
 	setPreferenceData("hos_SplitEXR.grid", grid, verbose)
+	setPreferenceData("hos_SplitEXR.mergeall", mergeall, verbose)
 	-- setPreferenceData("hos_SplitEXR.cxyz", cxyz, verbose)
 
 
