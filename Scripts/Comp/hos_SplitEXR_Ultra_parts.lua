@@ -1,5 +1,5 @@
 --[[--
-Split EXR Ultra v2.2
+Split EXR Ultra v2.3
 by S.Neve / House of Secrets
 
 -------------------------------------------------------------------------------
@@ -28,7 +28,7 @@ The hos_SplitEXR script will then generate a series of Loader nodes in your comp
 RELEASE NOTES
 -------------------------------------------------------------------------------
 * v2.3 Ultra 2020-3-09 by Bryan Ray and Alex Bogomolov
-    - add multipart EXR splitting
+    - add multipart EXR support
     - add Undo splitting
 * v2.2 Ultra 2019-10-01 by bfloch
 	- Fix for Blender support with "local channel = string.match(channelName, "[.]([^.]+)$")"
@@ -106,16 +106,12 @@ RELEASE NOTES
 	- Initial prototype.
 --]]--
 
-VERSION = [[v2.1 "Ultra" (2018-09-16)]]
+VERSION = [[v2.2 "Ultra" (2018-09-16)]]
 AUTHOR = [[S.Neve / House of Secrets]]
 CONTRIBUTORS = {"Tim Little", "Andrew Hazelden", "Cedric Duriau", "Bryan Ray", "Alex Bogomolov"
 }
 CHANNEL_NO_MATCH = "SomethingThatWontMatchHopefully"
-CHANNELS_TO_SKIP = {r = true, red = true,
-					g = true, green = true,
-					b = true, blue = true,
-					a = true, alpha = true,
-					somethingthatwontmatchhopefully = true}
+
 
 -------------------------------------------------------------------------------
 -- Set a fusion specific preference value
@@ -160,7 +156,7 @@ function getPreferenceData(pref, defaultValue, debugPrint)
         comp:SetData(pref, defaultValue)
 		-- fusion:SetData(pref, defaultValue)
 
-		if  (debugPrint == true) or (debugPrint == 1) then
+		if (debugPrint == true) or (debugPrint == 1) then
 			if newPreference == nil then
 				print("[Creating " .. tostring(pref) .. " Preference Data] " .. "nil")
 			else
@@ -230,24 +226,24 @@ end
 ------------------------------------------------------------------------
 -- Loader
 ------------------------------------------------------------------------
-function getLoaderChannels(loader)
+function getLoaderChannels(tool)
 	-- Get all loader channel and filter out the ones to skip
-	local sourceChannels = loader.Clip1.OpenEXRFormat.RedName:GetAttrs().INPIDT_ComboControl_ID
-    if #sourceChannels < 6 then
-        return false
-    end
-	local channels = {}
-	
-	for i, channelName in ipairs(sourceChannels) do
-		if not CHANNELS_TO_SKIP[channelName:lower()] then
-			table.insert(channels, channelName)
-		end
+	sourceChannels = tool.Clip1.OpenEXRFormat.RedName:GetAttrs().INPIDT_ComboControl_ID
+    dump(sourceChannels)
+	allChannels = { }
+    CHANNELS_TO_SKIP = {r = true, red = true,
+					g = true, green = true,
+					b = true, blue = true,
+					a = true, alpha = true,
+					somethingthatwontmatchhopefully = true}
+	for i, channelName in pairs(sourceChannels) do
+        if not CHANNELS_TO_SKIP[channelName:lower()] then
+            table.insert(allChannels, channelName)
+        end
 	end
-	
-	-- Assume a deranged monkey wrote out the channels and decided to scramble 'm all
-	table.sort(channels)
-	
-	return channels
+	-- sort channel table
+	-- sortedChannels = table.sort(allChannels)
+	return allChannels
 end
 
 function getChannelData(loaderChannels)
@@ -255,7 +251,7 @@ function getChannelData(loaderChannels)
 	local _channelPrefixSet = {}
 	local channelData = {}
 	
-	for i, channelName in ipairs(loaderChannels) do
+	for i, channelName in pairs(loaderChannels) do
 		-- Get prefix and channel from full channel name
 		local prefix, channel = string.match(channelName, "(.+)[.](.+)")
 		
@@ -281,17 +277,29 @@ function getChannelData(loaderChannels)
 	return channelData
 end
 function get_loader_clip(tool)
-	local loader_clip = tool.Clip[comp.CurrentTime]
+	local loader_clip = tool.Clip[fu.TIME_UNDEFINED]
 	if not loader_clip then
 		logError("Loader contains no clips to explore")
 		return
 	end
-    print('clip: ', loader_clip)
     return loader_clip
 end
 
-function process_channels(channelData, tool)
-	-- Ensure loader clip is valid
+function process_channels(tool)
+    local loaderChannels = getLoaderChannels(tool)
+
+    -- Debug print the channel list
+    logDebug("[EXR Check 3] [Sorted Channel List]", verbose)
+    logDump(loaderChannels, verbose)
+
+    -- Get list of unique channel prefixes to know how many loaders to create
+    local channelData = getChannelData(loaderChannels)
+
+    -- Debug print the loader node list
+    logDebug("[EXR Check 4] [Loader Node List]", verbose)
+    logDump(channelData, verbose)
+
+    loaders_list = {}
     -- Update the loader node channel settings
     for prefix, channels in pairs(channelData) do
         -- Debug print the loader list
@@ -309,7 +317,7 @@ function process_channels(channelData, tool)
         LDR.Clip1.OpenEXRFormat.YName = CHANNEL_NO_MATCH
         LDR.Clip1.OpenEXRFormat.ZName = CHANNEL_NO_MATCH
         -- Refresh the OpenEXRFormat setting using real channel name data in a 2nd stage
-        for i, channelName in ipairs(channels) do
+        for i, channelName in pairs(channels) do
             local channel = string.match(channelName, "[.]([^.]+)$")
             local _channelLower = channel:lower()
             -- Perform a channel match for renderers that use a single letter character at the end of the channel name to define the red/green/blue channels
@@ -418,11 +426,12 @@ function process_channels(channelData, tool)
                 end
             end
         end
-        loaders_list[counter] = LDR
-        counter = counter + 1
+        if LDR then
+            table.insert(loaders_list, LDR)
+        end
     end
-    print('total loaders ' .. tostring(#loaders_list))
-    if #loaders_list > 0 then
+    -- print('total loaders ' .. tostring(#loaders_list))
+    if loaders_list then
         return loaders_list
     end
 end
@@ -441,9 +450,11 @@ function getLoader(verbose, dialogResult, tool)
 		logError("Selected tool is not a Loader")
 		return
 	end
-
-
-
+	-- If the Skip Importing Alpha Channels checkbox was enabled then set the alpha channel to "None" on the orignal Loader node
+    local skipAlpha = dialogResult.skipAlpha
+    if (skipAlpha == 1) then
+        tool.Clip1.OpenEXRFormat.AlphaName = CHANNEL_NO_MATCH
+    end
 	-- Ensure loader clip is of format EXR
 	local loader_clip_format = attrs.TOOLST_Clip_FormatName[1]
 	if loader_clip_format ~= "OpenEXRFormat" then
@@ -458,58 +469,34 @@ function getLoader(verbose, dialogResult, tool)
 
 	-- Filter out None,R,G,B and A as these are already used by the original Loader
 	-- If the Skip Importing Alpha Channels checkbox was enabled in the AskUser dialog then keep the alpha channel separate as an extra loader item
-    loaders_list = {}
-    counter = 0 
-    loaderChannels = getLoaderChannels(tool)
-    if not loaderChannels then
-       if tool.Clip1.OpenEXRFormat.Part then
+    if tool.Clip1.OpenEXRFormat.Part then
         comp:Lock()
-        comp:StartUndo('SplitEXR')
-        for i, exr_part in ipairs(tool.Clip1.OpenEXRFormat.Part:GetAttrs().INPIDT_ComboControl_ID) do
-            print(exr_part)
+        comp:StartUndo('SplitEXR MultiPart')
+        local loaders_list = {}
+        local counter = 0 
+        for i, exr_part in pairs(tool.Clip1.OpenEXRFormat.Part:GetAttrs().INPIDT_ComboControl_ID) do
             tool.Clip1.OpenEXRFormat.Part = exr_part
-            local LDR = comp.Loader({Clip = get_loader_clip(tool)})
-            LDR.Clip1.OpenEXRFormat.Part = exr_part
-            print(tool)
-            if not LDR then
-                print('no loader found')
-                comp:Unlock()
-                comp:EndUndo()
-                return
+            local channelName = tool.Clip1.OpenEXRFormat.RedName:GetAttrs().INPIDT_ComboControl_ID[2]
+            channelName = string.match(channelName, '(.+)%..+$') or 'Z'
+            -- print('parsed channel ', channelName)
+            if channelName then
+               loader = comp.Loader({Clip = get_loader_clip(tool)})
+               loader:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = channelName})
+               loader.Clip1.OpenEXRFormat.Part = exr_part
+               loaders_list[counter] = loader
+               counter = counter + 1
             end
-            loaders_list[counter] = LDR
-            counter = counter + 1
         end
-
         comp:Unlock()
         move_loaders(org_x_pos, org_y_pos, loaders_list)
         comp:EndUndo()
         return
-      end
     end
 
-    -- Debug print the channel list
-    logDebug("[EXR Check 3] [Sorted Channel List]", verbose)
-    logDump(loaderChannels, verbose)
-
-    -- Get list of unique channel prefixes to know how many loaders to create
-    channelData = getChannelData(loaderChannels)
-
-    -- Debug print the loader node list
-    logDebug("[EXR Check 4] [Loader Node List]", verbose)
-    logDump(channelData, verbose)
-
-    -- process
-
-	-- If the Skip Importing Alpha Channels checkbox was enabled then set the alpha channel to "None" on the orignal Loader node
-    local skipAlpha = dialogResult.skipAlpha
-    if (skipAlpha == 1) then
-        tool.Clip1.OpenEXRFormat.AlphaName = CHANNEL_NO_MATCH
-    end
     comp:Lock()
-    comp:StartUndo('SplitEXR')
+    comp:StartUndo('SplitEXR MultiChannel')
 
-    loaders_list = process_channels(channelData, tool)
+    loaders_list = process_channels(tool)
     
     comp:Unlock()
     comp:EndUndo()
@@ -527,7 +514,7 @@ function move_loaders(org_x_pos, org_y_pos, loaders)
     else
         y_pos_add = 1
     end
-    for i, ldr in ipairs(loaders) do
+    for i, ldr in pairs(loaders) do
         flow:SetPos(ldr, org_x_pos + (count * cdir), org_y_pos + (y_pos_add * count * (1 - cdir)))
         count = count + 1
         if grid > 0 then
@@ -587,7 +574,7 @@ function main()
 	if splitAllSelectedNodes == 0 then
 		-- Process only the first actively selected node
 		local tool = comp.ActiveTool
-		if tool ~= nil then
+		if tool then
 			getLoader(verbose, dialogResult, tool)
 		else
 			logError("The \"Active Tool\" selection is empty. Please select a node before running this script again.\n\nNote: If you want to process multiple selected nodes at the same time please enable the \"Split All Selected Nodes\" option in the dialog.\n")
@@ -601,7 +588,7 @@ function main()
 			return
 		end
 		-- Iterate through each of the selected loader nodes
-		for i, tool in ipairs(toolList) do 
+		for i, tool in pairs(toolList) do 
 			getLoader(verbose, dialogResult, tool)
 		end
 	end
@@ -618,9 +605,9 @@ main()
 
 -- Print estimated time of execution in seconds
 print(string.format("[Processing Time] %.3f s", os.difftime(os.time(), t_start)))
--- while comp:IsLocked() do
---     print('unlocking')
---     comp:Unlock()
--- end
+while comp:IsLocked() do
+    print('unlocking')
+    comp:Unlock()
+end
 print("[Done]")
-collectgarbage()
+-- collectgarbage()
