@@ -1,0 +1,3048 @@
+--[[--
+
+Cloner
+
+Based on original Duplicator Fuse by Eyeon 
+
+thanks to Bryan Ray and everyone at We Suck Less
+https://www.steakunderwater.com
+
+v0.991
+
+
+
+ChangeLog
+
+V0.991
+Fixed Bug with linear offset when exactly same p1 and p2 positions
+Increased Image to Clone to Max Resolution
+
+v0.99
+Added Clone Soloing
+
+v0.09875
+Fixed Scale and rotation effector channel bug
+Fixed Linear Offset Bug
+
+v0.9871
+Fixed bug that I missed in last fix
+
+v0.987
+Major Bug Fix - effector not being the same size as cloner itself
+
+
+v0.986
+Add Grid Offset Control and Write On Off
+Bug Fix
+
+v0.985
+Add Linear Offset Control
+
+v0.981
+Minor Bug Fix
+
+v0.98
+Added Radial Offset and direction
+
+v 0.97
+Added channel selection for Rotation Effector and Time Effector
+Bug fixes
+
+v 0.96
+Added Midpoint option for transform effectors
+Changed Effector Operation Order so position is last effector
+
+v 0.95
+Added Bezier Line To Clone(uses code from Bryan Ray's Tapered Shape Fuse)
+
+v 0.9
+Added Image To Clone To
+
+v 0.81
+Changed apply mode to FuID control
+Increased max grid count to 100
+
+v 0.8
+Added Effector Axis
+Increased range of Rotation Effector
+Code Optimisation
+
+
+
+v 0.71
+Fixed Scale effector bug that stopped it working
+Reordered effector operation order so scale is before position
+
+v 0.7
+Added channel selection for position and scale effectors X and Y
+
+v 0.6
+Fixed Scale effector affecting the image to clone
+Changed node input colors(thanks again Bryan)
+Code Refactoring
+
+v.0.5
+Fixed Independent Scale Effector Control
+Added Seprate X Y Scale Control 
+
+v0.41
+
+Code Refactoring
+
+v0.4
+Added Colour Effector
+Added Separate X Y Position Option Uses Luminance for X Alpha for Y
+
+v0.3
+
+Added Time offset Effector
+Fixed grid having only 1 in either x or y count
+Refactored some code
+Bug Fixes 
+
+v0.2
+Added Ellipse option in radial
+Added Effectors Page - based on luminance of pixel at the clones centre
+Removed a couple of redundant inputs
+
+--]]--
+
+FuRegisterClass("Cloner", CT_SourceTool, {
+	REGS_Name = "Cloner",
+	REGS_Category = "Creator",
+	REGS_OpIconString = "Clo",
+	REGS_OpDescription = "Cloner of input.",
+	
+	REGS_Company = "SteveWatson",
+	REGS_URL = "",
+	
+	REG_Source_GlobalCtrls = true,
+	REG_Source_SizeCtrls = true,
+	REG_Source_AspectCtrls = true,
+	REG_Source_DepthCtrls = true,
+	REG_TimeVariant = true,	-- must set this to true if Time Offset is used
+	})
+	
+	
+function Create()
+
+
+	InMode = self:AddInput("Mode", "Mode", { 
+		LINKID_DataType = "Number",
+		INPID_InputControl = "MultiButtonControl",
+		{ MBTNC_AddButton = "Grid", },
+		{ MBTNC_AddButton = "Linear", },
+		{ MBTNC_AddButton = "Radial", },
+		{ MBTNC_AddButton = "Image", },
+		{ MBTNC_AddButton = "Bezier", },
+		MBTNC_StretchToFit = true,
+		INP_Default = 0,
+		INP_DoNotifyChanged = true,
+	})	
+	
+	InCopies = self:AddInput("Number", "Number", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MaxScale = 50.0,
+		INP_MinScale = 1,
+		INP_Default = 2.0,
+		INP_Integer    = true,
+		IC_Visible = false,
+		PC_Visible = false,
+		})
+		
+	InIndependentRadius = self:AddInput("Ellipse", "Ellipse", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Default = 0,
+		IC_Visible = false,
+		PC_Visible = false,
+		INP_DoNotifyChanged = true,
+	})
+		
+	InXRadius = self:AddInput("X Radius", "XRadius", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MaxScale = 1,
+		INP_Default = 0.25,
+		IC_Visible = false,
+		PC_Visible = false,
+	})
+	
+	InYRadius = self:AddInput("Y Radius", "YRadius", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MaxScale = 1,
+		INP_Default = 0.25,
+		IC_Visible = false,
+		PC_Visible = false,
+	})
+		
+
+	InGridXCount = self:AddInput("Grid X Count", "GridXCount", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MaxScale = 100.0,
+		INP_Default = 2.0,
+		INP_Integer    = true,
+		})
+	InGridYCount = self:AddInput("Grid Y Count", "GridYCount", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MaxScale = 100.0,
+		INP_Default = 2.0,
+		INP_Integer    = true,
+		})
+	InGridXSize = self:AddInput("Grid X Size", "GridXSize", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MaxScale = 1,
+		INP_Default = 0.5,
+		})
+	InGridYSize = self:AddInput("Grid Y Size", "GridYSize", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MaxScale = 1,
+		INP_Default = 0.5,
+		})
+		
+			
+	InXWriteOnStart = self:AddInput("X Write On Start", "XWriteOnStart", {
+		LINKID_DataType = "Number",
+--		INP_Integer = true,
+		INPID_InputControl = "RangeControl",
+--		ICS_ControlPage = "Controls",
+		IC_ControlGroup = 2,
+		IC_ControlID = 0,
+		LINKS_Name = "Start",
+		RNGCS_MidName = "Write On X",
+		INP_MinScale = -0,
+		INP_MaxScale = 1.0,
+--		RNGCD_LowOuterLength = "0.1",
+		INP_Default = 0,
+		
+	})
+	
+	InXWriteOnEnd = self:AddInput("X Write On End", "XWriteOnEnd", {
+		LINKID_DataType = "Number",
+--		INP_Integer = true,
+		INPID_InputControl = "RangeControl",
+--		ICS_ControlPage = "Controls",
+		IC_ControlGroup = 2,
+		IC_ControlID = 1,
+		
+		LINKS_Name = "End",	
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+--		RNGCD_HighOuterLength = "0.1",
+		INP_Default = 1,
+		
+	})
+			
+	InYWriteOnStart = self:AddInput("Y Write On Start", "YWriteOnStart", {
+		LINKID_DataType = "Number",
+--		INP_Integer = true,
+		INPID_InputControl = "RangeControl",
+--		ICS_ControlPage = "Controls",
+		IC_ControlGroup = 3,
+		IC_ControlID = 0,
+		LINKS_Name = "Start",
+		RNGCS_MidName = "Write On Y",
+		INP_MinScale = -0,
+		INP_MaxScale = 1.0,
+--		RNGCD_LowOuterLength = "0.1",
+		INP_Default = 0,
+		
+	})
+	
+	InYWriteOnEnd = self:AddInput("Y Write On End", "YWriteOnEnd", {
+		LINKID_DataType = "Number",
+--		INP_Integer = true,
+		INPID_InputControl = "RangeControl",
+--		ICS_ControlPage = "Controls",
+		IC_ControlGroup = 3,
+		IC_ControlID = 1,
+		LINKS_Name = "End",	
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+--		RNGCD_HighOuterLength = "0.1",
+		INP_Default = 1,
+		
+	})
+	
+
+		
+	InGridXOffset = self:AddInput("Grid X Offset", "GirdXOffset", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_Default = 0,
+		INP_MaxScale = 5,
+		
+	})
+	
+	InGridOffsetXLoop = self:AddInput("Loop Grid X Offset", "LoopGridXOffset", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Default = 0,
+		INP_DoNotifyChanged = true,
+	
+	})
+	
+	
+	
+	InGridYOffset = self:AddInput("Grid Y Offset", "GridYOffset", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_Default = 0,
+		INP_MaxScale = 5,
+	
+	})
+	
+	InGridOffsetYLoop = self:AddInput("Loop Grid Y Offset", "LoopGridYOffset", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Default = 0,
+		INP_DoNotifyChanged = true,
+	
+	})
+
+		
+	InP1 = self:AddInput("Point 1", "Point1", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		CHC_Style 			 = "Circle",
+		INP_DefaultX         = 0.25,
+		INP_DefaultY         = 0.5,
+		IC_Visible = false,
+		PC_Visible = false,
+	})
+	InP2 = self:AddInput("Point 2", "Point2", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		CHC_Style 			 = "Circle",
+		INP_DefaultX         = 0.75,
+		INP_DefaultY         = 0.5,
+		IC_Visible = false,
+		PC_Visible = false,
+	})
+	
+	InResolution = self:AddInput("Clone Image Resolution", "CloneImageResolution", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MaxScale = 1000.0,
+		INP_MinScale = 1,
+		INP_Default = 20.0,
+		INP_Integer    = true,
+		IC_Visible = false,
+		PC_Visible = false,
+		})
+		
+	InBezP1 = self:AddInput("Bezier Point 1", "BezierPoint1", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		CHC_Style 			 = "Circle",
+		INP_DefaultX         = 0.15,
+		INP_DefaultY         = 0.2,
+		})
+	InBezP2 = self:AddInput("Bezier Handle 1", "BezierHandle1", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_PreviewControl = "PointControl",
+		PCID_PrevPoint 		 = "BezierPoint1",
+		INP_DefaultX         = 0.2,
+		INP_DefaultY         = 0.5,
+		IC_Visible = false,
+		PC_Visible = false,
+		})
+	InBezP3 = self:AddInput("Bezier Handle 2", "BezierHandle2", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_PreviewControl = "PointControl",
+		PCID_PrevPoint		 = "BezierPoint2",
+		INP_DefaultX         = 0.75,
+		INP_DefaultY         = 0.25,
+		IC_Visible = false, 
+		PC_Visible = false,
+		})
+	InBezP4 = self:AddInput("Bezier Point 2", "BezierPoint2", {
+		LINKID_DataType      = "Point",
+		INPID_InputControl   = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		CHC_Style 			 = "Circle",		
+		INP_DefaultX         = 0.8,
+		INP_DefaultY         = 0.9,
+	})
+
+	
+	InWriteOnStart = self:AddInput("Write On Start", "WriteOnStart", {
+		LINKID_DataType = "Number",
+--		INP_Integer = true,
+		INPID_InputControl = "RangeControl",
+--		ICS_ControlPage = "Controls",
+		IC_ControlGroup = 1,
+--		IC_ControlID = 0,
+		LINKS_Name = "Start",
+
+		INP_MinScale = -0,
+		INP_MaxScale = 1.0,
+--		RNGCD_LowOuterLength = "0.1",
+		INP_Default = 0,
+			IC_Visible = false,
+		PC_Visible = false,
+	})
+	
+	InWriteOnEnd = self:AddInput("Write On End", "WriteOnEnd", {
+		LINKID_DataType = "Number",
+--		INP_Integer = true,
+		INPID_InputControl = "RangeControl",
+--		ICS_ControlPage = "Controls",
+		IC_ControlGroup = 1,
+		IC_ControlID = 1,
+		LINKS_Name = "End",	
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+--		RNGCD_HighOuterLength = "0.1",
+		INP_Default = 1,
+			IC_Visible = false,
+		PC_Visible = false,
+	})
+	
+	InLinearOffset = self:AddInput("Linear Offset", "LinearOffset", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_Default = 0,
+		INP_MaxScale = 5,
+		IC_Visible = false,
+		PC_Visible = false,
+	})
+	
+	
+	InRadialOffset = self:AddInput("Radial Offset", "RadialOffset", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_Default = 0,
+		INP_MaxScale = 5,
+		IC_Visible = false,
+		PC_Visible = false,
+	})
+	
+	InRadialDirection = self:AddInput("Clockwise", "Clockwise", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Default = 0,
+		INP_DoNotifyChanged = true,
+		IC_Visible = false,
+		PC_Visible = false,
+	})
+
+	InTimeOffset = self:AddInput("Time Offset", "TimeOffset", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Default 	= 0.0,
+		INP_MinScale	= -5.0,
+		INP_MaxScale	= 5.0,
+
+--		IC_Visible = false,		-- If you show this input, you must set REG_TimeVariant = true
+		})
+
+	InSoloClones = self:AddInput("Solo Clones", "SoloClones", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Default = 0,
+		IC_Visible = true,
+		PC_Visible = true,
+		INP_DoNotifyChanged = true,
+	})
+	
+	InShowHide = self:AddInput("Hide Selected", "ShowHide", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Default = 0,
+		IC_Visible = true,
+		PC_Visible = true,
+		IC_Visible = false,
+		PC_Visible = false,
+		INP_DoNotifyChanged = true,
+	})
+	
+	InClonesToSolo = self:AddInput("Clones to Solo", "ClonesToSolo", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "TextEditControl",
+		INPS_DefaultText = "Separate Numbers with comma",  -- use instead of INP_Default!
+		TEC_Lines = 3,               -- height of text entry (default is 8)
+		TEC_Wrap = true,             -- automatic word-wrapping (default is false)
+		TEC_ReadOnly = false,         -- default is false (you should also set INP_External = false)
+		TEC_CharLimit = 0,	     -- maximum number of allowed characters (default is 0, no limit)
+		TEC_DeferSetInputs = true,   -- call NotifyChanged when focus is lost (default is false, call on every key stroke)
+		IC_Visible = false,
+		PC_Visible = false,
+	})
+
+	InAxis = self:AddInput("Axis", "Axis", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		
+		CHC_Style = "DiagonalCross",
+		})
+
+	InXSize = self:AddInput("Size", "XSize", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MaxScale = 5,
+		INP_Default = 1.0,
+		ICD_Center = 1, -- this sets the default value to the center of the slider
+		})
+	InYSize = self:AddInput("Y Size", "YSize", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MaxScale = 5,
+		INP_Default = 1.0,
+		ICD_Center = 1, 		-- this sets the default value to the center of the slider
+		IC_Visible = false,		-- not yet implemented
+		})
+
+	InAngle = self:AddInput("Angle", "Angle", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		
+		INP_MinScale =   0.0,
+		INP_MaxScale = 360.0,
+		INP_Default = 0.0,
+	
+		PC_GrabPriority = 1 -- give this a higher priority than the rectangle
+		})
+
+	InXSize:SetAttrs({
+		
+	
+		RCD_LockAspect = 1.0,
+		})
+		
+	InApply = self:AddInput("Apply Mode", "ApplyMode", {
+		LINKID_DataType = "FuID",
+		INPID_InputControl = "MultiButtonControl",
+	
+		
+		
+		INP_DoNotifyChanged = true,
+		{ MBTNC_AddButton = "Normal", MBTNCID_AddID = "Merge",},
+		{ MBTNC_AddButton = "Screen", MBTNCID_AddID = "Screen",},
+		{ MBTNC_AddButton = "Dissolve", MBTNCID_AddID = "Dissolve",},
+		{ MBTNC_AddButton = "Multiply", MBTNCID_AddID = "Multiply",},
+		{ MBTNC_AddButton = "Overlay",MBTNCID_AddID = "Overlay", },
+		{ MBTNC_AddButton = "Soft Light", MBTNCID_AddID = "SoftLight",},
+		{ MBTNC_AddButton = "Hard Light", MBTNCID_AddID = "HardLight",},
+		{ MBTNC_AddButton = "Color Dodge", MBTNCID_AddID = "ColorDodge",},
+		{ MBTNC_AddButton = "Color Burn", MBTNCID_AddID = "ColorBurn",},
+		{ MBTNC_AddButton = "Darken", MBTNCID_AddID = "Darken",},
+		{ MBTNC_AddButton = "Lighten", MBTNCID_AddID = "Lighten",},
+		{ MBTNC_AddButton = "Difference", MBTNCID_AddID = "Difference",},
+		{ MBTNC_AddButton = "Exclusion", MBTNCID_AddID = "Exclusion",},
+		{ MBTNC_AddButton = "Hue", MBTNCID_AddID = "Hue",},
+		{ MBTNC_AddButton = "Saturation", MBTNCID_AddID = "Saturation",},
+		{ MBTNC_AddButton = "Color", MBTNCID_AddID = "Color",},
+		{ MBTNC_AddButton = "Luminosity",  MBTNCID_AddID = "Luminosity",},
+	})
+		
+
+		
+	InOperation = self:AddInput("Operator", "Operator", {
+		LINKID_DataType = "FuID",
+		INPID_InputControl = "MultiButtonControl",
+		
+		{ MBTNC_AddButton = "Over", MBTNCID_AddID = "Over",},
+		{ MBTNC_AddButton = "In", MBTNCID_AddID = "In",},
+		{ MBTNC_AddButton = "Held Out", MBTNCID_AddID = "HeldOut",},
+		{ MBTNC_AddButton = "Atop", MBTNCID_AddID = "Atop",},
+		{ MBTNC_AddButton = "XOr", MBTNCID_AddID = "XOr",},
+	
+		
+		})
+		
+	InAdditive = self:AddInput("Subtractive - Additive", "SubtractiveAdditive", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Default = 1.0,
+		SLCS_LowName = "Subtractive",
+		SLCS_HighName = "Additive",
+		})
+
+	self:BeginControlNest("Gain", "GainNest", false);
+		InGainRed = self:AddInput("Red Gain", "RedGain", {
+			LINKID_DataType = "Number",
+			INPID_InputControl = "SliderControl",
+			INP_Default = 1.0,
+			})
+		InGainGreen = self:AddInput("Green Gain", "GreenGain", {
+			LINKID_DataType = "Number",
+			INPID_InputControl = "SliderControl",
+			INP_Default = 1.0,
+			})
+		InGainBlue = self:AddInput("Blue Gain", "BlueGain", {
+			LINKID_DataType = "Number",
+			INPID_InputControl = "SliderControl",
+			INP_Default = 1.0,
+			})
+		InGainAlpha = self:AddInput("Alpha Gain", "AlphaGain", {
+			LINKID_DataType = "Number",
+			INPID_InputControl = "SliderControl",
+			INP_Default = 1.0,
+			})
+	self:EndControlNest()
+		
+	InBurn = self:AddInput("Burn In", "BurnIn", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Default = 0.0,
+		})
+	
+	InLayerBlend = self:AddInput("Blend", "LayerBlend", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Default = 1.0,
+		})
+
+
+
+
+		
+	self:AddControlPage("Jitter");
+
+	InRandomise = self:AddInput("Randomize", "Randomize", {
+		LINKID_DataType		= "Number",
+		INPID_InputControl	= "ButtonControl",
+		INP_DoNotifyChanged	= true,
+		ICD_Width			= 0.25,
+		})
+
+	InSeed = self:AddInput("Random Seed", "RandomSeed", {
+		LINKID_DataType		= "Number",
+		INPID_InputControl	= "SliderControl",
+		INP_MinAllowed,		0.0,
+		INP_MaxAllowed		= 32767.0,
+		INP_Integer			= true,
+		ICD_Width			= 0.75,
+		})
+
+
+	InJitterCenter = self:AddInput("Center", "JitterCenter", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+--		INPID_PreviewControl = "CrosshairControl",
+		INP_DefaultX		= 0,
+		INP_DefaultY		= 0,
+		})
+	InJitterAxis = self:AddInput("Axis", "JitterAxis", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+--		INPID_PreviewControl = "CrosshairControl",
+--		CHC_Style = "DiagonalCross",
+		INP_DefaultX		= 0,
+		INP_DefaultY		= 0,
+		})
+
+	InJitterXSize = self:AddInput("X Size", "JitterXSize", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 0,
+		INP_MaxScale = 5,
+		INP_Default = 0.0,
+		ICD_Center = 1, -- this sets the default value to the center of the slider
+		})
+
+	InJitterYSize = self:AddInput("Y Size", "JitterYSize", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 0,
+		INP_MaxScale = 5,
+		INP_Default = 0.0,
+		ICD_Center = 1, -- this sets the default value to the center of the slider
+		IC_Visible = false,		-- not yet implemented
+		})
+	InJitterAngle = self:AddInput("Angle", "JitterAngle", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+--		INPID_PreviewControl = "AngleControl",
+		INP_MinAllowed =   0.0,
+		INP_MaxScale = 90.0,
+		INP_Default = 0.0,
+	
+		PC_GrabPriority = 1 -- give this a higher priority than the rectangle
+		})
+
+	self:BeginControlNest("Gain", "JitterGainNest", false);
+		InJitterGainRed = self:AddInput("Red Gain", "JitterRedGain", {
+			LINKID_DataType = "Number",
+			INPID_InputControl = "SliderControl",
+			INP_MinAllowed =   0.0,
+			INP_Default = 0.0,
+			})
+		InJitterGainGreen = self:AddInput("Green Gain", "JitterGreenGain", {
+			LINKID_DataType = "Number",
+			INPID_InputControl = "SliderControl",
+			INP_MinAllowed =   0.0,
+			INP_Default = 0.0,
+			})
+		InJitterGainBlue = self:AddInput("Blue Gain", "JitterBlueGain", {
+			LINKID_DataType = "Number",
+			INPID_InputControl = "SliderControl",
+			INP_MinAllowed =   0.0,
+			INP_Default = 0.0,
+			})
+		InJitterGainAlpha = self:AddInput("Alpha Gain", "JitterAlphaGain", {
+			LINKID_DataType = "Number",
+			INPID_InputControl = "SliderControl",
+			INP_MinAllowed =   0.0,
+			INP_Default = 0.0,
+			})
+	self:EndControlNest()
+	
+	InJitterLayerBlend = self:AddInput("Blend", "JitterLayerBlend", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed =   0.0,
+		INP_Default = 0.0,
+		})
+	
+	self:AddControlPage("Effectors");
+	
+	InEffectorAxis = self:AddInput("Effector Axis", "EffectorAxis", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		
+		CHC_Style = "DiagonalCross",
+		})
+	
+	InUsePosEffectors = self:AddInput("Use Position Effector", "UsePositionEffector", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Default = 0,
+		INP_DoNotifyChanged = true,
+	})
+	
+	
+	
+	InPositionEffectorX = self:AddInput("X Position", "XPosition", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_MinAllowed =   -1,
+		INP_MaxAllowed =   1,
+		INP_MaxScale = 1,
+		INP_Default = 0.0,
+		IC_Visible = false,
+		PC_Visible = false,
+		})
+	InPositionEffectorY = self:AddInput("Y Position", "YPosition", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_MinAllowed =   -1,
+		INP_MaxAllowed =   1,
+		INP_MaxScale = 1,
+		INP_Default = 0.0,
+		IC_Visible = false,
+		PC_Visible = false,
+		})
+
+	InXPosControlChannel = self:AddInput("X Position Channel", "XPositionChannel", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "MultiButtonControl",
+	
+		MBTNC_StretchToFit = true,
+		INP_Default = 4,
+		INP_DoNotifyChanged = true,
+		{ MBTNC_AddButton = "Red", },
+		{ MBTNC_AddButton = "Green", },
+		{ MBTNC_AddButton = "Blue", },
+		{ MBTNC_AddButton = "Alpha", },
+		{ MBTNC_AddButton = "Luma", },
+		IC_Visible = false,
+		PC_Visible = false,
+	
+	})
+	InYPosControlChannel = self:AddInput("Y Position Channel", "YPositionChannel", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "MultiButtonControl",
+	
+		MBTNC_StretchToFit = true,
+		INP_Default = 4,
+		INP_DoNotifyChanged = true,
+		{ MBTNC_AddButton = "Red", },
+		{ MBTNC_AddButton = "Green", },
+		{ MBTNC_AddButton = "Blue", },
+		{ MBTNC_AddButton = "Alpha", },
+		{ MBTNC_AddButton = "Luma", },
+		IC_Visible = false,
+		PC_Visible = false,
+	
+	})
+	
+	InUsePosMidpoint = self:AddInput("Use Position MidPoint", "UsePositionMidPoint", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Default = 0,
+		INP_DoNotifyChanged = true,
+	})
+	
+	
+		
+	InUseScaleEffectors = self:AddInput("Use Scale Effector", "UseScaleEffector", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Default = 0,
+		INP_DoNotifyChanged = true,
+	})
+	
+
+	
+	InScaleEffectorX = self:AddInput("X Scale Increase", "XScaleIncrease", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_MinAllowed =   -1,
+		INP_MaxAllowed =   50,
+		INP_MaxScale = 1,
+		INP_Default = 0,
+		IC_Visible = false,
+		PC_Visible = false,
+	})
+	InScaleEffectorY = self:AddInput("Y Scale Increase", "YScaleIncrease", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_MinAllowed =   -1,
+		INP_MaxAllowed =   50,
+		INP_MaxScale = 1,
+		INP_Default = 0,
+		IC_Visible = false,
+		PC_Visible = false,
+		})
+		
+	InXScaleControlChannel = self:AddInput("X Scale Channel", "XScaleChannel", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "MultiButtonControl",
+	
+		MBTNC_StretchToFit = true,
+		INP_Default = 4,
+		INP_DoNotifyChanged = true,
+		{ MBTNC_AddButton = "Red", },
+		{ MBTNC_AddButton = "Green", },
+		{ MBTNC_AddButton = "Blue", },
+		{ MBTNC_AddButton = "Alpha", },
+		{ MBTNC_AddButton = "Luma", },
+		IC_Visible = false,
+		PC_Visible = false,
+	
+	})
+	InYScaleControlChannel = self:AddInput("Y Scale Channel", "YScaleChannel", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "MultiButtonControl",
+	
+		MBTNC_StretchToFit = true,
+		INP_Default = 4,
+		INP_DoNotifyChanged = true,
+		{ MBTNC_AddButton = "Red", },
+		{ MBTNC_AddButton = "Green", },
+		{ MBTNC_AddButton = "Blue", },
+		{ MBTNC_AddButton = "Alpha", },
+		{ MBTNC_AddButton = "Luma", },
+		IC_Visible = false,
+		PC_Visible = false,
+	
+	})
+	
+	InUseScaleMidpoint = self:AddInput("Use Scale MidPoint", "UseScaleMidPoint", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Default = 0,
+		INP_DoNotifyChanged = true,
+	})
+	
+	InUseRotEffectors = self:AddInput("Use Rotation Effector", "UseRotationEffector", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Default = 0,
+		INP_DoNotifyChanged = true,
+	})
+	InRotationEffectorAngle = self:AddInput("Angle", "RotAngle", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_MinAllowed =   -1800,
+		INP_MaxAllowed =   1800,
+		INP_MaxScale = 1,
+		INP_Default = 0,
+		IC_Visible = false,
+		PC_Visible = false,
+	})
+	
+	InRotControlChannel = self:AddInput("Rotation Channel", "RotationChannel", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "MultiButtonControl",
+	
+		MBTNC_StretchToFit = true,
+		INP_Default = 4,
+		INP_DoNotifyChanged = true,
+		{ MBTNC_AddButton = "Red", },
+		{ MBTNC_AddButton = "Green", },
+		{ MBTNC_AddButton = "Blue", },
+		{ MBTNC_AddButton = "Alpha", },
+		{ MBTNC_AddButton = "Luma", },
+		IC_Visible = false,
+		PC_Visible = false,
+	
+	})
+	
+	InUseRotMidpoint = self:AddInput("Use Rotation MidPoint", "UseRotationMidPoint", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Default = 0,
+		INP_DoNotifyChanged = true,
+	})
+	
+	InUseTimeEffectors = self:AddInput("Use Time Effector", "UseTimeEffector", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Default = 0,
+		INP_DoNotifyChanged = true,
+	})
+	InTimeEffectorValue = self:AddInput("Time Offset", "TimeEffectorOffset", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_MinAllowed =   -200,
+		INP_MaxAllowed =   2000,
+		INP_MaxScale = 1,
+		INP_Default = 0,
+		INP_Integer    = true,
+		IC_Visible = false,
+		PC_Visible = false,
+	})
+	
+	InTimeControlChannel = self:AddInput("Time Channel", "TimeChannel", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "MultiButtonControl",
+	
+		MBTNC_StretchToFit = true,
+		INP_Default = 4,
+		INP_DoNotifyChanged = true,
+		{ MBTNC_AddButton = "Red", },
+		{ MBTNC_AddButton = "Green", },
+		{ MBTNC_AddButton = "Blue", },
+		{ MBTNC_AddButton = "Alpha", },
+		{ MBTNC_AddButton = "Luma", },
+		IC_Visible = false,
+		PC_Visible = false,
+	
+	})
+	
+	InUseColourEffectors = self:AddInput("Use Colour Effector", "UseColourEffector", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Default = 0,
+		INP_DoNotifyChanged = true,
+	})
+	
+	InBackground = self:AddInput("Clone", "Clone", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})
+	
+	InPosition = self:AddInput("Position Effector", "PositionEffector", {
+		LINKID_DataType = "Image",
+		LINK_Main = 2,
+		INP_Required = false,
+	})
+	InScale = self:AddInput("Scale Effector", "ScaleEffector", {
+		LINKID_DataType = "Image",
+		LINK_Main = 3,
+		INP_Required = false,
+	})
+	InRotation = self:AddInput("Rotation Effector", "RotationEffector", {
+		LINKID_DataType = "Image",
+		LINK_Main = 4,
+		INP_Required = false,
+	})
+	InTimeEffector = self:AddInput("Time Effector", "TimeEffector", {
+		LINKID_DataType = "Image",
+		LINK_Main = 5,
+		INP_Required = false,
+	})
+	InColourEffector = self:AddInput("Colour Effector", "ColourEffector", {
+		LINKID_DataType = "Image",
+		LINK_Main = 6,
+		INP_Required = false,
+	})
+	InImageToCloneTo = self:AddInput("Image to Clone To", "ImagetoCloneTo", {
+		LINKID_DataType = "Image",
+		LINK_Main = 7,
+		INP_Required = false,
+	})
+
+	OutImage = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})
+end
+
+function NotifyChanged(inp, param, time)
+	if inp ~= nil and param ~= nil then
+		if inp == InMode then
+			if param.Value == 0 then -- Grid
+				InCopies:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InXRadius:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InYRadius:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InXWriteOnStart:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InYWriteOnStart:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InWriteOnStart:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InWriteOnEnd:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InLinearOffset:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InRadialOffset:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InRadialDirection:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InP1:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InP2:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridXCount:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InGridYCount:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InGridXOffset:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InGridYOffset:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InGridOffsetXLoop:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InGridOffsetYLoop:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InGridXSize:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InGridYSize:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InIndependentRadius:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InResolution:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InBezP1:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InBezP2:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InBezP3:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InBezP4:SetAttrs({IC_Visible = false, PC_Visible = false})
+			elseif param.Value == 1 then -- Linear
+				InCopies:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InXRadius:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InYRadius:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InWriteOnStart:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InWriteOnEnd:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InXWriteOnStart:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InYWriteOnStart:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InLinearOffset:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InRadialOffset:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InRadialDirection:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InP1:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InP2:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InGridXCount:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridYCount:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridXSize:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridYSize:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridXOffset:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridYOffset:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridOffsetXLoop:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridOffsetYLoop:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InIndependentRadius:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InResolution:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InBezP1:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InBezP2:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InBezP3:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InBezP4:SetAttrs({IC_Visible = false, PC_Visible = false})
+			elseif param.Value == 2 then -- Radial
+				InCopies:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InXRadius:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InYRadius:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InWriteOnStart:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InWriteOnEnd:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InXWriteOnStart:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InYWriteOnStart:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InLinearOffset:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InRadialOffset:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InRadialDirection:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InP1:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InP2:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridXCount:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridYCount:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridXSize:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridYSize:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridXOffset:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridYOffset:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridOffsetXLoop:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridOffsetYLoop:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InIndependentRadius:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InResolution:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InBezP1:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InBezP2:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InBezP3:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InBezP4:SetAttrs({IC_Visible = false, PC_Visible = false})
+				
+			elseif param.Value == 3 then -- Image
+				InCopies:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InXRadius:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InYRadius:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InWriteOnStart:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InWriteOnEnd:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InXWriteOnStart:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InYWriteOnStart:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InRadialOffset:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InLinearOffset:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InRadialDirection:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InP1:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InP2:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridXCount:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridYCount:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridXSize:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridYSize:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridXOffset:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridYOffset:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridOffsetXLoop:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridOffsetYLoop:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InIndependentRadius:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InResolution:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InBezP1:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InBezP2:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InBezP3:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InBezP4:SetAttrs({IC_Visible = false, PC_Visible = false})
+			elseif param.Value == 4 then -- Bezier
+				InCopies:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InXRadius:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InYRadius:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InWriteOnStart:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InWriteOnEnd:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InXWriteOnStart:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InYWriteOnStart:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InLinearOffset:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InRadialOffset:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InRadialDirection:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InP1:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InP2:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridXCount:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridYCount:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridXSize:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridYSize:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridXOffset:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridYOffset:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridOffsetXLoop:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InGridOffsetYLoop:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InIndependentRadius:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InResolution:SetAttrs({IC_Visible = false, PC_Visible = false})
+				InBezP1:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InBezP2:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InBezP3:SetAttrs({IC_Visible = true, PC_Visible = true})
+				InBezP4:SetAttrs({IC_Visible = true, PC_Visible = true})
+			end
+		elseif inp == InApply and param then
+				
+				InOperation:SetAttrs({IC_Visible = (param.Value == "Merge" or param.Value == 0)})
+		elseif inp == InRandomise then
+				InSeed:SetSource(Number(math.random(0,32767)), time)
+		elseif inp == InIndependentRadius and param then
+				InYRadius:SetAttrs({IC_Visible = (param.Value == 1)})
+		elseif inp == InUsePosEffectors and param then
+				InPositionEffectorX:SetAttrs({IC_Visible = (param.Value == 1)})
+				InPositionEffectorY:SetAttrs({IC_Visible = (param.Value == 1)})
+				InUsePosMidpoint:SetAttrs({IC_Visible = (param.Value == 1)})
+				InXPosControlChannel:SetAttrs({IC_Visible = (param.Value == 1)})
+				InYPosControlChannel:SetAttrs({IC_Visible = (param.Value == 1)})
+
+			
+		elseif inp == InUseScaleEffectors and param then
+				InScaleEffectorX:SetAttrs({IC_Visible = (param.Value == 1)})
+				InScaleEffectorY:SetAttrs({IC_Visible = (param.Value == 1)})
+				InXScaleControlChannel:SetAttrs({IC_Visible = (param.Value == 1)})
+				InYScaleControlChannel:SetAttrs({IC_Visible = (param.Value == 1)})
+				InUseScaleMidpoint:SetAttrs({IC_Visible = (param.Value == 1)})
+		elseif inp == InUseRotEffectors and param then
+				InRotationEffectorAngle:SetAttrs({IC_Visible = (param.Value == 1)})
+				InRotControlChannel:SetAttrs({IC_Visible = (param.Value == 1)})
+				InUseRotMidpoint:SetAttrs({IC_Visible = (param.Value == 1)})
+		elseif inp == InUseTimeEffectors and param then
+				InTimeEffectorValue:SetAttrs({IC_Visible = (param.Value == 1)})	
+				InTimeControlChannel:SetAttrs({IC_Visible = (param.Value == 1)})
+		elseif inp == InSoloClones and param then
+				InClonesToSolo:SetAttrs({IC_Visible = (param.Value == 1)})
+				InShowHide:SetAttrs({IC_Visible = (param.Value == 1)})
+		end
+	end
+end
+
+-- Alternate method of the above. Calculates only once instead of on-demand.
+function calcAspect(ref_img)
+	return (ref_img.Height * ref_img.YScale) / (ref_img.Width * ref_img.XScale)
+end
+
+
+-- Get the pixel values
+
+function pixelValueAt(xPos,yPos,imageToCheck,imageWidth,imageHeight)
+	local checkPoint = Pixel{}
+
+	local effectorToImageRatioX =  (imageToCheck.Width/imageWidth)
+	local effectorToImageRatioY =  (imageToCheck.Height/imageHeight)
+	
+	local normalisedX = (xPos * (imageWidth - 1)) * effectorToImageRatioX
+	local normalisedY = (yPos * (imageHeight - 1)) * effectorToImageRatioY
+
+	imageToCheck:GetPixel(normalisedX,normalisedY, checkPoint)
+
+	return checkPoint
+
+
+
+
+end
+
+-- Do All transforms etc
+
+function performBasicOperations(inputValue,inputBaseOperations,inputJitterOperations)
+	
+	local bl = math.pow(inputBaseOperations.layerBlend, inputValue)
+	local rg = math.pow(inputBaseOperations.gainRed  ,  inputValue)
+	local gg = math.pow(inputBaseOperations.gainGreen,  inputValue)
+	local bg = math.pow(inputBaseOperations.gainBlue ,  inputValue)
+	local ag = math.pow(inputBaseOperations.gainAlpha,  inputValue)
+	local jaxX = inputJitterOperations.jitterAxisX   * 2 * (math.random() - 0.5)
+	local jaxY = inputJitterOperations.jitterAxisY   * 2 * (math.random() - 0.5)
+	local jszx = inputJitterOperations.jitterSizeX * 2 * (math.random() - 0.5)
+	local jszy = inputJitterOperations.jitterSizeY * 2 * (math.random() - 0.5)
+	local jan  = inputJitterOperations.jitterAngle * 2 * (math.random() - 0.5)
+	local jgnr = inputJitterOperations.jitterGainRed   * 2 * (math.random() - 0.5)
+	local jgng = inputJitterOperations.jitterGainGreen * 2 * (math.random() - 0.5)
+	local jgnb = inputJitterOperations.jitterGainBlue  * 2 * (math.random() - 0.5)
+	local jgna = inputJitterOperations.jitterGainAlpha * 2 * (math.random() - 0.5)
+	local jlbl = inputJitterOperations.jitterLayerBlend * 2 * (math.random() - 0.5)
+	bl = bl + jlbl
+	
+	
+	local operationsOutput = {	jitterAxisX = jaxX,
+								jitterAxisY = jaxY,
+								jitterSizeX = jszx,
+								jitterSizeY = jszy,
+								jitterAngle = jan,
+								finalRedGain = (rg * bl + jgnr),
+								finalGreenGain = (gg * bl + jgng),
+								finalBlueGain = (bg * bl + jgnb),
+								finalAlphaGain = (ag * bl + jgna)
+							}
+
+	
+	return operationsOutput
+
+end
+
+-- Position Effector
+
+
+
+function performPositionEffector(inputPosEffectorX,inputPosEffectorY,inputOffsetX,inputOffsetY,inputPositionEffector,inputWidth,inputHeight,inputXPositionsChannel,inputYPositionsChannel,inputUseRange)
+	
+	
+	local positionAfterEffector = {}
+	
+	local effectorToImageRatioX =  (inputPositionEffector.Width/inputWidth)/2
+	local effectorToImageRatioY =  (inputPositionEffector.Height/inputHeight)/2
+	
+	
+	-- Check if the clone is within the effector image bounds if it is then do the effector, otherwise do nothing
+	if not(inputOffsetX > (0.5 + effectorToImageRatioX) or inputOffsetX < (0.5 - effectorToImageRatioX) or inputOffsetY > (0.5 + effectorToImageRatioY) or inputOffsetY < (0.5 - effectorToImageRatioY)) then
+		local effectorValue = pixelValueAt(inputOffsetX,inputOffsetY,inputPositionEffector,inputWidth,inputHeight)
+	
+	
+		local xPositionOffsetFromEffector = 1
+		local yPositionOffsetFromEffector = 1
+		if inputXPositionsChannel == 0 then
+			xPositionOffsetFromEffector = effectorValue.R
+		elseif inputXPositionsChannel == 1 then
+			xPositionOffsetFromEffector = effectorValue.G
+		elseif inputXPositionsChannel == 2 then
+			xPositionOffsetFromEffector = effectorValue.B
+		elseif inputXPositionsChannel == 3 then
+			xPositionOffsetFromEffector = effectorValue.A
+		else 
+			--Dodgy Luma Calculation
+			local lumaCalc = (0.33 * effectorValue.R) + (0.5 * effectorValue.G) + (0.16 * effectorValue.B)
+			xPositionOffsetFromEffector = lumaCalc
+		end
+	
+		if inputYPositionsChannel == 0 then
+			yPositionOffsetFromEffector = effectorValue.R
+		elseif inputYPositionsChannel == 1 then
+			yPositionOffsetFromEffector = effectorValue.G
+		elseif inputYPositionsChannel == 2 then
+			yPositionOffsetFromEffector = effectorValue.B
+		elseif inputYPositionsChannel == 3 then
+			yPositionOffsetFromEffector = effectorValue.A
+		else 
+			--Dodgy Luma Calculation
+			local lumaCalc = (0.33 * effectorValue.R) + (0.5 * effectorValue.G) + (0.16 * effectorValue.B)
+			yPositionOffsetFromEffector = lumaCalc
+		end
+	
+		
+	
+
+		if inputUseRange == 1 then 
+			local xPositionOffsetFromEffectorMapped = map_range(0,1,-1,1,xPositionOffsetFromEffector)
+			local yPositionOffsetFromEffectorMapped = map_range(0,1,-1,1,yPositionOffsetFromEffector)
+	
+			positionAfterEffector.X = inputOffsetX + ((inputPosEffectorX * inputWidth)/inputWidth) * xPositionOffsetFromEffectorMapped
+			positionAfterEffector.Y = inputOffsetY + ((inputPosEffectorY * inputHeight)/inputHeight) * yPositionOffsetFromEffectorMapped
+		
+		else
+			positionAfterEffector.X = inputOffsetX + ((inputPosEffectorX * inputWidth)/inputWidth) * xPositionOffsetFromEffector
+			positionAfterEffector.Y = inputOffsetY + ((inputPosEffectorY * inputHeight)/inputHeight) * yPositionOffsetFromEffector
+	
+	
+		end
+	
+	else 
+	
+		-- just return the original positions
+		positionAfterEffector.X = inputOffsetX
+		positionAfterEffector.Y = inputOffsetY
+	end
+
+	
+	
+	
+
+	
+	
+	return positionAfterEffector
+
+
+end
+
+
+-- Scale Effector
+
+
+function performScaleEffector(inputImage,inputOffsetX,inputOffsetY,scaleEffectorImage,xScale,yScale,imageXSize,imageYSize,inputXScaleChannel,inputYScaleChannel,inputUseMidPoint)
+
+	local effectorScaleX = 1
+	local effectorScaleY = 1
+	
+	local xScaleOffsetFromEffector = 1
+	local yScaleOffsetFromEffector = 1
+	
+	local imageToScale = inputImage:CopyOf()
+	
+	local effectorToImageRatioX =  (scaleEffectorImage.Width/imageXSize)/2
+	local effectorToImageRatioY =  (scaleEffectorImage.Height/imageYSize)/2
+	
+	if not(inputOffsetX > (0.5 + effectorToImageRatioX) or inputOffsetX < (0.5 - effectorToImageRatioX) or inputOffsetY > (0.5 + effectorToImageRatioY) or inputOffsetY < (0.5 - effectorToImageRatioY)) then
+	
+		local effectorValue = pixelValueAt(inputOffsetX,inputOffsetY,scaleEffectorImage,imageXSize,imageYSize)
+	
+		if inputXScaleChannel == 0 then
+			xScaleOffsetFromEffector = effectorValue.R
+		elseif inputXScaleChannel == 1 then
+			xScaleOffsetFromEffector = effectorValue.G
+			
+		elseif inputXScaleChannel == 2 then
+			xScaleOffsetFromEffector = effectorValue.B
+		
+		elseif inputXScaleChannel == 3 then
+			xScaleOffsetFromEffector = effectorValue.A
+		else 
+			--Dodgy Luma Calculation
+			local lumaCalc = (0.33 * effectorValue.R) + (0.5 * effectorValue.G) + (0.16 * effectorValue.B)
+			xScaleOffsetFromEffector = lumaCalc
+		end
+	
+		if inputYScaleChannel == 0 then
+			yScaleOffsetFromEffector = effectorValue.R
+		elseif inputYScaleChannel == 1 then
+			yScaleOffsetFromEffector = effectorValue.G
+		elseif inputYScaleChannel == 2 then
+			yScaleOffsetFromEffector = effectorValue.B
+		elseif inputYScaleChannel == 3 then
+			yScaleOffsetFromEffector = effectorValue.A
+		else 
+			--Dodgy Luma Calculation
+			local lumaCalc = (0.33 * effectorValue.R) + (0.5 * effectorValue.G) + (0.16 * effectorValue.B)
+			yScaleOffsetFromEffector = lumaCalc
+		end
+		
+
+	
+		if inputUseMidPoint == 1 then
+	
+			local mappedXScale = map_range(0,1,-1,1,xScaleOffsetFromEffector)
+			local mappedYScale = map_range(0,1,-1,1,yScaleOffsetFromEffector)
+	
+			effectorScaleX = xScale * mappedXScale
+			effectorScaleY = yScale * mappedYScale
+		else
+			effectorScaleX = xScale * xScaleOffsetFromEffector
+			effectorScaleY = yScale * yScaleOffsetFromEffector
+	
+		end
+	
+	end
+	
+	
+
+	imageToScale.XScale =  1 + effectorScaleX
+	
+	imageToScale.YScale =  1 + effectorScaleY
+	return imageToScale
+	
+end
+
+-- Rotation Effector
+function performRotationEffector(inputRotationEffectorPresent,inputUseRotEffector,inputOffsetX,inputOffsetY,inputRotationEffector,inputWidth,inputHeight,inputEffectorAngle,inputUseMidPoint,inputRotChannel)
+	local angleEffect = 0
+	
+	if inputRotationEffectorPresent and inputUseRotEffector == 1 then	
+	
+		
+		local effectorToImageRatioX =  (inputRotationEffector.Width/inputWidth)/2
+		local effectorToImageRatioY =  (inputRotationEffector.Height/inputHeight)/2
+	
+		if not(inputOffsetX > (0.5 + effectorToImageRatioX) or inputOffsetX < (0.5 - effectorToImageRatioX) or inputOffsetY > (0.5 + effectorToImageRatioY) or inputOffsetY < (0.5 - effectorToImageRatioY)) then		
+			local effectorValue = pixelValueAt(inputOffsetX,inputOffsetY,inputRotationEffector,inputWidth,inputHeight)
+		
+			local valueToUseForEffector = 1
+		
+			if inputRotChannel == 0 then
+				valueToUseForEffector = effectorValue.R
+			elseif inputRotChannel == 1 then
+				valueToUseForEffector = effectorValue.G
+			elseif inputRotChannel == 2 then
+				valueToUseForEffector = effectorValue.B
+			elseif inputRotChannel == 3 then
+				valueToUseForEffector = effectorValue.A
+			else 
+				--Dodgy Luma Calculation
+				local lumaCalc = (0.33 * effectorValue.R) + (0.5 * effectorValue.G) + (0.16 * effectorValue.B)
+				valueToUseForEffector = lumaCalc
+			end
+		
+			if inputUseMidPoint == 1 then
+			
+				local mappedRotationEffect = map_range(0,1,-1,1,valueToUseForEffector)
+				angleEffect = inputEffectorAngle * mappedRotationEffect
+		
+			else
+				angleEffect = inputEffectorAngle * valueToUseForEffector
+			end
+		end
+				
+		
+	end	
+	
+	return angleEffect
+end
+
+-- Colour Effector
+
+function performColourEffector(inputColourEffectorPresent,inputUseColourEffector,inputOffsetX,inputOffsetY,inputColourEffector,inputWidth,inputHeight)
+	local colourEffectorOffsets = {R = 1,G = 1,B = 1,A = 1}
+	
+	
+
+	if inputColourEffectorPresent and inputUseColourEffector == 1 then
+		local effectorToImageRatioX =  (inputColourEffector.Width/inputWidth)/2
+		local effectorToImageRatioY =  (inputColourEffector.Height/inputHeight)/2
+
+		if not(inputOffsetX > (0.5 + effectorToImageRatioX) or inputOffsetX < (0.5 - effectorToImageRatioX) or inputOffsetY > (0.5 + effectorToImageRatioY) or inputOffsetY < (0.5 - effectorToImageRatioY)) then
+			local effectorValue = pixelValueAt(inputOffsetX,inputOffsetY,inputColourEffector,inputWidth,inputHeight)
+			colourEffectorOffsets.R = effectorValue.R
+			colourEffectorOffsets.G = effectorValue.G
+			colourEffectorOffsets.B = effectorValue.B
+			colourEffectorOffsets.A = effectorValue.A
+		end
+	end
+	
+
+	return colourEffectorOffsets
+end
+
+
+-- De Casteljau's equation finds x,y coordinates for a given t
+-- p1 - p4 are Point DataType: Tables with indices X and Y 
+-- The return value of p is a table in the same format.
+function solvePoint(p1, p2, p3, p4, t)
+	local p = {}
+	p.X = (1-t)^3*p1.X + 3*(1-t)^2*t*p2.X + 3*(1-t)*t^2*p3.X + t^3*p4.X
+	p.Y = (1-t)^3*p1.Y + 3*(1-t)^2*t*p2.Y + 3*(1-t)*t^2*p3.Y + t^3*p4.Y
+	
+	return p
+end
+
+-- Range Mapping Function
+function map_range( a1, a2, b1, b2, s )
+    return b1 + (s-a1)*(b2-b1)/(a2-a1)
+end
+
+-- Function to check if an table contains an element
+
+function contains(table, element)
+
+	for index, value in ipairs(table) do
+		if value == element then
+			return true
+		end
+	end
+	
+	return false
+  
+  
+  
+end
+
+
+function Process(req) 
+	-- Standard set up for Creator tools
+	local realwidth = Width;
+	local realheight = Height;
+	
+	-- We'll handle proxy ourselves
+	Width = Width / Scale
+	Height = Height / Scale
+	Scale = 1
+	
+	-- Attributes for new images
+	local imgattrs = {
+		IMG_Document = self.Comp,
+		{ IMG_Channel = "Red", },
+		{ IMG_Channel = "Green", },
+		{ IMG_Channel = "Blue", },
+		{ IMG_Channel = "Alpha", },
+		IMG_Width = Width,
+		IMG_Height = Height,
+		IMG_XScale = XAspect,
+		IMG_YScale = YAspect,
+		IMAT_OriginalWidth = realwidth,
+		IMAT_OriginalHeight = realheight,
+		IMG_Quality = not req:IsQuick(),
+		IMG_MotionBlurQuality = not req:IsNoMotionBlur(),
+		}
+		
+	if not req:IsStampOnly() then
+		imgattrs.IMG_ProxyScale = 1
+	end
+	
+	if SourceDepth ~= 0 then
+		imgattrs.IMG_Depth = SourceDepth
+	end
+
+	-- Set up image
+	local img = Image(imgattrs)
+	local out = img:CopyOf()
+	local p = Pixel({R=0,G=0,B=0,A=0})
+	img:Fill(p) -- Clear the image so the next frame doesn't contain the previous one.
+	out:Fill(p)
+
+	local aspect = calcAspect(img)
+	local img = InBackground:GetValue(req)
+	
+	-- 
+	
+	local positionEffector = InPosition:GetValue(req)
+	local scaleEffector = InScale:GetValue(req)
+	
+	
+	
+	
+	
+	
+	
+	
+	local rotationEffector = InRotation:GetValue(req)
+	local timeEffector = InTimeEffector:GetValue(req)
+	local colourEffector = InColourEffector:GetValue(req)
+	local searchResolution = InResolution:GetValue(req).Value
+	
+	local imageToCloneTo =  InImageToCloneTo:GetValue(req)
+	
+	
+	local mode 			 	= InMode:GetValue(req).Value
+	local timeoff = InTimeOffset:GetValue(req).Value
+	
+	local axis = InAxis:GetValue(req)
+	local xsize = InXSize:GetValue(req).Value
+	local ysize = InYSize:GetValue(req).Value
+	local angle = InAngle:GetValue(req).Value
+	local additive = InAdditive:GetValue(req).Value
+	
+	
+	
+	local gain_red = InGainRed:GetValue(req).Value
+	local gain_green = InGainGreen:GetValue(req).Value
+	local gain_blue = InGainBlue:GetValue(req).Value
+	local gain_alpha = InGainAlpha:GetValue(req).Value
+	local burn = InBurn:GetValue(req).Value
+	local apply_mode = InApply:GetValue(req).Value
+	local apply_operator = InOperation:GetValue(req).Value
+	
+	local layerblend = InLayerBlend:GetValue(req).Value
+	
+	local baseOperations = {gainRed = gain_red,
+							gainGreen = gain_green,
+							gainBlue = gain_blue,
+							gainAlpha = gain_alpha,
+							layerBlend = layerblend
+							}
+	
+		
+--	local applyModes =	{  "Merge", "Screen",  "Dissolve", "Multiply","Overlay", "SoftLight", "HardLight", "ColorDodge", "ColorBurn","Darken",  "Lighten", "Difference",  "Exclusion","Hue", "Saturation", "Color", "Luminosity",  }
+--	local apply_mode = applyModes[apply_mode_input]
+	
+	
+--	local apply_operators = 	{ "Over", "In", "HeldOut","Atop", "XOr", }
+--	local apply_operator = apply_operators[apply_operator_input]
+	
+	
+	local gridXCount = InGridXCount:GetValue(req).Value
+	local gridYCount = InGridYCount:GetValue(req).Value
+	local gridXSize = InGridXSize:GetValue(req).Value
+	
+
+
+	
+	
+	local gridYSize = InGridYSize:GetValue(req).Value
+	
+	
+	
+	local gridXOffset = InGridXOffset:GetValue(req).Value
+	local gridYOffset = InGridYOffset:GetValue(req).Value
+	local gridXWriteOnStart = InXWriteOnStart:GetValue(req).Value
+	local gridXWriteOnEnd =  InXWriteOnEnd:GetValue(req).Value
+	local gridYWriteOnStart = InYWriteOnStart:GetValue(req).Value
+	local gridYWriteOnEnd =  InYWriteOnEnd:GetValue(req).Value
+	local gridXOffsetLoop = InGridOffsetXLoop:GetValue(req).Value
+	local gridYOffsetLoop = InGridOffsetYLoop:GetValue(req).Value
+	
+	local p1  = InP1:GetValue(req)
+	local p2  = InP2:GetValue(req)
+	
+	local bezP1   		 	  	= InBezP1:GetValue(req)
+	local bezP2   			 	= InBezP2:GetValue(req)
+	local bezP3  			 	= InBezP3:GetValue(req)
+	local bezP4   	   		 	= InBezP4:GetValue(req)
+	
+	local copies = InCopies:GetValue(req).Value
+	
+	local xRadius = InXRadius:GetValue(req).Value
+	local yRadius = InYRadius:GetValue(req).Value
+	local lockRadius = InIndependentRadius:GetValue(req).Value
+	local linearOffset = InLinearOffset:GetValue(req).Value
+	local radialOffset = InRadialOffset:GetValue(req).Value
+	local radialClockwise = InRadialDirection:GetValue(req).Value
+	
+	local writeOnStart 		= InWriteOnStart:GetValue(req).Value
+	local writeOnEnd		= InWriteOnEnd:GetValue(req).Value
+	
+	
+	local jitcenter = InJitterCenter:GetValue(req)
+	local jitaxis = InJitterAxis:GetValue(req)
+	local jitxsize = InJitterXSize:GetValue(req).Value
+	local jitysize = InJitterYSize:GetValue(req).Value
+	local jitangle = InJitterAngle:GetValue(req).Value
+	local jitgain_red = InJitterGainRed:GetValue(req).Value
+	local jitgain_green = InJitterGainGreen:GetValue(req).Value
+	local jitgain_blue = InJitterGainBlue:GetValue(req).Value
+	local jitgain_alpha = InJitterGainAlpha:GetValue(req).Value
+	local jitlayerblend = InJitterLayerBlend:GetValue(req).Value
+	
+	local jitterOperations = {	jitterAxisX = jitaxis.X,
+								jitterAxisY = jitaxis.Y,
+								jitterSizeX = jitxsize,
+								jitterSizeY = jitysize,
+								jitterAngle = jitangle,
+								jitterGainRed = jitgain_red,
+								jitterGainGreen = jitgain_green,
+								jitterGainBlue = jitgain_blue,
+								jitterGainAlpha = jitgain_alpha,
+								jitterLayerBlend = jitlayerblend
+							}
+
+	local seed = InSeed:GetValue(req).Value
+	math.randomseed(seed)
+	
+	local effectorAxis = InEffectorAxis:GetValue(req)
+	
+	local posEffectorX = InPositionEffectorX:GetValue(req).Value
+	local posEffectorY = InPositionEffectorY:GetValue(req).Value
+	local usePositionEffector = InUsePosEffectors:GetValue(req).Value
+	local usePositionMidPoint = InUsePosMidpoint:GetValue(req).Value
+	
+	
+	local xPositionsChannel = InXPosControlChannel:GetValue(req).Value
+	local yPositionsChannel = InYPosControlChannel:GetValue(req).Value
+	
+	local scaleEffectorX = InScaleEffectorX:GetValue(req).Value
+	local scaleEffectorY = InScaleEffectorY:GetValue(req).Value
+	local useScaleEffector = InUseScaleEffectors:GetValue(req).Value
+	local useScaleMidPoint = InUseScaleMidpoint:GetValue(req).Value
+	
+	
+	
+	local xScaleChannel = InXScaleControlChannel:GetValue(req).Value
+	local yScaleChannel = InYScaleControlChannel:GetValue(req).Value
+	
+	
+	local useRotEffector = InUseRotEffectors:GetValue(req).Value
+	local effectorAngle = InRotationEffectorAngle:GetValue(req).Value
+	local rotationChannel = InRotControlChannel:GetValue(req).Value
+	local useRotMidPoint = InUseRotMidpoint:GetValue(req).Value
+	
+	local useTimeEffector = InUseTimeEffectors:GetValue(req).Value
+	local timeEffectorValue = InTimeEffectorValue:GetValue(req).Value
+	local timeChannel = InTimeControlChannel:GetValue(req).Value
+	
+	local useColourEffector = InUseColourEffectors:GetValue(req).Value
+	
+	-- check if the effectors are there
+	
+	local positionEffectorPresent = false
+	local scaleEffectorPresent = false
+	local rotationEffectorPresent = false
+	local timeEffectorPresent = false
+	local colourEffectorPresent = false
+	
+	if positionEffector then positionEffectorPresent = true end
+	if scaleEffector then scaleEffectorPresent = true end
+	if rotationEffector then rotationEffectorPresent = true end
+	if timeEffector then timeEffectorPresent = true end
+	if colourEffector then colourEffectorPresent = true end
+
+	local effectorAxisOffsetX = 0
+	local effectorAxisOffsetY = 0
+	
+	if usePositionEffector == 1 or useScaleEffector == 1 or useRotEffector == 1 then
+	
+		effectorAxisOffsetX = 0.5 - effectorAxis.X
+		effectorAxisOffsetY = 0.5 - effectorAxis.Y
+	end
+	
+	local soloClones = InSoloClones:GetValue(req).Value
+	local showHide = InShowHide:GetValue(req).Value
+	local clonesToSolo = InClonesToSolo:GetValue(req).Value
+	
+	-- remove spaces
+	clonesToSolo = clonesToSolo:gsub("%s+", "")
+	clonesToSolo = string.gsub(clonesToSolo, "%s+", "")
+	
+	local soloElements = {}
+	
+	for word in string.gmatch(clonesToSolo, '([^,]+)') do
+		if tonumber(word) then
+			table.insert(soloElements,tonumber(word))
+		end
+   	 
+	end	
+
+	local soloIndex = 0
+	
+	
+	
+
+	local i
+	local cloneIndex = 0
+
+	if mode == 0 then
+		-- Grid Mode
+		-- if there are no clones then do nothing
+		if not(gridXCount == 0 or gridYCount == 0) then
+	
+
+	
+	
+			local fg
+
+
+	
+	
+			local imageXSize = img.Width
+			local imageYSize = img.Height
+			
+			local xSize = (((gridXSize*imageXSize)/(gridXCount-1))/imageXSize) * (gridXWriteOnEnd-gridXWriteOnStart)
+			local ySize = (((gridYSize*imageYSize)/(gridYCount-1))/imageYSize) * (gridYWriteOnEnd-gridYWriteOnStart)
+			
+			-- Deal with grid having 1 in either x count or y count, the difference is 
+			-- the position will be in middle so arithmetic used for other numbers get screwed up
+			
+			if gridXCount == 1 or gridYCount == 1 then
+				
+				
+				local gridCount = 1
+				
+				if gridXCount == 1 then gridCount = gridYCount else gridCount = gridXCount end
+					for j = 0, gridCount-1 do
+						cloneIndex = j + 1
+					
+						local calculatedOperations = performBasicOperations(j,baseOperations,jitterOperations)
+						if gridXOffsetLoop == 1 then
+						
+							-- Deal with Offset bigger or lower than 1 or -1
+							if gridXOffset > 1 then
+					
+								gridXOffset = gridXOffset % 1
+							
+							elseif gridXOffset < -1 then
+					
+								gridXOffset = gridXOffset * -1
+								gridXOffset = gridXOffset % 1
+								gridXOffset = gridXOffset * -1
+							
+ 							end
+ 						end
+ 						
+ 						if gridYOffsetLoop == 1 then
+						
+							-- Deal with Offset bigger or lower than 1 or -1
+							if gridYOffset > 1 then
+					
+								gridYOffset = gridYOffset % 1
+							
+							elseif gridYOffset < -1 then
+					
+								gridYOffset = gridYOffset * -1
+								gridYOffset = gridYOffset % 1
+								gridYOffset = gridYOffset * -1
+							
+ 							end
+ 						end
+						
+						if gridXCount == 1 then
+							offsetX = 0.5
+						else
+							offsetX = (xSize * j) + (0.5-(0.5*gridXSize)) + (gridXOffset * gridXSize) + (gridXWriteOnStart * gridXSize )
+						end
+						
+						if gridYCount == 1 then
+							offsetY = 0.5
+						else
+							offsetY = (ySize * j) + (0.5-(0.5*gridYSize)) + (gridYOffset * gridYSize) + (gridYWriteOnStart * gridYSize )
+						end			
+						
+						-- Looping X Grid Offset
+						
+						if gridXOffsetLoop == 1 then
+						
+							local gridStartX = (0.5-(0.5 * gridXSize))
+							local gridEndX = (0.5+(0.5 * gridXSize))
+							
+							if offsetX > gridEndX then
+								offsetX = gridStartX + ( offsetX - gridEndX) - xSize
+							elseif offsetX < gridStartX then
+								
+								offsetX = gridEndX - ((gridStartX - offsetX ) )  + xSize
+							
+							
+							end
+						
+						
+						
+						
+						
+						end
+						
+						-- Looping Y Grid Offset
+						
+						if gridYOffsetLoop == 1 then
+						
+							local gridStartY = (0.5-(0.5 * gridYSize))
+							local gridEndY = (0.5+(0.5 * gridYSize))
+							
+							if offsetY > gridEndY then
+								offsetY = gridStartY + ( offsetY - gridEndY) - ySize
+							elseif offsetY < gridStartY then
+								
+								offsetY = gridEndY - ((gridStartY - offsetY ) )  + ySize
+							
+							
+							end
+						
+						
+						
+						
+						
+						end
+						
+						-- Use Colour Effector
+						
+						local colourEffectorOffsets = performColourEffector(colourEffectorPresent,useColourEffector,offsetX,offsetY,colourEffector,Width,Height,usePositionMidPoint)
+						
+						
+						-- Use Time Effector		
+						local timeEffectorOffset = 0		
+						if timeEffectorPresent and useTimeEffector == 1 then
+						
+							local timeEffectorChannelValue = 0
+							local effectorToImageRatioX =  (timeEffector.Width/Width)/2
+							local effectorToImageRatioY =  (timeEffector.Height/Height)/2
+							if not(offsetX > (0.5 + effectorToImageRatioX) or offsetX < (0.5 - effectorToImageRatioX) or offsetY > (0.5 + effectorToImageRatioY) or offsetY < (0.5 - effectorToImageRatioY)) then
+								local effectorValue = pixelValueAt(offsetX,offsetY,timeEffector,Width,Height)
+							
+								if timeChannel == 0 then
+									timeEffectorChannelValue = effectorValue.R
+								elseif timeChannel == 1 then
+									timeEffectorChannelValue = effectorValue.G
+								elseif timeChannel == 2 then
+									timeEffectorChannelValue = effectorValue.B
+								elseif timeChannel == 3 then
+									timeEffectorChannelValue = effectorValue.A
+								else 
+									--Dodgy Luma Calculation
+									local lumaCalc = (0.33 * effectorValue.R) + (0.5 * effectorValue.G) + (0.16 * effectorValue.B)
+									timeEffectorChannelValue = lumaCalc
+								end
+							
+							end
+								
+								
+							timeEffectorOffset = timeEffectorChannelValue * timeEffectorValue
+						
+						end
+						if timeoff ~= 0.0 or timeEffectorOffset ~= 0.0 then
+							fg = InBackground:GetSource(req.Time + (timeoff * (j) + timeEffectorOffset), REQF_SecondaryTime, REQF_SecondaryTime)
+						else
+							fg = img
+						end
+
+						if fg then	
+						
+							-- Use Scale Effector	
+							
+							if scaleEffectorPresent and useScaleEffector == 1 then		
+								local scaledImage = performScaleEffector(fg,offsetX,offsetY,scaleEffector,scaleEffectorX,scaleEffectorY,Width,Height,xScaleChannel,yScaleChannel,useScaleMidPoint)
+								fg = scaledImage
+							end
+							
+							-- Use Rotation Effector	
+							local angleExtra = performRotationEffector(rotationEffectorPresent,useRotEffector,offsetX,offsetY,rotationEffector,Width,Height,effectorAngle,useRotMidPoint,rotationChannel)
+							
+							-- Use Position Effector
+							
+							if positionEffectorPresent and usePositionEffector == 1 then
+								local positionEffectorOffset = performPositionEffector(posEffectorX,posEffectorY,offsetX,offsetY,positionEffector,Width,Height,xPositionsChannel,yPositionsChannel,usePositionMidPoint)
+								
+								
+								offsetX = positionEffectorOffset.X
+								offsetY = positionEffectorOffset.Y
+							
+								
+								
+							end
+						
+							
+							local show = false
+							
+							if soloClones == 0 then
+								show = true
+							
+							elseif (contains(soloElements,cloneIndex) and showHide == 0)  then 
+								show = true
+								
+							elseif (contains(soloElements,cloneIndex) and showHide == 1) then
+								show = false
+							elseif not(contains(soloElements,cloneIndex)) and showHide == 1 then
+								show = true
+							
+							end
+							
+							
+							if show then 
+								out:Merge(fg, {
+									MO_ApplyMode = apply_mode,
+									MO_ApplyOperator = apply_operator,
+									MO_XOffset = offsetX + effectorAxisOffsetX,
+									MO_YOffset = offsetY + effectorAxisOffsetY,
+									MO_XAxis = axis.X + calculatedOperations.jitterAxisX - effectorAxisOffsetX, 
+									MO_YAxis = axis.Y + calculatedOperations.jitterAxisY - effectorAxisOffsetY,
+									MO_XSize = (math.pow(xsize, j) * (1 + calculatedOperations.jitterSizeX)),
+									MO_YSize = (math.pow(ysize, j) * (1 + calculatedOperations.jitterSizeX)),
+									MO_Angle = angle * (j) + calculatedOperations.jitterAngle + angleExtra,
+									MO_FgAddSub = additive,
+									MO_FgRedGain   = calculatedOperations.finalRedGain * colourEffectorOffsets.R,
+									MO_FgGreenGain = calculatedOperations.finalGreenGain * colourEffectorOffsets.G,
+									MO_FgBlueGain  = calculatedOperations.finalBlueGain * colourEffectorOffsets.B,
+									MO_FgAlphaGain = calculatedOperations.finalAlphaGain * colourEffectorOffsets.A,
+									MO_BurnIn = burn    
+								})
+							end
+							
+						end
+					end
+				
+				
+				
+			else 
+				
+				for i = 0, gridXCount-1 do 
+					for j = 0, gridYCount-1 do
+						local calculatedOperations = performBasicOperations(i+j,baseOperations,jitterOperations)
+						
+						
+						cloneIndex = cloneIndex + 1
+						
+						if gridXOffsetLoop == 1 then
+						
+							-- Deal with Offset bigger or lower than 1 or -1
+							if gridXOffset > 1 then
+					
+								gridXOffset = gridXOffset % 1
+							
+							elseif gridXOffset < -1 then
+					
+								gridXOffset = gridXOffset * -1
+								gridXOffset = gridXOffset % 1
+								gridXOffset = gridXOffset * -1
+							
+ 							end
+ 						end
+ 						
+ 						if gridYOffsetLoop == 1 then
+						
+							-- Deal with Offset bigger or lower than 1 or -1
+							if gridYOffset > 1 then
+					
+								gridYOffset = gridYOffset % 1
+							
+							elseif gridYOffset < -1 then
+					
+								gridYOffset = gridYOffset * -1
+								gridYOffset = gridYOffset % 1
+								gridYOffset = gridYOffset * -1
+							
+ 							end
+ 						end
+						
+			
+						offsetX = (xSize * i) + (0.5-(0.5 * gridXSize ) ) + (gridXWriteOnStart * gridXSize )   + (gridXOffset * gridXSize)
+						offsetY = (ySize * j) + (0.5-(0.5 * gridYSize))  + (gridYWriteOnStart * gridYSize ) + (gridYOffset * gridYSize)
+						
+						-- Looping X Grid Offset
+						
+						if gridXOffsetLoop == 1 then
+						
+							local gridStartX = (0.5-(0.5 * gridXSize))
+							local gridEndX = (0.5+(0.5 * gridXSize))
+							
+							if offsetX > gridEndX then
+								offsetX = gridStartX + ( offsetX - gridEndX) - xSize
+							elseif offsetX < gridStartX then
+								
+								offsetX = gridEndX - ((gridStartX - offsetX ) )  + xSize
+							
+							
+							end
+						
+						
+						
+						
+						
+						end
+						
+						-- Looping Y Grid Offset
+						
+						if gridYOffsetLoop == 1 then
+						
+							local gridStartY = (0.5-(0.5 * gridYSize))
+							local gridEndY = (0.5+(0.5 * gridYSize))
+							
+							if offsetY > gridEndY then
+								offsetY = gridStartY + ( offsetY - gridEndY) - ySize
+							elseif offsetY < gridStartY then
+								
+								offsetY = gridEndY - ((gridStartY - offsetY ) )  + ySize
+							
+							
+							end
+						
+						
+						
+						
+						
+						end
+						
+					
+						-- Use Colour Effector
+						
+						local colourEffectorOffsets = performColourEffector(colourEffectorPresent,useColourEffector,offsetX,offsetY,colourEffector,Width,Height)
+									
+						-- Use Time Effector		
+						local timeEffectorOffset = 0		
+						if timeEffectorPresent and useTimeEffector == 1 then
+						
+							local timeEffectorChannelValue = 0
+							local effectorToImageRatioX =  (timeEffector.Width/Width)/2
+							local effectorToImageRatioY =  (timeEffector.Height/Height)/2
+							if not(offsetX > (0.5 + effectorToImageRatioX) or offsetX < (0.5 - effectorToImageRatioX) or offsetY > (0.5 + effectorToImageRatioY) or offsetY < (0.5 - effectorToImageRatioY)) then
+								local effectorValue = pixelValueAt(offsetX,offsetY,timeEffector,Width,Height)
+							
+								if timeChannel == 0 then
+									timeEffectorChannelValue = effectorValue.R
+								elseif timeChannel == 1 then
+									timeEffectorChannelValue = effectorValue.G
+								elseif timeChannel == 2 then
+									timeEffectorChannelValue = effectorValue.B
+								elseif timeChannel == 3 then
+									timeEffectorChannelValue = effectorValue.A
+								else 
+									--Dodgy Luma Calculation
+									local lumaCalc = (0.33 * effectorValue.R) + (0.5 * effectorValue.G) + (0.16 * effectorValue.B)
+									timeEffectorChannelValue = lumaCalc
+								end
+							
+							end
+								
+								
+							timeEffectorOffset = timeEffectorChannelValue * timeEffectorValue
+						
+						end
+						if timeoff ~= 0.0 or timeEffectorOffset ~= 0.0 then
+							fg = InBackground:GetSource(req.Time + (timeoff * (j) + timeEffectorOffset), REQF_SecondaryTime, REQF_SecondaryTime)
+						else
+							fg = img
+						end
+					
+
+						if fg then	
+						
+							-- Use Scale Effector	
+							
+							if scaleEffectorPresent and useScaleEffector == 1 then		
+								local scaledImage = performScaleEffector(fg,offsetX,offsetY,scaleEffector,scaleEffectorX,scaleEffectorY,Width,Height,xScaleChannel,yScaleChannel,useScaleMidPoint)
+								fg = scaledImage
+							end	
+							
+							-- Use Rotation Effector	
+							local angleExtra = performRotationEffector(rotationEffectorPresent,useRotEffector,offsetX,offsetY,rotationEffector,Width,Height,effectorAngle,useRotMidPoint,rotationChannel)
+							
+							-- Use Position Effector
+							if positionEffectorPresent and usePositionEffector == 1 then
+								local positionEffectorOffset = performPositionEffector(posEffectorX,posEffectorY,offsetX,offsetY,positionEffector,Width,Height,xPositionsChannel,yPositionsChannel,usePositionMidPoint)
+								
+								
+								offsetX = positionEffectorOffset.X
+								offsetY = positionEffectorOffset.Y
+							
+								
+								
+							end	
+							
+							local show = false
+							
+							if soloClones == 0 then
+								show = true
+							
+							elseif (contains(soloElements,cloneIndex) and showHide == 0)  then 
+								show = true
+								
+							elseif (contains(soloElements,cloneIndex) and showHide == 1) then
+								show = false
+							elseif not(contains(soloElements,cloneIndex)) and showHide == 1 then
+								show = true
+							
+							end
+							
+							
+							if show then 
+								out:Merge(fg, {
+									MO_ApplyMode = apply_mode,
+									MO_ApplyOperator = apply_operator,
+									MO_XOffset = offsetX + effectorAxisOffsetX,
+									MO_YOffset = offsetY + effectorAxisOffsetY,
+									MO_XAxis = axis.X + calculatedOperations.jitterAxisX - effectorAxisOffsetX, 
+									MO_YAxis = axis.Y + calculatedOperations.jitterAxisY - effectorAxisOffsetY,
+									MO_XSize = (math.pow(xsize, i+j) * (1 + calculatedOperations.jitterSizeX)),
+									MO_YSize = (math.pow(ysize, i+j) * (1 + calculatedOperations.jitterSizeX)),
+									MO_Angle = angle * (i+j) + calculatedOperations.jitterAngle + angleExtra,
+									MO_FgAddSub = additive,
+									MO_FgRedGain   = calculatedOperations.finalRedGain * colourEffectorOffsets.R,
+									MO_FgGreenGain = calculatedOperations.finalGreenGain * colourEffectorOffsets.G,
+									MO_FgBlueGain  = calculatedOperations.finalBlueGain * colourEffectorOffsets.B,
+									MO_FgAlphaGain = calculatedOperations.finalAlphaGain * colourEffectorOffsets.A,
+									MO_BurnIn = burn           
+								})
+							end
+						end
+					end
+				end
+			end
+		end
+	elseif mode == 1 then
+		-- Linear Mode
+		
+		
+		
+		
+		
+		
+		
+		
+		local fg 
+		-- If there is just 1 copy then just put it in centre of line
+		
+		if copies == 1 then
+			local calculatedOperations = performBasicOperations(1,baseOperations,jitterOperations)
+			
+				if linearOffset > 1 then
+					
+							linearOffset = linearOffset % 1
+							
+					elseif linearOffset < -1 then
+					
+							linearOffset = linearOffset * -1
+							linearOffset = linearOffset % 1
+							linearOffset = linearOffset * -1
+							
+ 					end
+
+			offsetX = (p2.X - p1.X)/2 + p1.X + (linearOffset * (p2.X - p1.X))
+			offsetY = (p2.Y - p1.Y)/2 + p1.Y + (linearOffset * (p2.Y - p1.Y))
+			
+			-- Use Colour Effector
+						
+			local colourEffectorOffsets = performColourEffector(colourEffectorPresent,useColourEffector,offsetX,offsetY,colourEffector,Width,Height)
+						
+		-- Use Time Effector		
+						local timeEffectorOffset = 0		
+						if timeEffectorPresent and useTimeEffector == 1 then
+						
+							local timeEffectorChannelValue = 0
+							local effectorToImageRatioX =  (timeEffector.Width/Width)/2
+							local effectorToImageRatioY =  (timeEffector.Height/Height)/2
+							if not(offsetX > (0.5 + effectorToImageRatioX) or offsetX < (0.5 - effectorToImageRatioX) or offsetY > (0.5 + effectorToImageRatioY) or offsetY < (0.5 - effectorToImageRatioY)) then
+								local effectorValue = pixelValueAt(offsetX,offsetY,timeEffector,Width,Height)
+							
+								if timeChannel == 0 then
+									timeEffectorChannelValue = effectorValue.R
+								elseif timeChannel == 1 then
+									timeEffectorChannelValue = effectorValue.G
+								elseif timeChannel == 2 then
+									timeEffectorChannelValue = effectorValue.B
+								elseif timeChannel == 3 then
+									timeEffectorChannelValue = effectorValue.A
+								else 
+									--Dodgy Luma Calculation
+									local lumaCalc = (0.33 * effectorValue.R) + (0.5 * effectorValue.G) + (0.16 * effectorValue.B)
+									timeEffectorChannelValue = lumaCalc
+								end
+							
+							end
+								
+								
+							timeEffectorOffset = timeEffectorChannelValue * timeEffectorValue
+						
+						end
+						if timeoff ~= 0.0 or timeEffectorOffset ~= 0.0 then
+							fg = InBackground:GetSource(req.Time + (timeoff * (1) + timeEffectorOffset), REQF_SecondaryTime, REQF_SecondaryTime)
+						else
+							fg = img
+						end
+
+
+
+			if fg then
+				
+					-- Use Position Effector
+					
+						-- Use Scale Effector	
+							
+						if scaleEffectorPresent and useScaleEffector == 1 then		
+							local scaledImage = performScaleEffector(fg,offsetX,offsetY,scaleEffector,scaleEffectorX,scaleEffectorY,Width,Height,xScaleChannel,yScaleChannel,useScaleMidPoint)
+							fg = scaledImage
+						end	
+						-- Use Rotation Effector
+						
+						local angleExtra = performRotationEffector(rotationEffectorPresent,useRotEffector,offsetX,offsetY,rotationEffector,Width,Height,effectorAngle,useRotMidPoint,rotationChannel)
+						
+						
+						-- Use Position Effector
+							if positionEffectorPresent and usePositionEffector == 1 then
+								local positionEffectorOffset = performPositionEffector(posEffectorX,posEffectorY,offsetX,offsetY,positionEffector,Width,Height,xPositionsChannel,yPositionsChannel,usePositionMidPoint)
+								
+								
+								offsetX = positionEffectorOffset.X
+								offsetY = positionEffectorOffset.Y
+							
+								
+								
+							end	
+						
+						
+						
+						
+				out:Merge(fg, {
+					MO_ApplyMode = apply_mode,
+					MO_ApplyOperator = apply_operator,
+					MO_XOffset = offsetX + effectorAxisOffsetX,
+					MO_YOffset = offsetY + effectorAxisOffsetY,
+					MO_XAxis = axis.X + calculatedOperations.jitterAxisX - effectorAxisOffsetX, 
+					MO_YAxis = axis.Y + calculatedOperations.jitterAxisY - effectorAxisOffsetY,
+					MO_XSize = (math.pow(xsize, 1) * (1 + calculatedOperations.jitterSizeX)),
+					MO_YSize = (math.pow(ysize, 1) * (1 + calculatedOperations.jitterSizeX)),
+					MO_Angle = angle * (1) + calculatedOperations.jitterAngle + angleExtra,
+					MO_FgAddSub = additive,
+					MO_FgRedGain   = calculatedOperations.finalRedGain * colourEffectorOffsets.R,
+					MO_FgGreenGain = calculatedOperations.finalGreenGain * colourEffectorOffsets.G,
+					MO_FgBlueGain  = calculatedOperations.finalBlueGain * colourEffectorOffsets.B,
+					MO_FgAlphaGain = calculatedOperations.finalAlphaGain * colourEffectorOffsets.A,
+					MO_BurnIn = burn        
+					})
+			end
+		else 
+	
+		
+			local xGap = ((p2.X - p1.X)*(writeOnEnd-writeOnStart))/(copies-1)
+			local yGap = ((p2.Y - p1.Y)*(writeOnEnd-writeOnStart))/(copies-1)
+			
+			
+			for i = 0, copies-1 do 
+					cloneIndex = i + 1
+					local calculatedOperations = performBasicOperations(i,baseOperations,jitterOperations)
+					
+					-- Make LinearOffset between -1 and 1
+					if linearOffset > 1 then
+					
+							linearOffset = linearOffset % 1
+							
+					elseif linearOffset < -1 then
+					
+							linearOffset = linearOffset * -1
+							linearOffset = linearOffset % 1
+							linearOffset = linearOffset * -1
+							
+ 					end
+ 					
+ 					if linearOffset == 1 or linearOffset == -1 then 
+						linearOffset = 0
+					end
+ 					
+					
+					offsetX = (xGap * i) + (p1.X + (writeOnStart * (p2.X - p1.X))) + (linearOffset * (p2.X - p1.X))
+					offsetY = (yGap * i) + (p1.Y + (writeOnStart * (p2.Y - p1.Y))) + (linearOffset * (p2.Y - p1.Y))
+					
+					
+					
+					if not(linearOffset == 0) then 
+						-- Deal with Offsets with different point1 and point2 positions
+						if p2.X >= p1.X and p2.Y >= p1.Y then 
+							
+							if offsetX > p2.X then
+								offsetX = p1.X + (((offsetX - p2.X ) ) - xGap) 
+							elseif offsetX < p1.X then
+								offsetX = p2.X - (((p1.X - offsetX)  ) - xGap)
+							end
+					
+							if offsetY > p2.Y then
+								offsetY = p1.Y + ((offsetY - p2.Y ) - yGap) 
+							elseif offsetY < p1.Y then
+								offsetY = p2.Y - ((p1.Y - offsetY)  - yGap)
+							end
+						elseif p2.X <= p1.X and p2.Y >= p1.Y then 
+						
+							if offsetX < p2.X then
+								offsetX = p1.X - (((p2.X - offsetX ) ) + xGap) 
+							elseif offsetX > p1.X then
+								offsetX = p2.X + (((offsetX - p1.X)  ) + xGap)
+							end
+					
+							if offsetY > p2.Y then
+								offsetY = p1.Y + ((offsetY - p2.Y )  - yGap) 
+							elseif offsetY < p1.Y then
+								offsetY = p2.Y - ((p1.Y - offsetY) - yGap)
+							end
+						elseif p2.X >= p1.X and p2.Y <= p1.Y then 
+							
+							if offsetX > p2.X then
+								offsetX = p1.X + (((offsetX - p2.X ) ) - xGap) 
+							elseif offsetX < p1.X then
+								offsetX = p2.X - (((p1.X - offsetX)  ) - xGap)
+							end
+					
+							if offsetY > p1.Y then
+								offsetY = p2.Y + ((offsetY - p1.Y ) + yGap) 
+							elseif offsetY < p2.Y then
+							
+								offsetY = p1.Y - ((p2.Y - offsetY)  + yGap)
+							end
+						elseif p2.X <= p1.X and p2.Y <= p1.Y then
+							
+							if offsetX < p2.X then
+								offsetX = p1.X - (((p2.X - offsetX ) ) + xGap) 
+							elseif offsetX > p1.X then
+								offsetX = p2.X + (((offsetX - p1.X)  ) + xGap)
+							end 
+						
+						
+							if offsetY > p1.Y then
+								offsetY = p2.Y + ((offsetY - p1.Y ) + yGap) 
+							elseif offsetY < p2.Y then
+							
+								offsetY = p1.Y - ((p2.Y - offsetY)  + yGap)
+							end
+						end
+					end
+					
+					
+						
+						
+						
+					-- Use Colour Effector
+						
+					local colourEffectorOffsets = performColourEffector(colourEffectorPresent,useColourEffector,offsetX,offsetY,colourEffector,Width,Height)
+					-- Use Time Effector		
+						local timeEffectorOffset = 0		
+						if timeEffectorPresent and useTimeEffector == 1 then
+						
+							local timeEffectorChannelValue = 0
+							local effectorToImageRatioX =  (timeEffector.Width/Width)/2
+							local effectorToImageRatioY =  (timeEffector.Height/Height)/2
+							if not(offsetX > (0.5 + effectorToImageRatioX) or offsetX < (0.5 - effectorToImageRatioX) or offsetY > (0.5 + effectorToImageRatioY) or offsetY < (0.5 - effectorToImageRatioY)) then
+								local effectorValue = pixelValueAt(offsetX,offsetY,timeEffector,Width,Height)
+							
+								if timeChannel == 0 then
+									timeEffectorChannelValue = effectorValue.R
+								elseif timeChannel == 1 then
+									timeEffectorChannelValue = effectorValue.G
+								elseif timeChannel == 2 then
+									timeEffectorChannelValue = effectorValue.B
+								elseif timeChannel == 3 then
+									timeEffectorChannelValue = effectorValue.A
+								else 
+									--Dodgy Luma Calculation
+									local lumaCalc = (0.33 * effectorValue.R) + (0.5 * effectorValue.G) + (0.16 * effectorValue.B)
+									timeEffectorChannelValue = lumaCalc
+								end
+							
+							end
+								
+								
+							timeEffectorOffset = timeEffectorChannelValue * timeEffectorValue
+						
+						end
+						if timeoff ~= 0.0 or timeEffectorOffset ~= 0.0 then
+							fg = InBackground:GetSource(req.Time + (timeoff * (i) + timeEffectorOffset), REQF_SecondaryTime, REQF_SecondaryTime)
+						else
+							fg = img
+						end
+
+
+			
+
+					if fg then
+						-- Use Scale Effector	
+							
+						if scaleEffectorPresent and useScaleEffector == 1 then		
+							
+							local scaledImage = performScaleEffector(fg,offsetX,offsetY,scaleEffector,scaleEffectorX,scaleEffectorY,Width,Height,xScaleChannel,yScaleChannel,useScaleMidPoint)
+							fg = scaledImage
+						end	
+						-- Use Rotation Effector
+						
+						local angleExtra = performRotationEffector(rotationEffectorPresent,useRotEffector,offsetX,offsetY,rotationEffector,Width,Height,effectorAngle,useRotMidPoint,rotationChannel)
+						
+						
+						-- Use Position Effector
+							if positionEffectorPresent and usePositionEffector == 1 then
+								local positionEffectorOffset = performPositionEffector(posEffectorX,posEffectorY,offsetX,offsetY,positionEffector,Width,Height,xPositionsChannel,yPositionsChannel,usePositionMidPoint)
+								
+								
+								offsetX = positionEffectorOffset.X
+								offsetY = positionEffectorOffset.Y
+							
+								
+								
+							end	
+						
+					
+						
+						
+						local show = false
+							
+							if soloClones == 0 then
+								show = true
+							
+							elseif (contains(soloElements,cloneIndex) and showHide == 0)  then 
+								show = true
+								
+							elseif (contains(soloElements,cloneIndex) and showHide == 1) then
+								show = false
+							elseif not(contains(soloElements,cloneIndex)) and showHide == 1 then
+								show = true
+							
+							end
+							
+							
+							if show then  
+							out:Merge(fg, {
+								MO_ApplyMode = apply_mode,
+								MO_ApplyOperator = apply_operator,
+								MO_XOffset = offsetX + effectorAxisOffsetX,
+								MO_YOffset = offsetY + effectorAxisOffsetY,
+								MO_XAxis = axis.X + calculatedOperations.jitterAxisX - effectorAxisOffsetX, 
+								MO_YAxis = axis.Y + calculatedOperations.jitterAxisY - effectorAxisOffsetY,
+								MO_XSize = (math.pow(xsize, i) * (1 + calculatedOperations.jitterSizeX)),
+								MO_YSize = (math.pow(ysize, i) * (1 + calculatedOperations.jitterSizeX)),
+								MO_Angle = angle * (i) + calculatedOperations.jitterAngle + angleExtra,
+								MO_FgAddSub = additive,
+								MO_FgRedGain   = calculatedOperations.finalRedGain * colourEffectorOffsets.R,
+								MO_FgGreenGain = calculatedOperations.finalGreenGain * colourEffectorOffsets.G,
+								MO_FgBlueGain  = calculatedOperations.finalBlueGain * colourEffectorOffsets.B,
+								MO_FgAlphaGain = calculatedOperations.finalAlphaGain * colourEffectorOffsets.A,
+								MO_BurnIn = burn         
+								})
+							end
+					end
+		
+		
+				
+	
+			end
+			
+		end
+		
+
+	elseif mode == 2 then 
+		-- Radial Mode
+		local angleGap = ((math.pi * 2)*(writeOnEnd-writeOnStart))/copies
+		
+		
+		-- check if circle mode is on
+		
+		if lockRadius == 0 then
+		
+			yRadius = (Width/Height) * xRadius
+		end
+		
+		-- check which direction clones go in
+		
+		local directionFactor = 1
+		
+		if radialClockwise == 1 then
+			directionFactor = -1
+		end
+		
+		for i = 0, copies-1 do 
+					cloneIndex = i + 1
+				
+					local calculatedOperations = performBasicOperations(i,baseOperations,jitterOperations)
+					
+					offsetX = ((xRadius * math.cos(i*angleGap * directionFactor + radialOffset + (math.pi * 2 * writeOnStart))) + 0.5)
+					offsetY = ((yRadius * math.sin(i*angleGap * directionFactor + radialOffset + 		(math.pi * 2 * writeOnStart))) + 0.5)
+					
+					-- Use Colour Effector
+						
+					local colourEffectorOffsets = performColourEffector(colourEffectorPresent,useColourEffector,offsetX,offsetY,colourEffector,Width,Height)
+						
+						
+					-- Use Time Effector		
+						local timeEffectorOffset = 0		
+						if timeEffectorPresent and useTimeEffector == 1 then
+						
+							local timeEffectorChannelValue = 0
+							local effectorToImageRatioX =  (timeEffector.Width/Width)/2
+							local effectorToImageRatioY =  (timeEffector.Height/Height)/2
+							if not(offsetX > (0.5 + effectorToImageRatioX) or offsetX < (0.5 - effectorToImageRatioX) or offsetY > (0.5 + effectorToImageRatioY) or offsetY < (0.5 - effectorToImageRatioY)) then
+								local effectorValue = pixelValueAt(offsetX,offsetY,timeEffector,Width,Height)
+							
+								if timeChannel == 0 then
+									timeEffectorChannelValue = effectorValue.R
+								elseif timeChannel == 1 then
+									timeEffectorChannelValue = effectorValue.G
+								elseif timeChannel == 2 then
+									timeEffectorChannelValue = effectorValue.B
+								elseif timeChannel == 3 then
+									timeEffectorChannelValue = effectorValue.A
+								else 
+									--Dodgy Luma Calculation
+									local lumaCalc = (0.33 * effectorValue.R) + (0.5 * effectorValue.G) + (0.16 * effectorValue.B)
+									timeEffectorChannelValue = lumaCalc
+								end
+							
+							end
+								
+								
+							timeEffectorOffset = timeEffectorChannelValue * timeEffectorValue
+						
+						end
+						if timeoff ~= 0.0 or timeEffectorOffset ~= 0.0 then
+							fg = InBackground:GetSource(req.Time + (timeoff * (i) + timeEffectorOffset), REQF_SecondaryTime, REQF_SecondaryTime)
+						else
+							fg = img
+						end
+
+
+
+					if fg then
+						-- Use Scale Effector	
+							
+						if scaleEffectorPresent and useScaleEffector == 1 then		
+							local scaledImage = performScaleEffector(fg,offsetX,offsetY,scaleEffector,scaleEffectorX,scaleEffectorY,Width,Height,xScaleChannel,yScaleChannel,useScaleMidPoint)
+							fg = scaledImage
+						end	
+						
+						
+						-- Use Rotation Effector
+						
+						local angleExtra = performRotationEffector(rotationEffectorPresent,useRotEffector,offsetX,offsetY,rotationEffector,Width,Height,effectorAngle,useRotMidPoint,rotationChannel)
+						
+						
+						-- Use Position Effector
+							if positionEffectorPresent and usePositionEffector == 1 then
+								local positionEffectorOffset = performPositionEffector(posEffectorX,posEffectorY,offsetX,offsetY,positionEffector,Width,Height,xPositionsChannel,yPositionsChannel,usePositionMidPoint)
+								
+								
+								offsetX = positionEffectorOffset.X
+								offsetY = positionEffectorOffset.Y
+							
+								
+								
+							end	
+						
+						
+							local show = false
+							
+							if soloClones == 0 then
+								show = true
+							
+							elseif (contains(soloElements,cloneIndex) and showHide == 0)  then 
+								show = true
+								
+							elseif (contains(soloElements,cloneIndex) and showHide == 1) then
+								show = false
+							elseif not(contains(soloElements,cloneIndex)) and showHide == 1 then
+								show = true
+							
+							end
+							
+							
+							if show then 
+							out:Merge(fg, {
+								MO_ApplyMode = apply_mode,
+								MO_ApplyOperator = apply_operator,
+								MO_XOffset = offsetX + effectorAxisOffsetX,
+								MO_YOffset = offsetY + effectorAxisOffsetY,
+								MO_XAxis = axis.X + calculatedOperations.jitterAxisX - effectorAxisOffsetX, 
+								MO_YAxis = axis.Y + calculatedOperations.jitterAxisY - effectorAxisOffsetY,
+								MO_XSize = (math.pow(xsize, i) * (1 + calculatedOperations.jitterSizeX)),
+								MO_YSize = (math.pow(ysize, i) * (1 + calculatedOperations.jitterSizeX)),
+								MO_Angle = angle * (i) + calculatedOperations.jitterAngle + angleExtra,
+								MO_FgAddSub = additive,
+								MO_FgRedGain   = calculatedOperations.finalRedGain * colourEffectorOffsets.R,
+								MO_FgGreenGain = calculatedOperations.finalGreenGain * colourEffectorOffsets.G,
+								MO_FgBlueGain  = calculatedOperations.finalBlueGain * colourEffectorOffsets.B,
+								MO_FgAlphaGain = calculatedOperations.finalAlphaGain * colourEffectorOffsets.A,
+								MO_BurnIn = burn               
+								})
+						end
+					end
+		
+		
+				
+	
+			end
+		
+		
+		
+	elseif mode == 3 then 
+	
+		-- Image Mode
+		
+		
+		-- Check if there is an image to clone to or not, if there isn't then dont do anything
+		if imageToCloneTo then
+					
+					
+		
+					local xSizePixelOffset = 1/searchResolution
+					local ySizePixelOffset =1/searchResolution
+					local cloneCounter = 0
+					
+					local pixelsToCloneTo = {}
+					
+					for xsearchCount = 0, searchResolution - 1 do
+						for ysearchCount = 0, searchResolution - 1 do
+							
+							local xPositionToCheck = xsearchCount*xSizePixelOffset
+							local yPositionToCheck = ysearchCount*ySizePixelOffset
+							
+							local pixelCheck = pixelValueAt(xPositionToCheck,yPositionToCheck,imageToCloneTo,Width,Height)
+							
+							if pixelCheck.A >= 1 then
+								cloneCounter = cloneCounter + 1
+								local pixelToCloneTo = Point(xPositionToCheck,yPositionToCheck)
+								pixelsToCloneTo[cloneCounter] = pixelToCloneTo
+								
+							end
+						
+						end
+						
+					end
+					for i = 1, cloneCounter do 
+					cloneIndex = i
+				
+					local calculatedOperations = performBasicOperations(i,baseOperations,jitterOperations)
+					
+					offsetX = pixelsToCloneTo[i].X
+					offsetY = pixelsToCloneTo[i].Y
+					
+					-- Use Colour Effector
+						
+					local colourEffectorOffsets = performColourEffector(colourEffectorPresent,useColourEffector,offsetX,offsetY,colourEffector,Width,Height)
+						
+						
+					-- Use Time Effector		
+						local timeEffectorOffset = 0		
+						if timeEffectorPresent and useTimeEffector == 1 then
+						
+							local timeEffectorChannelValue = 0
+							local effectorToImageRatioX =  (timeEffector.Width/Width)/2
+							local effectorToImageRatioY =  (timeEffector.Height/Height)/2
+							if not(offsetX > (0.5 + effectorToImageRatioX) or offsetX < (0.5 - effectorToImageRatioX) or offsetY > (0.5 + effectorToImageRatioY) or offsetY < (0.5 - effectorToImageRatioY)) then
+								local effectorValue = pixelValueAt(offsetX,offsetY,timeEffector,Width,Height)
+							
+								if timeChannel == 0 then
+									timeEffectorChannelValue = effectorValue.R
+								elseif timeChannel == 1 then
+									timeEffectorChannelValue = effectorValue.G
+								elseif timeChannel == 2 then
+									timeEffectorChannelValue = effectorValue.B
+								elseif timeChannel == 3 then
+									timeEffectorChannelValue = effectorValue.A
+								else 
+									--Dodgy Luma Calculation
+									local lumaCalc = (0.33 * effectorValue.R) + (0.5 * effectorValue.G) + (0.16 * effectorValue.B)
+									timeEffectorChannelValue = lumaCalc
+								end
+							
+							end
+								
+								
+							timeEffectorOffset = timeEffectorChannelValue * timeEffectorValue
+						
+						end
+						if timeoff ~= 0.0 or timeEffectorOffset ~= 0.0 then
+							fg = InBackground:GetSource(req.Time + (timeoff * (i) + timeEffectorOffset), REQF_SecondaryTime, REQF_SecondaryTime)
+						else
+							fg = img
+						end
+
+
+
+					if fg then
+						-- Use Scale Effector	
+							
+						if scaleEffectorPresent and useScaleEffector == 1 then		
+							local scaledImage = performScaleEffector(fg,offsetX,offsetY,scaleEffector,scaleEffectorX,scaleEffectorY,Width,Height,xScaleChannel,yScaleChannel,useScaleMidPoint)
+							fg = scaledImage
+						end	
+						
+						-- Use Rotation Effector
+						
+						local angleExtra = performRotationEffector(rotationEffectorPresent,useRotEffector,offsetX,offsetY,rotationEffector,Width,Height,effectorAngle,useRotMidPoint,rotationChannel)
+						
+						
+						-- Use Position Effector
+							if positionEffectorPresent and usePositionEffector == 1 then
+								local positionEffectorOffset = performPositionEffector(posEffectorX,posEffectorY,offsetX,offsetY,positionEffector,Width,Height,xPositionsChannel,yPositionsChannel,usePositionMidPoint)
+								
+								
+								offsetX = positionEffectorOffset.X
+								offsetY = positionEffectorOffset.Y
+							
+								
+								
+							end	
+						
+						
+						local show = false
+							
+							if soloClones == 0 then
+								show = true
+							
+							elseif (contains(soloElements,cloneIndex) and showHide == 0)  then 
+								show = true
+								
+							elseif (contains(soloElements,cloneIndex) and showHide == 1) then
+								show = false
+							elseif not(contains(soloElements,cloneIndex)) and showHide == 1 then
+								show = true
+							
+							end
+							
+							
+							if show then  
+							out:Merge(fg, {
+								MO_ApplyMode = apply_mode,
+								MO_ApplyOperator = apply_operator,
+								MO_XOffset = offsetX + effectorAxisOffsetX,
+								MO_YOffset = offsetY + effectorAxisOffsetY,
+								MO_XAxis = axis.X + calculatedOperations.jitterAxisX - effectorAxisOffsetX, 
+								MO_YAxis = axis.Y + calculatedOperations.jitterAxisY - effectorAxisOffsetY,
+								MO_XSize = (math.pow(xsize, i) * (1 + calculatedOperations.jitterSizeX)),
+								MO_YSize = (math.pow(ysize, i) * (1 + calculatedOperations.jitterSizeX)),
+								MO_Angle = angle * (i) + calculatedOperations.jitterAngle + angleExtra,
+								MO_FgAddSub = additive,
+								MO_FgRedGain   = calculatedOperations.finalRedGain * colourEffectorOffsets.R,
+								MO_FgGreenGain = calculatedOperations.finalGreenGain * colourEffectorOffsets.G,
+								MO_FgBlueGain  = calculatedOperations.finalBlueGain * colourEffectorOffsets.B,
+								MO_FgAlphaGain = calculatedOperations.finalAlphaGain * colourEffectorOffsets.A,
+								MO_BurnIn = burn               
+								})
+						end
+					end
+		
+		
+				
+	
+			end
+		
+				
+				
+		end
+	
+	else 
+		-- Bezier Mode
+		
+		
+		-- Create Array of Points on the Curve
+		local bezierSubDivs = 100 -- MAGIC NUMBER
+		
+		local bezierPoints = {}
+		for i=0,bezierSubDivs do
+			t = i/bezierSubDivs
+			p = solvePoint(bezP1,bezP2,bezP3,bezP4, t)
+			
+			local bezPointsX = p.X
+			local bezPointsY = p.Y
+			bezierPoints[i] = Point(bezPointsX,bezPointsY)
+		end
+		-- If no copies then don't do anything
+		if copies > 0 then
+			if copies == 1 then
+				-- Only 1 Copy so put it in the middle of the bezier Curve
+				local calculatedOperations = performBasicOperations(1,baseOperations,jitterOperations)
+
+				offsetX = bezierPoints[bezierSubDivs/2].X
+				offsetY = bezierPoints[bezierSubDivs/2].Y
+			
+				-- Use Colour Effector
+						
+				local colourEffectorOffsets = performColourEffector(colourEffectorPresent,useColourEffector,offsetX,offsetY,colourEffector,Width,Height)
+						
+				-- Use Time Effector		
+						local timeEffectorOffset = 0		
+						if timeEffectorPresent and useTimeEffector == 1 then
+						
+							local timeEffectorChannelValue = 0
+							local effectorToImageRatioX =  (timeEffector.Width/Width)/2
+							local effectorToImageRatioY =  (timeEffector.Height/Height)/2
+							if not(offsetX > (0.5 + effectorToImageRatioX) or offsetX < (0.5 - effectorToImageRatioX) or offsetY > (0.5 + effectorToImageRatioY) or offsetY < (0.5 - effectorToImageRatioY)) then
+								local effectorValue = pixelValueAt(offsetX,offsetY,timeEffector,Width,Height)
+							
+								if timeChannel == 0 then
+									timeEffectorChannelValue = effectorValue.R
+								elseif timeChannel == 1 then
+									timeEffectorChannelValue = effectorValue.G
+								elseif timeChannel == 2 then
+									timeEffectorChannelValue = effectorValue.B
+								elseif timeChannel == 3 then
+									timeEffectorChannelValue = effectorValue.A
+								else 
+									--Dodgy Luma Calculation
+									local lumaCalc = (0.33 * effectorValue.R) + (0.5 * effectorValue.G) + (0.16 * effectorValue.B)
+									timeEffectorChannelValue = lumaCalc
+								end
+							
+							end
+								
+								
+							timeEffectorOffset = timeEffectorChannelValue * timeEffectorValue
+						
+						end
+						if timeoff ~= 0.0 or timeEffectorOffset ~= 0.0 then
+							fg = InBackground:GetSource(req.Time + (timeoff * (1) + timeEffectorOffset), REQF_SecondaryTime, REQF_SecondaryTime)
+						else
+							fg = img
+						end
+
+
+				if fg then
+				
+				
+					if scaleEffectorPresent and useScaleEffector == 1 then		
+						local scaledImage = performScaleEffector(fg,offsetX,offsetY,scaleEffector,scaleEffectorX,scaleEffectorY,Width,Height,xScaleChannel,yScaleChannel,useScaleMidPoint)
+						fg = scaledImage
+					end	
+					
+					-- Use Rotation Effector
+				
+					local angleExtra = performRotationEffector(rotationEffectorPresent,useRotEffector,offsetX,offsetY,rotationEffector,Width,Height,effectorAngle,useRotMidPoint,rotationChannel)
+						
+					-- Use Position Effector
+					if positionEffectorPresent and usePositionEffector == 1 then
+						local positionEffectorOffset = performPositionEffector(posEffectorX,posEffectorY,offsetX,offsetY,positionEffector,Width,Height,xPositionsChannel,yPositionsChannel,usePositionMidPoint)
+						
+					
+						offsetX = positionEffectorOffset.X
+						offsetY = positionEffectorOffset.Y
+				
+						
+						
+					end	
+						
+						
+						
+					
+					out:Merge(fg, {
+						MO_ApplyMode = apply_mode,
+						MO_ApplyOperator = apply_operator,
+						MO_XOffset = offsetX + effectorAxisOffsetX,
+						MO_YOffset = offsetY + effectorAxisOffsetY,
+						MO_XAxis = axis.X + calculatedOperations.jitterAxisX - effectorAxisOffsetX, 
+						MO_YAxis = axis.Y + calculatedOperations.jitterAxisY - effectorAxisOffsetY,
+						MO_XSize = (math.pow(xsize, 1) * (1 + calculatedOperations.jitterSizeX)),
+						MO_YSize = (math.pow(ysize, 1) * (1 + calculatedOperations.jitterSizeX)),
+						MO_Angle = angle * (1) + calculatedOperations.jitterAngle + angleExtra,
+						MO_FgAddSub = additive,
+						MO_FgRedGain   = calculatedOperations.finalRedGain * colourEffectorOffsets.R,
+						MO_FgGreenGain = calculatedOperations.finalGreenGain * colourEffectorOffsets.G,
+						MO_FgBlueGain  = calculatedOperations.finalBlueGain * colourEffectorOffsets.B,
+						MO_FgAlphaGain = calculatedOperations.finalAlphaGain * colourEffectorOffsets.A,
+						MO_BurnIn = burn        
+						})
+				end
+			else 
+				local arrayGap = math.floor((bezierSubDivs/(copies-1)) + 0.5)
+				
+				
+				local arrayIndex = math.floor(writeOnStart * bezierSubDivs + 0.5)
+				
+				
+				
+				for i = 0, copies-1 do
+					cloneIndex = i + 1
+					local calculatedOperations = performBasicOperations(i,baseOperations,jitterOperations)
+					
+					offsetX = bezierPoints[math.floor(arrayIndex * writeOnEnd + 0.5)].X
+					offsetY = bezierPoints[math.floor(arrayIndex * writeOnEnd + 0.5)].Y
+					
+					arrayIndex = arrayIndex + arrayGap
+					if arrayIndex > bezierSubDivs then arrayIndex = bezierSubDivs end
+					
+					-- Use Colour Effector
+						
+					local colourEffectorOffsets = performColourEffector(colourEffectorPresent,useColourEffector,offsetX,offsetY,colourEffector,Width,Height)
+						
+						
+					-- Use Time Effector		
+						local timeEffectorOffset = 0		
+						if timeEffectorPresent and useTimeEffector == 1 then
+						
+							local timeEffectorChannelValue = 0
+							local effectorToImageRatioX =  (timeEffector.Width/Width)/2
+							local effectorToImageRatioY =  (timeEffector.Height/Height)/2
+							if not(offsetX > (0.5 + effectorToImageRatioX) or offsetX < (0.5 - effectorToImageRatioX) or offsetY > (0.5 + effectorToImageRatioY) or offsetY < (0.5 - effectorToImageRatioY)) then
+								local effectorValue = pixelValueAt(offsetX,offsetY,timeEffector,Width,Height)
+							
+								if timeChannel == 0 then
+									timeEffectorChannelValue = effectorValue.R
+								elseif timeChannel == 1 then
+									timeEffectorChannelValue = effectorValue.G
+								elseif timeChannel == 2 then
+									timeEffectorChannelValue = effectorValue.B
+								elseif timeChannel == 3 then
+									timeEffectorChannelValue = effectorValue.A
+								else 
+									--Dodgy Luma Calculation
+									local lumaCalc = (0.33 * effectorValue.R) + (0.5 * effectorValue.G) + (0.16 * effectorValue.B)
+									timeEffectorChannelValue = lumaCalc
+								end
+							
+							end
+								
+								
+							timeEffectorOffset = timeEffectorChannelValue * timeEffectorValue
+						
+						end
+						if timeoff ~= 0.0 or timeEffectorOffset ~= 0.0 then
+							fg = InBackground:GetSource(req.Time + (timeoff * (i) + timeEffectorOffset), REQF_SecondaryTime, REQF_SecondaryTime)
+						else
+							fg = img
+						end
+
+
+
+					if fg then
+						-- Use Scale Effector	
+							
+						if scaleEffectorPresent and useScaleEffector == 1 then		
+							local scaledImage = performScaleEffector(fg,offsetX,offsetY,scaleEffector,scaleEffectorX,scaleEffectorY,Width,Height,xScaleChannel,yScaleChannel,useScaleMidPoint)
+							fg = scaledImage
+						end	
+						
+						-- Use Rotation Effector
+						
+						local angleExtra = performRotationEffector(rotationEffectorPresent,useRotEffector,offsetX,offsetY,rotationEffector,Width,Height,effectorAngle,useRotMidPoint,rotationChannel)
+						
+						
+						-- Use Position Effector
+							if positionEffectorPresent and usePositionEffector == 1 then
+								local positionEffectorOffset = performPositionEffector(posEffectorX,posEffectorY,offsetX,offsetY,positionEffector,Width,Height,xPositionsChannel,yPositionsChannel,usePositionMidPoint)
+								
+								
+								offsetX = positionEffectorOffset.X
+								offsetY = positionEffectorOffset.Y
+							
+								
+								
+							end	
+						
+						
+						local show = false
+							
+							if soloClones == 0 then
+								show = true
+							
+							elseif (contains(soloElements,cloneIndex) and showHide == 0)  then 
+								show = true
+								
+							elseif (contains(soloElements,cloneIndex) and showHide == 1) then
+								show = false
+							elseif not(contains(soloElements,cloneIndex)) and showHide == 1 then
+								show = true
+							
+							end
+							
+							
+							if show then  
+							out:Merge(fg, {
+								MO_ApplyMode = apply_mode,
+								MO_ApplyOperator = apply_operator,
+								MO_XOffset = offsetX + effectorAxisOffsetX,
+								MO_YOffset = offsetY + effectorAxisOffsetY,
+								MO_XAxis = axis.X + calculatedOperations.jitterAxisX - effectorAxisOffsetX, 
+								MO_YAxis = axis.Y + calculatedOperations.jitterAxisY - effectorAxisOffsetY,
+								MO_XSize = (math.pow(xsize, i) * (1 + calculatedOperations.jitterSizeX)),
+								MO_YSize = (math.pow(ysize, i) * (1 + calculatedOperations.jitterSizeX)),
+								MO_Angle = angle * (i) + calculatedOperations.jitterAngle + angleExtra,
+								MO_FgAddSub = additive,
+								MO_FgRedGain   = calculatedOperations.finalRedGain * colourEffectorOffsets.R,
+								MO_FgGreenGain = calculatedOperations.finalGreenGain * colourEffectorOffsets.G,
+								MO_FgBlueGain  = calculatedOperations.finalBlueGain * colourEffectorOffsets.B,
+								MO_FgAlphaGain = calculatedOperations.finalAlphaGain * colourEffectorOffsets.A,
+								MO_BurnIn = burn               
+								})
+						end
+					end
+				
+				
+				
+				end 
+			
+				
+			end
+		
+		end
+	
+	end
+	
+
+	if TimeExtent and timeoff ~= 0 and copies > 1 then
+		local te = TimeExtent({req.Time, req.Time})	-- prevents static caching
+		req:SetOutputData(OutImage, out, te)
+	else
+		OutImage:Set(req, out)
+	end
+end
