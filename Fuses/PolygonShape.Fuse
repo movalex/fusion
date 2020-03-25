@@ -1,0 +1,491 @@
+--[[--
+PolyShape.Fuse
+
+A polygon shape tool, using elements/ideas from Bryan Ray and Dunn Lewis
+
+Not elegant in any way. 
+
+version 0.1
+19/03/20
+Steve Watson
+
+
+--]]--
+
+
+FuRegisterClass("PolyShape", CT_SourceTool, {
+	REGS_Name = "PolyShape",
+	REGS_Category = "Creator",
+	REGS_OpIconString = "Psh",
+	REGS_OpDescription = "Polygon Shape Drawing Path.",
+	
+	REGS_Company = "SteveWatson",
+	REGS_URL = "",
+	
+	REG_Source_GlobalCtrls = true,
+	REG_Source_SizeCtrls = true,
+	REG_Source_AspectCtrls = true,
+	REG_Source_DepthCtrls = true,
+	})
+	
+
+function Create()
+
+	InPolyCentre = self:AddInput("Polygon Centre", "PolygonCentre", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		
+		CHC_Style = "DiagonalCross",
+		})
+		
+	InPolySides = self:AddInput("Polygon Sides", "PolySides", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 3,
+		INP_MaxScale = 20,
+		INP_Default = 6,
+		INP_Integer = true,
+		
+	})
+
+	InPolyDiam = self:AddInput("Polygon Diameter", "PolyDiameter", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 0,
+		INP_MaxScale = 1,
+		INP_Default = 0.5,
+		
+	})
+	
+	InPolyAngle = self:AddInput("Angle", "Angle", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_Default = 0,
+		INP_MaxScale = 360,
+	})
+	InPolyFill = self:AddInput("Fill Polygon","FillPolygon",{
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		LINKS_Name = "Fill Polygon",
+		INP_DoNotifyChanged = true,
+
+	
+	})
+
+
+	InSubdivs = self:AddInput("Side Subdivision", "SideSubdivision", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 1,
+		INP_MaxScale = 20,
+		INP_Default = 1,
+		INP_Integer = true,
+	})
+	
+	
+	
+		InThickness = self:AddInput("Thickness", "Thickness", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed     = 0,
+		INP_MaxScale       = 0.1,
+		INP_Default        = 0.01,
+		})
+		
+		self:BeginControlNest("Style", "Style", false, {})
+		
+	InLineType = self:AddInput("Type", "Type", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "MultiButtonControl",
+		INP_Default        = 0.0,
+		MBTNC_ShowName     = false,
+		{MBTNC_AddButton   = "Solid", MBTNCD_ButtonWidth = 0.33, },
+		{MBTNC_AddButton   = "Dash",  MBTNCD_ButtonWidth = 0.34, },
+		{MBTNC_AddButton   = "Dot",   MBTNCD_ButtonWidth = 0.33, },
+		{MBTNC_AddButton   = "Dash Dot",     MBTNCD_ButtonWidth = 0.5, },
+		{MBTNC_AddButton   = "Dash Dot Dot", MBTNCD_ButtonWidth = 0.5, },
+		})
+		
+	
+
+	InThickness = self:AddInput("Thickness", "Thickness", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed     = 0,
+		INP_MaxScale       = 0.1,
+		INP_Default        = 0.01,
+		})
+
+	InFilter = self:AddInput("Filter", "Filter", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "MultiButtonControl",
+		INP_Default        = 3.0,
+		{MBTNC_AddButton   = "Box",       MBTNCD_ButtonWidth = 0.25, },
+		{MBTNC_AddButton   = "Bartlett",  MBTNCD_ButtonWidth = 0.25, },
+		{MBTNC_AddButton   = "Multi-box", MBTNCD_ButtonWidth = 0.25, },
+		{MBTNC_AddButton   = "Gaussian",  MBTNCD_ButtonWidth = 0.25, },
+		})
+
+	InSoftness = self:AddInput("Softness", "Softness", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed     = 0.0,
+		INP_MaxScale       = 100,
+		INP_Default        = 0.0,
+		ICD_Center         = 10,
+		})
+
+	-- color wheel
+	InRed = self:AddInput("Red", "Red", {
+		ICS_Name            = "Color",
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 1.0,
+		INP_MaxScale        = 1.0,
+		CLRC_ShowWheel      = false,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 0,
+		})
+	InGreen = self:AddInput("Green", "Green", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 1.0,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 1,
+		})
+	InBlue = self:AddInput("Blue", "Blue", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 1.0,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 2,
+		})
+	InAlpha = self:AddInput("Alpha", "Alpha", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 1.0,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 3,
+		})
+
+
+	self:EndControlNest()
+	
+	InWriteOnStart = self:AddInput("Write On Start", "WriteOnStart", {
+		LINKID_DataType = "Number",
+--		INP_Integer = true,
+		INPID_InputControl = "RangeControl",
+--		ICS_ControlPage = "Controls",
+		IC_ControlGroup = 1,
+--		IC_ControlID = 0,
+		LINKS_Name = "Start",
+		RNGCS_MidName = "Write On",
+		INP_MinScale = -0,
+		INP_MaxScale = 1.0,
+--		RNGCD_LowOuterLength = "0.1",
+		INP_Default = 0,
+	})
+	
+	InWriteOnEnd = self:AddInput("Write On End", "WriteOnEnd", {
+		LINKID_DataType = "Number",
+--		INP_Integer = true,
+		INPID_InputControl = "RangeControl",
+--		ICS_ControlPage = "Controls",
+		IC_ControlGroup = 1,
+		IC_ControlID = 1,
+		LINKS_Name = "End",	
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+--		RNGCD_HighOuterLength = "0.1",
+		INP_Default = 1,
+	})	
+		
+	InOffset = self:AddInput("Offset", "Offset", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_Default = 0,
+		INP_MaxScale = 5,
+	})
+		
+		
+	-- outputs
+	OutImage = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})
+
+end
+
+function NotifyChanged(inp, param, time)
+	if inp ~= nil and param ~= nil then
+		if inp == InPolyFill and param then
+			InLineType:SetAttrs({IC_Visible = (param.Value == 0)})
+			InFilter:SetAttrs({IC_Visible = (param.Value == 0)})
+			InSoftness:SetAttrs({IC_Visible = (param.Value == 0)})
+			InThickness:SetAttrs({IC_Visible = (param.Value == 0)})
+			InWriteOnStart:SetAttrs({IC_Visible = (param.Value == 0)})
+			InWriteOnEnd:SetAttrs({IC_Visible = (param.Value == 0)})
+			InOffset:SetAttrs({IC_Visible = (param.Value == 0)})
+			InSubdivs:SetAttrs({IC_Visible = (param.Value == 0)})
+		end
+	end
+end
+
+
+
+
+-- Alternate method of the above. Calculates only once instead of on-demand.
+function calcAspect(ref_img)
+	return (ref_img.Height * ref_img.YScale) / (ref_img.Width * ref_img.XScale)
+end
+
+function Process(req)
+-- Standard set up for Creator tools
+	local realwidth = Width;
+	local realheight = Height;
+	
+	-- We'll handle proxy ourselves
+	Width = Width / Scale
+	Height = Height / Scale
+	Scale = 1
+	
+	-- Attributes for new images
+	local imgattrs = {
+		IMG_Document = self.Comp,
+		{ IMG_Channel = "Red", },
+		{ IMG_Channel = "Green", },
+		{ IMG_Channel = "Blue", },
+		{ IMG_Channel = "Alpha", },
+		IMG_Width = Width,
+		IMG_Height = Height,
+		IMG_XScale = XAspect,
+		IMG_YScale = YAspect,
+		IMAT_OriginalWidth = realwidth,
+		IMAT_OriginalHeight = realheight,
+		IMG_Quality = not req:IsQuick(),
+		IMG_MotionBlurQuality = not req:IsNoMotionBlur(),
+		}
+		
+	if not req:IsStampOnly() then
+		imgattrs.IMG_ProxyScale = 1
+	end
+	
+	if SourceDepth ~= 0 then
+		imgattrs.IMG_Depth = SourceDepth
+	end
+
+	-- Set up image
+	local img = Image(imgattrs)
+	local out = img:CopyOf()
+	local p = Pixel({R=0,G=0,B=0,A=0})
+	img:Fill(p) -- Clear the image so the next frame doesn't contain the previous one.
+	out:Fill(p)
+
+	local aspect = calcAspect(img)
+ 
+-- Import variables from control panel 
+
+	local polyCentre = InPolyCentre:GetValue(req)
+	local polySides	= InPolySides:GetValue(req).Value
+	local polyRadius  		 = InPolyDiam:GetValue(req).Value
+	local polyAngle = InPolyAngle:GetValue(req).Value  * (math.pi*2) / 360.0
+	
+	local polyFill = InPolyFill:GetValue(req).Value
+	
+	
+	local subdivs    = InSubdivs:GetValue(req).Value
+	local linetype   = math.floor(InLineType:GetValue(req).Value + 0.5) + 1
+	
+	local thickness  = InThickness:GetValue(req).Value
+	local blur       = InSoftness:GetValue(req).Value
+	local filter     = math.floor(InFilter:GetValue(req).Value + 0.5) + 1
+	local gain_r     = InRed:GetValue(req).Value
+	local gain_g     = InGreen:GetValue(req).Value
+	local gain_b     = InBlue:GetValue(req).Value
+	local gain_a     = InAlpha:GetValue(req).Value
+	
+	local outlinetypes = {"OLT_Solid", "OLT_Dash", "OLT_Dot", "OLT_DashDot", "OLT_DashDotDot",}
+	local blurfilters  = {"BT_Box", "BT_Bartless", "BT_MultiBox", "BT_Gaussian", }
+	
+
+	local writeOnStart 		= InWriteOnStart:GetValue(req).Value
+	local writeOnEnd		= InWriteOnEnd:GetValue(req).Value
+	local offset 		 	= InOffset:GetValue(req).Value
+	
+	local imageHeight = img.Height
+	local imageWidth = img.Width
+	local centreX = (imageWidth/2)/imageWidth
+	local centreY = ((imageHeight/2)/imageHeight)*aspect
+	local halfRadius = polyRadius/2
+	
+	
+	
+	local polygonVertices = {}
+	
+	for i = 0,(polySides - 1) do
+		
+		local xCoord = halfRadius * math.cos((2 * math.pi * i / polySides) + polyAngle) + polyCentre.X
+		local yCoord = halfRadius * math.sin((2 * math.pi * i / polySides) + polyAngle) + (polyCentre.Y * aspect)
+
+		
+		polygonVertices[i] = Point(xCoord,yCoord)
+	end
+
+	
+	
+
+	
+	
+	
+
+	
+	
+	local fullShape = Shape()
+	-- Filled poly ignores the write on and off
+	if polyFill == 1 then
+		local startPoint = polygonVertices[0]
+		
+		fullShape:MoveTo(startPoint.X,startPoint.Y)
+		for i=1,polySides-1 do
+		
+			local endPoint = polygonVertices[i]
+			fullShape:LineTo(endPoint.X,endPoint.Y)
+			
+		end
+		fullShape:Close()
+		
+	
+	
+	else
+	
+		local allPoints = {}
+	
+		local lineStartPoints = {} -- Array of Start Points
+		local lineEndPoints = {} -- Array of EndPoints Points
+	
+		
+	
+		-- No Need to do any subdividing
+		if subdivs == 1 then
+		
+			for i = 0,polySides-1 do
+				lineStartPoints[i] =  polygonVertices[i]
+				
+				if i <polySides-1 then
+					lineEndPoints[i]	=  polygonVertices[i+1]
+				
+				else
+					lineEndPoints[i] =  polygonVertices[0]
+				end
+				
+					
+			
+			end
+	
+	
+		else
+			local indexCounter = 0
+			
+			for i = 0,polySides - 1 do
+				local xDifference
+				local yDifference
+		
+				-- If it's the last point then the last line will use start point
+				if i < polySides - 1 then
+					xDifference = (polygonVertices[i+1].X - polygonVertices[i].X)/subdivs
+					yDifference = (polygonVertices[i+1].Y - polygonVertices[i].Y)/subdivs
+				else
+					xDifference = (polygonVertices[0].X - polygonVertices[i].X)/subdivs
+					yDifference = (polygonVertices[0].Y - polygonVertices[i].Y)/subdivs
+				end
+		
+				local firstPoint = polygonVertices[i]
+	
+			
+				for j = 1,subdivs do 
+	
+					lineStartPoints[indexCounter] = firstPoint
+					local dividedPoint = Point(polygonVertices[i].X + (xDifference * (j)),polygonVertices[i].Y + (yDifference * (j)))
+					lineEndPoints[indexCounter] = dividedPoint
+					firstPoint = dividedPoint
+					
+					indexCounter = indexCounter + 1
+					
+				end
+		
+	
+	
+			end
+				
+		
+			
+	
+	
+		end
+	
+		
+		local segmentCountTotal = polySides * subdivs
+		-- Construct the Line if start and end are not both 0 or 1, inelegant way of doing this
+	
+		if not((writeOnStart == 0 and writeOnEnd == 0) or (writeOnStart == 1 and writeOnEnd == 1)) then
+	
+	
+			for i=math.floor(writeOnStart*(segmentCountTotal-1)),math.floor(writeOnEnd*(segmentCountTotal-1)) do
+		
+				local j = i
+				local normOffset = math.floor(offset * subdivs * polySides)
+				j = ((j + normOffset)%(subdivs*polySides))
+			
+				startPoint = lineStartPoints[j]
+				endPoint = lineEndPoints[j]
+				fullShape:MoveTo(startPoint.X,startPoint.Y)
+				fullShape:LineTo(endPoint.X,endPoint.Y)
+			
+			
+			
+			end
+		
+		
+		
+		
+		
+		
+		
+		end
+		
+	end
+	local outputShape = Shape()
+	if polyFill == 1 then
+		outputShape:AddShape(fullShape)
+	
+	else
+		outputShape = fullShape:OutlineOfShape(thickness, outlinetypes[linetype], "OJT_Round", (req:IsQuick() and 8 or 16))
+	end
+	
+	
+	
+
+ 	
+	
+
+	
+	-- put shape to image
+	local ic = ImageChannel(out, 8)
+	local fs = FillStyle()
+	ic:SetStyleFill(fs)
+	
+	local cs = ChannelStyle()
+	cs.Color = Pixel({R = gain_r, G = gain_g, B = gain_b, A = gain_a})
+	cs.BlurType = blurfilters[filter]
+	cs.SoftnessX = blur
+	cs.SoftnessY = blur
+
+		ic:ShapeFill(outputShape)
+		if self.Status == "OK" then
+			ic:PutToImage("CM_Merge", cs)
+		end
+	
+	
+	OutImage:Set(req, out)
+	
+end
