@@ -1,0 +1,1126 @@
+{
+	Tools = ordered() {
+		CHmapper_v1 = MacroOperator {
+			CtrlWZoom = false,
+			Inputs = ordered() {
+				Label = InstanceInput {
+					SourceOp = "LU",
+					Source = "Label",
+					Page = "Controls",
+				},
+				Input1 = InstanceInput {
+					SourceOp = "LU",
+					Source = "Opacity1",
+					Default = 1,
+				},
+				Input2 = InstanceInput {
+					SourceOp = "LU",
+					Source = "Red1",
+					ControlGroup = 2,
+					Default = 1,
+				},
+				Input3 = InstanceInput {
+					SourceOp = "LU",
+					Source = "Green1",
+					ControlGroup = 2,
+					Default = 1,
+				},
+				Input4 = InstanceInput {
+					SourceOp = "LU",
+					Source = "Blue1",
+					ControlGroup = 2,
+					Default = 1,
+				},
+				Input5 = InstanceInput {
+					SourceOp = "LU",
+					Source = "Offset1",
+					DefaultX = 0,
+					DefaultY = 0,
+				},
+				Input6 = InstanceInput {
+					SourceOp = "LU",
+					Source = "OffsetZ1",
+					Default = 0,
+				},
+				Input7 = InstanceInput {
+					SourceOp = "LU",
+					Source = "AngleX1",
+					Default = 0,
+				},
+				Input8 = InstanceInput {
+					SourceOp = "LU",
+					Source = "AngleY1",
+					Default = 0,
+				},
+				Input9 = InstanceInput {
+					SourceOp = "LU",
+					Source = "AngleZ1",
+					Default = 0,
+				},
+				Label3 = InstanceInput {
+					SourceOp = "LB",
+					Source = "Label3",
+					Page = "Controls",
+				},
+				Input10 = InstanceInput {
+					SourceOp = "LB",
+					Source = "Opacity1",
+					Default = 1,
+				},
+				Input11 = InstanceInput {
+					SourceOp = "LB",
+					Source = "Red1",
+					ControlGroup = 29,
+					Default = 1,
+				},
+				Input12 = InstanceInput {
+					SourceOp = "LB",
+					Source = "Green1",
+					ControlGroup = 29,
+					Default = 1,
+				},
+				Input13 = InstanceInput {
+					SourceOp = "LB",
+					Source = "Blue1",
+					ControlGroup = 29,
+					Default = 1,
+				},
+				Input14 = InstanceInput {
+					SourceOp = "LB",
+					Source = "Offset1",
+					DefaultX = 0,
+					DefaultY = 0,
+				},
+				Input15 = InstanceInput {
+					SourceOp = "LB",
+					Source = "OffsetZ1",
+					Default = 0,
+				},
+				Input16 = InstanceInput {
+					SourceOp = "LB",
+					Source = "AngleX1",
+					Default = 0,
+				},
+				Input17 = InstanceInput {
+					SourceOp = "LB",
+					Source = "AngleY1",
+					Default = 0,
+				},
+				Input18 = InstanceInput {
+					SourceOp = "LB",
+					Source = "AngleZ1",
+					Default = 0,
+				},
+				Label5 = InstanceInput {
+					SourceOp = "RU",
+					Source = "Label5",
+					Page = "Controls",
+				},
+				Input19 = InstanceInput {
+					SourceOp = "RU",
+					Source = "Opacity1",
+					Default = 1,
+				},
+				Input20 = InstanceInput {
+					SourceOp = "RU",
+					Source = "Red1",
+					ControlGroup = 39,
+					Default = 1,
+				},
+				Input21 = InstanceInput {
+					SourceOp = "RU",
+					Source = "Green1",
+					ControlGroup = 39,
+					Default = 1,
+				},
+				Input22 = InstanceInput {
+					SourceOp = "RU",
+					Source = "Blue1",
+					ControlGroup = 39,
+					Default = 1,
+				},
+				Input23 = InstanceInput {
+					SourceOp = "RU",
+					Source = "Offset1",
+					DefaultX = 0,
+					DefaultY = 0,
+				},
+				Input24 = InstanceInput {
+					SourceOp = "RU",
+					Source = "OffsetZ1",
+					Default = 0,
+				},
+				Input25 = InstanceInput {
+					SourceOp = "RU",
+					Source = "AngleX1",
+					Default = 0,
+				},
+				Input26 = InstanceInput {
+					SourceOp = "RU",
+					Source = "AngleY1",
+					Default = 0,
+				},
+				Input27 = InstanceInput {
+					SourceOp = "RU",
+					Source = "AngleZ1",
+					Default = 0,
+				},
+				Label6 = InstanceInput {
+					SourceOp = "RB",
+					Source = "Label6",
+					Page = "Controls",
+				},
+				Input28 = InstanceInput {
+					SourceOp = "RB",
+					Source = "Opacity1",
+					Default = 1,
+				},
+				Input29 = InstanceInput {
+					SourceOp = "RB",
+					Source = "Red1",
+					ControlGroup = 46,
+					Default = 1,
+				},
+				Input30 = InstanceInput {
+					SourceOp = "RB",
+					Source = "Green1",
+					ControlGroup = 46,
+					Default = 1,
+				},
+				Input31 = InstanceInput {
+					SourceOp = "RB",
+					Source = "Blue1",
+					ControlGroup = 46,
+					Default = 1,
+				},
+				Input32 = InstanceInput {
+					SourceOp = "RB",
+					Source = "Offset1",
+					DefaultX = 0,
+					DefaultY = 0,
+				},
+				Input33 = InstanceInput {
+					SourceOp = "RB",
+					Source = "OffsetZ1",
+					Default = 0,
+				},
+				Input34 = InstanceInput {
+					SourceOp = "RB",
+					Source = "AngleX1",
+					Default = 0,
+				},
+				Input35 = InstanceInput {
+					SourceOp = "RB",
+					Source = "AngleY1",
+					Default = 0,
+				},
+				Input36 = InstanceInput {
+					SourceOp = "RB",
+					Source = "AngleZ1",
+					Default = 0,
+				},
+				Input37 = InstanceInput {
+					SourceOp = "MASTER",
+					Source = "Size",
+					Default = 5,
+				},
+				Input38 = InstanceInput {
+					SourceOp = "MASTER",
+					Source = "Font",
+					ControlGroup = 36,
+				},
+				Input60 = InstanceInput {
+					SourceOp = "MASTER",
+					Source = "Style",
+					ControlGroup = 36,
+				},
+				Input39 = InstanceInput {
+					SourceOp = "MASTER",
+					Source = "StyledText",
+				},
+				Input40 = InstanceInput {
+					SourceOp = "MASTER_3D",
+					Source = "CharacterSpacing",
+					Default = 1,
+				},
+				Label4 = InstanceInput {
+					SourceOp = "DelayCONTROL",
+					Source = "Label4",
+					Page = "Controls",
+				},
+				Input41 = InstanceInput {
+					SourceOp = "DelayCONTROL",
+					Source = "Range",
+					Default = 0,
+				},
+				Input42 = InstanceInput {
+					SourceOp = "DelayCONTROL",
+					Source = "FirstCharacter",
+					Default = 0,
+				},
+				Input43 = InstanceInput {
+					SourceOp = "DelayCONTROL",
+					Source = "LastCharacter",
+					Default = 20,
+				},
+				Input44 = InstanceInput {
+					SourceOp = "DelayCONTROL",
+					Source = "Order",
+					Default = 0,
+				},
+				Input45 = InstanceInput {
+					SourceOp = "DelayCONTROL",
+					Source = "DelayByCharacterPosition",
+					Default = 0,
+				},
+				Input46 = InstanceInput {
+					SourceOp = "DelayCONTROL",
+					Source = "SetFirstSelectedCharacterDelayTo",
+				},
+				Input47 = InstanceInput {
+					SourceOp = "DelayCONTROL",
+					Source = "ThisValue",
+					Default = 0,
+				},
+				Input48 = InstanceInput {
+					SourceOp = "DelayCONTROL",
+					Source = "DelayType",
+					Default = 1,
+				},
+				Input49 = InstanceInput {
+					SourceOp = "DelayCONTROL",
+					Source = "Delay",
+					Default = 0,
+				},
+				Label2 = InstanceInput {
+					SourceOp = "MASTER_3D",
+					Source = "Label2",
+					Page = "Controls",
+				},
+				Input50 = InstanceInput {
+					SourceOp = "MASTER_3D",
+					Source = "ExtrusionStyle",
+					Default = 0,
+				},
+				Input51 = InstanceInput {
+					SourceOp = "MASTER_3D",
+					Source = "ExtrusionProfile",
+				},
+				Input52 = InstanceInput {
+					SourceOp = "MASTER_3D",
+					Source = "ExtrusionDepth",
+					Default = 0,
+				},
+				Input53 = InstanceInput {
+					SourceOp = "MASTER_3D",
+					Source = "ExtrusionSubdivisions",
+					Default = 0,
+				},
+				Input54 = InstanceInput {
+					SourceOp = "MASTER_3D",
+					Source = "BevelDepth",
+					Default = 0,
+				},
+				Input55 = InstanceInput {
+					SourceOp = "MASTER_3D",
+					Source = "BevelWidth",
+					Default = 0,
+				},
+				Input56 = InstanceInput {
+					SourceOp = "MASTER_3D",
+					Source = "CustomExtrusionSubdivisions",
+					Default = 40,
+				},
+				Input57 = InstanceInput {
+					SourceOp = "MASTER_3D",
+					Source = "SmoothingAngle",
+					Default = 10,
+				},
+				Input58 = InstanceInput {
+					SourceOp = "MASTER_3D",
+					Source = "FrontBevel",
+					Default = 1,
+				},
+				Input59 = InstanceInput {
+					SourceOp = "MASTER_3D",
+					Source = "BackBevel",
+					Default = 1,
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Merge3D",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 185, 72 } },
+			Tools = ordered() {
+				Background1 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						Width = Input { Value = 1000, },
+						Height = Input { Value = 1000, },
+						Depth = Input { Value = 4, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 1, },
+						TopLeftGreen = Input { Value = 1, },
+						TopLeftBlue = Input { Value = 1, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+						EffectMask = Input {
+							SourceOp = "Mask_LU",
+							Source = "Mask",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { -82.5, 42.4281 } },
+				},
+				Mask_LU = RectangleMask {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						BorderWidth = Input { Value = 0.001, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.00618647590983745, 1 }, },
+						Width = Input { Value = 1, },
+						Height = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -82.5, 9.42814 } },
+				},
+				Mask_LB = RectangleMask {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						BorderWidth = Input { Value = 0.001, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.0025833360308, 0 }, },
+						Width = Input { Value = 1, },
+						Height = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -82.5, 75.4281 } },
+					UserControls = ordered() {
+						NewControl = {
+							INP_Integer = false,
+							LINKS_Name = "New Control",
+							LINKID_DataType = "Number",
+						}
+					}
+				},
+				LEFT_UP = Text3D {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						["Transform3DOp.PivotNest"] = Input { Value = 1, },
+						Size = Input {
+							Value = 5,
+							Expression = "MASTER.Size",
+						},
+						Font = Input {
+							Value = "Open Sans",
+							Expression = "MASTER.Font",
+						},
+						StyledText = Input {
+							SourceOp = "LU",
+							Source = "StyledText",
+						},
+						Style = Input {
+							Value = "Bold",
+							Expression = "MASTER.Style",
+						},
+						Extrusion = Input { Value = 1, },
+						ExtrusionProfile = Input {
+							SourceOp = "LEFT_UPExtrusionProfile",
+							Source = "Value",
+						},
+						ExtrusionDepth = Input { Expression = "MASTER_3D.ExtrusionDepth", },
+						ExtrusionSubdivisions = Input { Expression = "MASTER_3D.ExtrusionSubdivisions", },
+						BevelDepth = Input { Expression = "MASTER_3D.BevelDepth", },
+						BevelWidth = Input { Expression = "MASTER_3D.BevelWidth", },
+						SmoothingAngle = Input { Expression = "MASTER_3D.SmoothingAngle", },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+						CharacterSpacing = Input { Expression = "MASTER_3D.CharacterSpacing", },
+						Type1 = Input { Value = 1, },
+						ColorImage1 = Input {
+							SourceOp = "Background1",
+							Source = "Output",
+						},
+						ShadingGradient1 = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 27.5, 42.4281 } },
+				},
+				LU = StyledTextFollower {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Order = Input { Expression = "DelayCONTROL.Order", },
+						DelayType = Input { Expression = "DelayCONTROL.DelayType", },
+						Delay = Input { Expression = "DelayCONTROL.Delay", },
+						Text = Input { Expression = "MASTER.StyledText", },
+						Options1 = Input { Value = 0, },
+						Color1 = Input { Value = 0, },
+						Transform1 = Input { Value = 1, },
+						Pivot1 = Input {
+							SourceOp = "Path1",
+							Source = "Position",
+						},
+					},
+					UserControls = ordered() {
+						Label = {
+							LBLC_DropDownButton = true,
+							INPID_InputControl = "LabelControl",
+							LBLC_NumInputs = 9,
+							ICS_ControlPage = "Controls",
+							LINKS_Name = "Left Up Controls"
+						}
+					}
+				},
+				Path1 = PolyPath {
+					DrawMode = "InsertAndModify",
+					CtrlWShown = false,
+					Inputs = {
+						Displacement = Input {
+							SourceOp = "Path1Displacement",
+							Source = "Value",
+						},
+						PolyLine = Input {
+							Value = Polyline {
+								Points = {
+									{ Linear = true, LockY = true, X = -0.5, Y = -0.3 }
+								}
+							},
+						},
+					},
+				},
+				Path1Displacement = BezierSpline {
+					SplineColor = { Red = 255, Green = 0, Blue = 255 },
+					CtrlWShown = false,
+					NameSet = true,
+					KeyFrames = {
+						[78] = { 0, Flags = { Linear = true, LockedY = true } }
+					}
+				},
+				LEFT_UPExtrusionProfile = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.0666666666666667, 0.333333333333333 }, Flags = { Linear = true } },
+							[0.2] = { 1, LH = { 0.133333333333333, 0.666666666666667 }, RH = { 0.4, 1 }, Flags = { Linear = true } },
+							[0.8] = { 1, LH = { 0.6, 1 }, RH = { 0.866666666666667, 0.666666666666667 }, Flags = { Linear = true } },
+							[1] = { 0, LH = { 0.933333333333333, 0.333333333333333 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 192, Green = 128, Blue = 64 },
+					CtrlWShown = false,
+				},
+				MASTER_3D = Text3D {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Font = Input { Expression = "MASTER.Font", },
+						StyledText = Input {
+							SourceOp = "DelayCONTROL",
+							Source = "StyledText",
+						},
+						Style = Input { Expression = "MASTER.Style", },
+						Extrusion = Input { Value = 1, },
+						ExtrusionProfile = Input {
+							SourceOp = "MASTER_3DExtrusionProfile",
+							Source = "Value",
+						},
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+						ShadingGradient1 = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -302.5, 108.428 } },
+					UserControls = ordered() {
+						Label2 = {
+							LBLC_DropDownButton = true,
+							INPID_InputControl = "LabelControl",
+							LBLC_NumInputs = 10,
+							ICS_ControlPage = "Controls",
+							LINKS_Name = "Extrusion Controls"
+						}
+					}
+				},
+				DelayCONTROL = StyledTextFollower {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Text = Input { Expression = "MASTER.StyledText", },
+					},
+					UserControls = ordered() {
+						Label4 = {
+							LBLC_DropDownButton = true,
+							INPID_InputControl = "LabelControl",
+							LBLC_NumInputs = 9,
+							ICS_ControlPage = "Controls",
+							LINKS_Name = "Delay Controls"
+						}
+					}
+				},
+				MASTER_3DExtrusionProfile = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.0666666666666667, 0.333333333333333 }, Flags = { Linear = true } },
+							[0.2] = { 1, LH = { 0.133333333333333, 0.666666666666667 }, RH = { 0.4, 1 }, Flags = { Linear = true } },
+							[0.8] = { 1, LH = { 0.6, 1 }, RH = { 0.866666666666667, 0.666666666666667 }, Flags = { Linear = true } },
+							[1] = { 0, LH = { 0.933333333333333, 0.333333333333333 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 192, Green = 128, Blue = 64 },
+					CtrlWShown = false,
+					NameSet = true,
+				},
+				LEFT_BTM = Text3D {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						["Transform3DOp.Pivot.Y"] = Input { Value = 0.25, },
+						Size = Input {
+							Value = 5,
+							Expression = "MASTER.Size",
+						},
+						Font = Input {
+							Value = "Open Sans",
+							Expression = "MASTER.Font",
+						},
+						StyledText = Input {
+							SourceOp = "LB",
+							Source = "StyledText",
+						},
+						Style = Input {
+							Value = "Bold",
+							Expression = "MASTER.Style",
+						},
+						Extrusion = Input { Value = 1, },
+						ExtrusionProfile = Input {
+							SourceOp = "LEFT_BTMExtrusionProfile",
+							Source = "Value",
+						},
+						ExtrusionDepth = Input { Expression = "MASTER_3D.ExtrusionDepth", },
+						ExtrusionSubdivisions = Input { Expression = "MASTER_3D.ExtrusionSubdivisions", },
+						BevelDepth = Input { Expression = "MASTER_3D.BevelDepth", },
+						BevelWidth = Input { Expression = "MASTER_3D.BevelWidth", },
+						SmoothingAngle = Input { Expression = "MASTER_3D.SmoothingAngle", },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+						CharacterSpacing = Input { Expression = "MASTER_3D.CharacterSpacing", },
+						Type1 = Input { Value = 1, },
+						ColorImage1 = Input {
+							SourceOp = "Background1_4",
+							Source = "Output",
+						},
+						ShadingGradient1 = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 27.5, 108.428 } },
+				},
+				LB = StyledTextFollower {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Order = Input { Expression = "DelayCONTROL.Order", },
+						DelayType = Input { Expression = "DelayCONTROL.DelayType", },
+						Delay = Input { Expression = "DelayCONTROL.Delay", },
+						Text = Input { Expression = "MASTER.StyledText", },
+						Transform1 = Input { Value = 1, },
+						Pivot1 = Input {
+							SourceOp = "Path2",
+							Source = "Position",
+						},
+					},
+					UserControls = ordered() {
+						Label3 = {
+							LBLC_DropDownButton = true,
+							INPID_InputControl = "LabelControl",
+							LBLC_NumInputs = 9,
+							ICS_ControlPage = "Controls",
+							LINKS_Name = "Left Bottom Controls"
+						}
+					}
+				},
+				Path2 = PolyPath {
+					DrawMode = "InsertAndModify",
+					CtrlWShown = false,
+					Inputs = {
+						Displacement = Input {
+							SourceOp = "Path2Displacement",
+							Source = "Value",
+						},
+						PolyLine = Input {
+							Value = Polyline {
+								Points = {
+									{ Linear = true, LockY = true, X = -0.5, Y = -0.3 }
+								}
+							},
+						},
+					},
+				},
+				Path2Displacement = BezierSpline {
+					SplineColor = { Red = 255, Green = 0, Blue = 255 },
+					CtrlWShown = false,
+					NameSet = true,
+					KeyFrames = {
+						[78] = { 0, Flags = { Linear = true, LockedY = true } }
+					}
+				},
+				LEFT_BTMExtrusionProfile = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.0666666666666667, 0.333333333333333 }, Flags = { Linear = true } },
+							[0.2] = { 1, LH = { 0.133333333333333, 0.666666666666667 }, RH = { 0.4, 1 }, Flags = { Linear = true } },
+							[0.8] = { 1, LH = { 0.6, 1 }, RH = { 0.866666666666667, 0.666666666666667 }, Flags = { Linear = true } },
+							[1] = { 0, LH = { 0.933333333333333, 0.333333333333333 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 192, Green = 128, Blue = 64 },
+					CtrlWShown = false,
+				},
+				Background1_4 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						Width = Input { Value = 1000, },
+						Height = Input { Value = 1000, },
+						Depth = Input { Value = 4, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 1, },
+						TopLeftGreen = Input { Value = 1, },
+						TopLeftBlue = Input { Value = 1, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+						EffectMask = Input {
+							SourceOp = "Mask_LB",
+							Source = "Mask",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { -82.5, 108.428 } },
+				},
+				MASTER = TextPlus {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Size = Input { Value = 5, },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+						ShadingGradient1 = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -302.5, 141.428 } },
+				},
+				Mask_RU = RectangleMask {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						BorderWidth = Input { Value = 0.001, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 1.00510722498511, 1 }, },
+						Width = Input { Value = 1, },
+						Height = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -82.5, 141.428 } },
+				},
+				RIGHT_UP = Text3D {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						["Transform3DOp.Pivot.Y"] = Input { Value = 0.25, },
+						Size = Input {
+							Value = 5,
+							Expression = "MASTER.Size",
+						},
+						Font = Input {
+							Value = "Open Sans",
+							Expression = "MASTER.Font",
+						},
+						StyledText = Input {
+							SourceOp = "RU",
+							Source = "StyledText",
+						},
+						Style = Input {
+							Value = "Bold",
+							Expression = "MASTER.Style",
+						},
+						Extrusion = Input { Value = 1, },
+						ExtrusionProfile = Input {
+							SourceOp = "RIGHT_UPExtrusionProfile",
+							Source = "Value",
+						},
+						ExtrusionDepth = Input { Expression = "MASTER_3D.ExtrusionDepth", },
+						ExtrusionSubdivisions = Input { Expression = "MASTER_3D.ExtrusionSubdivisions", },
+						BevelDepth = Input { Expression = "MASTER_3D.BevelDepth", },
+						BevelWidth = Input { Expression = "MASTER_3D.BevelWidth", },
+						SmoothingAngle = Input { Expression = "MASTER_3D.SmoothingAngle", },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+						CharacterSpacing = Input { Expression = "MASTER_3D.CharacterSpacing", },
+						Type1 = Input { Value = 1, },
+						ColorImage1 = Input {
+							SourceOp = "Background1_5",
+							Source = "Output",
+						},
+						ShadingGradient1 = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 27.5, 174.428 } },
+				},
+				RU = StyledTextFollower {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Order = Input { Expression = "DelayCONTROL.Order", },
+						DelayType = Input { Expression = "DelayCONTROL.DelayType", },
+						Delay = Input { Expression = "DelayCONTROL.Delay", },
+						Text = Input { Expression = "MASTER.StyledText", },
+						Transform1 = Input { Value = 1, },
+						Pivot1 = Input {
+							SourceOp = "Path3",
+							Source = "Position",
+						},
+					},
+					UserControls = ordered() {
+						Label5 = {
+							LBLC_DropDownButton = true,
+							INPID_InputControl = "LabelControl",
+							LBLC_NumInputs = 9,
+							ICS_ControlPage = "Controls",
+							LINKS_Name = "Right Up Controls"
+						}
+					}
+				},
+				Path3 = PolyPath {
+					DrawMode = "InsertAndModify",
+					CtrlWShown = false,
+					Inputs = {
+						Displacement = Input {
+							SourceOp = "Path3Displacement",
+							Source = "Value",
+						},
+						PolyLine = Input {
+							Value = Polyline {
+								Points = {
+									{ Linear = true, LockY = true, X = -0.5, Y = -0.3 }
+								}
+							},
+						},
+					},
+				},
+				Path3Displacement = BezierSpline {
+					SplineColor = { Red = 255, Green = 0, Blue = 255 },
+					CtrlWShown = false,
+					NameSet = true,
+					KeyFrames = {
+						[78] = { 0, Flags = { Linear = true, LockedY = true } }
+					}
+				},
+				RIGHT_UPExtrusionProfile = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.0666666666666667, 0.333333333333333 }, Flags = { Linear = true } },
+							[0.2] = { 1, LH = { 0.133333333333333, 0.666666666666667 }, RH = { 0.4, 1 }, Flags = { Linear = true } },
+							[0.8] = { 1, LH = { 0.6, 1 }, RH = { 0.866666666666667, 0.666666666666667 }, Flags = { Linear = true } },
+							[1] = { 0, LH = { 0.933333333333333, 0.333333333333333 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 192, Green = 128, Blue = 64 },
+					CtrlWShown = false,
+				},
+				Background1_5 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						Width = Input { Value = 1000, },
+						Height = Input { Value = 1000, },
+						Depth = Input { Value = 4, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 1, },
+						TopLeftGreen = Input { Value = 1, },
+						TopLeftBlue = Input { Value = 1, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+						EffectMask = Input {
+							SourceOp = "Mask_RU",
+							Source = "Mask",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { -82.5, 174.428 } },
+				},
+				Mask_RB = RectangleMask {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						BorderWidth = Input { Value = 0.001, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 1.001685, 0 }, },
+						Width = Input { Value = 1, },
+						Height = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -82.5, 207.428 } },
+				},
+				Merge3D = Merge3D {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						SceneInput1 = Input {
+							SourceOp = "LEFT_BTM",
+							Source = "Output",
+						},
+						SceneInput2 = Input {
+							SourceOp = "LEFT_UP",
+							Source = "Output",
+						},
+						SceneInput3 = Input {
+							SourceOp = "RIGHT_UP",
+							Source = "Output",
+						},
+						SceneInput4 = Input {
+							SourceOp = "RIGHT_BTM",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 302.5, 141.428 } },
+				},
+				RIGHT_BTM = Text3D {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						["Transform3DOp.Pivot.Y"] = Input { Value = 0.25, },
+						Size = Input {
+							Value = 5,
+							Expression = "MASTER.Size",
+						},
+						Font = Input {
+							Value = "Open Sans",
+							Expression = "MASTER.Font",
+						},
+						StyledText = Input {
+							SourceOp = "RB",
+							Source = "StyledText",
+						},
+						Style = Input {
+							Value = "Bold",
+							Expression = "MASTER.Style",
+						},
+						Extrusion = Input { Value = 1, },
+						ExtrusionProfile = Input {
+							SourceOp = "RIGHT_BTMExtrusionProfile",
+							Source = "Value",
+						},
+						ExtrusionDepth = Input { Expression = "MASTER_3D.ExtrusionDepth", },
+						ExtrusionSubdivisions = Input { Expression = "MASTER_3D.ExtrusionSubdivisions", },
+						BevelDepth = Input { Expression = "MASTER_3D.BevelDepth", },
+						BevelWidth = Input { Expression = "MASTER_3D.BevelWidth", },
+						SmoothingAngle = Input { Expression = "MASTER_3D.SmoothingAngle", },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+						CharacterSpacing = Input { Expression = "MASTER_3D.CharacterSpacing", },
+						Type1 = Input { Value = 1, },
+						ColorImage1 = Input {
+							SourceOp = "Background1_6",
+							Source = "Output",
+						},
+						ShadingGradient1 = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 27.5, 240.428 } },
+				},
+				RB = StyledTextFollower {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Order = Input { Expression = "DelayCONTROL.Order", },
+						DelayType = Input { Expression = "DelayCONTROL.DelayType", },
+						Delay = Input { Expression = "DelayCONTROL.Delay", },
+						Text = Input { Expression = "MASTER.StyledText", },
+						Transform1 = Input { Value = 1, },
+						Pivot1 = Input {
+							SourceOp = "Path4",
+							Source = "Position",
+						},
+					},
+					UserControls = ordered() {
+						Label6 = {
+							LBLC_DropDownButton = true,
+							INPID_InputControl = "LabelControl",
+							LBLC_NumInputs = 9,
+							ICS_ControlPage = "Controls",
+							LINKS_Name = "Right Bottom Controls"
+						}
+					}
+				},
+				Path4 = PolyPath {
+					DrawMode = "InsertAndModify",
+					CtrlWShown = false,
+					Inputs = {
+						Displacement = Input {
+							SourceOp = "Path4Displacement",
+							Source = "Value",
+						},
+						PolyLine = Input {
+							Value = Polyline {
+								Points = {
+									{ Linear = true, LockY = true, X = -0.5, Y = -0.3 }
+								}
+							},
+						},
+					},
+				},
+				Path4Displacement = BezierSpline {
+					SplineColor = { Red = 255, Green = 0, Blue = 255 },
+					CtrlWShown = false,
+					NameSet = true,
+					KeyFrames = {
+						[78] = { 0, Flags = { Linear = true, LockedY = true } }
+					}
+				},
+				RIGHT_BTMExtrusionProfile = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.0666666666666667, 0.333333333333333 }, Flags = { Linear = true } },
+							[0.2] = { 1, LH = { 0.133333333333333, 0.666666666666667 }, RH = { 0.4, 1 }, Flags = { Linear = true } },
+							[0.8] = { 1, LH = { 0.6, 1 }, RH = { 0.866666666666667, 0.666666666666667 }, Flags = { Linear = true } },
+							[1] = { 0, LH = { 0.933333333333333, 0.333333333333333 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 192, Green = 128, Blue = 64 },
+					CtrlWShown = false,
+				},
+				Background1_6 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						Width = Input { Value = 1000, },
+						Height = Input { Value = 1000, },
+						Depth = Input { Value = 4, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 1, },
+						TopLeftGreen = Input { Value = 1, },
+						TopLeftBlue = Input { Value = 1, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+						EffectMask = Input {
+							SourceOp = "Mask_RB",
+							Source = "Mask",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { -82.5, 240.428 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "CHmapper_v1"
+}

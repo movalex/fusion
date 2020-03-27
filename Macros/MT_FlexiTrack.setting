@@ -1,0 +1,337 @@
+{
+	Tools = ordered() {
+		FlexiTrack = GroupOperator {
+			CtrlWZoom = false,
+			CustomData = {
+				HelpPage = "http://wiki/doku.php?id=flexitrack",
+			},
+			Inputs = ordered() {
+				Comments = Input { Value = "FlexiTrack v2\r\n\r\nMuse Tools Library\r\nby Bryan Ray\r\nwww.musevfx.com", },
+
+				Tracker = InstanceInput {
+					SourceOp = "Steady",
+					Source = "Tracker",
+					Default = 0,
+				},
+				doPosition = InstanceInput {
+					SourceOp = "Steady",
+					Source = "doPosition",
+					Default = 1,
+				},
+				SteadyX = InstanceInput {
+					SourceOp = "UnSteady",
+					Source = "SteadyX",
+					Default = 0,
+				},
+				SteadyY = InstanceInput {
+					SourceOp = "UnSteady",
+					Source = "SteadyY",
+					Default = 1,
+				},
+				doRotation = InstanceInput {
+					SourceOp = "Steady",
+					Source = "doRotation",
+					Default = 0,
+				},
+				SteadyAngle = InstanceInput {
+					SourceOp = "UnSteady",
+					Source = "SteadyAngle",
+					Default = 1,
+				},
+				doScale = InstanceInput {
+					SourceOp = "Steady",
+					Source = "doScale",
+					Default = 0,
+				},
+				SteadySize = InstanceInput {
+					SourceOp = "UnSteady",
+					Source = "SteadySize",
+					Default = 1,
+				},
+				MotionBlur = InstanceInput {
+					SourceOp = "UnSteady",
+					Source = "MotionBlur",
+					Default = 0,
+				},
+				Quality = InstanceInput {
+					SourceOp = "UnSteady",
+					Source = "Quality",
+					Default = 2,
+				},
+				ShutterAngle = InstanceInput {
+					SourceOp = "UnSteady",
+					Source = "ShutterAngle",
+					Default = 180,
+				},
+				CenterBias = InstanceInput {
+					SourceOp = "UnSteady",
+					Source = "CenterBias",
+					Default = 0,
+				},
+				SampleSpread = InstanceInput {
+					SourceOp = "UnSteady",
+					Source = "SampleSpread",
+					Default = 1,
+				},
+				ExportDestabilizer = InstanceInput {
+					SourceOp = "UnSteady",
+					Source = "ExportDestabilizer",
+				},
+				Input = InstanceInput {
+					SourceOp = "Steady",
+					Source = "Input",
+				},
+			},
+			Outputs = {
+				Output = InstanceOutput {
+					SourceOp = "UnSteady",
+					Source = "Output",
+				},
+			},
+			ViewInfo = GroupInfo {
+				Pos = { 495, 181.5, },
+				Flags = {
+					AllowPan = false,
+					GridSnap = true,
+					ConnectedSnap = true,
+					AutoSnap = true,
+					RemoveRouters = true,
+				},
+				Size = { 236, 64.3, },
+				Direction = "Horizontal",
+				PipeStyle = "Direct",
+				Scale = 1,
+				Offset = { 0, 0, },
+			},
+			Tools = ordered() {
+				Steady = Transform {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Center = Input { Expression = "NewPosition", },
+						Pivot = Input { Expression = "self:GetSourceTool(\"Tracker\").SteadyAxis", },
+						Size = Input { Expression = "(((self:GetSourceTool(\"Tracker\").SteadySize)-1.0)*doScale)+1.0", },
+						Angle = Input { Expression = "(self:GetSourceTool(\"Tracker\").SteadyAngle)*doRotation", },
+						SrcPosition = Input { Expression = "self:GetSourceTool(\"Tracker\").UnSteadyPosition", },
+						Displacement = Input {
+							Value = { 0, 0, },
+							Expression = "Point(0.5-SrcPosition.X, 0.5-SrcPosition.Y)",
+						},
+						ModDispl = Input {
+							Value = { 0, 0, },
+							Expression = "Point(Displacement.X*doPosition,Displacement.Y*doPosition)",
+						},
+						NewPosition = Input { Expression = "Point(0.5+ModDispl.X, 0.5+ModDispl.Y)", },
+					},
+					ViewInfo = OperatorInfo { Pos = { -55, 10.15, }, },
+					UserControls = ordered() {
+						Tracker = {
+							LINKID_DataType = "Image",
+							LINKS_Name = "Tracker",
+							INPID_InputControl = "ImageControl",
+							INP_Default = 0,
+							IC_ControlPage = 0,
+						},
+						doPosition = {
+							LINKID_DataType = "Number",
+							INP_Default = 1,
+							INPID_InputControl = "CheckboxControl",
+							LINKS_Name = "Position",
+							IC_ControlPage = 0,
+						},
+						doRotation = {
+							LINKID_DataType = "Number",
+							INP_Default = 0,
+							INPID_InputControl = "CheckboxControl",
+							LINKS_Name = "Rotation",
+							IC_ControlPage = 0,
+						},
+						doScale = {
+							LINKID_DataType = "Number",
+							INP_Default = 0,
+							INPID_InputControl = "CheckboxControl",
+							LINKS_Name = "Scale",
+							IC_ControlPage = 0,
+						},
+						SrcPosition = {
+							IC_ControlPage = 0,
+							INPID_InputControl = "OffsetControl",
+							LINKS_Name = "Source Position",
+							LINKID_DataType = "Point",
+						},
+						Displacement = {
+							IC_ControlPage = 0,
+							INPID_InputControl = "OffsetControl",
+							LINKS_Name = "Displacement",
+							LINKID_DataType = "Point",
+						},
+						ModDispl = {
+							IC_ControlPage = 0,
+							INPID_InputControl = "OffsetControl",
+							LINKS_Name = "New Displacement",
+							LINKID_DataType = "Point",
+						},
+						NewPosition = {
+							IC_ControlPage = 0,
+							INPID_InputControl = "OffsetControl",
+							LINKS_Name = "New Position",
+							LINKID_DataType = "Point",
+						},
+					},
+				},
+				UnSteady = Transform {
+					NameSet = true,
+					Inputs = {
+						Tracker = Input {
+							SourceOp = "Steady",
+							Source = "Output",
+						},
+						Center = Input { Expression = "NewPosition", },
+						Pivot = Input { Expression = "Steady:GetSourceTool(\"Tracker\").SteadyAxis", },
+						Size = Input { Expression = "(((Steady:GetSourceTool(\"Tracker\").SteadySize)-1.0)*(1.0-SteadySize)*Steady.doScale)+1.0", },
+						Angle = Input { Expression = "Steady:GetSourceTool(\"Tracker\").SteadyAngle*(1.0-SteadyAngle)*Steady.doRotation", },
+						InvertTransform = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "Steady",
+							Source = "Output",
+						},
+						SrcPosition = Input { Expression = "Steady:GetSourceTool(\"Tracker\").UnSteadyPosition", },
+						Displacement = Input {
+							Value = { 0, 0, },
+							Expression = "Point(0.5-SrcPosition.X, 0.5-SrcPosition.Y)",
+						},
+						SteadyX = Input { Value = 0, },
+						ModDispl = Input {
+							Value = { 0, 0, },
+							Expression = "Point(Displacement.X*(1.0-SteadyX)*Steady.doPosition, Displacement.Y*(1.0-SteadyY)*Steady.doPosition)",
+						},
+						NewPosition = Input { Expression = "Point(0.5+ModDispl.X, 0.5+ModDispl.Y)", },
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 10.15, }, },
+					UserControls = ordered() {
+						SrcPosition = {
+							IC_ControlPage = 0,
+							INPID_InputControl = "OffsetControl",
+							LINKS_Name = "Source Position",
+							LINKID_DataType = "Point",
+						},
+						Displacement = {
+							IC_ControlPage = 0,
+							INPID_InputControl = "OffsetControl",
+							LINKS_Name = "Displacement",
+							LINKID_DataType = "Point",
+						},
+						SteadyX = {
+							LINKID_DataType = "Number",
+							INP_Default = 1,
+							INP_MinScale = 0,
+							IC_ControlPage = 0,
+							INPID_InputControl = "SliderControl",
+							INP_MaxScale = 1,
+							SLCS_LowName = 'X Unstable',
+							SLCS_HighName = 'Stable',
+							--LINKS_Name = "Steady Amount X",
+						},
+						SteadyY = {
+							LINKID_DataType = "Number",
+							INP_Default = 1,
+							INP_MinScale = 0,
+							IC_ControlPage = 0,
+							INPID_InputControl = "SliderControl",
+							INP_MaxScale = 1,
+							SLCS_LowName = 'Y Unstable',
+							SLCS_HighName = 'Stable',
+							--LINKS_Name = "Steady Amount Y",
+						},
+						SteadyAngle = {
+							LINKID_DataType = "Number",
+							INP_Default = 1,
+							INP_MinScale = 0,
+							IC_ControlPage = 0,
+							INPID_InputControl = "SliderControl",
+							INP_MaxScale = 1,
+							SLCS_LowName = 'Angle Unstable',
+							SLCS_HighName = 'Stable',
+							--LINKS_Name = "Steady Angle",
+						},
+						SteadySize = {
+							LINKID_DataType = "Number",
+							INP_Default = 1,
+							INP_MinScale = 0,
+							IC_ControlPage = 0,
+							INPID_InputControl = "SliderControl",
+							INP_MaxScale = 1,
+							SLCS_LowName = 'Size Unstable',
+							SLCS_HighName = 'Stable',
+							--LINKS_Name = "Steady Size",
+						},
+						ModDispl = {
+							IC_ControlPage = 0,
+							INPID_InputControl = "OffsetControl",
+							LINKS_Name = "New Displacement",
+							LINKID_DataType = "Point",
+						},
+						NewPosition = {
+							IC_ControlPage = 0,
+							INPID_InputControl = "OffsetControl",
+							LINKS_Name = "New Position",
+							LINKID_DataType = "Point",
+						},
+						ExportDestabilizer = {
+							LINKID_DataType = "Number",
+							INP_Default = 0,
+							LINKS_Name = "Export Destabilizer",
+							BTNCS_Execute = [[
+
+-- Get this macro's UnSteady node
+for i, tool in ipairs(tool:GetChildrenList()) do
+	_, _, name = string.find(tool.Name, "(%a+)")
+	if name == "UnSteady" then
+		node = tool
+	end
+end
+
+-- Create a group table called Destabilizer1
+gt = { Tools = { Destabilizer1 = { __ctor = "GroupOperator" } } }
+gt.Tools.Destabilizer1.ViewInfo = { __ctor = "GroupInfo" }
+gt.Tools.Destabilizer1.Inputs = {}
+gt.Tools.Destabilizer1.Outputs = {}
+ 
+-- Add an external input, referencing UnSteady's Input
+gt.Tools.Destabilizer1.Inputs.Input1 = { __ctor = "InstanceInput", SourceOp = node.Name, Source = "Input" }
+ 
+-- Add an external output, referencing UnSteady's Output
+gt.Tools.Destabilizer1.Outputs.Output1 = { __ctor = "InstanceOutput", SourceOp = node.Name, Source = "Output" }
+
+-- get a table of settings for the actual tools to go in our new group
+t = comp:CopySettings(node)
+gt.Tools.Destabilizer1.Tools = t.Tools
+
+
+-- Add control panel
+
+gt.Tools.Destabilizer1.Inputs.SteadyX = 		{ __ctor = "InstanceInput", SourceOp = node.Name, Source = "SteadyX",  }
+gt.Tools.Destabilizer1.Inputs.SteadyY = 		{ __ctor = "InstanceInput", SourceOp = node.Name, Source = "SteadyY",  }
+gt.Tools.Destabilizer1.Inputs.SteadyAngle = 	{ __ctor = "InstanceInput", SourceOp = node.Name, Source = "SteadyAngle", }
+gt.Tools.Destabilizer1.Inputs.SteadySize = 		{ __ctor = "InstanceInput", SourceOp = node.Name, Source = "SteadySize", }
+gt.Tools.Destabilizer1.Inputs.MotionBlur = 		{ __ctor = "InstanceInput", SourceOp = node.Name, Source = "MotionBlur" }
+gt.Tools.Destabilizer1.Inputs.Quality =			{ __ctor = "InstanceInput", SourceOp = node.Name, Source = "Quality" }
+gt.Tools.Destabilizer1.Inputs.ShutterAngle =	{ __ctor = "InstanceInput", SourceOp = node.Name, Source = "ShutterAngle" }
+gt.Tools.Destabilizer1.Inputs.CenterBias = 		{ __ctor = "InstanceInput", SourceOp = node.Name, Source = "CenterBias" }
+gt.Tools.Destabilizer1.Inputs.SampleSize = 		{ __ctor = "InstanceInput", SourceOp = node.Name, Source = "SampleSize" }
+ 
+-- paste the new tool into the comp
+comp:Paste(gt)
+
+						]],
+							IC_ControlPage = 0,
+							INPID_InputControl = "ButtonControl",
+						},
+					},
+				},
+			},
+		},
+	},
+	ActiveTool = "FlexiTrack",
+}

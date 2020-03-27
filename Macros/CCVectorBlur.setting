@@ -1,0 +1,605 @@
+{
+	Tools = ordered() {
+		CCVectorBlur_2 = MacroOperator {
+			Inputs = ordered() {
+				MainInput1 = InstanceInput {
+					SourceOp = "image",
+					Source = "Input",
+				},
+				Input1 = InstanceInput {
+					SourceOp = "ErodeDilate1",
+					Source = "Filter",
+					Default = 2,
+				},
+				Input2 = InstanceInput {
+					SourceOp = "ErodeDilate1",
+					Source = "XAmount",
+					Name = "Roughness",
+					MinScale = -0.02,
+					MaxScale = 0.02,
+					Default = 0,
+				},
+				MainInput2 = InstanceInput {
+					SourceOp = "displaceInput",
+					Source = "Input",
+					Name = "Displace Input",
+				},
+				Input3 = InstanceInput {
+					SourceOp = "displaceInput",
+					Source = "Slope_Bump",
+					Page = "Controls",
+					Default = 1,
+				},
+				Input4 = InstanceInput {
+					SourceOp = "displaceInput",
+					Source = "Twirl",
+					Page = "Controls",
+				},
+				Input5 = InstanceInput {
+					SourceOp = "Blur1",
+					Source = "XBlurSize",
+					Name = "Slope Size",
+					Default = 0,
+				},
+				Input6 = InstanceInput {
+					SourceOp = "BrightnessContrast2",
+					Source = "Gamma",
+					Name = "Slope Height",
+					MinScale = 1,
+					Default = 1,
+				},
+				Input7 = InstanceInput {
+					SourceOp = "CreateBumpMap1",
+					Source = "FilterSize",
+				},
+				Input8 = InstanceInput {
+					SourceOp = "CreateBumpMap1",
+					Source = "HeightScale",
+					Name = "Bump Height",
+					MaxScale = 200,
+					Default = 0.0001,
+				},
+				Input10 = InstanceInput {
+					SourceOp = "Displace2",
+					Source = "XRefraction",
+					Name = "Displace",
+					Default = 0,
+				},
+				Input11 = InstanceInput {
+					SourceOp = "Displace2",
+					Source = "Spread",
+					Default = 0.2,
+				},
+				Input12 = InstanceInput {
+					SourceOp = "Displace2",
+					Source = "ApplyMaskInverted",
+					Default = 0,
+				},
+				Input13 = InstanceInput {
+					SourceOp = "Displace2",
+					Source = "MultiplyByMask",
+					Default = 0,
+				},
+				Input14 = InstanceInput {
+					SourceOp = "Displace2",
+					Source = "FitMask",
+				},
+				Input15 = InstanceInput {
+					SourceOp = "Displace2",
+					Source = "MaskChannel",
+					Default = 3,
+				},
+				Input16 = InstanceInput {
+					SourceOp = "Displace2",
+					Source = "MaskHigh",
+					ControlGroup = 18,
+					Default = 1,
+				},
+				Input17 = InstanceInput {
+					SourceOp = "Displace2",
+					Source = "MaskLow",
+					ControlGroup = 18,
+					Default = 0,
+				},
+				Input18 = InstanceInput {
+					SourceOp = "Displace2",
+					Source = "MaskClipBlack",
+					Default = 1,
+				},
+				Input19 = InstanceInput {
+					SourceOp = "Displace2",
+					Source = "MaskClipWhite",
+					Default = 1,
+				},
+				Input9 = InstanceInput {
+					SourceOp = "Displace2",
+					Source = "EffectMask",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Displace2",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			Tools = ordered() {
+				image = ChangeDepth {
+					NameSet = true,
+					Inputs = {
+						Depth = Input { Value = 4, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 335.684, 108.608 } },
+				},
+				ErodeDilate1 = ErodeDilate {
+					Inputs = {
+						Filter = Input { Value = 2, },
+						ClippingMode = Input { Value = FuID { "Domain" }, },
+						Input = Input {
+							SourceOp = "displaceInput",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 468.089, 187.336 } },
+				},
+				displaceInput = ChangeDepth {
+					NameSet = true,
+					Inputs = {
+						Depth = Input { Value = 4, },
+						Dither = Input { Value = 2, },
+						Slope_Bump = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 334.729, 187.336 } },
+					UserControls = ordered() {
+						Slope_Bump = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = false,
+							INPID_InputControl = "CheckboxControl",
+							INP_MaxScale = 100,
+							INP_MinScale = 0,
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							CBC_TriState = false,
+							LINKS_Name = "Slope/Bump"
+						},
+						Twirl = {
+							CBC_TriState = false,
+							INP_Integer = false,
+							ICS_ControlPage = "Controls",
+							LINKID_DataType = "Number",
+							INPID_InputControl = "CheckboxControl",
+							INP_MinScale = 0,
+							INP_MaxScale = 100,
+							LINKS_Name = "Twirl"
+						}
+					}
+				},
+				Blur1 = Blur {
+					Inputs = {
+						XBlurSize = Input { Value = 0, },
+						ClippingMode = Input { Value = FuID { "Domain" }, },
+						Input = Input {
+							SourceOp = "ErodeDilate1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 584.127, 228.079 } },
+				},
+				slope_4 = Custom {
+					NameSet = true,
+					Inputs = {
+						LUTIn1 = Input {
+							SourceOp = "slope_4LUTIn1",
+							Source = "Value",
+						},
+						LUTIn2 = Input {
+							SourceOp = "slope_4LUTIn2",
+							Source = "Value",
+						},
+						LUTIn3 = Input {
+							SourceOp = "slope_4LUTIn3",
+							Source = "Value",
+						},
+						LUTIn4 = Input {
+							SourceOp = "slope_4LUTIn4",
+							Source = "Value",
+						},
+						Intermediate1 = Input { Value = "1/width", },
+						Intermediate2 = Input { Value = "1/height", },
+						RedExpression = Input { Value = "getr1w(x,y) - getr1w(x-i1,y)", },
+						GreenExpression = Input { Value = "getr1w(x,y) - getr1w(x,y-i2)", },
+						BlueExpression = Input { Value = "0", },
+						AlphaExpression = Input { Value = "0", },
+						Image1 = Input {
+							SourceOp = "Blur1",
+							Source = "Output",
+						},
+						Comments = Input { Value = "theotheo@mailbox.org\nwww.euqahuba.com", },
+					},
+					ViewInfo = OperatorInfo { Pos = { 712.583, 228.079 } },
+				},
+				slope_4LUTIn1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 0, Blue = 0 },
+					CtrlWShown = false,
+				},
+				slope_4LUTIn2 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 204, Blue = 0 },
+					CtrlWShown = false,
+				},
+				slope_4LUTIn3 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 0, Blue = 204 },
+					CtrlWShown = false,
+				},
+				slope_4LUTIn4 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 204, Blue = 204 },
+					CtrlWShown = false,
+				},
+				BrightnessContrast2 = BrightnessContrast {
+					Inputs = {
+						Input = Input {
+							SourceOp = "crossproduct_3",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 843.247, 271.172 } },
+				},
+				crossproduct_3 = Custom {
+					CtrlWZoom = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Expression = "displaceInput.Twirl", },
+						LUTIn1 = Input {
+							SourceOp = "crossproduct_3LUTIn1",
+							Source = "Value",
+						},
+						LUTIn2 = Input {
+							SourceOp = "crossproduct_3LUTIn2",
+							Source = "Value",
+						},
+						LUTIn3 = Input {
+							SourceOp = "crossproduct_3LUTIn3",
+							Source = "Value",
+						},
+						LUTIn4 = Input {
+							SourceOp = "crossproduct_3LUTIn4",
+							Source = "Value",
+						},
+						RedExpression = Input { Value = "(g1*b2) - (b1*g2)", },
+						GreenExpression = Input { Value = "(b1*r2) - (r1*b2))", },
+						BlueExpression = Input { Value = "(r1*g2) - (g1*r2)", },
+						Image1 = Input {
+							SourceOp = "slope_4",
+							Source = "Output",
+						},
+						Image2 = Input {
+							SourceOp = "Background1_4",
+							Source = "Output",
+						},
+						Comments = Input { Value = "theotheo@mailbox.org\nwww.euqahuba.com", },
+					},
+					ViewInfo = OperatorInfo { Pos = { 712.583, 271.172 } },
+				},
+				crossproduct_3LUTIn1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 0, Blue = 0 },
+				},
+				crossproduct_3LUTIn2 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 204, Blue = 0 },
+				},
+				crossproduct_3LUTIn3 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 0, Blue = 204 },
+				},
+				crossproduct_3LUTIn4 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 204, Blue = 204 },
+				},
+				Background1_4 = Background {
+					CustomData = {
+						Settings = {
+							[1] = {
+								Tools = ordered() {
+									Background1 = Background {
+										Inputs = {
+											["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } },
+											GlobalIn = Input { Value = 1001 },
+											Depth = Input { Value = 3 },
+											GlobalOut = Input { Value = 1100 },
+											Gradient = Input {
+												Value = Gradient {
+													Colors = {
+														[0] = { 0, 0, 0, 1 },
+														[1] = { 1, 1, 1, 1 }
+													}
+												}
+											},
+											Height = Input { Value = 1080 },
+											Width = Input { Value = 1920 }
+										},
+										Name = "Background1",
+										CtrlWZoom = false,
+										ViewInfo = OperatorInfo { Pos = { 550, 82.5 } },
+										CustomData = {
+										}
+									}
+								}
+							},
+							[2] = {
+								Tools = ordered() {
+									Background1 = Background {
+										Inputs = {
+											Type = Input { Value = FuID { "Horizontal" } },
+											TopRightGreen = Input { Value = 1 },
+											Width = Input { Value = 1920 },
+											TopRightRed = Input { Value = 1 },
+											["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } },
+											GlobalIn = Input { Value = 1001 },
+											GlobalOut = Input { Value = 1100 },
+											Height = Input { Value = 1080 },
+											Depth = Input { Value = 3 },
+											TopRightBlue = Input { Value = 1 },
+											Gradient = Input {
+												Value = Gradient {
+													Colors = {
+														[0] = { 0, 0, 0, 1 },
+														[1] = { 1, 1, 1, 1 }
+													}
+												}
+											}
+										},
+										CtrlWZoom = false,
+										ViewInfo = OperatorInfo { Pos = { 550, 82.5 } },
+										CustomData = {
+										}
+									}
+								}
+							},
+							[3] = {
+								Tools = ordered() {
+									Background1 = Background {
+										Inputs = {
+											BottomRightGreen = Input { Value = 1 },
+											Type = Input { Value = FuID { "Corner" } },
+											TopRightGreen = Input { Value = 1 },
+											Width = Input { Value = 1920 },
+											TopRightRed = Input { Value = 1 },
+											["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } },
+											GlobalIn = Input { Value = 1001 },
+											GlobalOut = Input { Value = 1100 },
+											Height = Input { Value = 1080 },
+											Depth = Input { Value = 3 },
+											TopLeftRed = Input { Value = 1 },
+											Gradient = Input {
+												Value = Gradient {
+													Colors = {
+														[0] = { 0, 0, 0, 1 },
+														[1] = { 1, 1, 1, 1 }
+													}
+												}
+											}
+										},
+										CtrlWZoom = false,
+										ViewInfo = OperatorInfo { Pos = { 550, 82.5 } },
+										CustomData = {
+										}
+									}
+								}
+							},
+							[4] = {
+								Tools = ordered() {
+									Background1 = Background {
+										Inputs = {
+											BottomRightGreen = Input { Value = 1 },
+											Type = Input { Value = FuID { "Vertical" } },
+											GlobalIn = Input { Value = 1001 },
+											TopRightGreen = Input { Value = 1 },
+											GlobalOut = Input { Value = 1100 },
+											Width = Input { Value = 1920 },
+											TopRightRed = Input { Value = 1 },
+											["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } },
+											TopLeftRed = Input { Value = 1 },
+											Depth = Input { Value = 3 },
+											Height = Input { Value = 1080 },
+											TopLeftGreen = Input { Value = 1 },
+											TopLeftBlue = Input { Value = 1 },
+											Gradient = Input {
+												Value = Gradient {
+													Colors = {
+														[0] = { 0, 0, 0, 1 },
+														[1] = { 1, 1, 1, 1 }
+													}
+												}
+											}
+										},
+										CtrlWZoom = false,
+										ViewInfo = OperatorInfo { Pos = { 550, 82.5 } },
+										CustomData = {
+										}
+									}
+								}
+							},
+							[5] = {
+								Tools = ordered() {
+									Background1 = Background {
+										Inputs = {
+											BottomRightGreen = Input { Value = 1 },
+											TopRightGreen = Input { Value = 1 },
+											Width = Input { Value = 1920 },
+											TopRightRed = Input { Value = 1 },
+											["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } },
+											GlobalIn = Input { Value = 1001 },
+											GlobalOut = Input { Value = 1100 },
+											Height = Input { Value = 1080 },
+											Depth = Input { Value = 3 },
+											TopLeftRed = Input { Value = 1 },
+											Gradient = Input {
+												Value = Gradient {
+													Colors = {
+														[0] = { 0, 0, 0, 1 },
+														[1] = { 1, 1, 1, 1 }
+													}
+												}
+											}
+										},
+										CtrlWZoom = false,
+										ViewInfo = OperatorInfo { Pos = { 550, 82.5 } },
+										CustomData = {
+										}
+									}
+								}
+							},
+							[6] = {
+								Tools = ordered() {
+									Background1 = Background {
+										Inputs = {
+											BottomRightGreen = Input { Value = 1 },
+											TopRightGreen = Input { Value = 1 },
+											Width = Input { Value = 1920 },
+											TopRightRed = Input { Value = 1 },
+											["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } },
+											GlobalIn = Input { Value = 1001 },
+											Gradient = Input {
+												Value = Gradient {
+													Colors = {
+														[0] = { 0, 0, 0, 1 },
+														[1] = { 1, 1, 1, 1 }
+													}
+												}
+											},
+											GlobalOut = Input { Value = 1100 },
+											Depth = Input { Value = 3 },
+											TopLeftRed = Input { Value = 1 },
+											Height = Input { Value = 1080 }
+										},
+										CtrlWZoom = false,
+										ViewInfo = OperatorInfo { Pos = { 605, 49.5 } },
+										CustomData = {
+										}
+									}
+								}
+							}
+						}
+					},
+					Inputs = {
+						UseFrameFormatSettings = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						Depth = Input { Value = 4, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftBlue = Input { Value = 1, },
+						TopLeftAlpha = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 583.942, 271.172 } },
+				},
+				CreateBumpMap1 = CreateBumpMap {
+					Inputs = {
+						FilterSize = Input { Value = FuID { "5" }, },
+						Input = Input {
+							SourceOp = "ErodeDilate1",
+							Source = "Output",
+						},
+						HeightScale = Input { Value = 0.0001, },
+						BumpmapTextureDepth = Input { Value = 4, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 935.174, 187.336 } },
+				},
+				Displace2 = Displace {
+					CtrlWZoom = false,
+					Inputs = {
+						Type = Input { Value = 1, },
+						YRefraction = Input {
+							Value = -0.047,
+							Expression = "XRefraction",
+						},
+						Spread = Input { Value = 0.2, },
+						Input = Input {
+							SourceOp = "image",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Dissolve1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1031.62, 108.608 } },
+				},
+				Dissolve1 = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					CtrlWZoom = false,
+					Inputs = {
+						Mix = Input { Expression = "displaceInput.Slope_Bump", },
+						Background = Input {
+							SourceOp = "BrightnessContrast2",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "no",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1051.7, 271.172 } },
+				},
+				no = BrightnessContrast {
+					NameSet = true,
+					Inputs = {
+						Brightness = Input { Value = -0.5, },
+						Input = Input {
+							SourceOp = "CreateBumpMap1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1110.01, 187.336 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "CCVectorBlur_2"
+}
