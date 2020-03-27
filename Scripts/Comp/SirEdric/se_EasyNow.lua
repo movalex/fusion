@@ -521,7 +521,7 @@ end
 
 function win.On.butCncl.Clicked(ev)
 	disp:ExitLoop()
-	do return end
+	-- do return end
 end
 
 function win.On.Tree.ItemClicked(ev)
@@ -649,13 +649,11 @@ end
 
 function dPrint(dMsg, dTbl)
 	if itm.verbose.Checked == true then
-		dPrint(dMsg)
+		print(dMsg)
+        print("----------")
 		if dTbl then
 			dump(dTbl)
 		end
-	print("----------")
-	-- dMsg = nil
-	-- dTbl = nil
 	end
 end
 
@@ -897,5 +895,5 @@ win:Hide()
 collectgarbage()
 
 print("If you like this script, why not buy me a [coffee|bike|car|boat|swiss chalet] by donating on https://www.paypal.me/siredric")
----------------------------------------------------------------- </SirEdric's se_EasyNow!> ---------------------------------------------------------
+-------------------------------------------------- </SirEdric's se_EasyNow!> -------------------------------------------------------
 
