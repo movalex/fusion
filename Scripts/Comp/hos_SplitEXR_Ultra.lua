@@ -625,4 +625,3 @@ while comp:IsLocked() do
     comp:Unlock()
 end
 print("[Done]")
--- collectgarbage()
