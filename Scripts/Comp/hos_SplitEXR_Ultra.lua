@@ -30,7 +30,7 @@ RELEASE NOTES
 * v2.3 Ultra 2020-3-09 by Bryan Ray and Alex Bogomolov
     - add multipart EXR support
     - add Undo splitting
-    - add merge loaders option
+    - add merge loaders option (Mac only)
 * v2.2 Ultra 2019-10-01 by bfloch
 	- Fix for Blender support with "local channel = string.match(channelName, "[.]([^.]+)$")"
 

@@ -1,0 +1,369 @@
+{
+	Tools = ordered() {
+		FogGlow_1 = MacroOperator {
+			CtrlWZoom = false,
+			Inputs = ordered() {
+				Input2 = InstanceInput {
+					SourceOp = "Scale4_1_1_1",
+					Source = "XSize",
+				},
+				Input1 = InstanceInput {
+					SourceOp = "Merge7_1_1",
+					Source = "BlendClone",
+				},
+				Input5 = InstanceInput {
+					SourceOp = "Highlight2_1_1",
+					Source = "NumberOfPoints",
+				},
+				Input7 = InstanceInput {
+					SourceOp = "BrightnessContrast4_2_1",
+					Source = "Gain",
+				},
+				Input8 = InstanceInput {
+					SourceOp = "BrightnessContrast4_2_1",
+					Source = "Gamma",
+				},
+				Input9 = InstanceInput {
+					SourceOp = "Blur8_2_1",
+					Source = "XBlurSize",
+				},
+				Input6 = InstanceInput {
+					SourceOp = "Highlight2_1_1",
+					Source = "Blend",
+				},
+				Input4 = InstanceInput {
+					SourceOp = "Highlight2_1_1",
+					Source = "Length",
+					Default = 0.97,
+				},
+				MainInput1 = InstanceInput {
+					SourceOp = "Scale4_2_1",
+					Source = "Input",
+				},
+				Color = Input { Value = 0.522, },
+				Green = Input { Value = 1.8, },
+				Blue = Input { Value = 1.10136998389321, },
+				Input3 = InstanceInput {
+					SourceOp = "Highlight2_1_1",
+					Source = "Low",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Merge7_1_1",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Pos = { 4510, 445.5 },
+				Flags = {
+					AllowPan = false,
+					GridSnap = true,
+					ConnectedSnap = true,
+					AutoSnap = true
+				},
+				Size = { 621, 295.3, 310.5, 22 },
+				Direction = "Horizontal",
+				PipeStyle = "Direct",
+				Scale = 1,
+				Offset = { 0, 0 }
+			},
+			Tools = ordered() {
+				Resize2_1_1 = BetterResize {
+					CtrlWShown = false,
+					Inputs = {
+						Width = Input {
+							Value = 3656,
+							Expression = "Colorr2_1_1_1_2_1_2_1.Width",
+						},
+						Height = Input {
+							Value = 1976,
+							Expression = "Colorr2_1_1_1_2_1_2_1.Height",
+						},
+						PixelAspect = Input { Value = { 1, 1 }, },
+						Input = Input {
+							SourceOp = "Blur8_2_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 247.5, 142.15 } },
+				},
+				Merge7_1_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "ChangeDepth1_1_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Resize2_1_1",
+							Source = "Output",
+						},
+						Gain = Input { Value = 0, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 247.5, 241.15 } },
+				},
+				Scale4_1_1_1 = Scale {
+					CtrlWShown = false,
+					Inputs = {
+						XSize = Input { Value = 0.5, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						Input = Input {
+							SourceOp = "Colorr2_1_1_1_2_1_2_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -192.5, 76.15 } },
+				},
+				Colorr2_1_1_1_2_1_2_1 = Background {
+					Inputs = {
+						MaskChannel = Input { Value = 5, },
+						GlobalOut = Input { Value = 65, },
+						Width = Input {
+							Value = 3656,
+							Expression = "self.EffectMask.OriginalWidth",
+						},
+						Height = Input {
+							Value = 1976,
+							Expression = "self.EffectMask.OriginalHeight",
+						},
+						Depth = Input { Value = 4, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input {
+							Value = 0.522,
+							Expression = "FogGlow_1.Color",
+						},
+						TopLeftGreen = Input {
+							Value = 1.8,
+							Expression = "FogGlow_1.Green",
+						},
+						TopLeftBlue = Input {
+							Value = 1.10136998389321,
+							Expression = "FogGlow_1.Blue",
+						},
+						TopLeftAlpha = Input { Expression = "1.0", },
+						EffectMask = Input {
+							SourceOp = "Scale4_2_1",
+							Source = "Output",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { -192.5, 175.15 } },
+				},
+				Highlight2_1_1 = Highlight {
+					CtrlWShown = false,
+					Inputs = {
+						Blend = Input { Value = 0.002054, },
+						Low = Input { Value = 0.95, },
+						Curve = Input { Value = 0, },
+						Length = Input { Value = 0.97, },
+						NumberOfPoints = Input { Value = 120, },
+						MergeOver = Input { Value = 0, },
+						Input = Input {
+							SourceOp = "Scale4_1_1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 82.5, 76.15 } },
+				},
+				Scale4_2_1 = Scale {
+					CtrlWShown = false,
+					Inputs = {
+						PixelAspect = Input { Value = { 1, 1 }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -247.5, 241.15 } },
+				},
+				ChangeDepth1_1_1 = ChangeDepth {
+					CtrlWShown = false,
+					Inputs = {
+						Depth = Input { Value = 3, },
+						Input = Input {
+							SourceOp = "Scale4_2_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 27.5, 241.15 } },
+				},
+				BrightnessContrast4_2_1 = BrightnessContrast {
+					CtrlWShown = false,
+					Inputs = {
+						Lift = Input { Value = -1, },
+						Input = Input {
+							SourceOp = "Highlight2_1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 247.5, 10.15 } },
+				},
+				Blur8_2_1 = Blur {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					Inputs = {
+						ApplyMaskInverted = Input { Value = 1, },
+						MaskChannel = Input { Value = 5, },
+						XBlurSize = Input { Value = 3.9, },
+						Input = Input {
+							SourceOp = "Highlight2_1_1",
+							Source = "Output",
+						},
+						EffectMask = Input {
+							SourceOp = "BrightnessContrast4_2_1",
+							Source = "Output",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { 247.5, 76.15 } },
+				}
+			},
+			UserControls = ordered() {
+				Input3 = {
+					LINKS_Name = "Threshold",
+					LINKID_DataType = "Number",
+					INPID_InputControl = "SliderControl",
+					INP_Default = 0.949999988079071,
+					INP_Integer = false,
+					INP_MinScale = 0.699999988079071,
+					INP_MaxScale = 1,
+					INP_MinAllowed = 0.649999976158142,
+					INP_MaxAllowed = 1,
+					ICD_Center = 0.850000023841858,
+					IC_Steps = 0,
+				},
+				Input2 = {
+					INP_MaxAllowed = 1,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					INP_MaxScale = 1,
+					INP_Default = 0.5,
+					INP_MinScale = 0,
+					INP_MinAllowed = 0,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Center = 0.5,
+					LINKS_Name = "QualityScale"
+				},
+				Input1 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					INP_MaxScale = 1,
+					INP_Default = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Blend"
+				},
+				Input5 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = true,
+					INPID_InputControl = "SliderControl",
+					INP_MaxScale = 24,
+					INP_Default = 120,
+					INP_MinScale = 1,
+					INP_MinAllowed = 1,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Samples"
+				},
+				Input7 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					IC_Steps = 101,
+					INP_MaxScale = 5,
+					INP_Default = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICD_Center = 1,
+					LINKS_Name = "Gain",
+				},
+				Input8 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					IC_Steps = 101,
+					INP_MaxScale = 5,
+					INP_Default = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = 0,
+					LINKID_DataType = "Number",
+					ICD_Center = 1,
+					LINKS_Name = "Gamma",
+				},
+				Input9 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					IC_Steps = 101,
+					INP_MaxScale = 100,
+					INP_Default = 3.90000009536743,
+					INP_MinScale = 0,
+					INP_MinAllowed = 0,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Banding Cleaner"
+				},
+				Input6 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					IC_Steps = 0,
+					INP_MaxScale = 0.00999999977648258,
+					INP_Default = 0.00100000004749745,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Intensity"
+				},
+				Color = {
+					LINKS_Name = "Color",
+					LINKID_DataType = "Number",
+					INPID_InputControl = "ColorControl",
+					INP_Integer = false,
+					INP_MinScale = 0,
+					INP_MaxScale = 1,
+					INP_MinAllowed = -1000000,
+					INP_MaxAllowed = 1000000,
+					IC_ControlGroup = 1,
+					IC_ControlID = 0,
+					CLRC_ColorSpace = "HSV",
+					CLRC_ShowWheel = true,
+					ICS_ControlPage = "Controls"
+				},
+				Green = {
+					LINKS_Name = "Green",
+					LINKID_DataType = "Number",
+					INPID_InputControl = "ColorControl",
+					INP_Integer = false,
+					INP_MinScale = 0,
+					INP_MaxScale = 1,
+					INP_MinAllowed = -1000000,
+					INP_MaxAllowed = 1000000,
+					IC_ControlGroup = 1,
+					IC_ControlID = 1,
+					CLRC_ColorSpace = "HSV",
+					CLRC_ShowWheel = false,
+					ICS_ControlPage = "Controls"
+				},
+				Blue = {
+					LINKS_Name = "Blue",
+					LINKID_DataType = "Number",
+					INPID_InputControl = "ColorControl",
+					INP_Integer = false,
+					INP_MinScale = 0,
+					INP_MaxScale = 1,
+					INP_MinAllowed = -1000000,
+					INP_MaxAllowed = 1000000,
+					IC_ControlGroup = 1,
+					IC_ControlID = 2,
+					CLRC_ColorSpace = "HSV",
+					CLRC_ShowWheel = true,
+					ICS_ControlPage = "Controls"
+				}
+			}
+		}
+	},
+	ActiveTool = "FogGlow_1"
+}
