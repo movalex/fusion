@@ -1,0 +1,143 @@
+{
+	Tools = ordered() {
+		QuickCompress = MacroOperator {
+			CtrlWZoom = false,
+			Inputs = ordered() {
+				Input = InstanceInput {
+					SourceOp = "LogarithmicCompress",
+					Source = "Image1",
+					Name = "Input",
+				},
+				EffectMask = InstanceInput {
+					SourceOp = "LogarithmicCompress",
+					Source = "EffectMask",
+				},
+				StartClip = InstanceInput {
+					SourceOp = "LogarithmicCompress",
+					Source = "StartClip",
+					Default = 0.8,
+				},
+				EndClip = InstanceInput {
+					SourceOp = "LogarithmicCompress",
+					Source = "EndClip",
+					Default = 1,
+				}
+			},
+			Outputs = {
+				Output = InstanceOutput {
+					SourceOp = "LogarithmicCompress",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 550, 181.5 } },
+			Tools = ordered() {
+				LogarithmicCompress = Custom {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						NumberIn1 = Input {
+							Value = 0.8,
+							Expression = "StartClip",
+						},
+						NumberIn2 = Input {
+							Value = 1,
+							Expression = "EndClip",
+						},
+						LUTIn1 = Input {
+							SourceOp = "LogarithmicCompressLUTIn1",
+							Source = "Value",
+						},
+						LUTIn2 = Input {
+							SourceOp = "LogarithmicCompressLUTIn2",
+							Source = "Value",
+						},
+						LUTIn3 = Input {
+							SourceOp = "LogarithmicCompressLUTIn3",
+							Source = "Value",
+						},
+						LUTIn4 = Input {
+							SourceOp = "LogarithmicCompressLUTIn4",
+							Source = "Value",
+						},
+						Intermediate1 = Input { Value = "n2-n1", },
+						RedExpression = Input { Value = "if(c1>n1,n1+i1*(1-e^-((c1-n1)/i1)),c1)", },
+						GreenExpression = Input { Value = "if(c1>n1,n1+i1*(1-e^-((c1-n1)/i1)),c1)", },
+						BlueExpression = Input { Value = "if(c1>n1,n1+i1*(1-e^-((c1-n1)/i1)),c1)", },
+						ShowNumber3 = Input { Value = 0, },
+						ShowNumber4 = Input { Value = 0, },
+						ShowNumber5 = Input { Value = 0, },
+						ShowNumber6 = Input { Value = 0, },
+						ShowNumber7 = Input { Value = 0, },
+						ShowNumber8 = Input { Value = 0, },
+						ShowPoint1 = Input { Value = 0, },
+						ShowPoint2 = Input { Value = 0, },
+						ShowPoint3 = Input { Value = 0, },
+						ShowPoint4 = Input { Value = 0, },
+						ShowLUT1 = Input { Value = 0, },
+						ShowLUT2 = Input { Value = 0, },
+						ShowLUT3 = Input { Value = 0, },
+						ShowLUT4 = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, 10.15 } },
+					UserControls = ordered() {
+						StartClip = {
+							INP_Default = 0.8,
+							LINKS_Name = "Start Clip",
+							INPID_InputControl = "SliderControl",
+							LINKID_DataType = "Number",
+						},
+						EndClip = {
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							INP_Default = 1,
+							INPID_InputControl = "SliderControl",
+							LINKS_Name = "End Clip",
+						}
+					}
+				},
+				LogarithmicCompressLUTIn1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 0, Blue = 0 },
+					CtrlWShown = false,
+				},
+				LogarithmicCompressLUTIn2 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 204, Blue = 0 },
+					CtrlWShown = false,
+				},
+				LogarithmicCompressLUTIn3 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 0, Blue = 204 },
+					CtrlWShown = false,
+				},
+				LogarithmicCompressLUTIn4 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 204, Blue = 204 },
+					CtrlWShown = false,
+				}
+			},
+		}
+	},
+	ActiveTool = "QuickCompress"
+}

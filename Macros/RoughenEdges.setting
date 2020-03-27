@@ -1,0 +1,109 @@
+{
+	Tools = ordered() {
+		RoughenEdges11 = MacroOperator {
+			Inputs = ordered() {
+				MainInput1 = InstanceInput {
+					SourceOp = "MatteControl1",
+					Source = "Background",
+					Name = "Mask Input",
+				},
+				Input1 = InstanceInput {
+					SourceOp = "FastNoise1",
+					Source = "Center",
+					Name = "Offset",
+				},
+				Input2 = InstanceInput {
+					SourceOp = "Displace1",
+					Source = "XRefraction",
+					Name = "Displace",
+					Default = 0,
+				},
+				Input3 = InstanceInput {
+					SourceOp = "FastNoise1",
+					Source = "Detail",
+					Default = 5,
+				},
+				Input4 =InstanceInput {
+					SourceOp = "FastNoise1",
+					Source = "XScale",
+					Default = 2, 				},
+				Input5 = InstanceInput {
+					SourceOp = "MatteControl1",
+					Source = "MatteBlur",
+					Default = 0,
+				},
+				Input6 = InstanceInput {
+					SourceOp = "FastNoise1",
+					Source = "SeetheRate",
+					Name = "Evolution",
+					Default = 0,
+				},
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Displace1",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Name = "RoughenEdges1",
+				Pos = { 0, 0 }
+			},
+			Tools = ordered() {
+				MatteControl1 = MatteControl {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					ViewInfo = OperatorInfo { Pos = { 588, 271 } },
+				},
+				Displace1 = Displace {
+					CtrlWShown = false,
+					Inputs = {
+						Type = Input { Value = 1, },
+						XOffset = Input { Value = -0.5, },
+						YOffset = Input { Value = -0.5, },
+						YRefraction = Input {
+							Value = 0.0128,
+							Expression = "XRefraction",
+						},
+						Input = Input {
+							SourceOp = "MatteControl1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "CreateBumpMap1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 588, 317 } },
+				},
+				CreateBumpMap1 = CreateBumpMap {
+					CtrlWShown = false,
+					Inputs = {
+						FilterSize = Input { Value = FuID { "5" }, },
+						Input = Input {
+							SourceOp = "FastNoise1",
+							Source = "Output",
+						},
+						HeightScale = Input { Value = 100, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 448.653, 317 } },
+				},
+				FastNoise1 = FastNoise {
+					CtrlWShown = false,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						Depth = Input { Value = 3, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Detail = Input { Value = 5, },
+						XScale = Input { Value = 2, },
+						Angle = Input { Value = 0, },
+						Color1Alpha = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 313.653, 317 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "RoughenEdges11"
+}

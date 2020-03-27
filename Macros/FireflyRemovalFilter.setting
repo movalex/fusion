@@ -1,0 +1,216 @@
+{
+	Tools = ordered() {
+		FireflyRemoval = MacroOperator {
+			CtrlWZoom = false,
+			Inputs = ordered() {
+				Comments = Input { Value = "FireflyRemoval Filter\r\nMartin Geupel, 2016\r\nwww.racoon-artworks.de", },
+				Input1 = InstanceInput {
+					SourceOp = "BrightnessContrast1_1",
+					Source = "Threshold",
+					Default = 1,
+				},
+				MainInput1 = InstanceInput {
+					SourceOp = "PipeRouter1_1",
+					Source = "Input",
+				},
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "ChannelBooleans2_1",
+					Source = "Output",
+				},
+			},
+			ViewInfo = GroupInfo { Pos = { 770, 478.5, }, },
+			Tools = ordered() {
+				ChannelBooleans3_1_1 = ChannelBoolean {
+					CtrlWShown = false,
+					Inputs = {
+						ToRed = Input { Value = 6, },
+						ToGreen = Input { Value = 6, },
+						ToBlue = Input { Value = 6, },
+						ToAlpha = Input { Value = 16, },
+						Background = Input {
+							SourceOp = "ColorSpace1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 220, 10.6, }, },
+				},
+				ColorSpace1_1 = ColorSpace {
+					CtrlWShown = false,
+					Inputs = {
+						ColorSpaceConversion = Input { Value = 1, },
+						ColorType = Input { Value = 4, },
+						Input = Input {
+							SourceOp = "ChannelBooleans1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 110, 10.6, }, },
+				},
+				BrightnessContrast1_1 = BrightnessContrast {
+					CtrlWShown = false,
+					Inputs = {
+						Brightness = Input {
+							Value = -0.16046512,
+							Expression = "- (Threshold*0.1) ",
+						},
+						High = Input { Value = 0.0001, },
+						ClipBlack = Input { Value = 1, },
+						ClipWhite = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "ChannelBooleans3_1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 220, 43.6, }, },
+					UserControls = ordered() {
+						Threshold = {
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							IC_ControlPage = 0,
+							INP_MaxScale = 5,
+							INP_Default = 1,
+						},
+					},
+				},
+				ChannelBooleans1_1 = ChannelBoolean {
+					CtrlWShown = false,
+					Inputs = {
+						Operation = Input { Value = 2, },
+						Background = Input {
+							SourceOp = "ChangeDepth1_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "CustomFilter1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 43.6, }, },
+				},
+				Bitmap4_1 = BitmapMask {
+					CtrlWShown = false,
+					Inputs = {
+						MaskWidth = Input { Value = 2048, },
+						MaskHeight = Input { Value = 1556, },
+						PixelAspect = Input { Value = { 1, 1, }, },
+						ClippingMode = Input { Value = FuID { "None", }, },
+						Image = Input {
+							SourceOp = "BrightnessContrast1_1",
+							Source = "Output",
+						},
+						Channel = Input { Value = FuID { "Red", }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 220, 76.6, }, },
+				},
+				MaskIn_1 = BitmapMask {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						PaintMode = Input { Value = FuID { "Multiply", }, },
+						MaskWidth = Input { Value = 2048, },
+						MaskHeight = Input { Value = 1556, },
+						PixelAspect = Input { Value = { 1, 1, }, },
+						ClippingMode = Input { Value = FuID { "None", }, },
+						Image = Input {
+							SourceOp = "Bitmap4_1",
+							Source = "Mask",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 220, 109.6, }, },
+				},
+				CustomFilter1_1 = CustomFilter {
+					CtrlWShown = false,
+					Inputs = {
+						Matrix = Input {
+							Value = FilterTable {
+								NumEntries = 54,
+								Type = 6,
+								Offset = 0,
+								Minimum = 0,
+								Maximum = 1,
+								MinimumValue = 0,
+								MaximumValue = 1,
+								StartSlope = 1,
+								EndSlope = 1,
+								StartIn = 0,
+								EndIn = 1,
+								Table = { 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, },
+							},
+						},
+						Input = Input {
+							SourceOp = "ChangeDepth1_1",
+							Source = "Output",
+						},
+						EffectMask = Input {
+							SourceOp = "Bitmap1_1",
+							Source = "Mask",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -55, 43.6, }, },
+				},
+				Bitmap1_1 = BitmapMask {
+					CtrlWShown = false,
+					Inputs = {
+						MaskWidth = Input { Value = 2048, },
+						MaskHeight = Input { Value = 1556, },
+						PixelAspect = Input { Value = { 1, 1, }, },
+						ClippingMode = Input { Value = FuID { "None", }, },
+						Image = Input {
+							SourceOp = "ChangeDepth1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -55, 76.6, }, },
+				},
+				ChangeDepth1_1 = ChangeDepth {
+					CtrlWShown = false,
+					Inputs = {
+						Depth = Input { Value = 4, },
+						Input = Input {
+							SourceOp = "PipeRouter1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -110, 142.6, }, },
+				},
+				RankFilter1_1 = RankFilter {
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "ChangeDepth1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 110, 142.6, }, },
+				},
+				ChannelBooleans2_1 = ChannelBoolean {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "PipeRouter1_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "RankFilter1_1",
+							Source = "Output",
+						},
+						EffectMask = Input {
+							SourceOp = "MaskIn_1",
+							Source = "Mask",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 220, 175.6, }, },
+				},
+				PipeRouter1_1 = PipeRouter {
+					CtrlWShown = false,
+					ViewInfo = PipeRouterInfo { Pos = { -220, 175.6, }, },
+				},
+			},
+		},
+	},
+	ActiveTool = "FireflyRemoval",
+}
