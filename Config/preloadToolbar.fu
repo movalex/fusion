@@ -1,0 +1,28 @@
+{
+	Event {
+		Action = "Comp_New",
+		Targets = {
+			Fusion = {
+				Execute = [[
+					rets = self:Default(ctx, args)
+					comp = fusion.CurrentComp
+
+                    function load_layout(comp)
+                        if comp and fusion.Version > 16.1 then
+                            if comp:GetAttrs().COMPS_FileName == "" and not isLayoutLoaded then
+                                print("setting my layout")
+                                comp.CurrentFrame:LoadLayout(comp:MapPath("Reactor:Deploy/Layouts/FU16_1mon_bottom-timeview.layout"))
+                            end
+                        end
+                    end
+
+					if comp ~= nil then
+                        load_layout(comp)                        
+                        comp:RunScript(comp:MapPath("Reactor:Deploy/Scripts/Comp/Toolbar16/Toolbar16.lua"))
+					end
+					]]
+			},
+		},
+	}
+}
+
