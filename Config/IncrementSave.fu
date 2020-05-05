@@ -10,7 +10,7 @@
 			Composition =
 			{
 				Execute = [[
-                print("Saving version to IncrementalSave folder1...")
+                print("Incrementing comp version...")
                 comp = obj:Comp()
                 comp:RunScript('Scripts:Comp/HoS/IncrementSave.lua')
                 ]],

@@ -1,13 +1,12 @@
+local ContextNo = 1
 if not tool then
     tool = comp.ActiveTool
 end
-local contextNo = 1
-local prevTool = comp:FindTool(comp:GetData("ContextTool.name")[1])
-print(prevTool)
+local getToolName = comp:GetData("ContextTool."..ContextNo)
+local prevTool = comp:FindTool(getToolName)
 if prevTool and prevTool ~= tool then
-    print('found prev')
     prevTool.Comments[fu.TIME_UNDEFINED] = ""
 end
-comp:SetData("ContextTool.name", {tool.Name, contextNo})
-print(tool.Name ..' is set as context view #'..contextNo)
-tool.Comments = 'Context ' .. contextNo
+comp:SetData("ContextTool."..ContextNo, tool.Name)
+print(tool.Name ..' is set as context view #'..ContextNo)
+tool.Comments = 'Context ' .. ContextNo

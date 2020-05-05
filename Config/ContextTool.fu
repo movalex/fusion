@@ -1,0 +1,16 @@
+{
+    Hotkeys
+    {
+      Target = "FuFrame",
+      SHIFT_ALT_1 = "RunScript{filename = 'Scripts:Comp/ContextTool/viewContext1.lua'}",
+      SHIFT_ALT_2 = "RunScript{filename = 'Scripts:Comp/ContextTool/viewContext2.lua'}",
+      SHIFT_ALT_3 = "RunScript{filename = 'Scripts:Comp/ContextTool/viewContext3.lua'}",
+      SHIFT_ALT_4 = "RunScript{filename = 'Scripts:Comp/ContextTool/viewContext4.lua'}",
+      SHIFT_ALT_5 = "RunScript{filename = 'Scripts:Comp/ContextTool/viewContext5.lua'}",
+      ALT_1 = "RunScript{filename = 'Scripts:Comp/ContextTool/addContext1.lua'}",
+      ALT_2 = "RunScript{filename = 'Scripts:Comp/ContextTool/addContext2.lua'}",
+      ALT_3 = "RunScript{filename = 'Scripts:Comp/ContextTool/addContext3.lua'}",
+      ALT_4 = "RunScript{filename = 'Scripts:Comp/ContextTool/addContext4.lua'}",
+      ALT_5 = "RunScript{filename = 'Scripts:Comp/ContextTool/addContext5.lua'}",
+    }
+}
