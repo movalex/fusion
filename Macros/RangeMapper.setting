@@ -1,0 +1,115 @@
+{
+	Tools = ordered() {
+		RangeMapper = MacroOperator {
+			CtrlWZoom = false,
+			Inputs = ordered() {
+			Range = InstanceInput {
+					SourceOp = "Background1",
+					Source = "Range",
+				},
+			RangeCopy = InstanceInput {
+					SourceOp = "Background1",
+					Source = "Range",
+					Page = "Point",
+				}
+			},
+			Outputs = {
+				Output1 = InstanceOutput {
+					SourceOp = "PipeRouter1",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Pos = { 605.333, 6.15151 },
+				Flags = {
+					Expanded = true,
+					AllowPan = false,
+					AutoSnap = true,
+					RemoveRouters = true
+				},
+				Size = { 182.333, 66.3636, 91.1667, 24.2424 },
+				Direction = "Horizontal",
+				PipeStyle = "Direct",
+				Scale = 1,
+				Offset = { -464.167, -70.2424 }
+			},
+			Tools = ordered() {
+				PipeRouter1 = PipeRouter {
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "Background1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { 527.333, 78.2727 } },
+				},
+				Background1 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 436, 78.8788 } },
+					UserControls = ordered() {
+						Range = {
+							LINKS_Name = "Range",
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							INP_Default = 0,
+							INP_Integer = false,
+							INP_MinScale = 0,
+							INP_MaxScale = 1,
+						}
+					}
+				}
+			},
+			UserControls = ordered() {
+				AddControl = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = "@scripts:/Utility/RangeMapper.lua",
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Add Control"
+				},
+				AddPoint = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = "@scripts:/Utility/RangeMapperPoint.lua",
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Point",
+					LINKS_Name = "Add Control"
+				},
+				NumberOfButtons = {
+					INP_Integer = false,
+					INP_External = false,
+					LINKID_DataType = "Number",
+					IC_Visible = false,
+					ICS_ControlPage = "Controls",
+					INP_Default = 0,
+					LINKS_Name = "NumberOfButtons"
+				},
+				PointOfButtons = {
+					INP_Integer = false,
+					INP_External = false,
+					LINKID_DataType = "Number",
+					IC_Visible = false,
+					ICS_ControlPage = "Point",
+					INP_Default = 0,
+					LINKS_Name = "PointOfButtons"
+				}
+			}
+		}
+	},
+	ActiveTool = "RangeMapper"
+}
