@@ -1,0 +1,58 @@
+{
+	Action
+	{
+		ID = "Incremental_Save",
+		Category = "File",
+		Name = "Increment Save",
+
+		Targets =
+		{
+			Composition =
+			{
+				Execute = [[
+                print("Saving version to IncrementalSave folder1...")
+                comp = obj:Comp()
+                comp:RunScript('Scripts:Comp/HoS/IncrementSave.lua')
+                ]],
+			},
+		},
+	},
+
+	Hotkeys
+	{
+		Target = "FlowView",
+		
+		ALT_S = "Incremental_Save{}",
+	},
+
+	Hotkeys
+	{
+		Target = "GLView",
+		
+		ALT_S = "Incremental_Save{}",
+	},
+
+	Hotkeys
+	{
+		Target = "FuFrame",
+		
+		ALT_S = "Incremental_Save{}",
+	},
+
+	Hotkeys
+	{
+		Target = "ConsoleView",
+		
+		ALT_S = "Incremental_Save{}",
+	},
+
+	Menus
+	{
+		Target = "ChildFrame",
+
+		After "File\\Save Version"
+		{
+			"Incremental_Save{}",
+		},
+	},
+}
