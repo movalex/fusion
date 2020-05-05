@@ -14,7 +14,6 @@ function setTime()
         state = true
         print('temp set ', comp.CurrentTime)
         comp:Play()
-        -- comp:DoAction("Comp_BackgroundRender", {active = true})
     else
         restoreTime = comp:GetData("Ranger.before")
         comp:SetAttrs({COMPN_RenderEnd = restoreTime})
@@ -23,7 +22,6 @@ function setTime()
         print('position restored ', restoreTime)
         comp.CurrentTime = comp:GetAttrs().COMPN_RenderStart
         comp:Play()
-        -- comp:DoAction("Comp_BackgroundRender", {active = false})
     end
     return state
 end
