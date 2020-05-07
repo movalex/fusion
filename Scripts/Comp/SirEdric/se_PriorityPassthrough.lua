@@ -40,7 +40,7 @@ if ret then
 	-- ((ret.Selected ==1)) will return true if the 
 	-- selected checkbox is enabled.....
 	
-	for i, tool in ipairs(composition:GetToolList((ret.Selected) == 1)) do
+	for i, tool in ipairs(comp:GetToolList((ret.Selected) == 1)) do
 		id = tool:GetAttrs().TOOLS_RegID
 		MyName = tool:GetAttrs().TOOLS_Name
 		
