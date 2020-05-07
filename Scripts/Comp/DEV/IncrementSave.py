@@ -1,7 +1,7 @@
 """
   Incremental Save script
   by Alex Bogomolov
-  
+
   Based on IncrementalSave lua script by S.Neve / House of Secrets
 """
 import platform
@@ -21,12 +21,13 @@ comp_attrs = comp.GetAttrs()
 
 def get_save_path(path_env):
     if path_env:
+        comp_path = Path(comp_attrs["COMPS_FileName"])
         path_env = Path(path_env)
         print(f"env: {path_env}")
         if not path_env.exists():
             print("no save directory found, creating now")
             path_env.mkdir(exist_ok=True)
-        return path_env / comp_attrs["COMPS_Name"]
+        return path_env / comp_path.stem
     else:
         rootSaveFolder = "IncrementSave"
         comp_path = Path(comp.MapPath(comp.GetAttrs()["COMPS_FileName"]))
