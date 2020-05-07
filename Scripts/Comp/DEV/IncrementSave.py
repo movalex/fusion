@@ -4,17 +4,21 @@
   
   Ths script is based on IncrementalSave.lua script written by S.Neve / House of Secrets
 
-    NOTE: This version of thh script works with Python3 only
+    NOTE: This version of the script works with Python3 only
     However, it has some advantages over the lua one:
-        - it will save version if the path has some non-ascii characters
+        - it will work if the path has some non-ascii characters
         - save folder will look the same on Mac and PC - without '.comp' part 
-          (comp.GetAtttr()["COMPS_Filename"] works differently on windows and mac)
-        - possibly a bit cleaner to read and maintain
+              (comp.GetAtttr()["COMPS_Filename"] works differently on windows and mac)
+        - a bit cleaner to read and maintain
+
+    email: mail@abogomolov.com
+    donations: https://paypal.me/aabogomolov
 
 """
 import os
 import platform
 import re
+import sys
 from pathlib import Path
 
 comp = fu.GetCurrentComp()
@@ -45,6 +49,8 @@ def get_comp_files(path):
 
 
 def increment_comp():
+    if not (sys.version_info.major == 3 and sys.version_info.minor >=6):
+        print('this script requires Python version >= 3.6')
     number = 0
     source_file = Path(comp_attrs["COMPS_FileName"])
     comp_name = Path(comp_attrs["COMPS_Name"])
