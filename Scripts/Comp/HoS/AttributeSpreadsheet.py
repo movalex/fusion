@@ -61,10 +61,9 @@ import platform
 import builtins
 
 
-
 def print(*args, **kwargs):
     """custom print() function"""
-    builtins.print('[AttributeSpreadsheet] : ', end = '')
+    builtins.print("[AttributeSpreadsheet] : ", end="")
     return builtins.print(*args, **kwargs)
 
 
@@ -110,16 +109,18 @@ try:
 except (ImportError, ModuleNotFoundError):
 
     def run_comand(command):
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(
+            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         while True:
             output = process.stdout.readline().decode()
-            if output == '' or process.poll() is not None:
+            if output == "" or process.poll() is not None:
                 break
             if output:
                 print(output.strip())
         rc = process.poll()
         return rc
-    
+
     if sys.version_info.major < 3:
         print("Python 3.6 is required")
         sys.exit()
@@ -130,11 +131,18 @@ except (ImportError, ModuleNotFoundError):
         python_executable = os.path.join(os.__file__.split("lib/")[0], "bin", "python3")
     try:
         import pip
+
         pip_version = int(pip.__version__.split(".")[0])
         if pip_version < 19:
             print("updating pip")
             run_comand([python_executable, "-m", "pip", "install", "-U", "pip"])
-        pyside_cmd = [python_executable, "-m", "pip", "install", "{}>={}".format(PKG, PKG_VERSION)]
+        pyside_cmd = [
+            python_executable,
+            "-m",
+            "pip",
+            "install",
+            "{}>={}".format(PKG, PKG_VERSION),
+        ]
         rc = run_comand(pyside_cmd)
         if not rc:
             print("Pyside2 installation successful")
@@ -236,11 +244,11 @@ class PointDelegate(QItemDelegate):
             self,
             SLOT("currentIndexChanged()"),
         )
-        print('combo: ', combo)
+        print("combo: ", combo)
         return combo
 
     def setEditorData(self, editor, index):
-        print('index', index)
+        print("index", index)
         editor.blockSignals(True)
         editor.setCurrentIndex(int(index.model().data(index)))
         editor.blockSignals(False)
@@ -256,6 +264,7 @@ class TableView(QTableView):
     """
     We inherit the QTableView so we can write our own item delegation and multi select editing data commit.
     """
+
     def __init__(self, parent):
         QTableView.__init__(self, parent)
         self.resizeRowsToContents()
@@ -287,7 +296,8 @@ class TableView(QTableView):
     def create_value(self, sm, idxs):
         value = "={}.{}".format(
             sm.toolDict[idxs.row() + 1].Name,
-            sm.toolsInputs[idxs.row()].get(sm.attributeNameKeys[idxs.column()]).ID,)
+            sm.toolsInputs[idxs.row()].get(sm.attributeNameKeys[idxs.column()]).ID,
+        )
         self.commitDataDo(value)
 
     def mouseReleaseEvent(self, event):
@@ -400,8 +410,8 @@ class TableSortFilterProxyModel(QSortFilterProxyModel):
         index = self.sourceModel().createIndex(0, source_column)
         attrName = self.sourceModel().data(index, Qt.UserRole)
         dataType = self.sourceModel().data(index, Qt.UserRole + 1)
-        
-        keys = pattern.split(" ") 
+
+        keys = pattern.split(" ")
         for key in keys:
             if not key:
                 return False

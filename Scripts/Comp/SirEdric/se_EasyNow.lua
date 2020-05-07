@@ -740,7 +740,7 @@ function easeSections2()
 				dPrint("NewKeys: ", newKeys)
 			--end
 		end
-		dump(curSpline)
+		-- dump(curSpline)
 		curSpline:SetKeyFrames(newKeys, true) -- 'true' replaces the entire animation spline, rather than adding keyframes
 -- TODO: Add an Option to make curSpline into CubicSpline(for auto smoothing?)
 		-- cuSpline = comp.CubicSpline()
