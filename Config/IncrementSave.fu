@@ -1,7 +1,7 @@
 {
 	Action
 	{
-		ID = "Incremental_Save",
+		ID = "Increment_Save",
 		Category = "File",
 		Name = "Increment Save",
 
@@ -12,7 +12,7 @@
 				Execute = [[
                 print("Incrementing comp version...")
                 comp = obj:Comp()
-                comp:RunScript('Scripts:Comp/HoS/IncrementSave.lua')
+                comp:RunScript('Scripts:Comp/DEV/IncrementSave.py')
                 ]],
 			},
 		},
@@ -22,28 +22,28 @@
 	{
 		Target = "FlowView",
 		
-		ALT_S = "Incremental_Save{}",
+		ALT_S = "Increment_Save{}",
 	},
 
 	Hotkeys
 	{
 		Target = "GLView",
 		
-		ALT_S = "Incremental_Save{}",
+		ALT_S = "Increment_Save{}",
 	},
 
 	Hotkeys
 	{
 		Target = "FuFrame",
 		
-		ALT_S = "Incremental_Save{}",
+		ALT_S = "Increment_Save{}",
 	},
 
 	Hotkeys
 	{
 		Target = "ConsoleView",
 		
-		ALT_S = "Incremental_Save{}",
+		ALT_S = "Increment_Save{}",
 	},
 
 	Menus
@@ -52,7 +52,7 @@
 
 		After "File\\Save Version"
 		{
-			"Incremental_Save{}",
+			"Increment_Save{}",
 		},
 	},
 }
