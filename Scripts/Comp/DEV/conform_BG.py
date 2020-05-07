@@ -1,3 +1,4 @@
+print('select multiple tools you want to conform and at least one loader.\nThen activate the loader by clicking it. ')
 tools_to_conform = comp.GetToolList(True)
 
 active_tool = comp.ActiveTool
