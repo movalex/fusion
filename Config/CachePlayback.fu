@@ -1,0 +1,7 @@
+{
+    Hotkeys
+    {
+      Target = "FuFrame",
+      F6 = "RunScript{filename = 'Scripts:Comp/CachePlayback.lua'}",
+    }
+}

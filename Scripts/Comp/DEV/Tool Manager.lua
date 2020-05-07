@@ -10,7 +10,7 @@ if not comp then
     comp = fu:GetCurrentComp()
 end
 
-print(string.format("[Manage Tools] - v%s %s ", _VERSION, _date))
+print(string.format("[Tool Manager] - v%s %s ", _VERSION, _date))
 print(string.format("[Created By] %s\n\n", _author))
 
 checked_state = comp:GetData('MT.use_comments')
@@ -129,7 +129,7 @@ end
 win = disp:AddWindow({
   ID = 'Manage',
   TargetID = 'Manage',
-  WindowTitle = 'Manage Tools',
+  WindowTitle = 'Tool Manager',
   Geometry = {500, 500, width, height},
   Spacing = 0,
   
@@ -142,8 +142,6 @@ win = disp:AddWindow({
     },
     ui:HGroup {
         ui:Label{ID = 'Label', Weight = .6, Text = print_label()},
-        ui:Button{ID = 'Info', Text = 'info', Weight=0.1,MinimumSize = {30,16}, 
-        Alignment = {AlignRight = true}},
             },
     ui:HGroup {
 
@@ -154,12 +152,13 @@ win = disp:AddWindow({
                     Text = comp:GetData('MT.comment') or '1',
                     Events = {ReturnPressed = true}},
         },
-        ui:VGroup{
-            ui.Button{ID = 'SetComment',  Text = 'Set or Replace comment'},
-            ui.Button{ID = 'Toggle', Text = 'Toggle all tools with comment'},
-        },
-    },
-})
+        ui.Button{ID = 'SetComment', Text = 'Set or Replace comment'},
+        ui.Button{ID = 'Toggle', Text = 'Toggle all tools with comment', Weight = 0.9},
+        ui:HGroup {
+            ui:Button{ID = 'Info', Text = '.', Weight=0.1, MaxmumSize = {1,10}, Flat = true},
+            },
+            
+}})
 
 itm = win:GetItems()
 
@@ -210,7 +209,7 @@ function win.On.Toggle.Clicked(ev)
     tools = comp:GetToolList(false)
     count = 0
     for _, tool in pairs(tools) do
-        if tool.Comments[fu.TIME_UNDEFINED] == comment then
+        if tool.Comments and tool.Comments[TIME_UNDEFINED] == comment then
             count = count + 1
             if tool:GetAttrs().TOOLB_PassThrough == true then
                 tool:SetAttrs( {TOOLB_PassThrough = false} )
