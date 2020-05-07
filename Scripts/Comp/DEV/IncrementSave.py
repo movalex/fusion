@@ -47,7 +47,7 @@ def increment_comp():
     comp_list = get_comp_files(save_path)
     if len(comp_list) > 0:
         for file in comp_list:
-            num = re.findall("(\d{4})", str(file))[0]
+            num = re.findall("(\d{4}).comp$", str(file))[0]
             if int(num) > number:
                 number = int(num)
     number += 1
