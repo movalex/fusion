@@ -51,6 +51,7 @@ def get_comp_files(path):
 def increment_comp():
     if not (sys.version_info.major == 3 and sys.version_info.minor >=6):
         print('this script requires Python version >= 3.6')
+        return
     number = 0
     source_file = Path(comp_attrs["COMPS_FileName"])
     comp_name = Path(comp_attrs["COMPS_Name"])
