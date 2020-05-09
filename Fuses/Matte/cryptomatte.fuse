@@ -2,16 +2,17 @@
 Requires   : Fusion 9.0.2+
 Optional   : cjson
 Created by : Cédric Duriau         [duriau.cedric@live.be]
-             Kristof Indeherberge  [xmnr0x23@gmail.com]
+             Kristof Indeherberge  [xmnr0x23@gail.com]
              Andrew Hazelden       [andrew@andrewhazelden.com]
-Version    : 1.2.5
+Version    : 1.2.6
 --]]
 
--- modules
--- package.path = package.path .. ';C:\\Users\\abogomolov.RC\\AppData\\Roaming\\Blackmagic Design\\Fusion\\Modules\\ll\\?.lua;'
 -- =============================================================================
--- local cryptoutils = require("cryptomatte_utilities")
-local cryptoutils = self and require("cryptomatte_utilities") or nil-- =============================================================================
+-- modules
+-- =============================================================================
+local cryptoutils = require("cryptomatte_utilities")
+
+-- =============================================================================
 -- constants
 -- =============================================================================
 FUSE_NAME = "Cryptomatte"
