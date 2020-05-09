@@ -107,7 +107,7 @@ RELEASE NOTES
 	- Initial prototype.
 --]]--
 
-VERSION = [[v2.3 "Ultra" (2018-09-16)]]
+VERSION = [[v2.3 "Ultra" (2020-03-09)]]
 AUTHOR = [[S.Neve / House of Secrets]]
 CONTRIBUTORS = {"Tim Little", "Andrew Hazelden", "Cedric Duriau", "Bryan Ray", "Alex Bogomolov"
 }
@@ -280,6 +280,7 @@ function getChannelData(loaderChannels)
 	end
 	return channelData
 end
+
 function get_loader_clip(tool)
 	local loader_clip = tool.Clip[fu.TIME_UNDEFINED]
 	if not loader_clip then
@@ -289,7 +290,7 @@ function get_loader_clip(tool)
     return loader_clip
 end
 
-function process_channels(tool)
+function process_multichannel(tool)
     local loaderChannels = getLoaderChannels(tool)
 
     -- Debug print the channel list
@@ -470,29 +471,35 @@ function getLoader(verbose, dialogResult, tool)
 	logDebug("[EXR Check 1] [Loader Node] " .. tostring(loader_clip), verbose)
 	logDebug("[EXR Check 2] [Loader Node Atttributes]", verbose)
 	logDump(attrs, verbose)
-
+    floyd = 1.0
 	-- Filter out None,R,G,B and A as these are already used by the original Loader
 	-- If the Skip Importing Alpha Channels checkbox was enabled in the AskUser dialog then keep the alpha channel separate as an extra loader item
     if tool.Clip1.OpenEXRFormat.Part then
         comp:Lock()
         comp:StartUndo('SplitEXR MultiPart')
+        print('splitting multipart file')
         local loaders_list = {}
+        partsTable = tool.Clip1.OpenEXRFormat.Part:GetAttrs().INPIDT_ComboControl_ID
         -- local counter = 0 
-        for i, exr_part in pairs(tool.Clip1.OpenEXRFormat.Part:GetAttrs().INPIDT_ComboControl_ID) do
+        for i, exr_part in pairs(partsTable) do
             tool.Clip1.OpenEXRFormat.Part = exr_part
-            local channelName = tool.Clip1.OpenEXRFormat.RedName:GetAttrs().INPIDT_ComboControl_ID[2]
-            if not CHANNELS_TO_SKIP[channelName:lower()] then
-                parsedChannelName = string.match(channelName, '(.+)%..+$') or Z
+            if floyd == 1.0 then
+                channelName = exr_part
+            else
+                channelName = tool.Clip1.OpenEXRFormat.RedName:GetAttrs().INPIDT_ComboControl_ID[2]
+                if not CHANNELS_TO_SKIP[channelName:lower()] then
+                    channelName = string.match(channelName, '(.+)%..+$') or Z
+                end
             end
-            -- print('parsed channel ', channelName)
-            if parsedChannelName then
+            print('splitting channel: ', channelName)
+            if channelName then
                if mergeall == 1.0 then
                    loader = comp:AddTool("Loader", -32768, -32768)
                    loader.Clip = get_loader_clip(tool)
                else
                    loader = comp.Loader({Clip = get_loader_clip(tool)})
                end
-               loader:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = parsedChannelName})
+               loader:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = channelName})
                loader.Clip1.OpenEXRFormat.Part = exr_part
                loaders_list[i] = loader
             end
@@ -509,7 +516,7 @@ function getLoader(verbose, dialogResult, tool)
     comp:Lock()
     comp:StartUndo('SplitEXR MultiChannel')
 
-    loaders_list = process_channels(tool)
+    loaders_list = process_multichannel(tool)
     
     comp:Unlock()
     comp:EndUndo()
@@ -549,6 +556,7 @@ function main()
 	if not fusion then
 		logError("[Error] This is a Blackmagic Fusion lua script, it should be run from within Fusion.")
 	end
+    comp = fusion:GetCurrentComp()
 
 	print(string.format("[Split EXR] %s", VERSION))
 	print(string.format("[Created By] %s", AUTHOR))
@@ -621,7 +629,7 @@ main()
 -- Print estimated time of execution in seconds
 print(string.format("[Processing Time] %.3f s", os.difftime(os.time(), t_start)))
 while comp:IsLocked() do
-    print('unlocking')
+    print('unlocking comp')
     comp:Unlock()
 end
 print("[Done]")
