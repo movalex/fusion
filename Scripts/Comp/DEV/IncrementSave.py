@@ -67,7 +67,7 @@ def increment_comp():
                 number = int(num)
     number += 1
     dest_file = save_path / comp_name.with_suffix(f".{number:04}.comp")
-    # print(f"saving to destination: {dest_file}")
+    print(f"save destination: {dest_file}")
     source_file.rename(str(dest_file))
     comp.Save(source_file)
 
