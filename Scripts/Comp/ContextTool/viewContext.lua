@@ -19,6 +19,10 @@ function operateView(tool)
             return
         end
         local currentlyViewedTool = viewOutput:GetTool() 
+        if currentlyViewedTool.Name == tool then
+            print('this tool is already loaded')
+            return
+        end
         if currentlyViewedTool ~= nil then
             comp:SetData("ContextTool."..CONTEXT, currentlyViewedTool.Name)
             local contextTool = comp:FindTool(tool)
