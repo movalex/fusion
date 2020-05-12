@@ -1,19 +1,20 @@
 """
   Increment Save script
-  by Alex Bogomolov
+  by Alexey Bogomolov
   
   Ths script is based on IncrementalSave.lua script written by S.Neve / House of Secrets
-
-    NOTE: This version of the script works with Python3 only
-    However, it has some advantages over the lua one:
+    NOTE: This version of the script works with Python3 only because Python2 is deprecated (no other reasons)
+    If you are using Python2 or don't use Python at all, feel free to alter all fstrings to .format or use Lua version
+    However, this version of script has some advantages over the Lua one:
         - it will work if the path has some non-ascii characters
         - save folder will look the same on Mac and PC - without '.comp' part 
               (comp.GetAtttr()["COMPS_Filename"] works differently on windows and mac)
-        - a bit cleaner to read and maintain
-
+        - In my opinion it is faster and easier to read and maintain
+    MIT License:  https://mit-license.org/
+    Copyright 2020 Alexey Bogomolov
+    Version: 1.0
     email: mail@abogomolov.com
     donations: https://paypal.me/aabogomolov
-
 """
 import os
 import platform
@@ -40,31 +41,31 @@ def get_save_path(path_env=None):
     return comp_path.parent / root_save_folder / comp_path.stem
 
 
-def get_comp_files(path):
+def get_increment_number(path):
     comps = []
+    increment_number = 0
     for file in path.iterdir():
         if file.suffix == ".comp":
             comps.append(file)
-    return comps
+    if len(comps) > 0:
+        for file in comps:
+            num = re.findall("(\d{4}).comp$", str(file))[0]
+            if int(num) > increment_number:
+                increment_number = int(num)
+    return increment_number
 
 
 def increment_comp():
-    if not (sys.version_info.major == 3 and sys.version_info.minor >=6):
-        print('this script requires Python version >= 3.6')
+    if not (sys.version_info.major == 3 and sys.version_info.minor >= 6):
+        print("this script requires Python version >= 3.6")
         return
-    number = 0
     source_file = Path(comp_attrs["COMPS_FileName"])
     comp_name = Path(comp_attrs["COMPS_Name"])
     # print(f"source: {source_file}")
     save_path = get_save_path(PATHENV)
     if not save_path.exists():
         save_path.mkdir(parents=True)
-    comp_list = get_comp_files(save_path)
-    if len(comp_list) > 0:
-        for file in comp_list:
-            num = re.findall("(\d{4}).comp$", str(file))[0]
-            if int(num) > number:
-                number = int(num)
+    number = get_increment_number(save_path)
     number += 1
     dest_file = save_path / comp_name.with_suffix(f".{number:04}.comp")
     print(f"save destination: {dest_file}")
