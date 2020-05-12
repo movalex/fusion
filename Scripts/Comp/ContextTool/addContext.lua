@@ -1,6 +1,6 @@
 -- local CONTEXT = 1
 if not tool then
-    tool = comp.ActiveTool
+    tool = comp.ActiveTool or comp:GetToolList(true)[1] 
 end
 local getToolName = comp:GetData("ContextTool."..CONTEXT)
 local prevTool = comp:FindTool(getToolName)
