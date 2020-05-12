@@ -3,10 +3,10 @@
   by Alexey Bogomolov
   
   Ths script is based on IncrementalSave.lua script written by S.Neve / House of Secrets
-    NOTE: This version of the script works with Python3 only because Python2 is deprecated (no other reasons)
-    If you are using Python2 or don't use Python at all, feel free to alter all fstrings to .format or use Lua version
-    However, this version of script has some advantages over the Lua one:
-        - it will work if the path has some non-ascii characters
+    NOTE: This version of the script works with Python3 only, since Python2 is deprecated
+    If you are still using Python2 feel free to alter all f-strings to .format() or use IncrementSave.lua
+    However, this version has some advantages over the Lua one:
+        - it will work if the comp path has some non-ascii characters
         - save folder will look the same on Mac and PC - without '.comp' part 
               (comp.GetAtttr()["COMPS_Filename"] works differently on windows and mac)
         - In my opinion it is faster and easier to read and maintain
