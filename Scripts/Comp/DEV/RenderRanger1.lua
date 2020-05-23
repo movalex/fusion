@@ -77,6 +77,12 @@ function showUI()
                     
                 }
             },
+            ui:VGroup{
+                VMargin = 3,
+                ui:Button{
+                    ID = 'reset', Text = 'reset globals',
+                },
+            },
             ui:HGroup{
                 VMargin = 3,
                 ui:Button{
@@ -85,12 +91,6 @@ function showUI()
                     ui:Button{
                     ID = 'setOut', Text = 'saver out',
                 }
-            },
-            ui:VGroup{
-                VMargin = 3,
-                ui:Button{
-                    ID = 'reset', Text = 'reset globals',
-                },
             },
         }
     })

@@ -1,0 +1,29 @@
+{
+	Action
+	{
+		ID = "RevealInFinder",
+		Category = "File",
+		Name = "Reveal in Finder",
+
+		Targets =
+		{
+			Composition =
+			{
+				Execute = [[
+                comp = obj:Comp()
+                comp:RunScript('Scripts:Comp/reveal_in_finder.py')
+                ]],
+			},
+		},
+	},
+
+	Hotkeys
+	{
+		Target = "FlowView",
+		
+	F9 = "RevealInFinder{}",
+	},
+
+}
+
+
