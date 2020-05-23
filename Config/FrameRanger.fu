@@ -1,0 +1,58 @@
+{
+    Action
+    {
+        ID = "FRangerSet",
+        Category = 'FrameRanger',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                --begin=lua--
+                function getBounds()
+                    compAttrs = target:GetAttrs()
+                    rStart = compAttrs.COMPN_RenderStart
+                    rEnd = compAttrs.COMPN_RenderEnd
+                    return rStart, rEnd
+                end
+
+                function plusOffset(offset, s, e)
+                    target:SetAttrs({COMPN_RenderStart = s + offset})
+                    target:SetAttrs({COMPN_RenderEnd = e - offset})
+                end
+
+                function minusOffset(offset, s, e)
+                    target:SetAttrs({COMPN_RenderStart = s - offset})
+                    target:SetAttrs({COMPN_RenderEnd = e + offset})
+                end
+
+                status = target:GetData("FR.set")
+                if status then
+                    target:SetData("FR.set", false)
+                    local s, e = getBounds()
+                    local currentOffset = target:GetData("FR.offset") or 24
+                    local gstart = target:GetAttrs().COMPN_GlobalStart
+                    if s - currentOffset < 0 then
+                        target:SetAttrs({COMPN_GlobalStart = s - currentOffset})
+                    end
+                minusOffset(currentOffset, s, e) 
+                else
+                    target:SetData("FR.set", true)
+                    local s, e = getBounds()
+                    local currentOffset = target:GetData("FR.offset") or 24
+                    plusOffset(currentOffset, s, e)
+                end
+            --end=lua--
+                ]],
+            },
+        },
+    },
+
+
+    Hotkeys
+    {
+      Target = "FlowView",
+      ALT_F = "FRangerSet",
+    },
+}

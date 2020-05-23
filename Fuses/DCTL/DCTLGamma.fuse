@@ -1,0 +1,109 @@
+    --This fuse does a simple gamma correction using DCTL.
+    --Thanks to Aleksander Westphal for posting the DCTL test fuse that this is based on.
+    --In this fuse, we learn how DCTL handles color.
+    FuRegisterClass("DCTLGamma", CT_Tool, {
+        REGS_Category = "Color",
+        REGS_OpIconString = "GMA",
+        REGS_OpDescription = "DCTLGamma",
+        REG_Version = 1.0,
+    })
+    --These are the parameters that we need access to in our kernel.
+    -- Something worth noting: When listing the parameters here, you have a choice of making a parameter either float or int.
+    --If the parameter is an integer value, make sure to define it as int, otherwise things might not work right inside the kernel.
+    --This tip was taught to me by my friend Bryan Ray, thanks Bryan!!
+    GammaParams = [[
+        float redGamma;
+        float greenGamma;
+        float blueGamma;
+        int srcCompOrder;
+    ]]
+    --This is the GPU kernel, all of the image algorithms happen here.
+    GammaKernel = [[
+
+//begin=glsl//
+
+        __KERNEL__ void GammaKernel(__CONSTANTREF__ GammaParams *params, __TEXTURE2D__ src, __TEXTURE2D_WRITE__ dst)
+        {
+            DEFINE_KERNEL_ITERATORS_XY(x, y);
+    //This gets the values of the pixel from our input image and assigns it to a float 4 variable "col".       
+            float4 col = _tex2DVecN(src, x, y, params->srcCompOrder);
+           
+    //DCTL addresses the red, green blue and alpha values of our pixel as respectively x, y, z,and w, and since we named our input pixel "col",
+    // we address the red value of our pixel as "col.x", the green value as "col.y", the blue value as "col.z" and the alpha value as "col.w"
+            col.x = _powf(col.x, 1.0f / _fmaxf(params->redGamma, 0.01f));
+            col.y = _powf(col.y, 1.0f / _fmaxf(params->greenGamma, 0.01f));
+            col.z = _powf(col.z, 1.0f / _fmaxf(params->blueGamma, 0.01f));
+           
+    //In the above algorithms, we stated that the color pixels are equal to: The color pixels to the power of (1 divided by the gamma slider).
+    //We use _fmaxf to avoid NaN values when one of gamma sliders is set to 0. So it will divide by whichever is greater, the gamma slider or 0.01
+    // These methods were worked on greatly by Sam Treadway and Bryan Ray, Thank guys!!
+     
+            _tex2DVec4Write(dst, x, y, col);
+        }
+//end=glsl//
+        
+    ]]
+     
+    --This is the control panel, all of the controls that we want to appear in our fuse should be created here.
+    function Create()
+        InRedGamma = self:AddInput("Red Gamma", "RedGamma", {
+            LINKID_DataType = "Number",
+            INPID_InputControl = "SliderControl",
+            INP_MinScale = 0.00,
+            INP_MaxScale = 5.00,
+            INP_Default = 1.00,
+            })
+        InGreenGamma = self:AddInput("Green Gamma", "GreenGamma", {
+            LINKID_DataType = "Number",
+            INPID_InputControl = "SliderControl",
+            INP_MinScale = 0.00,
+            INP_MaxScale = 5.00,
+            INP_Default = 1.00,
+            })
+        InBlueGamma = self:AddInput("Blue Gamma", "BlueGamma", {
+            LINKID_DataType = "Number",
+            INPID_InputControl = "SliderControl",
+            INP_MinScale = 0.00,
+            INP_MaxScale = 5.00,
+            INP_Default = 1.00,
+            })     
+        InImage = self:AddInput("Image", "Image", {
+            LINKID_DataType = "Image",
+            LINK_Main = 1,
+            INP_AcceptsGPUImages = true,
+            })
+     
+        OutImage = self:AddOutput("Output", "Output", {
+            LINKID_DataType = "Image",
+            LINK_Main = 1,
+            })
+    end
+     
+    function Process(req)
+        local src = InImage:GetValue(req)
+        local dst = Image{ IMG_Like = src, IMG_DeferAlloc = true }
+    --This calls on our kernel to process the image we created.
+        local node = DVIPComputeNode(req, "GammaKernel", GammaKernel, "GammaParams", GammaParams)
+       
+    --This gets the values of our sliders from the control panel.
+        local params = node:GetParamBlock(GammaParams)
+     
+        params.redGamma = InRedGamma:GetValue(req).Value
+        params.greenGamma = InGreenGamma:GetValue(req).Value
+        params.blueGamma = InBlueGamma:GetValue(req).Value
+        params.srcCompOrder = src:IsMask() and 1 or 15
+     
+        node:SetParamBlock(params)
+    --This gets the value of our input image for us to modify inside the kernel
+        node:AddInput("src", src)
+        --This takes the image that we modified in the kernel and sends it to the output.
+        node:AddOutput("dst", dst)
+     
+        local ok = node:RunSession(req)
+     
+        if not ok then
+            dst = nil
+        end
+     
+        OutImage:Set(req, dst)
+    end
