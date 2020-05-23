@@ -1,0 +1,149 @@
+FuRegisterClass("SolidColor", CT_SourceTool, {
+	REGS_Category = "Creator",
+    REGS_OpIconString = "sld",	
+--This creates the "Image"tab 	
+	REG_Source_GlobalCtrls = true,
+	REG_Source_SizeCtrls = true,
+	REG_Source_AspectCtrls = true,
+	REG_Source_DepthCtrls = true,
+	})
+
+--These are the parameters that we need access to in our kernel.
+SolidParams = [[
+//begin=glsl//
+	float red;
+	float green;
+	float blue;
+	float alpha;
+	int srcCompOrder;
+//end=glsl//
+]]
+
+--This is the GPU kernel, all of the image algorithms happen here.
+SolidKernel = 
+[[
+//begin=glsl//
+	__KERNEL__ void SolidKernel(__CONSTANTREF__ SolidParams *params, __TEXTURE2D__ src, __TEXTURE2D_WRITE__ dst)
+	{
+		DEFINE_KERNEL_ITERATORS_XY(x, y);
+		float4 col = _tex2DVecN(src, x, y, params->srcCompOrder);
+
+		col.x = params->red;
+		col.y = params->green;
+		col.z = params->blue;
+		col.w = params->alpha;
+
+		_tex2DVec4Write(dst, x, y, col);
+	}
+//end=glsl//
+]]
+--This is the control panel, all of the controls that we want to appear in our fuse should be created here.
+function Create()
+		InColorR = self:AddInput("Red", "Red", {
+			ICS_Name            = "Color",
+			LINKID_DataType     = "Number",
+			INPID_InputControl  = "ColorControl",
+			INP_Default         = 0.0,
+			INP_MaxScale        = 1.0,
+			ICD_Center          = 1.0,
+			INP_DoNotifyChanged = true,
+			CLRC_ShowWheel      = true,
+			IC_ControlGroup     = 1,
+			IC_ControlID        = 0,
+			IC_Visible          = true,
+		})
+		InColorG = self:AddInput("Green", "Green", {
+			LINKID_DataType     = "Number",
+			INPID_InputControl  = "ColorControl",
+			INP_Default         = 0.5,
+			INP_DoNotifyChanged = true,
+			IC_ControlGroup     = 1,
+			IC_ControlID        = 1,
+		})
+		InColorB = self:AddInput("Blue", "Blue", {
+			LINKID_DataType     = "Number",
+			INPID_InputControl  = "ColorControl",
+			INP_Default         = 1.0,
+			INP_DoNotifyChanged = true,
+			IC_ControlGroup     = 1,
+			IC_ControlID        = 2,
+		})
+		InColorA = self:AddInput("Alpha", "Alpha", {
+			LINKID_DataType     = "Number",
+			INPID_InputControl  = "ColorControl",
+			INP_Default         = 1.0,
+			INP_DoNotifyChanged = true,
+			IC_ControlGroup     = 1,
+			IC_ControlID        = 3,
+		})
+
+	    OutImage = self:AddOutput("Output", "Output", {
+		   LINKID_DataType = "Image",
+		   LINK_Main = 1,
+		})
+end
+
+function Process(req)
+	local realwidth = Width;
+	local realheight = Height;
+	
+	local img_aspect = Width / Height
+	
+	-- We'll handle proxy ourselves
+	-- Borrowed from Hexagon Tiles fuse and Bryan's Tapered Shapes fuse.
+	Width = Width / Scale
+	Height = Height / Scale
+	Scale = 1
+
+--This creates an image for us to work on.
+	local imgattrs = {
+		IMG_Document = self.Comp,
+		{ IMG_Channel = "Red", },
+		{ IMG_Channel = "Green", },
+		{ IMG_Channel = "Blue", },
+		{ IMG_Channel = "Alpha", },
+		IMG_Width = Width,
+		IMG_Height = Height,
+		IMG_XScale = XAspect,
+		IMG_YScale = YAspect,
+		IMAT_OriginalWidth = realwidth,
+		IMAT_OriginalHeight = realheight,
+		IMG_Quality = not req:IsQuick(),
+		IMG_MotionBlurQuality = not req:IsNoMotionBlur(),
+		}
+	
+	if not req:IsStampOnly() then
+		imgattrs.IMG_ProxyScale = 1
+	end
+	
+	if SourceDepth ~= 0 then
+		imgattrs.IMG_Depth = SourceDepth
+	end
+	
+	local src = Image(imgattrs)
+	local dst = Image{ IMG_Like = src, IMG_DeferAlloc = true }	
+	
+--This calls on our kernel to process the image we created.
+	local node = DVIPComputeNode(req, "SolidKernel", SolidKernel, "SolidParams", SolidParams)
+
+	local params = node:GetParamBlock(SolidParams)
+--This gets the values of our sliders from the control panel.
+	params.red = InColorR:GetValue(req).Value
+	params.green = InColorG:GetValue(req).Value
+	params.blue = InColorB:GetValue(req).Value
+	params.alpha = InColorA:GetValue(req).Value
+	params.srcCompOrder = src:IsMask() and 1 or 15
+
+	node:SetParamBlock(params)
+
+	node:AddInput("src", src)
+	node:AddOutput("dst", dst)
+
+	local ok = node:RunSession(req)
+
+	if not ok then
+		dst = nil
+	end
+
+	OutImage:Set(req, dst)
+end

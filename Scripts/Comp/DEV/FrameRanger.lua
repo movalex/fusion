@@ -35,6 +35,7 @@ end
 
 
 function showUI()
+    frameOffset = comp:GetData("FR.offset") or 24
     local x = 500
     local y = 600
     -- local x = fu:GetMousePos()[1]
@@ -62,7 +63,7 @@ function showUI()
                 },
                 ui:LineEdit {
                     Weight = 0.2,
-                    ID = 'offset', Text = tostring(24),
+                    ID = 'offset', Text = tostring(frameOffset),
                     Alignment = {AlignCenter = true},
                     Events = {ReturnPressed = true},
                 }
@@ -77,6 +78,12 @@ function showUI()
                     
                 }
             },
+            ui:VGroup{
+                VMargin = 3,
+                ui:Button{
+                    ID = 'reset', Text = 'reset globals',
+                },
+            },
             ui:HGroup{
                 VMargin = 3,
                 ui:Button{
@@ -86,22 +93,18 @@ function showUI()
                     ID = 'setOut', Text = 'saver out',
                 }
             },
-            ui:VGroup{
-                VMargin = 3,
-                ui:Button{
-                    ID = 'reset', Text = 'reset globals',
-                },
-            },
         }
     })
     itm = win:GetItems()
     itm.offset:SelectAll()
     function win.On.minus.Clicked(ev)
+        comp:SetData("FR.set", true)
         local s, e = getBounds()
         local currentOffset = tonumber(itm.offset:GetText())
         plusOffset(currentOffset, s, e)
     end
     function win.On.plus.Clicked(ev)
+        comp:SetData("FR.set", false)
         local s, e = getBounds()
         local currentOffset = tonumber(itm.offset:GetText())
         local gstart = comp:GetAttrs().COMPN_GlobalStart
@@ -113,7 +116,9 @@ function showUI()
     function win.On.close.Clicked(ev)
         disp:ExitLoop()
     end
-   
+    function win.On.offset.ReturnPressed(ev)
+        frameOffset = comp:SetData("FR.offset", itm.offset:GetText()) 
+    end 
     function win.On.setIn.Clicked (ev)
         tool = comp.ActiveTool
         if tool and tool.ID == 'Saver' then

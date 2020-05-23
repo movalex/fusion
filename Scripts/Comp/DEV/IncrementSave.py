@@ -16,6 +16,7 @@
     email: mail@abogomolov.com
     donations: https://paypal.me/aabogomolov
 """
+
 import os
 import platform
 import re
@@ -69,7 +70,10 @@ def increment_comp():
     number += 1
     dest_file = save_path / comp_name.with_suffix(f".{number:04}.comp")
     print(f"save destination: {dest_file}")
-    source_file.rename(str(dest_file))
+    try:
+        source_file.rename(str(dest_file))
+    except OSError:
+        print("source file name is empty")
     comp.Save(source_file)
 
 

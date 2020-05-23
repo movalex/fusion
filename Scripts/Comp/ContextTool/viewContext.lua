@@ -1,4 +1,6 @@
--- local CONTEXT = 1
+if not CONTEXT then
+    CONTEXT = 1
+end
 
 function has_value (tab, val)
     for index, value in ipairs(tab) do
