@@ -1,16 +1,13 @@
 {
 	Tools = ordered() {
 		ml_Analyzer = MacroOperator {
+			CtrlWZoom = false,
 			Inputs = ordered() {
 				Input5 = InstanceInput {
-					SourceOp = "ChangeDepth1",
-					Source = "Sample",
-					Name = "Frame Sampling",
+					SourceOp = "Proxy",
+					Source = "Proxy",
 					Page = "Controls",
-				},
-				Blank = InstanceInput {
-					SourceOp = "ChangeDepth1",
-					Source = "Blank2",
+					Default = 1,
 				},
 				Input6 = InstanceInput {
 					SourceOp = "Probe1",
@@ -37,44 +34,61 @@
 					Default = 1,
 				},
 				Input1 = InstanceInput {
-					SourceOp = "ChangeDepth1",
+					SourceOp = "Analyze",
 					Source = "Red",
 					Name = "Color",
 					ControlGroup = 1,
 					Page = "Controls",
 				},
 				Input2 = InstanceInput {
-					SourceOp = "ChangeDepth1",
+					SourceOp = "Analyze",
 					Source = "Green",
 					ControlGroup = 1,
 					Page = "Controls",
 				},
 				Input3 = InstanceInput {
-					SourceOp = "ChangeDepth1",
+					SourceOp = "Analyze",
 					Source = "Blue",
 					ControlGroup = 1,
 					Page = "Controls",
 				},
 				Input4 = InstanceInput {
-					SourceOp = "ChangeDepth1",
+					SourceOp = "Analyze",
 					Source = "Analyze",
 					Page = "Controls",
 				},
 				MainInput1 = InstanceInput {
-					SourceOp = "PipeRouter1",
+					SourceOp = "Proxy",
 					Source = "Input",
-				},
+				}
 			},
 			Outputs = {
 				MainOutput1 = InstanceOutput {
-					SourceOp = "ChangeDepth1",
+					SourceOp = "Analyze",
 					Source = "Output",
 				}
 			},
-			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			ViewInfo = GroupInfo {
+				Pos = { 1148, -82.3334 },
+				Flags = {
+					Expanded = true,
+					AllowPan = false,
+					ConnectedSnap = true,
+					AutoSnap = true,
+					AspectPics = false,
+					ShowInstance = false,
+					Thumbnails = false,
+					RemoveRouters = true
+				},
+				Size = { 204, 204.242, 63, 24.2424 },
+				Direction = "Vertical",
+				PipeStyle = "Direct",
+				Scale = 1,
+				Offset = { 0, 0 }
+			},
 			Tools = ordered() {
-				ChangeDepth1 = ChangeDepth {
-					CtrlWZoom = false,
+				Analyze = ChangeDepth {
+					CtrlWShown = false,
 					Inputs = {
 						Input = Input {
 							SourceOp = "PipeRouter1",
@@ -93,7 +107,7 @@
 							Source = "Blue",
 						},
 					},
-					ViewInfo = OperatorInfo { Pos = { 819.333, 111 } },
+					ViewInfo = OperatorInfo { Pos = { 38.6667, 120.545 } },
 					UserControls = ordered() {
 						Red = {
 							INP_Integer = false,
@@ -129,36 +143,37 @@
 							LINKS_Name = "Blue"
 						},
 						Analyze = {
-							LINKS_Name = "Analyze",
-							LINKID_DataType = "Number",
-							INPID_InputControl = "ButtonControl",
-							INP_Integer = false,
-							INP_MinScale = 0,
-							INP_MaxScale = 1,
-							INP_MinAllowed = -1000000,
 							INP_MaxAllowed = 1000000,
+							INP_Integer = false,
+							INPID_InputControl = "ButtonControl",
 							BTNCS_Execute = "@scripts:/Tool/BakeColors.lua",
-							ICS_ControlPage = "Controls"
+							INP_MaxScale = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							LINKS_Name = "Analyze"
 						},
 						Sample = {
-							LINKS_Name = "Sample",
-							LINKID_DataType = "Number",
-							INPID_InputControl = "ComboControl",
-							INP_Integer = false,
-							INP_MinScale = 1,
-							INP_MaxScale = 5,
 							{ CCS_AddString = "All" },
 							{ CCS_AddString = "Half" },
 							{ CCS_AddString = "Third" },
 							{ CCS_AddString = "Quarter" },
 							{ CCS_AddString = "Fifth" },
+							INP_MinScale = 1,
+							INP_Integer = false,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							INPID_InputControl = "ComboControl",
 							CC_LabelPosition = "Horizontal",
-							ICS_ControlPage = "Controls"
+							INP_MaxScale = 5,
+							LINKS_Name = "Sample"
 						}
 					}
 				},
 				Probe1 = Probe {
 					CtrlWZoom = false,
+					CtrlWShown = false,
 					Inputs = {
 						ImageToProbe = Input {
 							SourceOp = "PipeRouter1",
@@ -168,11 +183,41 @@
 						ProbeRectangle = Input { Value = 1, },
 						Width = Input { Value = 0.5, },
 						Height = Input { Value = 0.5, },
-						Evaluation = Input { Value = 0, },
 					},
 				},
 				PipeRouter1 = PipeRouter {
-					ViewInfo = PipeRouterInfo { Pos = { 819.333, 69.7879 } },
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "Proxy",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { 38.6667, 78.4546 } },
+				},
+				Proxy = Scale {
+					Inputs = {
+						XSize = Input { Expression = "1.0/Proxy", },
+						Edges = Input { Value = 0, },
+						HiQOnly = Input { Value = 0, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						FilterMethod = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 38.6667, 41.2121 } },
+					UserControls = ordered() {
+						Proxy = {
+							INP_MaxAllowed = 4,
+							INP_Integer = true,
+							INPID_InputControl = "SliderControl",
+							INP_MaxScale = 4,
+							INP_Default = 1,
+							INP_MinScale = 1,
+							INP_MinAllowed = 1,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							LINKS_Name = "Proxy"
+						}
+					}
 				}
 			},
 		}
