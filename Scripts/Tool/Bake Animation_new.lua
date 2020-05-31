@@ -32,7 +32,7 @@ if not tool then
 	end
 end
 
-
+local tool = comp:GetToolList(true)[1]
 
 -- We can't bake DT_Image or DT_Mask (and possibly others...)
 unbakeable = { Image = true, Mask = true, Particles = true, DataType3D = true }
