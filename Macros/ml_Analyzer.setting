@@ -1,0 +1,237 @@
+{
+	Tools = ordered() {
+		ml_Analyzer = MacroOperator {
+			Inputs = ordered() {
+				Input1 = InstanceInput {
+					SourceOp = "Analyze",
+					Source = "NumberIn1",
+					ControlGroup = 1,
+					Page = "Controls",
+				},
+				Input2 = InstanceInput {
+					SourceOp = "Analyze",
+					Source = "NumberIn2",
+					ControlGroup = 1,
+					Page = "Controls",
+				},
+				Input3 = InstanceInput {
+					SourceOp = "Analyze",
+					Source = "NumberIn3",
+					ControlGroup = 1,
+					Page = "Controls",
+				},
+				Input9 = InstanceInput {
+					SourceOp = "Analyze",
+					Source = "Blank1",
+				},
+				Input6 = InstanceInput {
+					SourceOp = "Probe1",
+					Source = "Position",
+				},
+				Input7 = InstanceInput {
+					SourceOp = "Probe1",
+					Source = "Width",
+					Default = 0.5,
+				},
+				Input8 = InstanceInput {
+					SourceOp = "Probe1",
+					Source = "Height",
+					Default = 0.5,
+				},
+				Input5 = InstanceInput {
+					SourceOp = "Probe1",
+					Source = "ProbeRectangle",
+					Default = 1,
+				},
+				Input4 = InstanceInput {
+					SourceOp = "Probe1",
+					Source = "Evaluation",
+					Default = 1,
+				},
+				MainInput1 = InstanceInput {
+					SourceOp = "_IN_",
+					Source = "Input",
+				},
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Analyze",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			Tools = ordered() {
+				Analyze = Custom {
+					Inputs = {
+						LUTIn1 = Input {
+							SourceOp = "CustomTool1LUTIn1",
+							Source = "Value",
+						},
+						LUTIn2 = Input {
+							SourceOp = "CustomTool1LUTIn2",
+							Source = "Value",
+						},
+						LUTIn3 = Input {
+							SourceOp = "CustomTool1LUTIn3",
+							Source = "Value",
+						},
+						LUTIn4 = Input {
+							SourceOp = "CustomTool1LUTIn4",
+							Source = "Value",
+						},
+						NumberControls = Input { Value = 1, },
+						NameforNumber1 = Input { Value = "Color", },
+						NameforNumber2 = Input { Value = "Green", },
+						NameforNumber3 = Input { Value = "Blue", },
+						ShowNumber4 = Input { Value = 0, },
+						ShowNumber5 = Input { Value = 0, },
+						ShowNumber6 = Input { Value = 0, },
+						ShowNumber7 = Input { Value = 0, },
+						ShowNumber8 = Input { Value = 0, },
+						ShowPoint1 = Input { Value = 0, },
+						ShowPoint2 = Input { Value = 0, },
+						ShowPoint3 = Input { Value = 0, },
+						ShowPoint4 = Input { Value = 0, },
+						ShowLUT1 = Input { Value = 0, },
+						ShowLUT2 = Input { Value = 0, },
+						ShowLUT3 = Input { Value = 0, },
+						ShowLUT4 = Input { Value = 0, },
+						Image1 = Input {
+							SourceOp = "_IN_",
+							Source = "Output",
+						},
+						NumberIn1 = Input {
+							SourceOp = "Probe1",
+							Source = "Red",
+						},
+						NumberIn2 = Input {
+							SourceOp = "Probe1",
+							Source = "Green",
+						},
+						NumberIn3 = Input {
+							SourceOp = "Probe1",
+							Source = "Blue",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 638.919, 245.327 } },
+					UserControls = ordered() {
+
+						NumberIn1 = {
+							LINKS_Name = "Color",
+							LINKID_DataType = "Number",
+							INPID_InputControl = "ColorControl",
+							INP_Integer = false,
+							INP_MinScale = 0,
+							INP_MaxScale = 1,
+							INP_MinAllowed = -1000000,
+							INP_MaxAllowed = 1000000,
+							IC_ControlGroup = 2,
+							IC_ControlID = 0,
+							CLRC_ColorSpace = "HSV",
+							CLRC_ShowWheel = false,
+							ICS_ControlPage = "Controls"
+						},
+						NumberIn2 = {
+							LINKS_Name = "Green",
+							LINKID_DataType = "Number",
+							INPID_InputControl = "ColorControl",
+							INP_Integer = false,
+							INP_MinScale = 0,
+							INP_MaxScale = 1,
+							INP_MinAllowed = -1000000,
+							INP_MaxAllowed = 1000000,
+							IC_ControlGroup = 2,
+							IC_ControlID = 1,
+							CLRC_ColorSpace = "HSV",
+							CLRC_ShowWheel = false,
+							ICS_ControlPage = "Controls"
+						},
+						NumberIn3 = {
+							LINKS_Name = "Blue",
+							LINKID_DataType = "Number",
+							INPID_InputControl = "ColorControl",
+							INP_Integer = false,
+							INP_MinScale = 0,
+							INP_MaxScale = 1,
+							INP_MinAllowed = -1000000,
+							INP_MaxAllowed = 1000000,
+							IC_ControlGroup = 2,
+							IC_ControlID = 2,
+							CLRC_ColorSpace = "HSV",
+							CLRC_ShowWheel = false,
+							ICS_ControlPage = "Controls"
+						}
+					}
+				},
+				CustomTool1LUTIn1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 0, Blue = 0 },
+				},
+				CustomTool1LUTIn2 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 204, Blue = 0 },
+				},
+				CustomTool1LUTIn3 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 0, Blue = 204 },
+				},
+				CustomTool1LUTIn4 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 204, Blue = 204 },
+				},
+				Probe1 = Probe {
+					CtrlWZoom = false,
+					Inputs = {
+						ImageToProbe = Input {
+							SourceOp = "_IN_",
+							Source = "Output",
+						},
+						ProbeRectangle = Input { Value = 1, },
+						Width = Input { Value = 0.5, },
+						Height = Input { Value = 0.5, },
+						Evaluation = Input { Value = 1, },
+					},
+				},
+				_IN_ = BrightnessContrast {
+					CtrlWZoom = false,
+					ViewInfo = OperatorInfo { Pos = { 638.919, 187.523 } },
+				}
+			},
+           UserControls = ordered() {
+                BakeAnimation = {
+                    INP_MaxAllowed = 1000000,
+                    INP_Integer = false,
+                    INPID_InputControl = "ButtonControl",
+                    BTNCS_Execute = "@scripts:/Tool/BakeColors.lua", {step = 5},
+                    INP_MaxScale = 1,
+                    INP_MinScale = 0,
+                    INP_MinAllowed = -1000000,
+                    LINKID_DataType = "Number",
+                    ICS_ControlPage = "Controls",
+                    LINKS_Name = "Bake Colors"
+                },
+			}
+		}
+	},
+	ActiveTool = "ml_Analyzer"
+}

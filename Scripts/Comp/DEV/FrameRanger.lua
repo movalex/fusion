@@ -100,13 +100,13 @@ function showUI()
     function win.On.minus.Clicked(ev)
         comp:SetData("FR.set", true)
         local s, e = getBounds()
-        local currentOffset = tonumber(itm.offset:GetText())
+        local currentOffset = tonumber(itm.offset:GetText()) - 1
         plusOffset(currentOffset, s, e)
     end
     function win.On.plus.Clicked(ev)
         comp:SetData("FR.set", false)
         local s, e = getBounds()
-        local currentOffset = tonumber(itm.offset:GetText())
+        local currentOffset = tonumber(itm.offset:GetText()) - 1
         local gstart = comp:GetAttrs().COMPN_GlobalStart
         if s - currentOffset < 0 then
             comp:SetAttrs({COMPN_GlobalStart = s - currentOffset})
@@ -140,6 +140,7 @@ function showUI()
         gEnd = comp:GetAttrs().COMPN_GlobalEnd
         comp:SetAttrs({COMPN_RenderStart = gStart})
         comp:SetAttrs({COMPN_RenderEnd = gEnd})
+        comp:SetData("FR.set", false)
     end
 
     function win.On.FRanger.Close(ev)
