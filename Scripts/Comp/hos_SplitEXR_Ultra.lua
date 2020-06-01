@@ -471,7 +471,7 @@ function getLoader(verbose, dialogResult, tool)
 	logDebug("[EXR Check 1] [Loader Node] " .. tostring(loader_clip), verbose)
 	logDebug("[EXR Check 2] [Loader Node Atttributes]", verbose)
 	logDump(attrs, verbose)
-    floyd = 1.0
+    byPartName = 0
 	-- Filter out None,R,G,B and A as these are already used by the original Loader
 	-- If the Skip Importing Alpha Channels checkbox was enabled in the AskUser dialog then keep the alpha channel separate as an extra loader item
     if tool.Clip1.OpenEXRFormat.Part then
@@ -483,7 +483,7 @@ function getLoader(verbose, dialogResult, tool)
         -- local counter = 0 
         for i, exr_part in pairs(partsTable) do
             tool.Clip1.OpenEXRFormat.Part = exr_part
-            if floyd == 1.0 then
+            if byPartName == 1.0 then
                 channelName = exr_part
             else
                 channelName = tool.Clip1.OpenEXRFormat.RedName:GetAttrs().INPIDT_ComboControl_ID[2]
