@@ -315,6 +315,7 @@ function process_multichannel(tool)
         else
            LDR = comp.Loader({Clip = get_loader_clip(tool)})
         end
+        LDR.PixelAspect = 1
 
         -- Force an initial (invalid) EXR channel name value into the OpenEXRFormat setting
         LDR:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = prefix})
