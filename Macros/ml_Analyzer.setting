@@ -24,7 +24,7 @@
 					Default = 0.5,
 				},
 				Input10 = InstanceInput {
-					SourceOp = "Probe1_1_2",
+					SourceOp = "Probe1",
 					Source = "Evaluation",
 					Default = 1,
 				},
@@ -53,7 +53,7 @@
 					Page = "Controls",
 				},
 				MainInput1 = InstanceInput {
-					SourceOp = "PipeRouter2_1",
+					SourceOp = "PipeRouter2",
 					Source = "Input",
 				}
 			},
@@ -90,15 +90,15 @@
 							Source = "Output",
 						},
 						Red = Input {
-							SourceOp = "Probe1_1_2",
+							SourceOp = "Probe1",
 							Source = "Red",
 						},
 						Green = Input {
-							SourceOp = "Probe1_1_2",
+							SourceOp = "Probe1",
 							Source = "Green",
 						},
 						Blue = Input {
-							SourceOp = "Probe1_1_2",
+							SourceOp = "Probe1",
 							Source = "Blue",
 						},
 					},
@@ -141,7 +141,7 @@
 							INP_MaxAllowed = 1000000,
 							INP_Integer = false,
 							INPID_InputControl = "ButtonControl",
-							BTNCS_Execute = "@scripts:/Tool/BakeColors.lua",
+							BTNCS_Execute = "@scripts:/Utility/BakeColors.lua",
 							INP_MaxScale = 1,
 							INP_MinScale = 0,
 							INP_MinAllowed = -1000000,
@@ -213,7 +213,7 @@
 							Expression = "Crop.Input.OriginalHeight*Sample.Height",
 						},
 						Input = Input {
-							SourceOp = "PipeRouter2_1",
+							SourceOp = "PipeRouter2",
 							Source = "Output",
 						},
 					},
@@ -248,19 +248,19 @@
 							Source = "Output",
 						},
 						Foreground = Input {
-							SourceOp = "PipeRouter2_1",
+							SourceOp = "PipeRouter2",
 							Source = "Output",
 						},
 					},
 					ViewInfo = OperatorInfo { Pos = { 88.6194, 208.065 } },
 				},
-				PipeRouter2_1 = PipeRouter {
+				PipeRouter2 = PipeRouter {
 					CtrlWShown = false,
 					ViewInfo = PipeRouterInfo { Pos = { 178.577, 60.974 } },
 				}
 			},
 		},
-		Probe1_1_2 = Probe {
+		Probe1 = Probe {
 			CtrlWZoom = false,
 			Inputs = {
 				ImageToProbe = Input {
