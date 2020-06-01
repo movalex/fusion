@@ -110,6 +110,7 @@
 							CLRC_ColorSpace = "HSV",
 							IC_ControlGroup = 1,
 							CLRC_ShowWheel = false,
+                            CLRC_NoPick = true,
 							LINKID_DataType = "Number",
 							IC_ControlID = 0,
 							ICS_ControlPage = "Controls",
