@@ -80,4 +80,5 @@ def increment_comp():
 if __name__ == "__main__":
     if comp_attrs["COMPS_FileName"] == "":
         comp.Save()
-    increment_comp()
+    else:
+        increment_comp()
