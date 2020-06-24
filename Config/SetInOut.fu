@@ -36,12 +36,13 @@
       },
     },
 
-  -- Hotkeys
-  -- {
-    -- Target = "TimeView",
-    -- I = "SetRenderIn",
-    -- O = "SetRenderOut", 
-  -- },
+  Hotkeys
+  {
+    Target = "FuFrame",
+    ALT_I = "SetRenderIn",
+    ALT_O = "SetRenderOut", 
+  },
+
   Hotkeys
   {
     Target = "FlowView",
