@@ -1,4 +1,6 @@
-newStart = comp:GetData("FrameHandles.offset") or 24
+if not tool then
+    print('this is a tool script, it should be run from a flow context menu')
+end
 
 function moveLoader(tool, startFrom)
     if tool.ID ~= "Loader" then
@@ -10,4 +12,7 @@ function moveLoader(tool, startFrom)
     comp:EndUndo()
 end
 
-moveLoader(tool, newStart)
+if tool.ID == "Loader" then
+    tool.PixelAspect = 2
+    tool.CustomPixelAspect = {1,1}
+end
