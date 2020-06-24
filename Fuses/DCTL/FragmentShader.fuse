@@ -1,0 +1,458 @@
+--[[--
+
+Fragment Shader Fuse - a second attempt at making it easy to develop shaders in Davinci Resolve Fusion.
+Because AMD graphics cards didn't want to play ball with the first one :)
+
+Chris Ridings
+www.chrisridings.com
+
+--]]--
+
+
+FuRegisterClass("FragmentShader", CT_SourceTool, {
+    REGS_Name = "Fragment Shader", 
+	REGS_Category = "Fuses",	
+    REGS_OpDescription = "Fragment Shader",
+	REGS_OpIconString = "fFS",
+    REG_Source_GlobalCtrls = true,
+    REG_Source_SizeCtrls = true,
+    REG_Source_AspectCtrls = true,    
+	REG_TimeVariant = true,	
+	REGS_Company = "Chris Ridings",
+	REGS_URL = "https://www.chrisridings.com",	
+	REG_Version	= 000001,
+    })
+	
+
+function Create()
+	SiteButton = self:AddInput("Visit www.chrisridings.com", "Label1", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "ButtonControl",
+		INP_DoNotifyChanged = true,
+		INP_External = false,
+	})	
+	YouTubeButton = self:AddInput("Visit the Youtube Channel", "Label2", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "ButtonControl",
+		INP_External = false,
+	})	
+	InLabelAdv = self:AddInput("Version 0.0.1", "LabelAdv", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "LabelControl",
+		INP_External = false,
+		INP_Passive = true,
+	})
+	InFile = self:AddInput("File", "File", {
+		LINKID_DataType = "Text",
+		INPID_InputControl =  "FileControl",
+		FC_ClipBrowse = true,
+		INP_DoNotifyChanged = true, 
+		INP_Passive = true,
+		IC_Visible = false,
+		})	
+	InFrameRate = self:AddInput("Frame Rate", "FrameRate", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Integer = false,		
+		INP_Default = 30,
+		INP_MinScale = 24,
+		INP_MaxScale = 240,
+	})	
+	InUniqueID = self:AddInput("UniqueID", "UniqueID", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Integer = true,		
+		INP_Default = 1,
+		INP_MinScale = 1,
+		INP_MaxScale = 100,
+		IC_Visible = false,
+	})		
+	InChannel0 = self:AddInput("iChannel0", "iChannel0", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		INP_Required = false
+		})		
+	InChannel1 = self:AddInput("iChannel1", "iChannel1", {
+		LINKID_DataType = "Image",
+		LINK_Main = 2,
+		INP_Required = false		
+		})	
+	InChannel2 = self:AddInput("iChannel2", "iChannel2", {
+		LINKID_DataType = "Image",
+		LINK_Main = 3,
+		INP_Required = false		
+		})	
+	InChannel3 = self:AddInput("iChannel3", "iChannel3", {
+		LINKID_DataType = "Image",
+		LINK_Main = 4,
+		INP_Required = false		
+		})	
+	self:BeginControlNest("Virtual Mouse", "Mouse", true, {})	
+		MousePoint = self:AddInput("Location", "MouseXY", {
+			LINKID_DataType = "Point",
+			INPID_InputControl = "OffsetControl",
+			INPID_PreviewControl = "CrosshairControl",	
+		})
+		MouseButton = self:AddInput("Button", "MouseButton", {
+			LINKID_DataType = "Number",
+			INPID_InputControl = "CheckboxControl",
+			INP_Default = 0,
+			INP_MinScale = 0,
+			INP_MaxScale = 1,
+		})	
+	self:EndControlNest()				
+	OutImage = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		INP_Required = false			
+		})	
+	self:AddControlPage("Variables")
+		self:BeginControlNest("Floats", "Floats", false, {})		
+			InFloat1 = self:AddInput("p_Float1", "pFloat1", {
+				LINKID_DataType = "Number",
+				INPID_InputControl = "SliderControl",
+				INP_Integer = false,		
+				INP_Default = 0,
+				INP_MinScale = -100,
+				INP_MaxScale = 100,
+				PC_Visible =  false,
+			})
+			InFloat2 = self:AddInput("p_Float2", "pFloat2", {
+				LINKID_DataType = "Number",
+				INPID_InputControl = "SliderControl",
+				INP_Integer = false,		
+				INP_Default = 0,
+				INP_MinScale = -100,
+				INP_MaxScale = 100,
+				PC_Visible =  false,
+			})	
+			InFloat3 = self:AddInput("p_Float3", "pFloat3", {
+				LINKID_DataType = "Number",
+				INPID_InputControl = "SliderControl",
+				INP_Integer = false,		
+				INP_Default = 0,
+				INP_MinScale = -100,
+				INP_MaxScale = 100,
+				PC_Visible =  false,
+			})			
+		self:EndControlNest()
+	self:AddControlPage("Shader Developer")		
+		self:BeginControlNest("Debugging", "Development", false, {})	
+			Rewrites = self:AddInput("Dump Kernel Rewrites", "Rewrites", {
+				LINKID_DataType = "Number",
+				INPID_InputControl = "CheckboxControl",
+				INP_Default = 0,
+				INP_MinScale = 0,
+				INP_MaxScale = 1,
+			})		
+			Debugs = self:AddInput("Dump Kernel Debug Logs", "Debug", {
+				LINKID_DataType = "Number",
+				INPID_InputControl = "CheckboxControl",
+				INP_Default = 0,
+				INP_MinScale = 0,
+				INP_MaxScale = 1,
+			})	
+		self:EndControlNest()	
+		UseDevShader = self:AddInput("Use this Code as Shader", "UseDevShader", {
+			LINKID_DataType = "Number",
+			INPID_InputControl = "CheckboxControl",
+			INP_Default = 1,
+			INP_MinScale = 0,
+			INP_MaxScale = 1,
+			IC_Visible = false,
+		})	
+		InDevShader = self:AddInput("", "DevelopmentShader", {
+			LINKID_DataType = "Text",
+			INPID_InputControl = "TextEditControl",
+			INP_DoNotifyChanged  = true,
+			INP_External = false,
+			IC_NoLabel = true,
+			ICD_Width = 1.1,
+			INPS_DefaultText = "__KERNEL__ void ShaderToyKernel(__CONSTANTREF__ ShaderToyParams *params, __TEXTURE2D__ iChannel0, __TEXTURE2D__ iChannel1, __TEXTURE2D__ iChannel2, __TEXTURE2D__ iChannel3, __TEXTURE2D_WRITE__ dst) {\n\tDEFINE_KERNEL_ITERATORS_XY(x, y);\n\tfloat ox = x;\n\tfloat oy = y;\n\tif (x > params->width - 2) { ox = params->width - 1; } // Fix iterator bug for last column\n\tfloat4 fragColor = { p_Float1, p_Float2, p_Float3, 1 };\n\t_tex2DVec4Write(dst, ox, oy, fragColor);\n}",  -- use instead of INP_Default!
+			TEC_Lines = 40,               -- height of text entry (default is 8)
+			TEC_Wrap = true,             -- automatic word-wrapping (default is false)
+			TEC_ReadOnly = false,         -- default is false (you should also set INP_External = false)
+			TEC_CharLimit = 0,	     -- maximum number of allowed characters (default is 0, no limit)
+			TEC_DeferSetInputs = false,   -- call NotifyChanged when focus is lost (default is false, call on every key stroke)
+			})	
+		DevCacheDirty = self:AddInput("Cache Dirty", "CacheDirty", {
+			LINKID_DataType = "Number",
+			INPID_InputControl = "CheckboxControl",
+			INP_Default = 0,
+			INP_MinScale = 0,
+			INP_MaxScale = 1,
+		})			
+	self:EndControlNest()
+		
+	local thistool = ffi.string(self.RegNode.m_ID);
+	self:SetData(thistool.."MouseState",0)
+	self:SetData(thistool.."LastClickX",0)
+	self:SetData(thistool.."LastClickY",0)	
+
+	-- Pick a unique id for this tool
+	math.randomseed(os.clock()*1000)
+	local bigrandomnumber = math.random(1000000)
+	InUniqueID:SetSource(Number(bigrandomnumber),0)
+end
+
+ShaderToyParams = [[
+	int width;
+	int height;
+	float itime;
+	int ic0width;
+	int ic0height;
+	int ic1width;
+	int ic1height;
+	int ic2width;
+	int ic2height;
+	int ic3width;
+	int ic3height;
+	float mousex;
+	float mousey;
+	float mousew;
+	float mousez;
+	int mousebutton;
+	float p_Float1;
+	float p_Float2;
+	float p_Float3;
+]]
+
+HelperFunctions = [[	
+	__DEVICE__ float _fract(float f) {
+		// Return the fractional part of a float
+		return _fabs(f - _floor(f));
+	}
+	__DEVICE__ float _srand(float seed) {
+		// Terrible pseudo random number generator, but it'll do for now
+		float r = seed;
+		r = r *21545611.45235365;
+		r = _fract(r/100000000);
+		r = r/5.45245 + _fract(r * r)*2.214835;
+		r = _fract(r);
+		return r;
+	}	
+	__DEVICE__ float _smoothstep(float a, float b, float c) {
+		return smoothstep((float)a,(float)b,(float)c);
+	}
+	__DEVICE__ float _length(float a, float b) {
+		return _hypotf(a,b);
+	}
+	__DEVICE__ float _length_v(float2 a) {
+		return _hypotf(a.x,a.y);
+	}	
+	
+]]
+
+function Process(req)
+	local imgattrs = {
+        IMG_Document = self.Comp,
+        { IMG_Channel = "Red", },
+        { IMG_Channel = "Green", },
+        { IMG_Channel = "Blue", },
+        { IMG_Channel = "Alpha", },
+        IMG_Width = Width,
+        IMG_Height = Height,
+		IMG_DeferAlloc = true,
+    }
+	local img = Image(imgattrs)	
+	local blankattrs = {
+        IMG_Document = self.Comp,
+        { IMG_Channel = "Red", },
+        { IMG_Channel = "Green", },
+        { IMG_Channel = "Blue", },
+        { IMG_Channel = "Alpha", },
+        IMG_Width = Width,
+        IMG_Height = Height,
+		IMG_DeferAlloc = false,
+    }
+	local nonattrs = {
+        IMG_Document = self.Comp,
+        { IMG_Channel = "Red", },
+        { IMG_Channel = "Green", },
+        { IMG_Channel = "Blue", },
+        { IMG_Channel = "Alpha", },
+        IMG_Width = 1,
+        IMG_Height = 1,
+		IMG_DeferAlloc = false,
+    }	
+--	if (ShaderProg == "" or ShaderProg == nil) then
+--		if (UseDevShader:GetValue(req).Value == 0) then	
+--			local file = InFile:GetValue(req).Value
+--			if (file ~= nil) then
+--				-- Load the file into shaderprog
+--				f = io.open(file,"r")
+--				if (f ~= nil) then
+--					ShaderProg = "\n" .. f:read("*all")
+--					f:close()
+--				else
+--					return
+--				end
+--			else
+--				return
+--			end
+--		end
+--	end
+	if (UseDevShader:GetValue(req).Value == 1 and (DevCacheDirty:GetValue(req).Value == 1)) then
+		ShaderProg = "\n" .. InDevShader:GetValue(req).Value	
+		DevCacheDirty:SetSource(Number(0),0)			
+	end
+	local uid = InUniqueID:GetValue(req).Value;
+	if (uid == nil or uid == "") then uid = 1 end
+	local blank = Image(nonattrs)		
+	local node = DVIPComputeNode(req,"ShaderToyKernel" .. uid, string.gsub(HelperFunctions,"ShaderToyParams","ShaderToyParams" .. uid) .. string.gsub(string.gsub(rewriteShader(ShaderProg,Rewrites:GetValue(req).Value),"ShaderToyKernel","ShaderToyKernel"..uid),"ShaderToyParams","ShaderToyParams"..uid), "ShaderToyParams" .. uid, ShaderToyParams)
+	if (DevCacheDirty:GetValue(req).Value == 1) then
+		node:ForceRebuild()
+	end
+	local params = {}
+	params = node:GetParamBlock(ShaderToyParams)
+	params.width = img.Width
+	params.height = img.Height
+	local inframerate = InFrameRate:GetValue(req).Value
+	params.itime = req.Time / inframerate
+	
+	local ic0 = Image({IMG_Like = blank})
+	if (InChannel0:GetValue(req) ~= nil) then
+		ic0 = InChannel0:GetValue(req)
+	else
+		--ic0:Fill(Pixel({R = 0, G = 0, B = 0, A = 0}))
+	end	
+	local ic1 = Image({IMG_Like = blank})
+	if (InChannel1:GetValue(req) ~= nil) then
+		ic1 = InChannel1:GetValue(req)
+	else
+		--ic1:Fill(Pixel({R = 0, G = 0, B = 0, A = 0}))
+	end	
+	local ic2 = Image({IMG_Like = blank})
+	if (InChannel2:GetValue(req) ~= nil) then
+		ic2 = InChannel2:GetValue(req)
+	else
+		--ic2:Fill(Pixel({R = 0, G = 0, B = 0, A = 0}))
+	end	
+	local ic3 = Image({IMG_Like = blank})
+	if (InChannel3:GetValue(req) ~= nil) then
+		ic3 = InChannel3:GetValue(req)
+	else
+		--ic3:Fill(Pixel({R = 0, G = 0, B = 0, A = 0}))
+	end	
+	params.ic0width = ic0.Width
+	params.ic0height = ic0.Height
+	params.ic1width = ic0.Width
+	params.ic1height = ic0.Height
+	params.ic2width = ic0.Width
+	params.ic2height = ic0.Height
+	params.ic3width = ic0.Width
+	params.ic3height = ic0.Height
+	params.p_Float1 = 0
+	params.p_Float2 = 0
+	params.p_Float3 = 0
+	if (InFloat1:GetValue(req).Value ~= nil) then params.p_Float1 = InFloat1:GetValue(req).Value end
+	if (InFloat2:GetValue(req).Value ~= nil) then params.p_Float2 = InFloat2:GetValue(req).Value end
+	if (InFloat2:GetValue(req).Value ~= nil) then params.p_Float3 = InFloat3:GetValue(req).Value end
+	local mouseloc  = MousePoint:GetValue(req)
+	params.mousex = 0
+	params.mousey = 0
+	if (mouseloc ~= nil) then
+		params.mousex = mouseloc.X * img.Width
+		params.mousey = mouseloc.Y * img.Height
+	end
+	local mousebutton = MouseButton:GetValue(req).Value
+	local thistool = ffi.string(self.RegNode.m_ID);
+	local lastmousestate = self:GetData(thistool.."MouseState")
+	local lastclickX = self:GetData(thistool.."LastClickX")
+	local lastclickY = self:GetData(thistool.."LastClickY")
+	if (req.Time == 0) then
+		lastmousestate = 0;
+		lastclickX = 0;
+		lastclickY = 0;
+	end
+	if (lastmousestate == nil or lastmousestate == "") then
+		lastmousestate = 0;
+	end
+	if (lastclickX == nil or lastclickX == "") then
+		lastclickX = 0;
+	end
+	if (lastclickY == nil or lastclickX == "") then
+		lastclickY = 0;
+	end
+	if (mousebutton == 1 and lastmousestate == 0) then
+		lastclickX = mouseloc.X
+		lastclickY = mouseloc.Y
+		params.mousez = lastclickY * img.Height * -1
+		params.mousew = lastclickX * img.Width * -1		
+		self:SetData(thistool.."LastClickX", mouseloc.X)
+		self:SetData(thistool.."LastClickY", mouseloc.Y)
+	end
+	if (mousebutton == 1 and lastmousestate == 1) then
+		params.mousez = lastclickX * img.Width * -1
+		params.mousew = lastclickY * img.Height * -1
+	end
+	if (mousebutton == 0 and lastmousestate == 1) then
+		params.mousez = lastclickX * img.Width
+		params.mousew = lastclickY * img.Height
+	end
+	if (mousebutton == 0 and lastmousestate == 0) then
+		params.mousez = lastclickX * img.Width
+		params.mousew = lastclickY * img.Height
+	end
+	self:SetData(thistool.."MouseState", 1);		
+	params.mousebutton = mousebutton
+	
+	node:AddInput("iChannel0",ic0)
+	node:AddInput("iChannel1",ic1)
+	node:AddInput("iChannel2",ic2)
+	node:AddInput("iChannel3",ic3)
+	node:AddOutput("dst", img)	
+	node:SetParamBlock(params)
+	local ok = node:RunSession(req)
+	
+	if (not ok) then
+		img = nil
+		if (Debugs:GetValue(req).Value==1) then dump(node:GetErrorLog()) end
+	end
+	--node:SetParamStructCopy(nil, 0)	
+	-- Output our result
+	OutImage:Set(req,img)
+	collectgarbage();
+end	
+
+function rewriteShader(shader, log)
+	-- Takes the shader code and rewrite it a little bit to make it work
+	local newshader = shader
+	
+	-- Variable sliders	
+	newshader = string.gsub(newshader,"p_Float1","params->p_Float1")
+	newshader = string.gsub(newshader,"p_Float2","params->p_Float2")
+	newshader = string.gsub(newshader,"p_Float3","params->p_Float3")
+	
+	-- Params shortcuts
+	newshader = string.gsub(newshader,"iResolution.x","params->width");
+	newshader = string.gsub(newshader,"iResolution.y","params->height");
+	newshader = string.gsub(newshader,"iTime", "params->itime");
+	newshader = string.gsub(newshader,"iMouse.x", "params->mousex");
+	newshader = string.gsub(newshader,"iMouse.y", "params->mousex");
+	
+	-- iChannels
+	newshader = string.gsub(newshader,"%,iChannel([0123])%,",",%1,")
+	
+	if (log==1) then dump(newshader) end
+	return newshader
+end
+
+function NotifyChanged(inp, param, time)
+	if (param ~= nil) then
+		if (param.Value == 1) then
+			if (inp == SiteButton) then
+				os.execute('open "" "https://www.chrisridings.com"')
+				os.execute('start "" "https://www.chrisridings.com"')
+			end
+			if (inp == YouTubeButton) then
+				os.execute('open "" "https://www.youtube.com/c/ChrisRidings"')
+				os.execute('start "" "https://www.youtube.com/c/ChrisRidings"')
+			end				
+		end
+	end
+	if (inp == InDevShader) then
+		DevCacheDirty:SetSource(Number(1),0)
+	end
+end
+
