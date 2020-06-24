@@ -4,14 +4,16 @@
 		Targets = {
 			Fusion = {
 				Execute = [[
+                    --begin=lua--
 					rets = self:Default(ctx, args)
 					comp = fusion.CurrentComp
-                    print("setting beta layout")
+                    -- print("setting beta layout")
                     if comp and fusion.Version > 16.1 then
                         -- comp.CurrentFrame:LoadLayout(comp:MapPath("Reactor:Deploy/Layouts/beta/FU16_1mon_tabbed_beta.layout"))
                         comp.CurrentFrame:LoadLayout(comp:MapPath("Reactor:Deploy/Layouts/FU16_1mon_bottom-timeview.layout"))
                         comp:RunScript(comp:MapPath("Reactor:Deploy/Scripts/Comp/Toolbar16/Toolbar16.lua"))
                     end
+                    --end=lua--
 					]]
 			},
 		},
