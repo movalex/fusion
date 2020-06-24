@@ -1,15 +1,15 @@
 local ui = fu.UIManager
 local disp = bmd.UIDispatcher(ui)
-local width, height = 220,160
+local width, height = 180,100
 
 comp = fu:GetCurrentComp()
 
-app:AddConfig("FRanger", {
+app:AddConfig("FrameHandles", {
     Target {
-        ID = "FRanger",
+        ID = "FrameHandles",
     },
     Hotkeys {
-        Target = "FRanger",
+        Target = "FrameHandles",
         Defaults = true,
         ESCAPE = "Execute{cmd = [[app.UIManager:QueueEvent(obj, 'Close', {})]]}",
     },
@@ -23,19 +23,21 @@ end
 
 
 function plusOffset(offset, s, e)
+    comp = fu:GetCurrentComp()
     comp:SetAttrs({COMPN_RenderStart = s + offset})
     comp:SetAttrs({COMPN_RenderEnd = e - offset})
 end
 
 
 function minusOffset(offset, s, e)
+    comp = fu:GetCurrentComp()
     comp:SetAttrs({COMPN_RenderStart = s - offset})
     comp:SetAttrs({COMPN_RenderEnd = e + offset})
 end
 
 
 function showUI()
-    frameOffset = comp:GetData("FR.offset") or 24
+    frameOffset = comp:GetData("FrameHandles.offset") or 24
     local x = 500
     local y = 600
     -- local x = fu:GetMousePos()[1]
@@ -45,8 +47,8 @@ function showUI()
     -- end
 
     win = disp:AddWindow({
-        ID = "FRanger",
-        TargetID = "FRanger",
+        ID = "FrameHandles",
+        TargetID = "FrameHandles",
         WindowTitle = "Frame Ranger",
         Geometry = {x+20, y, width, height},
         Spacing = 10,
@@ -58,7 +60,7 @@ function showUI()
                 ui:Label{
                     Weight = 0.8,
                     ID = 'Label',
-                    Text = 'amount of frames to offset:',
+                    Text = 'frames to offset:',
                     Alignment = {AlignRight = true, AlignVCenter = true}
                 },
                 ui:LineEdit {
@@ -84,29 +86,29 @@ function showUI()
                     ID = 'reset', Text = 'reset globals',
                 },
             },
-            ui:HGroup{
-                VMargin = 3,
-                ui:Button{
-                    ID = 'setIn', Text = 'saver IN',
-                },
-                    ui:Button{
-                    ID = 'setOut', Text = 'saver out',
-                }
-            },
+            -- ui:HGroup{
+            --     VMargin = 3,
+            --     ui:Button{
+            --         ID = 'setIn', Text = 'saver IN',
+            --     },
+            --         ui:Button{
+            --         ID = 'setOut', Text = 'saver out',
+            --     }
+            -- },
         }
     })
     itm = win:GetItems()
     itm.offset:SelectAll()
     function win.On.minus.Clicked(ev)
-        comp:SetData("FR.set", true)
+        comp:SetData("FrameHandles.set", true)
         local s, e = getBounds()
-        local currentOffset = tonumber(itm.offset:GetText()) - 1
+        local currentOffset = tonumber(itm.offset:GetText())
         plusOffset(currentOffset, s, e)
     end
     function win.On.plus.Clicked(ev)
-        comp:SetData("FR.set", false)
+        comp:SetData("FrameHandles.set", false)
         local s, e = getBounds()
-        local currentOffset = tonumber(itm.offset:GetText()) - 1
+        local currentOffset = tonumber(itm.offset:GetText())
         local gstart = comp:GetAttrs().COMPN_GlobalStart
         if s - currentOffset < 0 then
             comp:SetAttrs({COMPN_GlobalStart = s - currentOffset})
@@ -117,7 +119,7 @@ function showUI()
         disp:ExitLoop()
     end
     function win.On.offset.ReturnPressed(ev)
-        frameOffset = comp:SetData("FR.offset", itm.offset:GetText()) 
+        frameOffset = comp:SetData("FrameHandles.offset", itm.offset:GetText()) 
     end 
     function win.On.setIn.Clicked (ev)
         tool = comp.ActiveTool
@@ -132,6 +134,7 @@ function showUI()
         end
     end
     function win.On.reset.Clicked(ev)
+        comp = fu:GetCurrentComp()
         gStart = comp:GetAttrs().COMPN_GlobalStart
         if gStart < 0 then
             gStart = 0
@@ -140,10 +143,10 @@ function showUI()
         gEnd = comp:GetAttrs().COMPN_GlobalEnd
         comp:SetAttrs({COMPN_RenderStart = gStart})
         comp:SetAttrs({COMPN_RenderEnd = gEnd})
-        comp:SetData("FR.set", false)
+        comp:SetData("FrameHandles.set", false)
     end
 
-    function win.On.FRanger.Close(ev)
+    function win.On.FrameHandles.Close(ev)
         disp:ExitLoop()
     end
 
