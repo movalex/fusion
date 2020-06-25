@@ -1,5 +1,6 @@
 from pathlib import Path
 import platform
+
 comp = fu.GetCurrentComp()
 comp_name = comp.GetAttrs()["COMPS_FileName"]
 rev_path = comp.ReverseMapPath(comp_name)
@@ -10,7 +11,7 @@ if platform.system() in ["Darwin", "Linux"]:
 else:
     delimeter = "\\"
 for tool in comp.GetToolList(True, "Loader").values():
-    if tool.Clip[0][:5].lower() == "comp:": # already relative
+    if tool.Clip[0][:5].lower() == "comp:":  # already relative
         continue
     G_In = tool.GlobalIn[0]
     G_Out = tool.GlobalOut[0]
@@ -19,7 +20,7 @@ for tool in comp.GetToolList(True, "Loader").values():
     PA = tool.PixelAspect[0]
     CPA = tool.CustomPixelAspect[0]
     tool_parent = Path(tool.Clip[0]).parent
-    if str(tool_parent)[:len(str(comp_parent))] == str(comp_parent):
+    if str(tool_parent)[: len(str(comp_parent))] == str(comp_parent):
         # print("downstream footage")
         tool.Clip = tool.Clip[0].replace(str(comp_parent), "Comp:")
     else:
