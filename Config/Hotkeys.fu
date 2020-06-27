@@ -26,8 +26,105 @@
          },
       },
    },
+    Action
+    {
+        ID = "Hide_Timeline",
+        Category = 'Flow',
+        Targets = 
+        {
+            Composition = 
+            {
+              Execute = 
+              [[
+                --begin=lua--
+                print('hide timeline')
+                target:DoAction("Fusion_View_Show", {view = "Keyframes", show = false}) 
+                target:DoAction("Fusion_View_Show", {view = "Nodes", show = true}) 
+                --end=lua--
+              ]]
+            },
+        },
+    },
 
+    Action
+    {
+        ID = "Toggle_Timeline",
+        Category = 'Flow',
+        Targets = 
+        {
+            Composition = 
+            {
+              Execute = 
+              [[
+                --begin=lua--
+                print('toggle timeline')
+                target:DoAction("Fusion_View_Show", {view = "Spline", show = false}) 
+                target:DoAction("Fusion_View_Show", {view = "Nodes", show = false}) 
+                target:DoAction("Fusion_View_Show", {view = "Keyframes"}) 
+                --end=lua--
+              ]]
+            },
+        },
+    },
+    Action
+    {
+        ID = "Hide_Spline",
+        Category = 'Flow',
+        Targets = 
+        {
+            Composition = 
+            {
+              Execute = 
+              [[
+                --begin=lua--
+                print('hide timeline')
+                target:DoAction("Fusion_View_Show", {view = "Spline", show = false}) 
+                target:DoAction("Fusion_View_Show", {view = "Nodes", show = true}) 
+                --end=lua--
+              ]]
+            },
+        },
+    },
 
+    Action
+    {
+        ID = "Toggle_Spline",
+        Category = 'Flow',
+        Targets = 
+        {
+            Composition = 
+            {
+              Execute = 
+                [[
+                --begin=lua--
+                print('toggle spline')
+                target:DoAction("Fusion_View_Show", {view = "Keyframes", show = false}) 
+                target:DoAction("Fusion_View_Show", {view = "Nodes", show = false}) 
+                target:DoAction("Fusion_View_Show", {view = "Spline"}) 
+                --end=lua--
+                ]],
+            }
+        }
+    },
+    
+    Action
+    {
+        ID = "Toggle_Console",
+        Category = 'Flow',
+        Targets = 
+        {
+            Composition = 
+            {
+              Execute = 
+                [[
+                --begin=lua--
+                print('toggle console')
+                target:DoAction("Console_Show", {})
+                --end=lua--
+                ]],
+            }
+        }
+    },
 
   Hotkeys
   {
@@ -56,8 +153,38 @@
     OEM_PERIOD = "AddTool{ id = 'PipeRouter' }",
     LEFT  = "Time_Step_Back",
     RIGHT = "Time_Step_Forward",
+    -- F3 = "Execute{ cmd = 'print(\"test\")' }",
   },
-  
+
+    Hotkeys 
+    {
+      Target = "FuFrame",
+      F3 = "Toggle_Console" 
+    },
+
+    Hotkeys 
+    {
+      Target = "FuFrame",
+      F7 = "Toggle_Timeline" 
+    },
+
+    Hotkeys 
+    {
+      Target = "FuFrame",
+      F8 = "Toggle_Spline" 
+    },
+
+    Hotkeys 
+    {
+      Target = "FuFrame",
+      SHIFT_F7 = "Hide_Timeline" 
+    },
+    Hotkeys 
+    {
+      Target = "FuFrame",
+      SHIFT_F8 = "Hide_Spline" 
+    },
+
   Hotkeys
   {
     Target = "GraphView",
