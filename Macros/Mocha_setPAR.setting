@@ -1,0 +1,45 @@
+{
+	Tools = ordered() {
+		Mocha_setPAR = MacroOperator {
+			Inputs = ordered() {
+				MainInput1 = InstanceInput {
+					SourceOp = "Resize1",
+					Source = "Input",
+				},
+				Input1 = InstanceInput {
+					SourceOp = "Resize1",
+					Source = "ChangePixelAspect",
+					Default = 1,
+				},
+				Input2 = InstanceInput {
+					SourceOp = "Resize1",
+					Source = "PixelAspect",
+					DefaultX = 1,
+					DefaultY = 2,
+				},
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Resize1",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			Tools = ordered() {
+				Resize1 = BetterResize {
+					PassThrough = false,
+					CtrlWZoom = false,
+					Inputs = {
+						Width = Input { Value = 2048, },
+						Height = Input { Value = 1716, },
+						HiQOnly = Input { Value = 0, },
+						ChangePixelAspect = Input { Value = 1, },
+						PixelAspect = Input { Value = { 1, 2 }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 268, 132.212 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "Mocha_setPAR"
+}
