@@ -1,0 +1,2842 @@
+{
+	Tools = ordered() {
+		Flare_Helios = MacroOperator {
+			Inputs = ordered() {
+				Input1 = InstanceInput {
+					SourceOp = "Background2_7",
+					Source = "FlarePosition",
+				},
+				Input2 = InstanceInput {
+					SourceOp = "Background2_7",
+					Source = "Size",
+					MinScale = 0.0099999997765,
+					Default = 1,
+				},
+				Input3 = InstanceInput {
+					SourceOp = "LensDirtIn",
+					Source = "Input",
+					Name = "LensDirtImage",
+				},
+				Input4 = InstanceInput {
+					SourceOp = "Bitmap1",
+					Source = "High",
+					ControlGroup = 1,
+					Default = 0.5352941,
+					Name = "Dirt Intensity",
+				},
+				Input5 = InstanceInput {
+					SourceOp = "Probe1",
+					Source = "ImageToProbe",
+					Name = "OcclusionMask",
+				},
+				Input6 = InstanceInput {
+					SourceOp = "Probe1",
+					Source = "Channel",
+					Name = "Occlussion Channel",
+				},
+				Input7 = InstanceInput {
+					SourceOp = "Background2_7",
+					Source = "Depth",
+					Name = "ImageDepth",
+					Page = "ImageControls",
+					Default = 0,
+				},
+				Input10 = InstanceInput {
+					SourceOp = "Background2_7",
+					Source = "UseFrameFormatSettings",
+					Default = 0,
+				},
+				Input8 = InstanceInput {
+					SourceOp = "Background2_7",
+					Source = "Width",
+					Name = "ImageWidth",
+					Default = 0,
+				},
+				Input9 = InstanceInput {
+					SourceOp = "Background2_7",
+					Source = "Height",
+					Name = "ImageHeight",
+					Default = 0,
+				},
+			},
+			Outputs = {
+				Output1 = InstanceOutput {
+					SourceOp = "Probe1",
+					Source = "Red",
+				},
+				Output2 = InstanceOutput {
+					SourceOp = "Probe1",
+					Source = "Green",
+				},
+				Output3 = InstanceOutput {
+					SourceOp = "Probe1",
+					Source = "Blue",
+				},
+				Output4 = InstanceOutput {
+					SourceOp = "Probe1",
+					Source = "Alpha",
+				},
+				MainOutput1 = InstanceOutput {
+					SourceOp = "PipeRouter1_1",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			Tools = ordered() {
+				PipeRouter2 = PipeRouter {
+					Inputs = {
+						Input = Input {
+							SourceOp = "Background2_7",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { -440, -643.5 } },
+				},
+				FastNoise1_25 = FastNoise {
+					Inputs = {
+						GlobalIn = Input { Value = 1001, },
+						GlobalOut = Input { Value = 2001, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Detail = Input { Value = 4, },
+						Contrast = Input { Value = 3.247619, },
+						XScale = Input {
+							Value = 25,
+							Expression = "25.0/Background2_7.Size",
+						},
+						SeetheRate = Input { Value = 0.02, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -275, -346.5 } },
+				},
+				CoordinateSpace1_8 = CoordSpace {
+					Inputs = {
+						Shape = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "FastNoise1_16",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -275, -478.5 } },
+				},
+				FastNoise1_16 = FastNoise {
+					Inputs = {
+						GlobalIn = Input { Value = 1001, },
+						GlobalOut = Input { Value = 2001, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Contrast = Input { Value = 3.780952, },
+						Brightness = Input { Value = 0.7333333, },
+						LockXY = Input { Value = 0, },
+						XScale = Input {
+							Value = 15,
+							Expression = "15.0/Background2_7.Size",
+						},
+						YScale = Input { Expression = "2.0/Background2_7.Size", },
+						SeetheRate = Input { Value = 0.02, },
+						Color2Red = Input { Value = 0.2439938225117, },
+						Color2Green = Input { Value = 0.2439938225117, },
+						Color2Blue = Input { Value = 0.2439938225117, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -275, -544.5 } },
+				},
+				FastNoise1_18 = FastNoise {
+					Inputs = {
+						GlobalIn = Input { Value = 1001, },
+						GlobalOut = Input { Value = 2001, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						XScale = Input {
+							Value = 250,
+							Expression = "250.0/Background2_7.Size",
+						},
+						SeetheRate = Input { Value = 0.02, },
+						Color2Red = Input { Value = 0.2439938225117, },
+						Color2Green = Input { Value = 0.2439938225117, },
+						Color2Blue = Input { Value = 0.2439938225117, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -385, 148.5 } },
+				},
+				CoordinateSpace1_10 = CoordSpace {
+					Inputs = {
+						Shape = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "FastNoise1_18",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -385, 214.5 } },
+				},
+				Merge20_5 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "XfChromaFuse1_5",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Blur10",
+							Source = "Output",
+						},
+						ApplyMode = Input { Value = FuID { "Multiply" }, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -165, 313.5 } },
+				},
+				XfChromaFuse1_5 = Fuse.XfChroma {
+					Inputs = {
+						Size = Input { Value = 1.190476, },
+						Aspect = Input { Value = 1.10000033600005, },
+						XSize = Input { Value = 1.190476, },
+						YSize = Input { Value = 1.309524, },
+						Angle = Input { Value = 6.923077, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 1, 0, 0, 1 },
+									[0.5] = { 0, 1, 0, 1 },
+									[1] = { 0, 0, 1, 1 }
+								}
+							},
+						},
+						NewTool = Input { Value = 0, },
+						Input = Input {
+							SourceOp = "CoordinateSpace1_11",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -165, 247.5 } },
+				},
+				CoordinateSpace1_11 = CoordSpace {
+					Inputs = {
+						Shape = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "FastNoise1_19",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -165, 214.5 } },
+				},
+				FastNoise1_19 = FastNoise {
+					Inputs = {
+						GlobalIn = Input { Value = 1001, },
+						GlobalOut = Input { Value = 2001, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Detail = Input { Value = 5, },
+						Contrast = Input { Value = 4.390476, },
+						LockXY = Input { Value = 0, },
+						XScale = Input {
+							Value = 200,
+							Expression = "200.0/Background2_7.Size",
+						},
+						SeetheRate = Input { Value = 0.02, },
+						Color2Red = Input { Value = 0.2439938225117, },
+						Color2Green = Input { Value = 0.2439938225117, },
+						Color2Blue = Input { Value = 0.2439938225117, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -165, 181.5 } },
+				},
+				Blur10 = Blur {
+					Inputs = {
+						XBlurSize = Input { Value = 2, },
+						Input = Input {
+							SourceOp = "BrightnessContrast19",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -385, 313.5 } },
+				},
+				BrightnessContrast19 = BrightnessContrast {
+					Inputs = {
+						Alpha = Input { Value = 1, },
+						Low = Input { Value = 0.0470588, },
+						High = Input { Value = 0.2, },
+						ClipBlack = Input { Value = 1, },
+						ClipWhite = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "CoordinateSpace1_10",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -385, 280.5 } },
+				},
+				Blur5_1 = Blur {
+					Inputs = {
+						Input = Input {
+							SourceOp = "BrightnessContrast5_10",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -165, 412.5 } },
+				},
+				BrightnessContrast5_10 = BrightnessContrast {
+					Inputs = {
+						ApplyMaskInverted = Input { Value = 1, },
+						MaskChannel = Input { Value = 2, },
+						Gain = Input { Value = 0, },
+						Input = Input {
+							SourceOp = "Merge20_5",
+							Source = "Output",
+						},
+						EffectMask = Input {
+							SourceOp = "Rectangle1",
+							Source = "Mask",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { -165, 379.5 } },
+				},
+				Rectangle1 = RectangleMask {
+					Inputs = {
+						SoftEdge = Input { Value = 0.1533333, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -275, 379.5 } },
+				},
+				Transform2_6 = Transform {
+					Inputs = {
+						Center = Input {
+							Value = { 0.19342523159834, 1.12171441649575 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Size = Input { Expression = "1.0*Background2_7.Size", },
+						Input = Input {
+							SourceOp = "Displace2_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -110, -280.5 } },
+				},
+				BrightnessContrast18 = BrightnessContrast {
+					Inputs = {
+						ClipBlack = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "Transform2_6",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -110, -247.5 } },
+				},
+				BrightnessContrast5_9 = BrightnessContrast {
+					Inputs = {
+						ApplyMaskInverted = Input { Value = 1, },
+						MaskChannel = Input { Value = 2, },
+						Gain = Input { Value = 0, },
+						Input = Input {
+							SourceOp = "Transform3_4",
+							Source = "Output",
+						},
+						EffectMask = Input {
+							SourceOp = "Ellipse1_8",
+							Source = "Mask",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { -110, -412.5 } },
+				},
+				Merge20_4 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "XfChromaFuse1_4",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "CoordinateSpace1_8",
+							Source = "Output",
+						},
+						ApplyMode = Input { Value = FuID { "Multiply" }, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -110, -478.5 } },
+				},
+				XfChromaFuse1_4 = Fuse.XfChroma {
+					Inputs = {
+						Size = Input { Value = 1.02, },
+						Aspect = Input { Value = 1.02, },
+						XSize = Input { Value = 1.02, },
+						YSize = Input { Value = 1.0404, },
+						Angle = Input { Value = 1.730769, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 1, 0, 0, 1 },
+									[0.5] = { 0, 1, 0, 1 },
+									[1] = { 0, 0, 1, 1 }
+								}
+							},
+						},
+						NewTool = Input { Value = 0, },
+						Input = Input {
+							SourceOp = "CoordinateSpace1_9",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -110, -544.5 } },
+				},
+				FastNoise1_17 = FastNoise {
+					Inputs = {
+						GlobalIn = Input { Value = 1001, },
+						GlobalOut = Input { Value = 2001, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Detail = Input { Value = 5, },
+						Contrast = Input { Value = 4.390476, },
+						LockXY = Input { Value = 0, },
+						XScale = Input {
+							Value = 200,
+							Expression = "200.0/Background2_7.Size",
+						},
+						YScale = Input { Expression = "2.0/Background2_7.Size", },
+						SeetheRate = Input { Value = 0.02, },
+						Color2Red = Input { Value = 0.2439938225117, },
+						Color2Green = Input { Value = 0.2439938225117, },
+						Color2Blue = Input { Value = 0.2439938225117, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -110, -610.5 } },
+				},
+				Displace2_1 = Displace {
+					Inputs = {
+						Offset = Input { Value = -0.1571429, },
+						RefractionStrength = Input { Value = -1.409524, },
+						Input = Input {
+							SourceOp = "BrightnessContrast5_9",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "FastNoise1_25",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -110, -346.5 } },
+				},
+				Transform3_4 = Transform {
+					Inputs = {
+						Angle = Input { Value = 19.03846, },
+						Input = Input {
+							SourceOp = "Merge20_4",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -110, -445.5 } },
+				},
+				Blur6 = Blur {
+					Inputs = {
+						Input = Input {
+							SourceOp = "BrightnessContrast18",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -110, -214.5 } },
+				},
+				CoordinateSpace1_9 = CoordSpace {
+					Inputs = {
+						Shape = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "FastNoise1_17",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -110, -577.5 } },
+				},
+				Ellipse1_9 = EllipseMask {
+					Inputs = {
+						SoftEdge = Input { Value = 0.0638095, },
+						BorderWidth = Input { Value = 0.0304762, },
+						Solid = Input { Value = 0, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Width = Input { Value = 0.2766940177454, },
+						Height = Input {
+							Value = 0.276694017745356,
+							Expression = "Width",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -55, 379.5 } },
+				},
+				Displace2_2 = Displace {
+					Inputs = {
+						Offset = Input { Value = -0.1571429, },
+						RefractionStrength = Input { Value = -0.9142857, },
+						Input = Input {
+							SourceOp = "Blur5_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "FastNoise1_26",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -165, 511.5 } },
+				},
+				FastNoise1_26 = FastNoise {
+					Inputs = {
+						GlobalIn = Input { Value = 1001, },
+						GlobalOut = Input { Value = 2001, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Detail = Input { Value = 4, },
+						Contrast = Input { Value = 3.247619, },
+						XScale = Input {
+							Value = 50,
+							Expression = "50.0/Background2_7.Size",
+						},
+						SeetheRate = Input { Value = 0.02, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -330, 511.5 } },
+				},
+				Ellipse1_8 = EllipseMask {
+					Inputs = {
+						SoftEdge = Input { Value = 0.0704762, },
+						BorderWidth = Input { Value = 0.087619, },
+						Solid = Input { Value = 0, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Width = Input { Value = 0.1586542050752, },
+						Height = Input {
+							Value = 0.158654205075161,
+							Expression = "Width",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, -412.5 } },
+				},
+				Background2_7 = Background {
+					NameSet = true,
+					Inputs = {
+						GlobalIn = Input { Value = 1001, },
+						GlobalOut = Input { Value = 2001, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						TopLeftAlpha = Input { Value = 0, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+						Comments = Input { Value = "control flare position here", },
+						FlarePosition = Input { Value = { 0.294104402288337, 0.751307389401849 }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, -808.5 } },
+					UserControls = ordered() {
+						FlarePosition = {
+							INPID_InputControl = "OffsetControl",
+							INPID_PreviewControl = "CrosshairControl",
+							CHC_Style = 0,
+							LINKID_DataType = "Point",
+						},
+						Size = {
+							LINKS_Name = "Size",
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							INP_Default = 1,
+							INP_Integer = false,
+							INP_MinScale = 0.00999999977648258,
+							INP_MaxScale = 5,
+							ICD_Center = 1,
+						}
+					}
+				},
+				FlareCircle1_42 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Offset = Input { Value = 0, },
+						InnerRadius = Input { Value = 0.0025, },
+						OuterRadius = Input { Value = 0.01125, },
+						Softness = Input { Value = 3, },
+						GainRed = Input { Value = 1, },
+						GainGreen = Input { Value = 1, },
+						GainBlue = Input { Value = 1, },
+						Gain = Input { Value = 1, },
+						Border = Input { Value = 1, },
+						PostScaling = Input {
+							Value = 1.5,
+							Expression = "1.5*Background2_7.Size",
+						},
+						Input = Input {
+							SourceOp = "Background2_7",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, -544.5 } },
+				},
+				SoftGlow1_5 = SoftGlow {
+					Inputs = {
+						Gain = Input { Value = 4.5, },
+						XGlowSize = Input { Value = 56.66667, },
+						Input = Input {
+							SourceOp = "FlareCircle1_42",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, -478.5 } },
+				},
+				Merge26 = Merge {
+					Inputs = {
+						Blend = Input { Value = 0.152381, },
+						Background = Input {
+							SourceOp = "SoftGlow1_5",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Blur6",
+							Source = "Output",
+						},
+						Gain = Input { Value = 0, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, -214.5 } },
+				},
+				Merge27_1 = Merge {
+					Inputs = {
+						Blend = Input { Value = 0.05, },
+						MaskChannel = Input { Value = 5, },
+						Background = Input {
+							SourceOp = "FlareCircle1_48",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "BrightnessContrast14_1",
+							Source = "Output",
+						},
+						Gain = Input { Value = 0, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 577.5 } },
+				},
+				Transform2_7 = Transform {
+					Inputs = {
+						Center = Input {
+							Value = { 0.19342523159834, 1.12171441649575 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Size = Input {
+							Value = 1.2666667,
+							Expression = "1.266667*Background2_7.Size",
+						},
+						Aspect = Input { Value = 2.257143, },
+						XSize = Input { Value = 1.266667, },
+						YSize = Input { Value = 2.859048, },
+						Angle = Input {
+							Value = 206.248454194029,
+							Expression = "iif(Center.Y<.5,(-deg(atan((.5-Center.X)/(.5-Center.Y)))),-deg(atan((.5-Center.X)/(.5-Center.Y)))+180)",
+						},
+						Input = Input {
+							SourceOp = "Displace2_2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -165, 577.5 } },
+				},
+				Merge26_1 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge26_2",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Blur7",
+							Source = "Output",
+						},
+						Gain = Input { Value = 0, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 148.5 } },
+				},
+				FlareCircle1_48 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Offset = Input { Value = 2, },
+						InnerRadius = Input { Value = 0, },
+						OuterRadius = Input { Value = 0.00625, },
+						Softness = Input { Value = 2, },
+						GainRed = Input { Value = 0.190716883785177, },
+						GainGreen = Input { Value = 0.349999999999957, },
+						GainBlue = Input { Value = 0.195568240209276, },
+						Gain = Input { Value = 0.2847691276356, },
+						BorderRed = Input { Value = 1.792014, },
+						BorderGreen = Input { Value = 0.5978158788298, },
+						BorderBlue = Input { Value = 0.9935962391858, },
+						Border = Input { Value = 1.00000007814027, },
+						Abberation = Input { Value = 1, },
+						PostScaling = Input {
+							Value = 2,
+							Expression = "2.0*Background2_7.Size",
+						},
+						Input = Input {
+							SourceOp = "Merge26_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 214.5 } },
+				},
+				Merge26_2 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "FlareCircle1_47",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Blur8",
+							Source = "Output",
+						},
+						Gain = Input { Value = 0, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 82.5 } },
+				},
+				FlareCircle1_47 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Offset = Input { Value = 1.485714, },
+						InnerRadius = Input { Value = 0.17875, },
+						OuterRadius = Input { Value = 0.18125, },
+						SplitBorder = Input { Value = 1, },
+						GainRed = Input { Value = 0.0100000000000241, },
+						GainGreen = Input { Value = 0.00700000000001684, },
+						GainBlue = Input { Value = 0.00847557492792039, },
+						Gain = Input { Value = 0.0080652155418, },
+						BorderRed = Input { Value = 8.00000126157773, },
+						BorderGreen = Input { Value = 2.66880042086233, },
+						BorderBlue = Input { Value = 4.43566469949186, },
+						Border = Input { Value = 4.464252, },
+						Abberation = Input { Value = 1, },
+						ChannelScale = Input { Value = 0.99, },
+						ChannelShift = Input { Value = 0.0001, },
+						PostScaling = Input {
+							Value = 2,
+							Expression = "2.0*Background2_7.Size",
+						},
+						DoSecondary = Input { Value = 1, },
+						SecondaryStrength = Input { Value = 0.2, },
+						DoMask = Input { Value = 1, },
+						MaskRadius = Input { Value = 0.25, },
+						MaskSoftness = Input { Value = 16, },
+						Input = Input {
+							SourceOp = "FlareCircle1_46",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 49.5 } },
+				},
+				FlareCircle1_46 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Offset = Input { Value = 1.752381, },
+						InnerRadius = Input { Value = 0.0425, },
+						OuterRadius = Input { Value = 0.045, },
+						SplitBorder = Input { Value = 1, },
+						GainRed = Input { Value = 0.0100000000000241, },
+						GainGreen = Input { Value = 0.00700000000001684, },
+						GainBlue = Input { Value = 0.00847557492792039, },
+						Gain = Input { Value = 0.0080652155418, },
+						BorderRed = Input { Value = 9.00000072755763, },
+						BorderGreen = Input { Value = 3.00240024271322, },
+						BorderBlue = Input { Value = 4.99012140340007, },
+						Border = Input { Value = 5.022283, },
+						Abberation = Input { Value = 1, },
+						ChannelScale = Input { Value = 0.98, },
+						ChannelShift = Input { Value = -0.002, },
+						PostScaling = Input {
+							Value = 2,
+							Expression = "2.0*Background2_7.Size",
+						},
+						DoSecondary = Input { Value = 1, },
+						SecondaryStrength = Input { Value = 0.1, },
+						DoMask = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "FlareCircle1_45",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 16.5 } },
+				},
+				FlareCircle1_45 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						InnerRadius = Input { Value = 0.065, },
+						OuterRadius = Input { Value = 0.0675, },
+						SplitBorder = Input { Value = 1, },
+						GainRed = Input { Value = 0.0100000000000241, },
+						GainGreen = Input { Value = 0.00700000000001684, },
+						GainBlue = Input { Value = 0.00847557492792039, },
+						Gain = Input { Value = 0.0080652155418, },
+						BorderRed = Input { Value = 4.99999989247917, },
+						BorderGreen = Input { Value = 1.66799996413105, },
+						BorderBlue = Input { Value = 2.77228994038422, },
+						Border = Input { Value = 2.790157, },
+						Abberation = Input { Value = 1, },
+						ChannelScale = Input { Value = 0.98, },
+						ChannelShift = Input { Value = -0.001, },
+						PostScaling = Input {
+							Value = 2,
+							Expression = "2.0*Background2_7.Size",
+						},
+						DoSecondary = Input { Value = 1, },
+						SecondaryStrength = Input { Value = 0.15, },
+						DoMask = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "ColorCorrector1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, -16.5 } },
+				},
+				ColorCorrector1 = ColorCorrector {
+					Inputs = {
+						WheelTintAngle1 = Input { Value = -0.7390411493638, },
+						WheelTintLength1 = Input { Value = 0.1502222222222, },
+						ColorRanges = Input {
+							Value = ColorCurves {
+								Curves = {
+									{
+										Points = {
+											{ 0, 1 },
+											{ 0.4, 0.2 },
+											{ 0.6, 0 },
+											{ 1, 0 }
+										}
+									},
+									{
+										Points = {
+											{ 0, 0 },
+											{ 0.4, 0 },
+											{ 0.6, 0.2 },
+											{ 1, 1 }
+										}
+									}
+								}
+							},
+						},
+						HistogramIgnoreTransparent = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "FlareCircle1_43",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, -82.5 } },
+				},
+				FlareCircle1_43 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Offset = Input { Value = 0, },
+						InnerRadius = Input { Value = 0, },
+						OuterRadius = Input { Value = 0.05, },
+						Softness = Input { Value = 100, },
+						GainRed = Input { Value = 0.0334140549425, },
+						GainGreen = Input { Value = 0.0334140549425, },
+						GainBlue = Input { Value = 0.0334140549425, },
+						Gain = Input { Value = 0.0334140549425, },
+						Border = Input { Value = 1, },
+						PostScaling = Input {
+							Value = 2,
+							Expression = "2.0*Background2_7.Size",
+						},
+						Input = Input {
+							SourceOp = "FlareCircle1_44",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, -115.5 } },
+				},
+				FlareCircle1_44 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Offset = Input { Value = 0, },
+						InnerRadius = Input { Value = 0, },
+						OuterRadius = Input { Value = 0.05125, },
+						Softness = Input { Value = 85.6, },
+						GainRed = Input { Value = 0.114449233781511, },
+						GainGreen = Input { Value = 0.114449233781511, },
+						GainBlue = Input { Value = 0.114449233781411, },
+						Gain = Input { Value = 0.1144492337815, },
+						Border = Input { Value = 1, },
+						PostScaling = Input {
+							Value = 1.5,
+							Expression = "1.5*Background2_7.Size",
+						},
+						Input = Input {
+							SourceOp = "Merge26",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, -148.5 } },
+				},
+				PipeRouter1 = PipeRouter {
+					Inputs = {
+						Input = Input {
+							SourceOp = "PipeRouter2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { -495, 610.5 } },
+				},
+				Merge27 = Merge {
+					Inputs = {
+						MaskChannel = Input { Value = 5, },
+						Background = Input {
+							SourceOp = "Merge27_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "BrightnessContrast14_1",
+							Source = "Output",
+						},
+						Gain = Input { Value = 0, },
+						PerformDepthMerge = Input { Value = 0, },
+						EffectMask = Input {
+							SourceOp = "FlareCircle1_49",
+							Source = "Output",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 676.5 } },
+				},
+				BrightnessContrast14_1 = BrightnessContrast {
+					Inputs = {
+						ClipBlack = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "Transform2_7",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -165, 676.5 } },
+				},
+				FlareCircle1_49 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Offset = Input { Value = 0.1, },
+						InnerRadius = Input { Value = 0.19375, },
+						OuterRadius = Input { Value = 0.2, },
+						Softness = Input { Value = 56.8, },
+						SplitBorder = Input { Value = 1, },
+						GainRed = Input { Value = 0.0099999999998413, },
+						GainGreen = Input { Value = 0.0099999999999413, },
+						GainBlue = Input { Value = 0.0099999999998413, },
+						Gain = Input { Value = 0.0099999999999, },
+						BorderRed = Input { Value = 249.999949348932, },
+						BorderGreen = Input { Value = 237.981451783932, },
+						BorderBlue = Input { Value = 244.729850416677, },
+						Border = Input { Value = 242.3443, },
+						Abberation = Input { Value = 1, },
+						PostScaling = Input {
+							Value = 0.75,
+							Expression = "3.0*Background2_7.Size",
+						},
+						DoSecondary = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "PipeRouter6",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 220, 676.5 } },
+				},
+				Blur8 = Blur {
+					Inputs = {
+						XBlurSize = Input { Value = 2, },
+						Input = Input {
+							SourceOp = "FlareMulti3_4",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 220, 82.5 } },
+				},
+				FlareMulti3_4 = Fuse.FlareMulti {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						OffsetLow = Input { Value = 1.8, },
+						OffsetHigh = Input { Value = 2.1, },
+						RadiusLow = Input {
+							Value = 0.0028125,
+							Expression = "0.0028125*Background2_7.Size",
+						},
+						RadiusHigh = Input {
+							Value = 0.0046875,
+							Expression = "0.0046875*Background2_7.Size",
+						},
+						Softness = Input { Value = 8, },
+						GainRed = Input { Value = 0.0593962288978862, },
+						GainGreen = Input { Value = 0.0548785528226873, },
+						GainBlue = Input { Value = 0.0607781769132859, },
+						Gain = Input { Value = 0.0569018951155, },
+						Aberration = Input { Value = 1, },
+						ChannelScale = Input { Value = 0.865, },
+						RandomSeed = Input { Value = 26024, },
+						Input = Input {
+							SourceOp = "PipeRouter6",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 220, 16.5 } },
+				},
+				HotSpot1_1 = HotSpot {
+					Inputs = {
+						PrimaryCenter = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						PrimaryStrength = Input { Value = 0, },
+						HotSpotSize = Input { Expression = "0.25*Background2_7.Size", },
+						SecondaryStrength = Input { Value = 0.2571429, },
+						SecondarySize = Input { Value = 0.152381, },
+						LensAberration = Input { Value = 2, },
+						Aberration = Input { Value = 5, },
+						AmbientLight = Input { Disabled = true, },
+						ShowGreen = Input { Value = 0, },
+						ShowBlue = Input { Value = 0, },
+						ShowAlpha = Input { Value = 0, },
+						ShowMix = Input { Value = 0, },
+						Red = Input {
+							SourceOp = "HotSpot1Red_1",
+							Source = "Value",
+						},
+						Green = Input {
+							SourceOp = "HotSpot1Green_1",
+							Source = "Value",
+						},
+						Blue = Input {
+							SourceOp = "HotSpot1Blue_1",
+							Source = "Value",
+						},
+						Alpha = Input {
+							SourceOp = "HotSpot1Alpha_1",
+							Source = "Value",
+						},
+						Mix = Input {
+							SourceOp = "HotSpot1Mix_1",
+							Source = "Value",
+						},
+						RadialOn = Input { Value = 1, },
+						Radial = Input {
+							SourceOp = "HotSpot1Radial_1",
+							Source = "Value",
+						},
+						Length = Input {
+							SourceOp = "HotSpot1Length_1",
+							Source = "Value",
+						},
+						RadialRepeat = Input { Value = 64, },
+						LengthAngle = Input { Value = 264.8077, },
+						Input = Input {
+							SourceOp = "PipeRouter1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -660, 775.5 } },
+				},
+				HotSpot1Red_1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 255, Green = 52, Blue = 52 },
+				},
+				HotSpot1Green_1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 255, Blue = 0 },
+				},
+				HotSpot1Blue_1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 68, Green = 68, Blue = 255 },
+				},
+				HotSpot1Alpha_1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 255, Green = 255, Blue = 255 },
+				},
+				HotSpot1Mix_1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 255, Blue = 255 },
+				},
+				HotSpot1Radial_1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 255, Green = 170, Blue = 48 },
+				},
+				HotSpot1Length_1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 170, Green = 128, Blue = 255 },
+				},
+				HotSpot1 = HotSpot {
+					Inputs = {
+						PrimaryCenter = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						PrimaryStrength = Input { Value = 0, },
+						HotSpotSize = Input { Expression = "0.25*Background2_7.Size", },
+						Aspect = Input { Value = 0.8942857, },
+						SecondaryStrength = Input { Value = 0.3333333, },
+						SecondarySize = Input { Value = 0.1047619, },
+						LensAberration = Input { Value = 1, },
+						Aberration = Input { Value = 5, },
+						AmbientLight = Input { Disabled = true, },
+						ShowRed = Input { Value = 0, },
+						ShowGreen = Input { Value = 0, },
+						ShowBlue = Input { Value = 0, },
+						ShowAlpha = Input { Value = 0, },
+						ShowMix = Input { Value = 0, },
+						Red = Input {
+							SourceOp = "HotSpot1Red",
+							Source = "Value",
+						},
+						Green = Input {
+							SourceOp = "HotSpot1Green",
+							Source = "Value",
+						},
+						Blue = Input {
+							SourceOp = "HotSpot1Blue",
+							Source = "Value",
+						},
+						Alpha = Input {
+							SourceOp = "HotSpot1Alpha",
+							Source = "Value",
+						},
+						Mix = Input {
+							SourceOp = "HotSpot1Mix",
+							Source = "Value",
+						},
+						RadialOn = Input { Value = 1, },
+						Radial = Input {
+							SourceOp = "HotSpot1Radial",
+							Source = "Value",
+						},
+						Length = Input {
+							SourceOp = "HotSpot1Length",
+							Source = "Value",
+						},
+						RadialRepeat = Input { Value = 64, },
+						Input = Input {
+							SourceOp = "PipeRouter1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -495, 775.5 } },
+				},
+				HotSpot1Red = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 255, Green = 52, Blue = 52 },
+				},
+				HotSpot1Green = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 255, Blue = 0 },
+				},
+				HotSpot1Blue = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 68, Green = 68, Blue = 255 },
+				},
+				HotSpot1Alpha = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 255, Green = 255, Blue = 255 },
+				},
+				HotSpot1Mix = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 255, Blue = 255 },
+				},
+				HotSpot1Radial = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 255, Green = 170, Blue = 48 },
+				},
+				HotSpot1Length = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 170, Green = 128, Blue = 255 },
+				},
+				PipeRouter6 = PipeRouter {
+					Inputs = {
+						Input = Input {
+							SourceOp = "Background2_7",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { 205.8, -154.441 } },
+				},
+				FastNoise1_38 = FastNoise {
+					Inputs = {
+						GlobalIn = Input { Value = 1001, },
+						GlobalOut = Input { Value = 2001, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Detail = Input { Value = 3, },
+						XScale = Input {
+							Value = 3,
+							Expression = "3.0/Background2_7.Size",
+						},
+						Seethe = Input { Value = 3.129808, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 330, 346.5 } },
+				},
+				Merge27_3 = Merge {
+					Inputs = {
+						Blend = Input { Value = 0.2, },
+						MaskChannel = Input { Value = 5, },
+						Background = Input {
+							SourceOp = "Merge27",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "XfChromaFuse1",
+							Source = "Output",
+						},
+						Gain = Input { Value = 0, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 841.5 } },
+				},
+				XfChromaFuse1 = Fuse.XfChroma {
+					Inputs = {
+						Angle = Input { Value = 5.192307, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 1, 0, 0, 1 },
+									[0.5] = { 0, 1, 0, 1 },
+									[1] = { 0, 0, 1, 1 }
+								}
+							},
+						},
+						NewTool = Input { Value = 0, },
+						Input = Input {
+							SourceOp = "Blur1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -110, 841.5 } },
+				},
+				Blur1 = Blur {
+					Inputs = {
+						Input = Input {
+							SourceOp = "ColorCorrector1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -220, 841.5 } },
+				},
+				ColorCorrector1_1 = ColorCorrector {
+					Inputs = {
+						CorrectionRange = Input { Value = 2, },
+						WheelTintAngle1 = Input { Value = -0.6024163823496, },
+						WheelTintLength1 = Input { Value = 0.16, },
+						WheelRangeDummy1 = Input { Value = 2, },
+						WheelTintAngle3 = Input { Value = -0.3152737935443, },
+						WheelTintLength3 = Input { Value = 0.4472888888889, },
+						WheelTintAngle4 = Input { Value = 0.0058201460128, },
+						WheelTintLength4 = Input { Value = 1, },
+						MasterRGBGain = Input { Value = 1.190476, },
+						MasterRGBGamma = Input { Value = 0.8952381, },
+						MidTonesRGBGain = Input { Value = 0.9428571, },
+						HighlightsRGBGain = Input { Value = 1.609524, },
+						SuppressionRangeDummy = Input { Value = 2, },
+						ColorRanges = Input {
+							Value = ColorCurves {
+								Curves = {
+									{
+										Points = {
+											{ 0, 1 },
+											{ 0.4, 0.2 },
+											{ 0.6, 0 },
+											{ 1, 0 }
+										}
+									},
+									{
+										Points = {
+											{ 0, 0 },
+											{ 0.4, 0 },
+											{ 0.6, 0.2 },
+											{ 1, 1 }
+										}
+									}
+								}
+							},
+						},
+						HistogramIgnoreTransparent = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "Merge1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -330, 841.5 } },
+				},
+				Merge1 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "HotSpot1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "HotSpot1_1",
+							Source = "Output",
+						},
+						Gain = Input { Value = 0, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -440, 841.5 } },
+				},
+				FlareMulti3_5 = Fuse.FlareMulti {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						OffsetLow = Input { Value = 2, },
+						OffsetHigh = Input { Value = 2.15, },
+						Number = Input { Value = 4, },
+						RadiusLow = Input {
+							Value = 0.0009375,
+							Expression = "0.0009375*Background2_7.Size",
+						},
+						RadiusHigh = Input {
+							Value = 0.0128125,
+							Expression = "0.0128125*Background2_7.Size",
+						},
+						Softness = Input { Value = 8, },
+						GainRed = Input { Value = 0.0425447238393025, },
+						GainGreen = Input { Value = 0.0243112707653014, },
+						GainBlue = Input { Value = 0.0607781769133036, },
+						Gain = Input { Value = 0.0339203005353, },
+						HueVariation = Input { Value = 46.8, },
+						LumaVariation = Input { Value = 0.15, },
+						Aberration = Input { Value = 1, },
+						RandomSeed = Input { Value = 26024, },
+						Input = Input {
+							SourceOp = "PipeRouter6",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 385, 82.5 } },
+				},
+				Blur7 = Blur {
+					Inputs = {
+						XBlurSize = Input { Value = 3.333333, },
+						Input = Input {
+							SourceOp = "FlareMulti3_5",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 385, 148.5 } },
+				},
+				Transform3_8 = Transform {
+					Inputs = {
+						Center = Input {
+							SourceOp = "FlareCircle1_83",
+							Source = "ActualPosition",
+						},
+						Size = Input { Value = 0.1, },
+						Input = Input {
+							SourceOp = "ColorCorrector5_7",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 440, 775.5 } },
+				},
+				ColorCorrector5_7 = ColorCorrector {
+					Inputs = {
+						WheelTintAngle1 = Input { Value = -0.3094804707635, },
+						WheelTintLength1 = Input { Value = 0.5335111111111, },
+						WheelTintAngle3 = Input { Value = 0.8085898319606, },
+						WheelTintLength3 = Input { Value = 1, },
+						WheelTintAngle4 = Input { Value = -0.1024163823496, },
+						WheelTintLength4 = Input { Value = 0.64, },
+						MasterRGBGain = Input { Value = 1.647619, },
+						MasterRGBGamma = Input { Value = 0.5428571, },
+						ColorRanges = Input {
+							Value = ColorCurves {
+								Curves = {
+									{
+										Points = {
+											{ 0, 1 },
+											{ 0.4, 0.2 },
+											{ 0.6, 0 },
+											{ 1, 0 }
+										}
+									},
+									{
+										Points = {
+											{ 0, 0 },
+											{ 0.4, 0 },
+											{ 0.6, 0.2 },
+											{ 1, 1 }
+										}
+									}
+								}
+							},
+						},
+						HistogramIgnoreTransparent = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "ChannelBooleans4_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 440, 742.5 } },
+				},
+				Merge4_1 = Merge {
+					Inputs = {
+						Blend = Input { Value = 0.4190476, },
+						Background = Input {
+							SourceOp = "Transform3_8",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Transform4_1",
+							Source = "Output",
+						},
+						Gain = Input { Value = 0, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 495, 874.5 } },
+				},
+				BrightnessContrast10_1 = BrightnessContrast {
+					Inputs = {
+						Low = Input { Value = 0.0941176, },
+						High = Input { Value = 0.5823529, },
+						ClipBlack = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "Displace3_5",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 495, 643.5 } },
+				},
+				Displace3_5 = Displace {
+					Inputs = {
+						Type = Input { Value = 1, },
+						XRefraction = Input { Value = 0.04, },
+						YRefraction = Input { Value = 0.012381, },
+						Offset = Input { Value = 0.2619048, },
+						RefractionStrength = Input { Value = 0.3238095, },
+						LightAngle = Input { Value = 235.3846, },
+						Input = Input {
+							SourceOp = "Blur11_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "ChannelBooleans3_2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 495, 577.5 } },
+				},
+				Blur11_1 = Blur {
+					Inputs = {
+						XBlurSize = Input { Value = 5.714286, },
+						Input = Input {
+							SourceOp = "DirectionalBlur2_5",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 495, 544.5 } },
+				},
+				DirectionalBlur2_5 = DirectionalBlur {
+					Inputs = {
+						Type = Input { Value = 1, },
+						Length = Input { Value = -0.1, },
+						Input = Input {
+							SourceOp = "DirectionalBlur2_4",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 495, 445.5 } },
+				},
+				DirectionalBlur2_4 = DirectionalBlur {
+					Inputs = {
+						Type = Input { Value = 1, },
+						Length = Input { Value = -0.1, },
+						Input = Input {
+							SourceOp = "BrightnessContrast9_2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 495, 412.5 } },
+				},
+				BrightnessContrast9_2 = BrightnessContrast {
+					Inputs = {
+						ClipBlack = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "BrightnessContrast7_3",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 495, 379.5 } },
+				},
+				BrightnessContrast7_3 = BrightnessContrast {
+					Inputs = {
+						Gain = Input { Value = 1.914286, },
+						Gamma = Input { Value = 0.3333333, },
+						Low = Input { Value = 0.4647059, },
+						Input = Input {
+							SourceOp = "Vortex1_2",
+							Source = "Output",
+						},
+						EffectMask = Input {
+							SourceOp = "FastNoise1_38",
+							Source = "Output",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { 495, 346.5 } },
+				},
+				Vortex1_2 = Vortex {
+					Inputs = {
+						Size = Input { Value = 1.766667, },
+						Power = Input { Value = 10, },
+						Input = Input {
+							SourceOp = "Displace3_4",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 495, 313.5 } },
+				},
+				Displace3_4 = Displace {
+					Inputs = {
+						Offset = Input { Value = 0.2619048, },
+						RefractionStrength = Input { Value = 0.3238095, },
+						LightPower = Input { Value = 1.942857, },
+						LightAngle = Input { Value = 235.3846, },
+						Spread = Input { Value = 1.342857, },
+						Input = Input {
+							SourceOp = "FastNoise1_37",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "FastNoise1_37",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 495, 280.5 } },
+				},
+				FastNoise1_37 = FastNoise {
+					Inputs = {
+						GlobalIn = Input { Value = 1001, },
+						GlobalOut = Input { Value = 2001, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Discontinuous = Input { Value = 1, },
+						Inverted = Input { Value = 1, },
+						Contrast = Input { Value = 3.323809, },
+						Brightness = Input { Value = -0.4857143, },
+						LockXY = Input { Value = 0, },
+						XScale = Input {
+							Value = 8,
+							Expression = "8.0/Background2_7.Size",
+						},
+						YScale = Input {
+							Value = 25,
+							Expression = "25.0/Background2_7.Size",
+						},
+						Seethe = Input { Value = 1.572115, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 495, 214.5 } },
+				},
+				BrightnessContrast8_1 = BrightnessContrast {
+					Inputs = {
+						Gain = Input { Value = 0, },
+						ClipBlack = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "BrightnessContrast10_1",
+							Source = "Output",
+						},
+						EffectMask = Input {
+							SourceOp = "Ellipse2_1",
+							Source = "Mask",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { 495, 676.5 } },
+				},
+				ColorCorrector5_6 = ColorCorrector {
+					Inputs = {
+						WheelTintAngle1 = Input { Value = -0.3654239254115, },
+						WheelTintLength1 = Input { Value = 0.6145777777778, },
+						WheelTintAngle3 = Input { Value = 0.8085898319606, },
+						WheelTintLength3 = Input { Value = 1, },
+						WheelTintAngle4 = Input { Value = -0.1024163823496, },
+						WheelTintLength4 = Input { Value = 0.64, },
+						MasterRGBGain = Input { Value = 1.647619, },
+						MasterRGBGamma = Input { Value = 0.5428571, },
+						ColorRanges = Input {
+							Value = ColorCurves {
+								Curves = {
+									{
+										Points = {
+											{ 0, 1 },
+											{ 0.4, 0.2 },
+											{ 0.6, 0 },
+											{ 1, 0 }
+										}
+									},
+									{
+										Points = {
+											{ 0, 0 },
+											{ 0.4, 0 },
+											{ 0.6, 0.2 },
+											{ 1, 1 }
+										}
+									}
+								}
+							},
+						},
+						HistogramIgnoreTransparent = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "ChannelBooleans4_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 550, 775.5 } },
+				},
+				Transform4_1 = Transform {
+					Inputs = {
+						Center = Input {
+							SourceOp = "FlareCircle1_80",
+							Source = "ActualPosition",
+						},
+						Size = Input { Value = 0.15, },
+						Angle = Input { Value = 91.73077, },
+						Input = Input {
+							SourceOp = "ColorCorrector5_6",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 550, 808.5 } },
+				},
+				Merge6_2 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Transform5_1",
+							Source = "Output",
+						},
+						Gain = Input { Value = 0, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 550, 907.5 } },
+				},
+				Merge6_3 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge6_2",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Transform3_7",
+							Source = "Output",
+						},
+						Gain = Input { Value = 0, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 550, 940.5 } },
+				},
+				ChannelBooleans4_1 = ChannelBoolean {
+					Inputs = {
+						ToAlpha = Input { Value = 15, },
+						Background = Input {
+							SourceOp = "BrightnessContrast8_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 550, 709.5 } },
+				},
+				DirectionalBlur2_3 = DirectionalBlur {
+					Inputs = {
+						Type = Input { Value = 1, },
+						Length = Input { Value = -0.0219048, },
+						Input = Input {
+							SourceOp = "Merge6_3",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 550, 1072.5 } },
+				},
+				FastNoise1_36 = FastNoise {
+					Inputs = {
+						GlobalIn = Input { Value = 1001, },
+						GlobalOut = Input { Value = 2001, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Detail = Input { Value = 5, },
+						Contrast = Input { Value = 3.476191, },
+						XScale = Input {
+							Value = 15,
+							Expression = "15.0/Background2_7.Size",
+						},
+						Seethe = Input { Value = 2.581731, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 605, 511.5 } },
+				},
+				Ellipse2_1 = EllipseMask {
+					Inputs = {
+						SoftEdge = Input { Value = 0.072381, },
+						Invert = Input { Value = 1, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Width = Input { Value = 0.3428571, },
+						Height = Input {
+							Value = 0.3428571,
+							Expression = "Width",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 605, 676.5 } },
+				},
+				ChannelBooleans3_2 = ChannelBoolean {
+					Inputs = {
+						ToGreen = Input { Value = 6, },
+						ToBlue = Input { Value = 15, },
+						ToAlpha = Input { Value = 15, },
+						Background = Input {
+							SourceOp = "FastNoise1_36",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "FastNoise1_35",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 605, 577.5 } },
+				},
+				Transform5_1 = Transform {
+					Inputs = {
+						Center = Input {
+							SourceOp = "FlareCircle1_79",
+							Source = "ActualPosition",
+						},
+						Size = Input { Value = 0.2, },
+						Angle = Input { Value = 34.61538, },
+						Input = Input {
+							SourceOp = "ColorCorrector5_5",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 660, 808.5 } },
+				},
+				ColorCorrector5_5 = ColorCorrector {
+					Inputs = {
+						WheelTintAngle1 = Input { Value = -0.3395243262086, },
+						WheelTintLength1 = Input { Value = 0.5256888888889, },
+						WheelTintAngle3 = Input { Value = 0.8085898319606, },
+						WheelTintLength3 = Input { Value = 1, },
+						WheelTintAngle4 = Input { Value = -0.1024163823496, },
+						WheelTintLength4 = Input { Value = 0.64, },
+						MasterRGBGain = Input { Value = 2.028571, },
+						MasterRGBGamma = Input { Value = 0.5428571, },
+						ColorRanges = Input {
+							Value = ColorCurves {
+								Curves = {
+									{
+										Points = {
+											{ 0, 1 },
+											{ 0.4, 0.2 },
+											{ 0.6, 0 },
+											{ 1, 0 }
+										}
+									},
+									{
+										Points = {
+											{ 0, 0 },
+											{ 0.4, 0 },
+											{ 0.6, 0.2 },
+											{ 1, 1 }
+										}
+									}
+								}
+							},
+						},
+						HistogramIgnoreTransparent = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "ChannelBooleans4_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 660, 742.5 } },
+				},
+				FastNoise1_35 = FastNoise {
+					Inputs = {
+						GlobalIn = Input { Value = 1001, },
+						GlobalOut = Input { Value = 2001, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Detail = Input { Value = 4, },
+						Contrast = Input { Value = 3.476191, },
+						XScale = Input {
+							Value = 10,
+							Expression = "10.0/Background2_7.Size",
+						},
+						Seethe = Input { Value = 3.514423, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 715, 511.5 } },
+				},
+				Merge2_18 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge2_19",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "FlareCircle1_85",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 825, 1270.5 } },
+				},
+				Merge2_19 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge2_15",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "FlareCircle1_86",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 825, 1237.5 } },
+				},
+				Merge2_15 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge2_20",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "FlareCircle1_87",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 825, 1204.5 } },
+				},
+				Merge2_20 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge2_11",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "FlareCircle1_88",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 825, 1171.5 } },
+				},
+				Merge2_11 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge2_14",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "FlareCircle1_89",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 825, 1138.5 } },
+				},
+				Merge2_14 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge2_16",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "FlareCircle1_83",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 825, 1105.5 } },
+				},
+				ColorCorrector5_4 = ColorCorrector {
+					Inputs = {
+						WheelTintAngle1 = Input { Value = -0.3094804707635, },
+						WheelTintLength1 = Input { Value = 0.5335111111111, },
+						WheelTintAngle3 = Input { Value = 0.8085898319606, },
+						WheelTintLength3 = Input { Value = 1, },
+						WheelTintAngle4 = Input { Value = -0.1024163823496, },
+						WheelTintLength4 = Input { Value = 0.64, },
+						MasterRGBGain = Input { Value = 4.390476, },
+						MasterRGBGamma = Input { Value = 0.5428571, },
+						ColorRanges = Input {
+							Value = ColorCurves {
+								Curves = {
+									{
+										Points = {
+											{ 0, 1 },
+											{ 0.4, 0.2 },
+											{ 0.6, 0 },
+											{ 1, 0 }
+										}
+									},
+									{
+										Points = {
+											{ 0, 0 },
+											{ 0.4, 0 },
+											{ 0.6, 0.2 },
+											{ 1, 1 }
+										}
+									}
+								}
+							},
+						},
+						HistogramIgnoreTransparent = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "ChannelBooleans4_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 825, 808.5 } },
+				},
+				Transform3_7 = Transform {
+					Inputs = {
+						Center = Input {
+							SourceOp = "FlareCircle1_89",
+							Source = "ActualPosition",
+						},
+						Size = Input { Value = 0.05, },
+						Angle = Input { Value = 228.4615, },
+						Input = Input {
+							SourceOp = "ColorCorrector5_4",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 825, 841.5 } },
+				},
+				Merge2_16 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "FlareCircle1_79",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "FlareCircle1_80",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 825, 1072.5 } },
+				},
+				Merge2_17 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge2_18",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "FlareCircle1_84",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 825, 1303.5 } },
+				},
+				Merge2_12 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge2_17",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "FlareCircle1_82",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 825, 1336.5 } },
+				},
+				BrightnessContrast7_2 = BrightnessContrast {
+					Inputs = {
+						ApplyMaskInverted = Input { Value = 1, },
+						MaskChannel = Input { Value = 2, },
+						MaskHigh = Input { Value = 0.3647059, },
+						Gain = Input { Value = 0, },
+						Input = Input {
+							SourceOp = "DirectionalBlur2_3",
+							Source = "Output",
+						},
+						EffectMask = Input {
+							SourceOp = "Merge2_13",
+							Source = "Output",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { 550, 1336.5 } },
+				},
+				Merge2_13 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge2_12",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "FlareCircle1_81",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 825, 1369.5 } },
+				},
+				Merge7_1 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "BrightnessContrast7_2",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "XfChromaFuse2_1",
+							Source = "Output",
+						},
+						Gain = Input { Value = 0, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 550, 1402.5 } },
+				},
+				XfChromaFuse2_1 = Fuse.XfChroma {
+					Inputs = {
+						Size = Input { Value = 1.01, },
+						Aspect = Input { Value = 1.22857128712871, },
+						XSize = Input { Value = 1.01, },
+						YSize = Input { Value = 1.240857, },
+						Angle = Input { Value = 2, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 1, 0, 0, 1 },
+									[0.5] = { 0, 1, 0, 1 },
+									[1] = { 0, 0, 1, 1 }
+								}
+							},
+						},
+						NewTool = Input { Value = 0, },
+						Input = Input {
+							SourceOp = "ColorCorrector6_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 660, 1435.5 } },
+				},
+				FlareCircle1_79 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Offset = Input { Value = 1.9, },
+						InnerRadius = Input { Value = 0.0225, },
+						OuterRadius = Input { Value = 0.025, },
+						GainRed = Input { Value = 0.00025885506210053, },
+						GainGreen = Input { Value = 0.00613638341321256, },
+						GainBlue = Input { Value = 0.0289911865471594, },
+						Gain = Input { Value = 0.0069844499935, },
+						BorderRed = Input { Value = 2, },
+						BorderGreen = Input { Value = 2, },
+						BorderBlue = Input { Value = 2, },
+						Border = Input { Value = 2, },
+						PostScaling = Input {
+							Value = 2,
+							Expression = "2.0*Background2_7.Size",
+						},
+						MaskDistance = Input { Value = -0.2571429, },
+						MaskRadius = Input { Value = 0.18, },
+						MaskSoftness = Input { Value = 6.190476, },
+						Input = Input {
+							SourceOp = "PipeRouter3_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1155, 1039.5 } },
+				},
+				FlareCircle1_80 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Offset = Input { Value = 1.95, },
+						InnerRadius = Input { Value = 0.008, },
+						OuterRadius = Input { Value = 0.015, },
+						GainRed = Input { Value = 0.00025885506210053, },
+						GainGreen = Input { Value = 0.00613638341321256, },
+						GainBlue = Input { Value = 0.0289911865471594, },
+						Gain = Input { Value = 0.0069844499935, },
+						BorderRed = Input { Value = 1.52, },
+						BorderGreen = Input { Value = 1.52, },
+						BorderBlue = Input { Value = 1.52, },
+						Border = Input { Value = 1.52, },
+						PostScaling = Input {
+							Value = 2,
+							Expression = "2.0*Background2_7.Size",
+						},
+						MaskDistance = Input { Value = -0.2571429, },
+						MaskRadius = Input { Value = 0.18, },
+						MaskSoftness = Input { Value = 6.190476, },
+						Input = Input {
+							SourceOp = "PipeRouter3_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1155, 1072.5 } },
+				},
+				FlareCircle1_82 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Offset = Input { Value = 1.93, },
+						InnerRadius = Input { Value = 0.015, },
+						OuterRadius = Input { Value = 0.017, },
+						GainRed = Input { Value = 0.00025885506210053, },
+						GainGreen = Input { Value = 0.00613638341321256, },
+						GainBlue = Input { Value = 0.0289911865471594, },
+						Gain = Input { Value = 0.0069844499935, },
+						BorderRed = Input { Value = 1.52, },
+						BorderGreen = Input { Value = 1.52, },
+						BorderBlue = Input { Value = 1.52, },
+						Border = Input { Value = 1.52, },
+						PostScaling = Input {
+							Value = 2,
+							Expression = "2.0*Background2_7.Size",
+						},
+						MaskDistance = Input { Value = -0.2571429, },
+						MaskRadius = Input { Value = 0.18, },
+						MaskSoftness = Input { Value = 6.190476, },
+						Input = Input {
+							SourceOp = "PipeRouter3_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1155, 1336.5 } },
+				},
+				FlareCircle1_81 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Offset = Input { Value = 2, },
+						InnerRadius = Input { Value = 0.003, },
+						OuterRadius = Input { Value = 0.008, },
+						GainRed = Input { Value = 0.00025885506210053, },
+						GainGreen = Input { Value = 0.00613638341321256, },
+						GainBlue = Input { Value = 0.0289911865471594, },
+						Gain = Input { Value = 0.0069844499935, },
+						BorderRed = Input { Value = 1.52, },
+						BorderGreen = Input { Value = 1.52, },
+						BorderBlue = Input { Value = 1.52, },
+						Border = Input { Value = 1.52, },
+						PostScaling = Input {
+							Value = 2,
+							Expression = "2.0*Background2_7.Size",
+						},
+						MaskDistance = Input { Value = -0.2571429, },
+						MaskRadius = Input { Value = 0.18, },
+						MaskSoftness = Input { Value = 6.190476, },
+						Input = Input {
+							SourceOp = "PipeRouter3_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1155, 1369.5 } },
+				},
+				FlareCircle1_86 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Offset = Input { Value = 1.925, },
+						InnerRadius = Input { Value = 0.01, },
+						OuterRadius = Input { Value = 0.0125, },
+						GainRed = Input { Value = 0.00025885506210053, },
+						GainGreen = Input { Value = 0.00613638341321256, },
+						GainBlue = Input { Value = 0.0289911865471594, },
+						Gain = Input { Value = 0.0069844499935, },
+						BorderRed = Input { Value = 1.52, },
+						BorderGreen = Input { Value = 1.52, },
+						BorderBlue = Input { Value = 1.52, },
+						Border = Input { Value = 1.52, },
+						PostScaling = Input {
+							Value = 2,
+							Expression = "2.0*Background2_7.Size",
+						},
+						MaskDistance = Input { Value = -0.2571429, },
+						MaskRadius = Input { Value = 0.18, },
+						MaskSoftness = Input { Value = 6.190476, },
+						Input = Input {
+							SourceOp = "PipeRouter3_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1155, 1237.5 } },
+				},
+				FlareCircle1_87 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Offset = Input { Value = 1.98, },
+						InnerRadius = Input { Value = 0.01, },
+						OuterRadius = Input { Value = 0.012, },
+						GainRed = Input { Value = 0.00025885506210053, },
+						GainGreen = Input { Value = 0.00613638341321256, },
+						GainBlue = Input { Value = 0.0289911865471594, },
+						Gain = Input { Value = 0.0069844499935, },
+						BorderRed = Input { Value = 1.52, },
+						BorderGreen = Input { Value = 1.52, },
+						BorderBlue = Input { Value = 1.52, },
+						Border = Input { Value = 1.52, },
+						PostScaling = Input {
+							Value = 2,
+							Expression = "2.0*Background2_7.Size",
+						},
+						MaskDistance = Input { Value = -0.2571429, },
+						MaskRadius = Input { Value = 0.18, },
+						MaskSoftness = Input { Value = 6.190476, },
+						Input = Input {
+							SourceOp = "PipeRouter3_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1155, 1204.5 } },
+				},
+				FlareCircle1_88 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Offset = Input { Value = 1.85, },
+						InnerRadius = Input { Value = 0.015, },
+						OuterRadius = Input { Value = 0.018, },
+						GainRed = Input { Value = 0.00025885506210053, },
+						GainGreen = Input { Value = 0.00613638341321256, },
+						GainBlue = Input { Value = 0.0289911865471594, },
+						Gain = Input { Value = 0.0069844499935, },
+						BorderRed = Input { Value = 1.52, },
+						BorderGreen = Input { Value = 1.52, },
+						BorderBlue = Input { Value = 1.52, },
+						Border = Input { Value = 1.52, },
+						PostScaling = Input {
+							Value = 2,
+							Expression = "2.0*Background2_7.Size",
+						},
+						MaskDistance = Input { Value = -0.2571429, },
+						MaskRadius = Input { Value = 0.18, },
+						MaskSoftness = Input { Value = 6.190476, },
+						Input = Input {
+							SourceOp = "PipeRouter3_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1155, 1171.5 } },
+				},
+				FlareCircle1_85 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Offset = Input { Value = 1.87, },
+						InnerRadius = Input { Value = 0.015, },
+						OuterRadius = Input { Value = 0.018, },
+						GainRed = Input { Value = 0.00025885506210053, },
+						GainGreen = Input { Value = 0.00613638341321256, },
+						GainBlue = Input { Value = 0.0289911865471594, },
+						Gain = Input { Value = 0.0069844499935, },
+						BorderRed = Input { Value = 1.52, },
+						BorderGreen = Input { Value = 1.52, },
+						BorderBlue = Input { Value = 1.52, },
+						Border = Input { Value = 1.52, },
+						PostScaling = Input {
+							Value = 2,
+							Expression = "2.0*Background2_7.Size",
+						},
+						MaskDistance = Input { Value = -0.2571429, },
+						MaskRadius = Input { Value = 0.18, },
+						MaskSoftness = Input { Value = 6.190476, },
+						Input = Input {
+							SourceOp = "PipeRouter3_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1155, 1270.5 } },
+				},
+				FlareCircle1_84 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Offset = Input { Value = 1.97, },
+						InnerRadius = Input { Value = 0.003, },
+						OuterRadius = Input { Value = 0.007, },
+						GainRed = Input { Value = 0.00025885506210053, },
+						GainGreen = Input { Value = 0.00613638341321256, },
+						GainBlue = Input { Value = 0.0289911865471594, },
+						Gain = Input { Value = 0.0069844499935, },
+						BorderRed = Input { Value = 1.52, },
+						BorderGreen = Input { Value = 1.52, },
+						BorderBlue = Input { Value = 1.52, },
+						Border = Input { Value = 1.52, },
+						PostScaling = Input {
+							Value = 2,
+							Expression = "2.0*Background2_7.Size",
+						},
+						MaskDistance = Input { Value = -0.2571429, },
+						MaskRadius = Input { Value = 0.18, },
+						MaskSoftness = Input { Value = 6.190476, },
+						Input = Input {
+							SourceOp = "PipeRouter3_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1155, 1303.5 } },
+				},
+				FlareCircle1_89 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Offset = Input { Value = 1.82, },
+						InnerRadius = Input { Value = 0.012, },
+						OuterRadius = Input { Value = 0.015, },
+						GainRed = Input { Value = 0.00025885506210053, },
+						GainGreen = Input { Value = 0.00613638341321256, },
+						GainBlue = Input { Value = 0.0289911865471594, },
+						Gain = Input { Value = 0.0069844499935, },
+						BorderRed = Input { Value = 1.52, },
+						BorderGreen = Input { Value = 1.52, },
+						BorderBlue = Input { Value = 1.52, },
+						Border = Input { Value = 1.52, },
+						PostScaling = Input {
+							Value = 2,
+							Expression = "2.0*Background2_7.Size",
+						},
+						MaskDistance = Input { Value = -0.2571429, },
+						MaskRadius = Input { Value = 0.18, },
+						MaskSoftness = Input { Value = 6.190476, },
+						Input = Input {
+							SourceOp = "PipeRouter3_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1155, 1138.5 } },
+				},
+				FlareCircle1_83 = Fuse.FlareCircle {
+					Inputs = {
+						Position = Input {
+							Value = { 0.294104402288337, 0.751307389401849 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						Offset = Input { Value = 1.8, },
+						InnerRadius = Input { Value = 0.008, },
+						OuterRadius = Input { Value = 0.01, },
+						GainRed = Input { Value = 0.00025885506210053, },
+						GainGreen = Input { Value = 0.00613638341321256, },
+						GainBlue = Input { Value = 0.0289911865471594, },
+						Gain = Input { Value = 0.0069844499935, },
+						BorderRed = Input { Value = 1.52, },
+						BorderGreen = Input { Value = 1.52, },
+						BorderBlue = Input { Value = 1.52, },
+						Border = Input { Value = 1.52, },
+						PostScaling = Input {
+							Value = 2,
+							Expression = "2.0*Background2_7.Size",
+						},
+						MaskDistance = Input { Value = -0.2571429, },
+						MaskRadius = Input { Value = 0.18, },
+						MaskSoftness = Input { Value = 6.190476, },
+						Input = Input {
+							SourceOp = "PipeRouter3_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1155, 1105.5 } },
+				},
+				ColorCorrector6_1 = ColorCorrector {
+					Inputs = {
+						WheelSaturation1 = Input { Value = 0.5904762, },
+						MasterRGBGain = Input { Value = 1.419048, },
+						MasterRGBGamma = Input { Value = 0.7238095, },
+						ColorRanges = Input {
+							Value = ColorCurves {
+								Curves = {
+									{
+										Points = {
+											{ 0, 1 },
+											{ 0.4, 0.2 },
+											{ 0.6, 0 },
+											{ 1, 0 }
+										}
+									},
+									{
+										Points = {
+											{ 0, 0 },
+											{ 0.4, 0 },
+											{ 0.6, 0.2 },
+											{ 1, 1 }
+										}
+									}
+								}
+							},
+						},
+						HistogramIgnoreTransparent = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "Merge2_13",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 770, 1435.5 } },
+				},
+				SoftGlow1_11 = SoftGlow {
+					Inputs = {
+						Green = Input { Value = 0, },
+						Blue = Input { Value = 0, },
+						Threshold = Input { Value = 0.0095238, },
+						Gain = Input { Value = 3.166667, },
+						XGlowSize = Input { Value = 39.52381, },
+						Input = Input {
+							SourceOp = "Merge7_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 550, 1468.5 } },
+				},
+				Merge8_1 = Merge {
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge27_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "SoftGlow1_10",
+							Source = "Output",
+						},
+						Gain = Input { Value = 0, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 1534.5 } },
+				},
+				SoftGlow1_10 = SoftGlow {
+					Inputs = {
+						Red = Input { Value = 0, },
+						Green = Input { Value = 0, },
+						Threshold = Input { Value = 0.0666667, },
+						XGlowSize = Input { Value = 39.04762, },
+						Input = Input {
+							SourceOp = "SoftGlow1_11",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 550, 1534.5 } },
+				},
+				PipeRouter3_1 = PipeRouter {
+					Inputs = {
+						Input = Input {
+							SourceOp = "PipeRouter5_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { 1485, 1204.5 } },
+				},
+				PipeRouter5_1 = PipeRouter {
+					Inputs = {
+						Input = Input {
+							SourceOp = "Background2_7",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { 1485, -478.5 } },
+				},
+				Blur9 = Blur {
+					Inputs = {
+						XBlurSize = Input { Value = 5, },
+						Input = Input {
+							SourceOp = "SoftGlow1_6",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 2161.5 } },
+				},
+				SoftGlow1_6 = SoftGlow {
+					Inputs = {
+						Gain = Input { Value = 0.1428571, },
+						Input = Input {
+							SourceOp = "Merge8_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 2128.5 } },
+				},
+				FilmGrain1_2 = FilmGrain {
+					Inputs = {
+						AlphaMultiply = Input { Value = 0, },
+						Seed = Input { Value = 26713, },
+						Monochrome = Input { Value = 0, },
+						Input = Input {
+							SourceOp = "Blur9",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 2227.5 } },
+				},
+				Merge5 = Merge {
+					Inputs = {
+						Blend = Input { Value = 0.5, },
+						Background = Input {
+							SourceOp = "PipeRouter4",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "LensDirtIn",
+							Source = "Output",
+						},
+						Gain = Input { Value = 0, },
+						PerformDepthMerge = Input { Value = 0, },
+						EffectMask = Input {
+							SourceOp = "Bitmap1",
+							Source = "Mask",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 2524.5 } },
+				},
+				LensDirtIn = Fuse.Wireless {
+					NameSet = true,
+					Inputs = {
+						Input = Input {
+							SourceOp = "BlackNothing",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -110, 2524.5 } },
+				},
+				PipeRouter4 = PipeRouter {
+					Inputs = {
+						Input = Input {
+							SourceOp = "FilmGrain1_2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { 55, 2260.5 } },
+				},
+				BlackNothing = Background {
+					NameSet = true,
+					Inputs = {
+						GlobalIn = Input { Value = 1001, },
+						GlobalOut = Input { Value = 2001, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftAlpha = Input { Value = 0, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 220, 2293.5 } },
+				},
+				Bitmap1 = BitmapMask {
+					Inputs = {
+						SoftEdge = Input { Value = 0.1590476, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Image = Input {
+							SourceOp = "PipeRouter4",
+							Source = "Output",
+						},
+						Channel = Input { Value = FuID { "Luminance" }, },
+						High = Input { Value = 0.5352941, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 165, 2458.5 } },
+				},
+				Dissolve1 = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					Inputs = {
+						Mix = Input {
+							SourceOp = "Calculation1",
+							Source = "Result",
+						},
+						Background = Input {
+							SourceOp = "Nothing",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Merge5",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 2656.5 } },
+				},
+				
+				Nothing = Background {
+					CtrlWZoom = false,
+					NameSet = true,
+					Inputs = {
+						GlobalIn = Input { Value = 1001, },
+						GlobalOut = Input { Value = 2001, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftAlpha = Input { Value = 0, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1, 1, 1, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 220, 2656.5 } },
+				},
+				PipeRouter1_1 = PipeRouter {
+					Inputs = {
+						Input = Input {
+							SourceOp = "Dissolve1",
+							Source = "Output",
+						},
+						Comments = Input { Value = "Output", }
+					},
+					ViewInfo = PipeRouterInfo { Pos = { 55, 2722.5 } },
+				}
+			},
+		},
+		Calculation1 = Calculation {
+					CtrlWZoom = false,
+					Inputs = {
+						FirstOperand = Input {
+							SourceOp = "Probe1",
+							Source = "Result",
+						},
+						Operator = Input { Value = 5, },
+						SecondOperand = Input { Value = 1, },
+					},
+				},
+				Probe1 = Probe {
+					CtrlWZoom = false,
+					Inputs = {
+						ImageToProbe = Input {
+							SourceOp = "BlackNothing",
+							Source = "Output",
+						},
+						Position = Input {
+							Value = { 0.148910128259707, 0.74035848429236 },
+							Expression = "Background2_7.FlarePosition",
+						},
+						ClipInputHigh = Input { Value = 0.05, },
+					},
+				},
+	},
+	ActiveTool = "Flare_Helios"
+}
