@@ -9,7 +9,7 @@
 					comp = fusion.CurrentComp
 
                     function loadLayout(comp)
-                        if comp and fusion.Version > 16.1 then
+                        if comp and fusion.Version > 16.1 not fusion:GetResolve() then
                             if comp:GetAttrs().COMPS_FileName == "" and not isLayoutLoaded then
                                 -- print("setting my layout")
                                 comp.CurrentFrame:LoadLayout(comp:MapPath("Reactor:Deploy/Layouts/FU16_1mon_bottom-timeview.layout"))
