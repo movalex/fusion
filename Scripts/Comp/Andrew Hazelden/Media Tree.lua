@@ -29,7 +29,7 @@
 -- ----------------------------------------------------------------------------
   
 -- Find out if we are running Fusion 6, 7, or 8
-fu_major_version = math.floor(tonumber(eyeon._VERSION))
+-- fu_major_version = math.floor(tonumber(eyeon._VERSION))
 
 -- Find out the current operating system platform. The platform local variable should be set to either 'Windows', 'Mac', or 'Linux'.
 platform = ''
