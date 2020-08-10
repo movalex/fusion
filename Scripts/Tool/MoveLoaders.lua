@@ -6,7 +6,7 @@ function moveLoader(tool, startFrom)
         return nil
     end
     comp:StartUndo('set loader start')
-    bmd.MoveClip(tool, comp:GetAttrs().COMPN_GlobalStart, startFrom)
+    bmd.MoveClip(tool, comp:GetAttrs().COMPN_GlobalStart, tonumber(startFrom))
     comp:EndUndo()
 end
 
