@@ -142,8 +142,8 @@ win = disp:AddWindow({
     },
     ui:HGroup {
         ui:Label{ID = 'Label', Weight = .6, Text = print_label()},
-        ui:Button{ID = 'Info', Text = 'info', Weight=0.1,MinimumSize = {30,16}, 
-        Alignment = {AlignRight = true}},
+        -- ui:Button{ID = 'Info', Text = 'info', Weight=0.1,MinimumSize = {30,16}, 
+        -- Alignment = {AlignRight = true}},
             },
     ui:HGroup {
 
