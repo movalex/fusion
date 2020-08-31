@@ -19,7 +19,7 @@
 -- Ideas: Detect 3D coordinates and import three values automatically
 --        Ask to replace existing animation instead of merging keyframes
 ------------------------------------------------------------------------------
-
+composition = fu:GetCurrentComp()
 
 -----------------------------------------------------
 -- trim(strTrim)
@@ -65,7 +65,7 @@ controlNames = {}
 filterInputs = {Quality = true, ShutterAngle = true, CenterBias = true, SampleSpread = true,}
 
 inps = tool:GetInputList()
-for i, inp in inps do
+for i, inp in ipairs(inps) do
 	local attrs = inp:GetAttrs() 
 	-- allow all point inputs but filter numbers to some pre-defined well-known inputs.
 	if attrs.INP_External ~= false then
@@ -81,7 +81,6 @@ for i, inp in inps do
 		end
 	end
 end
-
 -- complain if none of the controls have this datatype
 if table.getn(controls) == 0 then
    print("Can't find a number or point control that could be animated.")
@@ -107,7 +106,7 @@ while fileHandle == nil do
 	if ret == nil then return end
 	
 	-- can we open the file?
-	fileName = MapPath(ret.filename)
+	fileName = composition:MapPath(ret.filename)
 	fileHandle, err = io.open(fileName, "r")
 end
 
@@ -149,10 +148,10 @@ ret.skip = firstDataLine
 ret.control = 1
 if detectColumns == 1 then
 	-- If only one column has been detected, default input should be "angle" (if available).
-	ret.control = eyeon.get_table_index(controlNames, "Angle") or 1
+	ret.control = bmd.get_table_index(controlNames, "Angle") or 1
 else
 	-- If two or more columns have been detected, default input should be "center" (if available).
-	ret.control = eyeon.get_table_index(controlNames, "Center (2D Point)") or 1
+	ret.control = bmd.get_table_index(controlNames, "Center (2D Point)") or 1
 end
 
 -- detect image width, either from tool itself or from comp preferences
@@ -237,12 +236,15 @@ if theControl:GetAttrs().INPB_Connected == true then
 else
 	if is2DPoint then
 		if ret.path == 0 then
-			theControl:ConnectTo(XYPath({}))
+            tool:AddModifier(theControl.ID, "XYPath")
 		else
-			theControl:ConnectTo(Path({}))
+            print("Currently unable to add Path() modifier")
+            -- this should work, but it does't unfortunately:
+            -- tool:AddModifier(theControl.ID, "Path")
+            tool:AddModifier(theControl.ID, "XYPath")
 		end
 	else
-		theControl:ConnectTo(BezierSpline({}))
+        tool:AddModifier(theControl.ID, "BezierSpline")
 	end
 	-- a keyframe is created at the current time. It needs to be deleted
 	-- if it isn't overwritten by imported data
