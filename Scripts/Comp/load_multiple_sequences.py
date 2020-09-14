@@ -11,7 +11,7 @@
 # - saves last accessed folder to a Fusion data
 # - set minimum digits the script should look for at the end of the file
 # - use preselect checkbox it you want all the sequences to be marked to import (on by default)
-# - image sequences with similar names but in defferent directories are added
+# - image sequences with similar names but in different directories are added
 
 
 import os
