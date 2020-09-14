@@ -4,7 +4,7 @@
 # This version walks forward through the folders recursively and loads all the sequences and files
 # update: by Alexey Bogomolov
 # email: mail@abogomolov.com
-# version: 1.2 09/14/2020
+# version: 1.3 09/14/2020
 # license: MIT
 # Features:
 # - walk forward through the folders recursively and load all the sequences or single files
@@ -13,10 +13,12 @@
 # - use preselect checkboxes it you want all the sequences to be marked to import (on by default)
 # - image sequences with similar names but in different directories are added
 # - option to search for sequences only (off by default)
+# - show warning if more than 30 loaders would be added
 
 
 import os
 import re
+import sys
 
 comp = fu.GetCurrentComp()
 
@@ -59,7 +61,7 @@ input = comp.AskUser(
         2.0: {
             1.0: "seqdigits",
             2.0: "Slider",
-            "Name": "has digits: ",
+            "Name": "Has digits: ",
             "Default": 3,
             "Integer": True,
             "Min": 2,
@@ -157,7 +159,25 @@ if input:
     seqlist = {}
     fu.SetData("LMPath", input["filepath"])
     command, full_names_dict, short_seqs = run_folder(input)
-    print("{} sequences will be loaded. Proceed?".format(len(short_seqs)))
+    if len(short_seqs) > 30:
+        message = "{} sequences will be loaded.\nProceed?".format(len(short_seqs))
+        ret_warning = comp.AskUser(
+            "Warning",
+            {
+                1.0: {
+                    1.0: "",
+                    "Name": "",
+                    2.0: "Text",
+                    "Readonly": True,
+                    "Lines": 3,
+                    "Wrap": False,
+                    "Default": message,
+                }
+            },
+        )
+        if not ret_warning:
+            print("|\n|------  Import canceled.\n")
+            sys.exit()
     exec(command)  # show second dialogue with shorneted names, generates seqlist
     if seqlist:
         comp.Lock()
