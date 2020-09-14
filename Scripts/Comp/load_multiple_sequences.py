@@ -1,17 +1,17 @@
-
 # -*- coding: utf-8 -*-
 
 # Original script provided by ISOTRON, thanks to Helge, suedlich-t.com
-# This version walks forward through the folders recursively and loads all the sequences
+# This version walks forward through the folders recursively and loads all the sequences and files
 # update: by Alexey Bogomolov
 # email: mail@abogomolov.com
-# version: 1.0 09/13/2020
+# version: 1.1 09/14/2020
 # license: MIT
 # Features:
-# - walk forward through the folders recursively and load all the sequences or single files 
+# - walk forward through the folders recursively and load all the sequences or single files
 # - saves last accessed folder to a Fusion data
 # - set minimum digits the script should look for at the end of the file
 # - use preselect checkbox it you want all the sequences to be marked to import (on by default)
+# - image sequences with similar names but in defferent directories are added
 
 
 import os
@@ -90,12 +90,13 @@ def run_folder(input):
     print("| Path to search: " + str(path))
     print("| Sequence with " + seqdigits + " or more digits.")
 
-    gen = os.walk(path)
     full_names_dict = {}
     short_seqs = {}
 
-    for root, dir, files in os.walk(path):
+    for root, _, files in os.walk(path):
         for name in files:
+            if name.lower() == "thumbs.db":
+                continue
             if not os.path.splitext(name)[1] in [
                 ".mov",
                 ".mp4",
@@ -103,11 +104,16 @@ def run_folder(input):
                 ".mkv",
                 ".mxf",
             ]:
-                seqname = re.sub(r"\d{" + seqdigits + ",}(\.\w+)$", r"\g<1>", name)
+                seqname = re.sub(r"\d{" + seqdigits + r",}(\.\w+)$", r"###\g<1>", name)
+                full_path = os.path.join(root, name)
+                parent_dir = os.path.dirname(full_path).split(os.path.sep)[-1]
+                # prepend parent directory to sequences short names,
+                # to make sure seqs with the similar names are added
+                seqname = parent_dir + os.path.sep + seqname
                 if not seqname in short_seqs.values():
                     short_seqs[float(len(short_seqs) + 1)] = seqname
                     if not seqname in full_names_dict.keys():
-                        full_names_dict[seqname] = os.path.join(root, name)
+                        full_names_dict[seqname] = full_path
             else:
                 if not name in short_seqs.values():
                     short_seqs[float(len(short_seqs) + 1)] = name
@@ -141,22 +147,25 @@ def run_folder(input):
 
 
 if input:
+    seqlist = {}
     fu.SetData("LMPath", input["filepath"])
     command, full_names_dict, short_seqs = run_folder(input)
-    exec(command)
+    print("{} sequences will be loaded. Proceed?".format(len(short_seqs)))
+    exec(command)  # show second dialogue with shorneted names, generates seqlist
     if seqlist:
         comp.Lock()
         for i, short_seq in enumerate(short_seqs.values(), 1):
-            if seqlist["sequence_" + str(i)] == 1:
+            if seqlist["sequence_" + str(i)] == 1:  # if checkbox is set
                 file_name_without_seq = short_seq
                 print("importing: ", file_name_without_seq)
-                file_name_with_seq = full_names_dict[file_name_without_seq]
+                file_path = full_names_dict[file_name_without_seq]
                 loader = comp.Loader()
-                loader.Clip = file_name_with_seq
+                loader.Clip = file_path
                 if input["color"] != 0.0:
                     loader.TileColor = colordict[str(dropdict[input["color"]])]
         comp.Unlock()
         print("|\n|------  Import done.\n")
+    else:
+        print("|\n|------  Import canceled.\n")
 else:
     print("|\n|------  Import canceled.\n")
-
