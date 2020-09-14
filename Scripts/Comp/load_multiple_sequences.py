@@ -14,6 +14,7 @@
 # - image sequences with similar names but in different directories are added
 # - option to search for sequences only (off by default)
 # - show warning if more than 30 loaders would be added
+# - filter only image sequence and movie formats (any additions to file extension list?)
 
 
 import os
@@ -104,14 +105,15 @@ def run_folder(input):
 
     for root, _, files in os.walk(path):
         for name in files:
-            if name.lower() == "thumbs.db":
-                continue
-            if not os.path.splitext(name)[1].lower() in [
-                ".mov",
-                ".mp4",
-                ".avi",
-                ".mkv",
-                ".mxf",
+            if os.path.splitext(name)[1].lower() in [
+                ".dpx",
+                ".exr",
+                ".ifl",
+                ".jpg",
+                ".png",
+                ".psd",
+                ".tga",
+                ".tiff",
             ]:
                 seqname = re.sub(r"\d{" + seqdigits + r",}(\.\w+)$", r"###\g<1>", name)
                 full_path = os.path.join(root, name)
@@ -123,7 +125,13 @@ def run_folder(input):
                     short_seqs[float(len(short_seqs) + 1)] = seqname
                     if not seqname in full_names_dict.keys():
                         full_names_dict[seqname] = full_path
-            else:
+            elif os.path.splitext(name)[1].lower() in [
+                ".avi",
+                ".mkv",
+                ".mov",
+                ".mp4",
+                ".mxf",
+            ]:
                 if not name in short_seqs.values() and input["only_sequences"] == 0:
                     short_seqs[float(len(short_seqs) + 1)] = name
                     if not name in full_names_dict.keys():
