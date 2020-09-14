@@ -125,14 +125,12 @@ def run_folder(input):
                     short_seqs[float(len(short_seqs) + 1)] = seqname
                     if not seqname in full_names_dict.keys():
                         full_names_dict[seqname] = full_path
-            elif os.path.splitext(name)[1].lower() in [
-                ".avi",
-                ".mkv",
-                ".mov",
-                ".mp4",
-                ".mxf",
-            ]:
-                if not name in short_seqs.values() and input["only_sequences"] == 0:
+            elif (
+                os.path.splitext(name)[1].lower()
+                in [".avi", ".mkv", ".mov", ".mp4", ".mxf",]
+                and input["only_sequences"] == 0
+            ):
+                if not name in short_seqs.values():
                     short_seqs[float(len(short_seqs) + 1)] = name
                     if not name in full_names_dict.keys():
                         full_names_dict[name] = os.path.join(root, name)
