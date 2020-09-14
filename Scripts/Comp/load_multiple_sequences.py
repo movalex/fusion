@@ -4,14 +4,15 @@
 # This version walks forward through the folders recursively and loads all the sequences and files
 # update: by Alexey Bogomolov
 # email: mail@abogomolov.com
-# version: 1.1 09/14/2020
+# version: 1.2 09/14/2020
 # license: MIT
 # Features:
 # - walk forward through the folders recursively and load all the sequences or single files
 # - saves last accessed folder to a Fusion data
 # - set minimum digits the script should look for at the end of the file
-# - use preselect checkbox it you want all the sequences to be marked to import (on by default)
+# - use preselect checkboxes it you want all the sequences to be marked to import (on by default)
 # - image sequences with similar names but in different directories are added
+# - option to search for sequences only (off by default)
 
 
 import os
@@ -47,7 +48,7 @@ dropdict = {
 saved_path = fu.GetData("LMPath")
 
 input = comp.AskUser(
-    "Load Sequences",
+    "Load Multiple Sequences",
     {
         1.0: {
             1.0: "filepath",
@@ -67,7 +68,7 @@ input = comp.AskUser(
         3.0: {
             1.0: "preselect",
             2.0: "Checkbox",
-            "Name": "Checkbox sequences?",
+            "Name": "Set checkboxes",
             "Default": 1,
         },
         4.0: {
@@ -76,6 +77,12 @@ input = comp.AskUser(
             "Name": "Color",
             "Default": 0,
             "Options": dropdict,
+        },
+        5.0: {
+            1.0: "only_sequences",
+            2.0: "Checkbox",
+            "Name": "Search for sequences only",
+            "Default": 0,
         },
     },
 )
@@ -97,7 +104,7 @@ def run_folder(input):
         for name in files:
             if name.lower() == "thumbs.db":
                 continue
-            if not os.path.splitext(name)[1] in [
+            if not os.path.splitext(name)[1].lower() in [
                 ".mov",
                 ".mp4",
                 ".avi",
@@ -115,7 +122,7 @@ def run_folder(input):
                     if not seqname in full_names_dict.keys():
                         full_names_dict[seqname] = full_path
             else:
-                if not name in short_seqs.values():
+                if not name in short_seqs.values() and input["only_sequences"] == 0:
                     short_seqs[float(len(short_seqs) + 1)] = name
                     if not name in full_names_dict.keys():
                         full_names_dict[name] = os.path.join(root, name)
@@ -128,7 +135,7 @@ def run_folder(input):
         + " sequence(s)/single file(s) in that folder."
     )
 
-    mycode = 'seqlist = comp.AskUser("Load Sequences", {'
+    mycode = 'seqlist = comp.AskUser("Load Multiple Sequences", {'
 
     for i in range(1, sequencelength):
         mycode = (
