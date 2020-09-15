@@ -25,30 +25,11 @@
             ]],
          },
       },
-   },
-    Action
-    {
-        ID = "Hide_Timeline",
-        Category = 'Flow',
-        Targets = 
-        {
-            Composition = 
-            {
-              Execute = 
-              [[
-                --begin=lua--
-                print('hide timeline')
-                target:DoAction("Fusion_View_Show", {view = "Keyframes", show = false}) 
-                target:DoAction("Fusion_View_Show", {view = "Nodes", show = true}) 
-                --end=lua--
-              ]]
-            },
-        },
     },
 
     Action
     {
-        ID = "Toggle_Timeline",
+        ID = "Show_Timeline",
         Category = 'Flow',
         Targets = 
         {
@@ -56,31 +37,10 @@
             {
               Execute = 
               [[
-                --begin=lua--
-                print('toggle timeline')
+                print('show timeline view')
                 target:DoAction("Fusion_View_Show", {view = "Spline", show = false}) 
                 target:DoAction("Fusion_View_Show", {view = "Nodes", show = false}) 
-                target:DoAction("Fusion_View_Show", {view = "Keyframes"}) 
-                --end=lua--
-              ]]
-            },
-        },
-    },
-    Action
-    {
-        ID = "Hide_Spline",
-        Category = 'Flow',
-        Targets = 
-        {
-            Composition = 
-            {
-              Execute = 
-              [[
-                --begin=lua--
-                print('hide timeline')
-                target:DoAction("Fusion_View_Show", {view = "Spline", show = false}) 
-                target:DoAction("Fusion_View_Show", {view = "Nodes", show = true}) 
-                --end=lua--
+                target:DoAction("Fusion_View_Show", {view = "Keyframes", show = true}) 
               ]]
             },
         },
@@ -88,7 +48,7 @@
 
     Action
     {
-        ID = "Toggle_Spline",
+        ID = "Show_Spline",
         Category = 'Flow',
         Targets = 
         {
@@ -96,17 +56,34 @@
             {
               Execute = 
                 [[
-                --begin=lua--
-                print('toggle spline')
+                print('show spline view')
                 target:DoAction("Fusion_View_Show", {view = "Keyframes", show = false}) 
                 target:DoAction("Fusion_View_Show", {view = "Nodes", show = false}) 
-                target:DoAction("Fusion_View_Show", {view = "Spline"}) 
-                --end=lua--
+                target:DoAction("Fusion_View_Show", {view = "Spline", show = true}) 
                 ]],
             }
         }
     },
-    
+
+    Action
+    {
+        ID = "Show_Nodes",
+        Category = 'FuFrame',
+        Targets = 
+        {
+            Composition = 
+            {
+              Execute = 
+                [[
+                print('show nodes view')
+                target:DoAction("Fusion_View_Show", {view = "Keyframes", show = false}) 
+                target:DoAction("Fusion_View_Show", {view = "Spline", show = false}) 
+                target:DoAction("Fusion_View_Show", {view = "Nodes", show = true}) 
+                ]],
+            }
+        }
+    },
+
     Action
     {
         ID = "Toggle_Console",
@@ -126,85 +103,55 @@
         }
     },
 
-  Hotkeys
-  {
-    Target = "FlowView",
-     
-    TAB = "Comp_Choose_Tool",
-    T = "AddTool{id = 'Transform'}",
-    X = "AddTool{ id = 'Background' }",
-    P = "AddTool{ id = 'PolylineMask' }",
-    B = "AddTool{id = 'Blur'}",    
-    N = "AddTool{id = 'Note'}",
-    D = "Execute{ cmd = 'obj:Comp():DisableSelectedTools()' }",
-    C = "AddTool{ id = 'ColorCorrector' }",
-    G = "AddTool{ id = 'BrightnessContrast' }",
-    R = "AddTool{ id = 'Loader' }",
-    W = "AddTool{ id = 'Saver' }",
-    U = "AddTool{ id = 'Underlay' }",
-    SHIFT_M = "RunScript{filename = 'Scripts:/Utility/stx_merge3DConnect.lua'}",
-    SHIFT_C = "AddTool{ id = 'Camera3D' }",
-    SHIFT_R = "AddTool{ id = 'Renderer3D' }",
-    SHIFT_I = "AddTool{ id = 'ImagePlane3D' }",
-    SHIFT_T = "AddTool{ id = 'Transform3D' }",
-    SHIFT_E = "AddTool{ id = 'pEmitter' }",
-    SHIFT_P = "AddTool{ id = 'pRender' }",
-    M = "RunScript{filename = 'Scripts:/Utility/stx_mergeConnect.lua'}",
-    K = "RunScript{filename = 'Scripts:/Utility/stx_kissConnect.lua'}",
-    OEM_PERIOD = "AddTool{ id = 'PipeRouter' }",
-    LEFT  = "Time_Step_Back",
-    RIGHT = "Time_Step_Forward",
-    -- F3 = "Execute{ cmd = 'print(\"test\")' }",
-  },
-
-    Hotkeys 
+    Hotkeys
     {
-      Target = "FuFrame",
-      F3 = "Toggle_Console" 
+        Target = "FlowView",
+        TAB = "Comp_Choose_Tool",
+        T = "AddTool{id = 'Transform'}",
+        X = "AddTool{ id = 'Background' }",
+        P = "AddTool{ id = 'PolylineMask' }",
+        B = "AddTool{id = 'Blur'}",    
+        N = "AddTool{id = 'Note'}",
+        D = "Execute{ cmd = 'obj:Comp():DisableSelectedTools()' }",
+        C = "AddTool{ id = 'ColorCorrector' }",
+        G = "AddTool{ id = 'BrightnessContrast' }",
+        R = "AddTool{ id = 'Loader' }",
+        W = "AddTool{ id = 'Saver' }",
+        U = "AddTool{ id = 'Underlay' }",
+        SHIFT_M = "RunScript{filename = 'Scripts:/Utility/stx_merge3DConnect.lua'}",
+        SHIFT_C = "AddTool{ id = 'Camera3D' }",
+        SHIFT_R = "AddTool{ id = 'Renderer3D' }",
+        SHIFT_I = "AddTool{ id = 'ImagePlane3D' }",
+        SHIFT_T = "AddTool{ id = 'Transform3D' }",
+        SHIFT_E = "AddTool{ id = 'pEmitter' }",
+        SHIFT_P = "AddTool{ id = 'pRender' }",
+        M = "RunScript{filename = 'Scripts:/Utility/stx_mergeConnect.lua'}",
+        K = "RunScript{filename = 'Scripts:/Utility/stx_kissConnect.lua'}",
+        OEM_PERIOD = "AddTool{ id = 'PipeRouter' }",
+        LEFT  = "Time_Step_Back",
+        RIGHT = "Time_Step_Forward",
     },
 
     Hotkeys 
     {
-      Target = "FuFrame",
-      F7 = "Toggle_Timeline" 
+        Target = "FuFrame",
+        F3 = "Toggle_Console",
+        F7 = "Show_Timeline",
+        F8 = "Show_Spline",
+        F9 = "Show_Nodes", 
     },
 
-    Hotkeys 
+    Hotkeys
     {
-      Target = "FuFrame",
-      F8 = "Toggle_Spline" 
+        Target = "GraphView",
+        Q = "Time_Goto_Key_Prev",
+        W = "Time_Goto_Key_Next", 
     },
 
-    Hotkeys 
+    Hotkeys
     {
-      Target = "FuFrame",
-      SHIFT_F7 = "Hide_Timeline" 
+         Target = "GLView",
+         F = "Viewer_Scale_Abs{ scale=0 }",
+         Q = "My_ShowHideControls",
     },
-    Hotkeys 
-    {
-      Target = "FuFrame",
-      SHIFT_F8 = "Hide_Spline" 
-    },
-
-  Hotkeys
-  {
-    Target = "GraphView",
-    Q = "Time_Goto_Key_Prev",
-    W = "Time_Goto_Key_Next", 
-  },
-
-  Hotkeys
-  {
-     Target = "GLView",
-     F = "Viewer_Scale_Abs{ scale=0 }",
-     Q = "My_ShowHideControls",
-  },
-
-  -- Hotkeys
-  -- {
-  --   Target = "FuFrame",
-  --   I = "SetRenderIn",
-  --   O = "SetRenderOut", 
-  -- },
-
 }
