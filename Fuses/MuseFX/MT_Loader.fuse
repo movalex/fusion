@@ -1,0 +1,134 @@
+FuRegisterClass('MT_Loader', CT_SourceTool, {
+	REGS_Name = 'MT_Loader',
+	REGS_Category = 'I/O',
+	REGS_OpIconString = 'MTLd',
+	REGS_OpDescription = '',
+
+	REG_Source_GlobalCtrls = true,
+	REG_Source_SizeCtrls = true,
+	REG_Source_AspectCtrls = false,
+	REG_Source_DepthCtrls = false,
+	
+	REG_TimeVariant = true,
+
+	})
+	
+	
+function Create()
+	self:RemoveControlPage("Controls")
+	
+	InFilename = self:AddInput('Filename', 'Filename', {
+		LINKID_DataType = 'Text',
+		INPID_InputControl = 'FileControl',
+		FC_ClipBrows = true,
+		FCS_FilterString = 'OpenEXR Files (*.exr)|*.exr|',
+		ICS_ControlPage = 'File',
+	})
+	
+	OutImage = self:AddOutput('Output', 'Output', {
+		LINKID_DataType = 'Image',
+		LINK_Main = 1,
+	})
+	
+end
+	
+function Process(req)
+	-- Create a pointer to the EXRIO library
+	local exr = EXRIO()
+	
+	-- Get inputs
+	local filename = InFilename:GetValue(req).Value
+	print(filename)
+	
+	local currentFrame = req.Time
+	local osSeparator = package.config:sub(1,1)
+	
+	local Width = 720
+	local Height = 540
+	
+	if bmd.fileexists(filename) then
+		exr:ReadOpen(filename, currentFrame)
+		
+		if exr:ReadHeader() then
+
+			-- Get channel names
+			local channel_names = {}
+			local channels = exr:GetChannels(1)
+			dump(channels)
+			for i, channel in ipairs(channels) do
+				local channel_name = channel["Name"]
+				table.insert(channel_names, channel_name)
+			end
+			dump(channel_names)
+			
+			local dataWindow = exr:DataWindow(1)
+			dump(dataWindow)
+			local displayWindow = exr:DisplayWindow(1)
+			dump(displayWindow)
+			local ox, oy = displayWindow.left, displayWindow.bottom
+			Width = displayWindow.right - displayWindow.left;
+			Height = displayWindow.top - displayWindow.bottom;
+			local imgw = ImgRectI(dataw)
+			imgw:Offset(-ox, -oy)
+			local pixelAspect = exr:PixelAspectRatio(1)
+
+			-- Read part
+			exr:Part(1)
+			local tempimg = Image({
+							IMG_Width = Width,
+                            IMG_Height = Height,
+                            IMG_Depth = IMDP_128bitFloat,
+                            IMG_DataWindow = imgw,
+                            IMG_YScale = 1.0 / pixelAspect})
+			
+			exr:Channel(R, ANY_TYPE, 1, CHAN_RED)
+			exr:Channel(G, ANY_TYPE, 1, CHAN_GREEN)
+			exr:Channel(B, ANY_TYPE, 1, CHAN_BLUE)
+			
+			exr:ReadPart(1, { tempimg })
+			
+		end
+		exr:Close()	
+
+	end
+		
+	local imgattrs = {
+		IMG_Document = self.Comp,
+		{ IMG_Channel = "Red", },
+		{ IMG_Channel = "Green", },
+		{ IMG_Channel = "Blue", },
+		{ IMG_Channel = "Alpha", },
+		IMG_Width = Width,
+		IMG_Height = Height,
+		IMG_Depth = IMDP_128bitFloat,
+		IMG_DataWindow = dataWindow,		
+		}
+	
+	local img = Image(imgattrs)
+	
+	local random = math.random -- faster in a local
+	
+	local p = Pixel({A=1})
+	
+	for y=0,Height-1 do
+		if self.Status ~= "OK" then break end
+		
+		for x=0,Width-1 do
+			p.R = random()
+			p.G = random()
+			p.B = random()
+			img:SetPixel(x,y, p)
+		end
+	end
+	
+
+	
+	local err = exr:GetLastError()
+	
+	if #err > 0 then
+		print(bmd.writestring(err))
+	end
+	
+	OutImage:Set(req, img)
+	
+end

@@ -1,0 +1,209 @@
+
+--[[--
+MT_EXRLoad.fuse
+
+A simplified EXR Loader. Does not need to know the sequence length
+upon loading. If a frame fails to load (file doesn't exist or is 
+incomplete), it will output (0,0,0,0) instead of failing.
+--]]--
+
+FuRegisterClass('MT_EXRLoad', CT_Tool, {
+	REGS_Name = 'MT_EXRLoad',
+	REGS_Category = 'I/O',
+	REGS_OpIconString = 'MTLd',
+	REGS_OpDescription = 'A simplified EXR Loader',
+
+	REG_SupportsDoD = true,
+	REG_TimeVariant = true,
+
+	})
+	
+	
+function Create()
+	self:RemoveControlPage("Controls")
+	
+	InFilename = self:AddInput('Filename', 'Filename', {
+		LINKID_DataType = 'Text',
+		INPID_InputControl = 'FileControl',
+		FC_ClipBrows = true,
+		FCS_FilterString = 'OpenEXR Files (*.exr)|*.exr|',
+		ICS_ControlPage = 'File',
+	})
+	
+	OutImage = self:AddOutput('Output', 'Output', {
+		LINKID_DataType = 'Image',
+		LINK_Main = 1,
+	})
+	
+end
+	
+function Process(req)
+
+
+	-- Get inputs
+	local filename = InFilename:GetValue(req).Value
+	local parts = {}
+	
+	-- Current Frame Number
+	local t = req.Time
+	
+	local img
+	local err = {}
+
+	-- The filename field will always have the same frame number
+	-- In order to test the existence of more than one frame, we 
+	-- need the filename variable to by dynamic. The ReadOpen()
+	-- function can normally handle this, but bmd.fileexists() 
+	-- cannot.
+	local fileTable = ParseFilename(filename)
+	local padding = fileTable.Padding
+	-- Add the correct amount of padding to the frame number.
+	local framenum = string.format("%0"..padding..'d', tostring(t))
+	-- Reconstruct the filename with the dynamic frame number
+	filename = fileTable.Path..fileTable.CleanName..framenum..'.exr'
+	
+	if bmd.fileexists(filename) then
+		-- Create a pointer to the EXRIO library
+		local exr = EXRIO()
+		
+		-- Create a context for EXRIO operations. Since we already 
+		-- have a dynamic filename, we set the second argument to
+		-- -1. The argument can be set to the current frame number
+		-- using req.Time if the filename handling used above
+		-- is not performed.
+		exr:ReadOpen(filename, -1)
+				
+		if exr:ReadHeader() then
+			-- Get a list of Parts
+			parts = exr:GetPartNames()
+			
+			-- TODO: Populate a combo box with all detected PartNames
+			-- User selects a Part, and that becomes partnum
+			for part=1, exr.NumParts do
+				--print("Part "..tostring(part))
+			end
+			
+			local partnum = 1 -- Hard-coded for testing
+			
+			-- Get image geometry
+			local dispw = exr:DisplayWindow(partnum)
+			local dataw = exr:DataWindow(partnum)
+			local ox, oy = dispw.left, dispw.bottom
+			local w, h = dispw.right - dispw.left, dispw.top - dispw.bottom
+			
+			local imgw = ImgRectI(dataw)
+			imgw:Offset(-ox, -oy)
+			
+			local imgattrs = {
+				IMG_Width = w,
+				IMG_Height = h,
+				IMG_Depth = IMDP_128bitFloat,
+				IMG_DataWindow = imgw,
+				IMG_NoData = req:IsPreCalc(),
+				IMG_YScale = 1.0/exr:PixelAspectRatio(partnum),
+			}
+			
+			img = Image(imgattrs)
+			
+			if not req:IsPreCalc() then
+				-- Read part	
+				exr:Part(partnum)
+				exr:Channel("R", ANY_TYPE, 1, CHAN_RED)
+				exr:Channel("G", ANY_TYPE, 1, CHAN_GREEN)
+				exr:Channel("B", ANY_TYPE, 1, CHAN_BLUE)
+				exr:Channel("A", ANY_TYPE, 1, CHAN_ALPHA, 1.0)
+				
+				exr:ReadPart(partnum, { img })
+			end
+		else -- File exists, but Header not read
+			print("image failure")
+			
+			-- Get default frame attributes from Comp preferences
+			local attrs = self.Comp:GetPrefs("Comp.FrameFormat")
+			local imgattrs = {
+				IMG_Width = attrs.Width,
+				IMG_Height = attrs.Height,
+				IMG_Depth = IMDP_128bitFloat,
+				IMG_DataWindow = imgw,
+				IMG_NoData = req:IsPreCalc(),
+				IMG_YScale = attrs.AspectX/attrs.AspectY,
+			}
+			
+			local p = Pixel({R=0, G=0, B=0, A=0})
+			img = Image(imgattrs)
+			img:Fill(p)
+		end
+		
+		exr:Close()	
+		err = exr:GetLastError()
+	else -- File not found.
+		print("File Not Found")
+
+		-- Get default frame attributes from Comp preferences
+		local attrs = self.Comp:GetPrefs("Comp.FrameFormat")
+		local imgattrs = {
+			IMG_Width = attrs.Width,
+			IMG_Height = attrs.Height,
+			IMG_Depth = IMDP_128bitFloat,
+			IMG_DataWindow = imgw,
+			IMG_NoData = req:IsPreCalc(),
+			IMG_YScale = attrs.AspectX/attrs.AspectY,
+		}
+		
+		img = Image(imgattrs)
+		local p = Pixel({R=0, G=0, B=0, A=0})
+		img:Fill(p)
+	end
+		
+	
+	if #err > 0 then
+		print(bmd.writestring(err))
+	end
+	
+	OutImage:Set(req, img)
+	
+end
+
+------------------------------------------------------------------------------
+-- ParseFilename() is from bmd.scriptlib
+--
+-- This is a great function for ripping a filepath into little bits
+-- returns a table with the following
+--
+-- FullPath : The raw, original path sent to the function
+-- Path : The path, without filename
+-- FullName : The name of the clip w\ extension
+-- Name : The name without extension
+-- CleanName: The name of the clip, without extension or sequence
+-- SNum : The original sequence string, or '' if no sequence
+-- Number : The sequence as a numeric value, or nil if no sequence
+-- Extension: The raw extension of the clip
+-- Padding : Amount of padding in the sequence, or nil if no sequence
+-- UNC : A true or false value indicating whether the path is a UNC path or not
+------------------------------------------------------------------------------
+-- Example: frameNumber = tonumber(ParseFilename(filename).Number)
+function ParseFilename(filename)
+	local seq = {}
+	seq.FullPath = filename
+	string.gsub(seq.FullPath, '^(.+[/\\])(.+)', function(path, name) seq.Path = path seq.FullName = name end)
+	string.gsub(seq.FullName, '^(.+)(%..+)$', function(name, ext) seq.Name = name seq.Extension = ext end)
+	
+	if not seq.Name then -- no extension?
+		seq.Name = seq.FullName
+	end
+	
+	string.gsub(seq.Name, '^(.-)(%d+)$', function(name, SNum) seq.CleanName = name seq.SNum = SNum end)
+	
+	if seq.SNum then
+		seq.Number = tonumber(seq.SNum)
+		seq.Padding = string.len(seq.SNum)
+	else
+		seq.SNum = ''
+		seq.CleanName = seq.Name
+	end
+	
+	if seq.Extension == nil then seq.Extension = '' end
+	seq.UNC = (string.sub(seq.Path, 1, 2) == [[\\]])
+	
+	return seq
+end
