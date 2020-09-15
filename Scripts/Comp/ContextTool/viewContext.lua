@@ -11,6 +11,19 @@ function has_value (tab, val)
     return false
 end
 
+function getViewer(currentView)
+    local leftViewer = {"Left", "LeftView"}
+    local rightViewer = {"Right", "RightView"}
+    if has_value(leftViewer, currentView.ID) then
+        return 1
+    elseif has_value(rightViewer, currentView.ID) then
+        return 2
+    else
+        print('select viewer, then switch context')
+        return nil
+    end
+end
+
 function operateView(tool)
     local currentView = comp.CurrentFrame.CurrentView
     viewNumber = getViewer(currentView)
@@ -33,20 +46,8 @@ function operateView(tool)
     end
 end
 
-function getViewer(currentView)
-    local leftViewer = {"Left", "LeftView"}
-    local rightViewer = {"Right", "RightView"}
-    if has_value(leftViewer, currentView.ID) then
-        return 1
-    elseif has_value(rightViewer, currentView.ID) then
-        return 2
-    else
-        print('select viewer, then switch context')
-        return nil
-    end
-end
-
 local tool = comp:GetData("ContextTool."..CONTEXT)
+
 if tool then
     operateView(tool)
 end
