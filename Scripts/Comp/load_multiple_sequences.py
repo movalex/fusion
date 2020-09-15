@@ -133,7 +133,8 @@ def run_folder(input):
                 if not name in short_seqs.values():
                     short_seqs[float(len(short_seqs) + 1)] = name
                     if not name in full_names_dict.keys():
-                        full_names_dict[name] = os.path.join(root, name)
+                        full_path = os.path.join(root, name)
+                        full_names_dict[name] = full_path
 
     sequencelength = len(short_seqs) + 1
 
