@@ -1,6 +1,7 @@
 {
 	Tools = ordered() {
 		SHTV_10s_concert = GroupOperator {
+			CtrlWZoom = false,
 			Inputs = ordered() {
 				Input1 = InstanceInput {
 					SourceOp = "date",
@@ -63,7 +64,7 @@
 				}
 			},
 			ViewInfo = GroupInfo {
-				Pos = { 0.206993, 80.6822 },
+				Pos = { 347.333, 89.1818 },
 				Flags = {
 					Expanded = true,
 					AllowPan = false,
@@ -98,7 +99,6 @@
 							GlobalEnd = 249
 						}
 					},
-					CtrlWShown = false,
 					Inputs = {
 						["Clip1.PNGFormat.PostMultiply"] = Input { Value = 1, },
 						Depth = Input { Value = 2, },
@@ -112,7 +112,6 @@
 				},
 				date = TextPlus {
 					ExtentSet = true,
-					CtrlWShown = false,
 					Inputs = {
 						Alignment = Input { Value = 1, },
 						GlobalIn = Input { Value = 28, },
@@ -206,8 +205,6 @@
 				},
 				place = TextPlus {
 					ExtentSet = true,
-					CtrlWZoom = false,
-					CtrlWShown = false,
 					Inputs = {
 						Alignment = Input { Value = 1, },
 						GlobalIn = Input { Value = 28, },
@@ -285,7 +282,6 @@
 					ViewInfo = OperatorInfo { Pos = { 160.668, 125.671 } },
 				},
 				song = TextPlus {
-					CtrlWShown = false,
 					Inputs = {
 						Alignment = Input { Value = 1, },
 						GlobalIn = Input { Value = 1, },
@@ -319,6 +315,7 @@
 					UserControls = ordered() { delay = { INP_MaxAllowed = 20, INP_Integer = true, INPID_InputControl = "SliderControl", INP_MaxScale = 20, INP_Default = 20, INP_MinScale = 1, INP_MinAllowed = 1, LINKID_DataType = "Number", ICS_ControlPage = "Controls", ICD_Center = 20, LINKS_Name = "delay" } }
 				},
 				Follower_song = StyledTextFollower {
+					CtrlWZoom = false,
 					NameSet = true,
 					Inputs = {
 						DelayType = Input { Value = 2, },
@@ -327,6 +324,7 @@
 							Expression = "song.delay",
 						},
 						Text = Input { Value = "ЭЛЕКТРИЧКА", },
+						TransformSize = Input { Value = 1, },
 						CharacterSizeY = Input {
 							SourceOp = "Follower_songCharacterSizeY",
 							Source = "Value",
@@ -338,7 +336,8 @@
 					NameSet = true,
 					KeyFrames = {
 						[28] = { 0, RH = { 28.3333333333333, 0 }, Flags = { Linear = true } },
-						[29] = { 1, LH = { 28.6666666666667, 1 } }
+						[29] = { 0.63, LH = { 28.6666666666667, 0.63 }, RH = { 29.3333333333333, 0.753333333333333 } },
+						[30] = { 1, LH = { 29.6666666666667, 0.876666666666667 }, Flags = { Linear = true } }
 					}
 				},
 				Merge3 = Merge {
@@ -376,7 +375,6 @@
 					ViewInfo = OperatorInfo { Pos = { -30.3264, 81.2271 } },
 				},
 				name = TextPlus {
-					CtrlWShown = false,
 					Inputs = {
 						Alignment = Input { Value = 1, },
 						GlobalIn = Input { Value = 1, },
@@ -385,6 +383,7 @@
 						Height = Input { Value = 1080, },
 						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
 						Center = Input { Value = { 0.102709355619, 0.2138263665595 }, },
+						TransformSize = Input { Value = 1, },
 						Red1 = Input { Value = 0.921568627451, },
 						Green1 = Input { Value = 0.921568627451, },
 						Blue1 = Input { Value = 0.921568627451, },
@@ -405,6 +404,7 @@
 								Value = ""
 							},
 						},
+						delay = Input { Value = 16, },
 					},
 					ViewInfo = OperatorInfo { Pos = { -186.832, 10.0877 } },
 					UserControls = ordered() { delay = { INP_MaxAllowed = 20, INP_Integer = true, INPID_InputControl = "SliderControl", INP_MaxScale = 20, INP_Default = 20, INP_MinScale = 1, INP_MinAllowed = 1, LINKID_DataType = "Number", ICS_ControlPage = "Controls", ICD_Center = 20, LINKS_Name = "delay" } }
@@ -415,10 +415,11 @@
 					Inputs = {
 						DelayType = Input { Value = 2, },
 						Delay = Input {
-							Value = 20,
+							Value = 16,
 							Expression = "name.delay",
 						},
 						Text = Input { Value = "Алена АПИНА", },
+						TransformSize = Input { Value = 1, },
 						CharacterSizeY = Input {
 							SourceOp = "Follower_nameCharacterSizeY",
 							Source = "Value",
@@ -430,7 +431,8 @@
 					NameSet = true,
 					KeyFrames = {
 						[12] = { 0, RH = { 12.3333333333333, 0 } },
-						[13] = { 1, LH = { 12.6666666666667, 1 } }
+						[13] = { 0.669, LH = { 12.6666666666667, 0.669 }, RH = { 13.3333333333333, 0.779333333333333 } },
+						[14] = { 1, LH = { 13.6666666666667, 0.889666666666667 }, Flags = { Linear = true } }
 					}
 				},
 				Merge1 = Merge {
@@ -449,7 +451,6 @@
 					ViewInfo = OperatorInfo { Pos = { -186.832, 81.2271 } },
 				},
 				Background1 = Background {
-					CtrlWShown = false,
 					Inputs = {
 						GlobalIn = Input { Value = 1, },
 						GlobalOut = Input { Value = 249, },
@@ -460,7 +461,7 @@
 						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
 						TopLeftAlpha = Input { Value = 0, },
 					},
-					ViewInfo = OperatorInfo { Pos = { -391.989, 81.2271 } },
+					ViewInfo = OperatorInfo { Pos = { -389.989, 81.2271 } },
 				},
 				Rectangle1 = RectangleMask {
 					CtrlWShown = false,
@@ -547,5 +548,6 @@
 				}
 			},
 		}
-	}
+	},
+	ActiveTool = "SHTV_10s_concert"
 }
