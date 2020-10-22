@@ -36,73 +36,77 @@
         UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
         2019/6/30
-        updates by Alex Bogomolov mail@abogomolov.com
+        updates by Alexey Bogomolov mail@abogomolov.com
         v.6:
             -- update for Fusion 9/16
-            -- Python3 (dropped Python2 support completely, sorry for that)
-            -- update to PySide2 compatibility
+            -- Python3 (no Python2 support)
+            -- update to PySide2
         2019/12/17
         v.7:
-            -- automatic PySide2 package installation for Windows and MacOs (Linux to be tested)
+            -- automatic PySide2 package installation for Windows and MacOs (Linux to be tested, but should work too)
         2020/1/24
-        v.8
-            -- cleanup, add some useful logs
+        v.81
+            -- code cleanup, add some useful logs
+        v.85
+            -- start implementing PointDelegate with some hacks
 """
 
-__VERSION__ = 8
+__VERSION__ = 85
 PKG = "PySide2"
 PKG_VERSION = "5.13.2"
 
-import datetime
-import sys
-import os
-import subprocess
-import platform
 import builtins
+import datetime
+import os
+import platform
+import re
+import subprocess
+import sys
 
 
 def print(*args, **kwargs):
     """custom print() function"""
-    builtins.print("[AttributeSpreadsheet] : ", end="")
+    builtins.print("[AS] : ", end="")
     return builtins.print(*args, **kwargs)
 
 
 try:
     from PySide2.QtWidgets import (
-        QMainWindow,
+        QAbstractItemView,
         QApplication,
+        QCheckBox,
+        QComboBox,
+        QDoubleSpinBox,
         QHBoxLayout,
-        QTableWidget,
-        QWidget,
-        QVBoxLayout,
+        QHeaderView,
+        QItemDelegate,
+        QLineEdit,
+        QMainWindow,
+        QProgressBar,
         QPushButton,
         QSizeGrip,
-        QTableView,
-        QAbstractItemView,
-        QComboBox,
-        QItemDelegate,
-        QHeaderView,
-        QDoubleSpinBox,
-        QSpinBox,
-        QLineEdit,
-        QProgressBar,
-        QToolButton,
-        QCheckBox,
         QSizePolicy,
+        QSpinBox,
+        QTableView,
+        QTableWidget,
+        QTableWidgetItem,
+        QToolButton,
+        QVBoxLayout,
+        QWidget,
     )
     from PySide2.QtCore import (
-        QSize,
-        Qt,
         QAbstractTableModel,
+        QItemSelectionModel,
         QModelIndex,
+        QObject,
+        QPoint,
+        QRect,
+        QSize,
+        QSortFilterProxyModel,
+        Qt,
         SIGNAL,
         SLOT,
-        QPoint,
-        QObject,
         Signal,
-        QRect,
-        QItemSelectionModel,
-        QSortFilterProxyModel,
     )
     from PySide2.QtGui import QBrush, QPainter, QColor
 
@@ -125,6 +129,7 @@ except (ImportError, ModuleNotFoundError):
         print("Python 3.6 is required")
         sys.exit()
     print("No Pyside2 module found, trying to install...")
+
     if platform.system() == "Windows":
         python_executable = os.path.join(os.__file__.split("lib")[0], "python.exe")
     elif platform.system() in ["Darwin", "Linux"]:
@@ -133,7 +138,7 @@ except (ImportError, ModuleNotFoundError):
         import pip
 
         pip_version = int(pip.__version__.split(".")[0])
-        if pip_version < 19:
+        if pip_version < 20:
             print("updating pip")
             run_comand([python_executable, "-m", "pip", "install", "-U", "pip"])
         pyside_cmd = [
@@ -150,7 +155,8 @@ except (ImportError, ModuleNotFoundError):
             sys.exit()
         else:
             print(
-                "Pyside2 installation has failed for some reason, please try again... Or not."
+                "Pyside2 installation has failed for some reason, please try again..."
+                " Or not."
             )
             sys.exit()
     except ImportError:
@@ -167,7 +173,7 @@ class FUIDComboDelegate(QItemDelegate):
     def __init__(self, parent):
 
         QItemDelegate.__init__(self, parent)
-        self.items = ["None"]
+        self.items = ["None", "Domain"]
 
     def createEditor(self, parent, option, index):
         combo = QComboBox(parent)
@@ -182,7 +188,9 @@ class FUIDComboDelegate(QItemDelegate):
 
     def setEditorData(self, editor, index):
         editor.blockSignals(True)
-        editor.setCurrentIndex(int(float(index.model().data(index))))
+        # print(index.model().data(index))
+        # editor.setCurrentIndex(self.items.index(str(index.model().data(index))))
+        editor.setData("Domain")
         editor.blockSignals(False)
 
     def setModelData(self, editor, model, index):
@@ -192,7 +200,7 @@ class FUIDComboDelegate(QItemDelegate):
         self.commitData.emit(self.sender())
 
 
-class NumberDelegate(QItemDelegate):
+class LineEditDelegate(QItemDelegate):
     """
     A delegate that places a fully functioning QLineEdit in every
     cell of the column to which it's applied
@@ -248,9 +256,16 @@ class PointDelegate(QItemDelegate):
         return combo
 
     def setEditorData(self, editor, index):
-        print("index", index)
+        point_data = str(index.model().data(index))
+        substring = re.sub("[{} ]", "", point_data)
+        dict_point = dict(ss.split(":") for ss in substring.split(","))
+        print("point", dict_point.values())
+        a = QTableWidgetItem(dict_point["1.0"])
+        b = QTableWidgetItem(dict_point["2.0"])
         editor.blockSignals(True)
-        editor.setCurrentIndex(int(index.model().data(index)))
+        # editor.setCurrentIndex(int(index.model().data(index)))
+        editor.setItem(0, 0, a)
+        editor.setItem(0, 1, b)
         editor.blockSignals(False)
 
     def setModelData(self, editor, model, index):
@@ -294,11 +309,14 @@ class TableView(QTableView):
             QTableView.mousePressEvent(self, event)
 
     def create_value(self, sm, idxs):
-        value = "={}.{}".format(
-            sm.toolDict[idxs.row() + 1].Name,
-            sm.toolsInputs[idxs.row()].get(sm.attributeNameKeys[idxs.column()]).ID,
-        )
-        self.commitDataDo(value)
+        try:
+            value = "={}.{}".format(
+                sm.toolDict[idxs.row() + 1].Name,
+                sm.toolsInputs[idxs.row()].get(sm.attributeNameKeys[idxs.column()]).ID,
+            )
+            self.commitDataDo(value)
+        except KeyError:
+            pass
 
     def mouseReleaseEvent(self, event):
         if self.mouseIsDown:
@@ -337,8 +355,8 @@ class TableView(QTableView):
 
     def updateColumns(self):
         """
-        updateColumns sets the QItemDelegates for the columns (this way we can make a distinction between various
-        data types for Fusion.
+        updateColumns sets the QItemDelegates for the columns 
+        (this way we can make a distinction between various data types for Fusion)
 
         The columns are grouped by their attribute/parameter names, so tools with attributes that have conflicting
         parameter/input data types might (and probably will) error out.
@@ -352,14 +370,16 @@ class TableView(QTableView):
 
         # filteredKeys contains the column data types with the indices properly sorted after filtering.
         for k, v in enumerate(tm.filteredKeys):
+            # print(f"{k} : {v}")
             if v == "Point":
                 self.setItemDelegateForColumn(k, PointDelegate(self))
             elif v == "FuID":
                 self.setItemDelegateForColumn(k, FUIDComboDelegate(self))
-            elif v in ["Number", "Float", "Int"]:
-                self.setItemDelegateForColumn(k, NumberDelegate(self))
-        pass
+            elif v in ["Number", "Float", "Int", "Clip", "Text"]:
+                self.setItemDelegateForColumn(k, LineEditDelegate(self))
+        # pass
         self.resizeColumnsToContents()
+        self.resizeRowsToContents()
 
     def commitData(self, editor):
         """
@@ -379,8 +399,11 @@ class TableView(QTableView):
         try:
             for isr in self.selectionModel().selection():
                 for s in isr.indexes():
+                    input_name = self.model().headerData(s.column(), Qt.Horizontal, Qt.DisplayRole)
+                    tool_name = self.model().headerData(s.row(), Qt.Vertical, Qt.DisplayRole)
+                    input_name = input_name.replace("\n", " ").strip()
                     print(
-                        f"setting value {value} at row {s.row()+1}, column {s.column()+1}"
+                        f"setting {tool_name} [{input_name}] to {value}"
                     )
                     tm.setData(self.model().mapToSource(s), value, Qt.EditRole)
             comp.EndUndo(True)
@@ -612,7 +635,6 @@ class TableModel(QAbstractTableModel):
             progress += 1
             self.communicate.send((100.0 / (len(self.toolDict))) * progress)
 
-        # print('Total execution time : ' + str(datetime.datetime.now()-startTime))
         self.communicate.send(
             "Done loading, execution time : " + str(datetime.datetime.now() - startTime)
         )
@@ -804,7 +826,6 @@ class MainWindow(QMainWindow):
         v_box.setContentsMargins(2, 2, 2, 2)
         # v_box.setSpacing(0)
         sizeGrip.setWindowFlags(Qt.WindowStaysOnTopHint)
-
         sizeGrip.move(0, 200)
 
         central_widget = QWidget()
@@ -819,7 +840,6 @@ class MainWindow(QMainWindow):
         self.drawInputInfoColors.setChecked(True)
 
         # self.lineEdit.textChanged.connect(self._tv.updateColumns)
-
         # self.proxyModel.setSourceModel(self._tm)
         # self.proxyModel.filteredKeys = self._tm.attributeNameKeys
         self._tv.setModel(self.proxyModel)
@@ -897,7 +917,6 @@ class MainWindow(QMainWindow):
         """
 
         regExp = self.lineEdit.text()
-
         self.proxyModel.filteredKeys = []
         self.proxyModel.setFilterRegExp(regExp)
         self._tv.updateColumns()
@@ -955,6 +974,7 @@ QHeaderView::up-arrow {\
 }\
 "
 
+
 # We define fu and comp as globals so we can basically run the same script from console as well from within Fusion
 if __name__ == "__main__":
     # fu = bmd.scriptapp("Fusion")
@@ -965,13 +985,13 @@ if __name__ == "__main__":
         raise Exception("No instance of Fusion found running.")
     comp = fu.GetCurrentComp()
 
-main_app = QApplication.instance()  # checks if QApplication already exists
-if not main_app:  # create QApplication if it doesnt exist
-    main_app = QApplication([])
-main_app.setStyleSheet(css)
-main = MainWindow()
-main.setWindowTitle("Attribute Spreadsheet 0.1.r{}".format(__VERSION__))
-main.setMinimumSize(QSize(640, 200))
-main.show()
-main.loadFusionData()
-main_app.exec_()
+    main_app = QApplication.instance()  # checks if QApplication already exists
+    if not main_app:  # create QApplication if it doesnt exist
+        main_app = QApplication([])
+    main_app.setStyleSheet(css)
+    main = MainWindow()
+    main.setWindowTitle("Attribute Spreadsheet 0.1.r{}".format(__VERSION__))
+    main.setMinimumSize(QSize(640, 200))
+    main.show()
+    main.loadFusionData()
+    main_app.exec_()
