@@ -13,6 +13,26 @@
         Copyright (c) 2013 House of Secrets
         (http://www.svenneve.com)
 
+        2019/6/30
+        updates by Alexey Bogomolov 
+        (mail@abogomolov.com)
+        v.6:
+            -- update for Fusion 9/16
+            -- Python3 is required
+            -- update to PySide2
+        2019/12/17
+        v.7:
+            -- automatic PySide2 package installation for Windows and MacOs (Linux to be tested, but should work too)
+        2020/1/24
+        v.81:
+            -- code cleanup, add some useful logs
+        2020/10/23
+        v.9:
+            -- implement PointDelegate with some crazy hacks (it really works now!)
+            -- set FuID (comboboxes) to be line edit temporary until proper ComboDelegate is implemented
+            -- further improve logging
+
+    License:
         The authors hereby grant permission to use, copy, and distribute this
         software and its documentation for any purpose, provided that existing
         copyright notices are retained in all copies and that this notice is
@@ -34,24 +54,9 @@
         THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, AND THE AUTHORS AND
         DISTRIBUTORS HAVE NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT,
         UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
-
-        2019/6/30
-        updates by Alexey Bogomolov mail@abogomolov.com
-        v.6:
-            -- update for Fusion 9/16
-            -- Python3 (no Python2 support)
-            -- update to PySide2
-        2019/12/17
-        v.7:
-            -- automatic PySide2 package installation for Windows and MacOs (Linux to be tested, but should work too)
-        2020/1/24
-        v.81
-            -- code cleanup, add some useful logs
-        v.85
-            -- start implementing PointDelegate with some hacks
 """
 
-__VERSION__ = 85
+__VERSION__ = 9
 PKG = "PySide2"
 PKG_VERSION = "5.13.2"
 
@@ -59,6 +64,7 @@ import builtins
 import datetime
 import os
 import platform
+from pprint import pprint as pp
 import re
 import subprocess
 import sys
@@ -112,7 +118,7 @@ try:
 
 except (ImportError, ModuleNotFoundError):
 
-    def run_comand(command):
+    def run_command(command):
         process = subprocess.Popen(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -140,7 +146,7 @@ except (ImportError, ModuleNotFoundError):
         pip_version = int(pip.__version__.split(".")[0])
         if pip_version < 20:
             print("updating pip")
-            run_comand([python_executable, "-m", "pip", "install", "-U", "pip"])
+            run_command([python_executable, "-m", "pip", "install", "-U", "pip"])
         pyside_cmd = [
             python_executable,
             "-m",
@@ -148,7 +154,7 @@ except (ImportError, ModuleNotFoundError):
             "install",
             "{}>={}".format(PKG, PKG_VERSION),
         ]
-        rc = run_comand(pyside_cmd)
+        rc = run_command(pyside_cmd)
         if not rc:
             print("Pyside2 installation successful")
             print("Now try to launch the script again!")
@@ -168,6 +174,8 @@ class FUIDComboDelegate(QItemDelegate):
     """
     A delegate that places a fully functioning QComboBox in every
     cell of the column to which it's applied
+
+    TODO: make it work
     """
 
     def __init__(self, parent):
@@ -234,7 +242,7 @@ class LineEditDelegate(QItemDelegate):
 
 class PointDelegate(QItemDelegate):
     """
-    Need to figure out how to do this bastard.
+    Create a Table Widget with Point(x, y) data.
     """
 
     def __init__(self, parent):
@@ -242,37 +250,35 @@ class PointDelegate(QItemDelegate):
         QItemDelegate.__init__(self, parent)
 
     def createEditor(self, parent, option, index):
-        combo = QTableWidget(1, 2, parent)
-        combo.verticalHeader().setVisible(False)
-        combo.horizontalHeader().setVisible(False)
-        combo.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        qtable_widget = QTableWidget(1, 2, parent)
+        qtable_widget.verticalHeader().setVisible(False)
+        qtable_widget.setMinimumHeight(30)
+        qtable_widget.horizontalHeader().setVisible(False)
+        qtable_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.connect(
-            combo,
+            qtable_widget,
             SIGNAL("currentIndexChanged(int)"),
             self,
             SLOT("currentIndexChanged()"),
         )
-        print("combo: ", combo)
-        return combo
+        return qtable_widget
 
     def setEditorData(self, editor, index):
         point_data = str(index.model().data(index))
         substring = re.sub("[{} ]", "", point_data)
         dict_point = dict(ss.split(":") for ss in substring.split(","))
-        print("point", dict_point.values())
         a = QTableWidgetItem(dict_point["1.0"])
         b = QTableWidgetItem(dict_point["2.0"])
         editor.blockSignals(True)
-        # editor.setCurrentIndex(int(index.model().data(index)))
         editor.setItem(0, 0, a)
         editor.setItem(0, 1, b)
         editor.blockSignals(False)
 
     def setModelData(self, editor, model, index):
-        model.setData(index, editor.currentIndex())
-
-    def currentIndexChanged(self):
-        self.commitData.emit(self.sender())
+        x = editor.item(0,0).text()
+        y = editor.item(0,1).text()
+        data = [x, y]
+        model.sourceModel().stored_edit_role_data = data
 
 
 class TableView(QTableView):
@@ -366,20 +372,17 @@ class TableView(QTableView):
         alternative.)
         """
         tm = self.model()
-        # print(tm.filteredKeys)
 
         # filteredKeys contains the column data types with the indices properly sorted after filtering.
         for k, v in enumerate(tm.filteredKeys):
             # print(f"{k} : {v}")
             if v == "Point":
                 self.setItemDelegateForColumn(k, PointDelegate(self))
-            elif v == "FuID":
-                self.setItemDelegateForColumn(k, FUIDComboDelegate(self))
-            elif v in ["Number", "Float", "Int", "Clip", "Text"]:
+            # elif v == "FuID":
+            #     self.setItemDelegateForColumn(k, FUIDComboDelegate(self))
+            elif v in ["Number", "Float", "Int", "Clip", "Text", "FuID"]:
                 self.setItemDelegateForColumn(k, LineEditDelegate(self))
-        # pass
         self.resizeColumnsToContents()
-        self.resizeRowsToContents()
 
     def commitData(self, editor):
         """
@@ -393,7 +396,6 @@ class TableView(QTableView):
         self.commitDataDo(value)
 
     def commitDataDo(self, value):
-        # print(f'got value: {value}')
         tm = self.model().sourceModel()
         comp.StartUndo("Attribute Spreadsheet")
         try:
@@ -444,7 +446,7 @@ class TableSortFilterProxyModel(QSortFilterProxyModel):
         return False
 
 
-class FusionInput(object):
+class FusionInput():
     """
     A Fusion Input cache/wrapper around the actual Input retrieved from the tool input list.
     """
@@ -497,21 +499,19 @@ class FusionInput(object):
         return self.fusionInput[item]
 
     def __setitem__(self, key, value):
-        # print('__setitem__: ', value)
-
-        # Some debugging values
-        if value == "p":
-            print(self.attributes.keys())
+        
+        # print input attributes  
+        if value == "p" or "p" in value:
+            pp(self.attributes)
             return
-
-        if self.GetExpression() or value[0] == "=":
-            if value == "=-x":
+        if self.GetExpression() or "=" in value:
+            if value == "=-x" or "=-x" in value:
+                print("Expression cleared")
                 self.SetExpression(None)
             else:
                 # print("settings expression")
                 self.SetExpression(value.lstrip("="))
             return
-
         if self.attributes["INPS_DataType"] == "Number":
             if value[0:2] in ["+=", "-=", "*=", "/=", "%="] and len(value) >= 3:
                 # expecting an compound assignment
@@ -552,12 +552,37 @@ class FusionInput(object):
                 self.attributes["INPN_MaxAllowed"],
                 max(self.attributes["INPN_MinAllowed"], value),
             )
+        if self.attributes["INPS_DataType"] == "Point":
+            math_ops = ["+=", "-=", "*=", "/=", "%="]
+            values = []
+            for i, v in enumerate(value):
+                if any(op in v[:2] for op in math_ops) and len(v) >= 3:
+                    # expecting an compound assignment
+                    if self.is_number(v[2:]):
+                        operator = v[0]
+                        v = float(v[2:])
+                        if operator == "+":
+                            v = float(self.fusionInput[key][float(i+1)] + v)
+                        elif operator == "-":
+                            v = float(self.fusionInput[key][float(i+1)] - v)
+                        elif operator == "/":
+                            v = float(self.fusionInput[key][float(i+1)] / v)
+                        elif operator == "*":
+                            v = float(self.fusionInput[key][float(i+1)] * v)
+                        elif operator == "%":
+                            v = float(self.fusionInput[key][float(i+1)] % v)
+                        print("setting a math value")
+                    else:
+                        v = self.fusionInput[key]
+                values.append(v)
+            value = [float(i) for i in values]
 
         self.fusionInput[key] = value
         self.keyFrames = self.fusionInput.GetKeyFrames()
         self.value = self.fusionInput[key]
 
-    def is_number(self, s):
+    @staticmethod
+    def is_number(s):
         try:
             float(s)
             return True
@@ -727,14 +752,19 @@ class TableModel(QAbstractTableModel):
         Needs more work
         """
         if not index.isValid():
+            print('index not valid')
             return
         elif role == Qt.EditRole:
             r = self.toolsInputs[index.row()].get(
-                self.attributeNameKeys[index.column()], None
-            )
+                    self.attributeNameKeys[index.column()], None
+                    )
             if r:
-                # print("tablemodel editrole", str(value))
-                r[comp.CurrentTime] = str(value)
+                if isinstance(value, list):
+                    print("setting point data: ", value)
+                    r[comp.CurrentTime] = value
+                else:
+                    # print("setting string data: ", str(value))
+                    r[comp.CurrentTime] = str(value)
         return True
 
     def flags(self, index):
@@ -922,58 +952,52 @@ class MainWindow(QMainWindow):
         self._tv.updateColumns()
 
 
-css = "*, QTableCornerButton::section {\
-    font: 9pt 'tahoma';\
-    color: rgb(192, 192, 192);\
-    background-color: rgb(52, 52, 52);\
-}\
-\
-QMainWindow {\
-    border-top: 1px solid rgb(80,80,80);\
-    border-left: 1px solid rgb(80,80,80);\
-    border-right: 1px solid rgb(33,33,33);\
-    border-bottom: 1px solid rgb(33,33,33);\
-}\
-\
-QTableView {\
-    background-color: rgb(52, 52, 52);\
-    border-color: rgb(33, 33, 33);\
-    border-bottom-color: rgb(34, 34, 34);\
-    color: rgb(192, 192, 192);\
-    gridline-color: rgb(34, 34, 34);\
-}\
-\
-QHeaderView::section {\
-    background-color: rgb(100, 100, 100);\
-    color: rgb(0,0,0);\
-    padding: 0;\
-}\
-QTableView::item {\
-    border: 0px;\
-    padding-left: 8px;\
-}\
-\
-QToolButton {\
-    background-color: rgb(52, 52, 52);\
-}\
-QToolButton:checked {\
-    background-color: rgb(70, 86, 134);\
-}\
-QHeaderView::down-arrow {\
-    /*image: url(TriangleDown.png);*/\
-    width: 4 px;\
-    height: 8 px;\
-    padding-right: 4px;\
-}\
-\
-QHeaderView::up-arrow {\
-    /*image: url(TriangleUp.png);*/\
-    width: 4 px;\
-    height: 8 px;\
-    padding-right: 4px;\
-}\
-"
+css = """
+*, QTableCornerButton::section {
+    font: 9pt 'tahoma';
+    color: rgb(192, 192, 192);
+    background-color: rgb(52, 52, 52);
+}
 
+QMainWindow {
+    border-top: 1px solid rgb(80,80,80);
+    border-left: 1px solid rgb(80,80,80);
+    border-right: 1px solid rgb(33,33,33);
+    border-bottom: 1px solid rgb(33,33,33);
+}
+
+QTableView {
+    background-color: rgb(52, 52, 52);
+    border-color: rgb(33, 33, 33);
+    border-bottom-color: rgb(34, 34, 34);
+    color: rgb(192, 192, 192);
+    gridline-color: rgb(34, 34, 34);
+}
+
+QHeaderView::section {
+    background-color: rgb(100, 100, 100);
+    color: rgb(0,0,0);
+    padding: 0;
+}
+QTableView::item {
+    border: 0px;
+    padding-left: 8px;
+}
+
+QToolButton {
+    background-color: rgb(52, 52, 52);
+}
+QToolButton:checked {
+    background-color: rgb(70, 86, 134);
+}
+QTableWidget::item {
+    text-align: top center;
+    border-style: outset;
+    border-width: 4px;
+    background-color: rgb(30,30,30);
+    }
+}
+"""
 
 # We define fu and comp as globals so we can basically run the same script from console as well from within Fusion
 if __name__ == "__main__":
