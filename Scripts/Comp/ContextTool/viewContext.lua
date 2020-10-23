@@ -1,6 +1,6 @@
-if not CONTEXT then
-    CONTEXT = 1
-end
+-- if not CONTEXT then
+--     CONTEXT = 1
+-- end
 
 function has_value (tab, val)
     for index, value in ipairs(tab) do
@@ -24,30 +24,35 @@ function getViewer(currentView)
     end
 end
 
-function operateView(tool)
+function switchContext(toolName)
     local currentView = comp.CurrentFrame.CurrentView
     viewNumber = getViewer(currentView)
     if viewNumber then
+        -- previousTool = comp:GetData("Context.previousTool")
+        -- if previousTool ~= nil and previousTool ~= toolName then
+        --     print("prev and tool", previousTool, toolName)
+        --     comp:SetData("Context.previousTool")
+        --     comp.CurrentFrame:ViewOn(currentView, comp:FindTool(previousTool))
+        --     return
+        -- end
         local viewOutput = currentView:GetPreview():GetConnectedOutput()
         if not viewOutput then
-            print('no tool in current viewer')
+            -- no toolName in current viewer
+            comp.CurrentFrame:ViewOn(comp:FindTool(toolName), viewNumber)
+            -- comp:SetData("ContextTool."..CONTEXT, toolName)
             return
         end
         local currentlyViewedTool = viewOutput:GetTool() 
-        if currentlyViewedTool.Name == tool then
-            print('this tool is already loaded')
-            return
-        end
         if currentlyViewedTool ~= nil then
-            comp:SetData("ContextTool."..CONTEXT, currentlyViewedTool.Name)
-            local contextTool = comp:FindTool(tool)
+            -- comp:SetData("ContextTool.previousTool", currentlyViewedTool.Name)
+            local contextTool = comp:FindTool(toolName)
             comp.CurrentFrame:ViewOn(contextTool, viewNumber)
         end
     end
 end
-
-local tool = comp:GetData("ContextTool."..CONTEXT)
-
-if tool then
-    operateView(tool)
+print(CONTEXT)
+local toolName = comp:GetData("ContextTool."..CONTEXT)
+if toolName then
+    switchContext(toolName)
+else print("add at least one context tool")
 end
