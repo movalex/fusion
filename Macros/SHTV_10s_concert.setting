@@ -44,17 +44,25 @@
 					Source = "StyledText",
 					Name = "name",
 				},
-				Input8 = InstanceInput {
-					SourceOp = "name",
-					Source = "delay",
-					Name = "name delay",
-					Page = "Controls",
-					Default = 20,
-				},
 				Input9 = InstanceInput {
 					SourceOp = "Loader",
 					Source = "Clip",
 					Name = "Filename",
+				},
+				Input8 = InstanceInput {
+					SourceOp = "name",
+					Source = "delay",
+					Name = "name delay",
+					DataType = "Number",
+					InputControl = "SliderControl",
+                    MaxAllowed = 30,
+                    MaxScale = 30,
+                    Default = 10,
+                    Integer = true,
+                    MinScale = 1,
+                    MinAllowed = 1,
+                    Center = 15,
+					ControlPage = "Controls",
 				}
 			},
 			Outputs = {
@@ -64,7 +72,7 @@
 				}
 			},
 			ViewInfo = GroupInfo {
-				Pos = { 347.333, 89.1818 },
+				Pos = { 396.617, 363.106 },
 				Flags = {
 					Expanded = true,
 					AllowPan = false,
@@ -99,6 +107,7 @@
 							GlobalEnd = 249
 						}
 					},
+					CtrlWShown = false,
 					Inputs = {
 						["Clip1.PNGFormat.PostMultiply"] = Input { Value = 1, },
 						Depth = Input { Value = 2, },
@@ -112,6 +121,7 @@
 				},
 				date = TextPlus {
 					ExtentSet = true,
+					CtrlWShown = false,
 					Inputs = {
 						Alignment = Input { Value = 1, },
 						GlobalIn = Input { Value = 28, },
@@ -205,6 +215,7 @@
 				},
 				place = TextPlus {
 					ExtentSet = true,
+					CtrlWShown = false,
 					Inputs = {
 						Alignment = Input { Value = 1, },
 						GlobalIn = Input { Value = 28, },
@@ -282,6 +293,7 @@
 					ViewInfo = OperatorInfo { Pos = { 160.668, 125.671 } },
 				},
 				song = TextPlus {
+					CtrlWShown = false,
 					Inputs = {
 						Alignment = Input { Value = 1, },
 						GlobalIn = Input { Value = 1, },
@@ -375,6 +387,7 @@
 					ViewInfo = OperatorInfo { Pos = { -30.3264, 81.2271 } },
 				},
 				name = TextPlus {
+					CtrlWShown = false,
 					Inputs = {
 						Alignment = Input { Value = 1, },
 						GlobalIn = Input { Value = 1, },
@@ -404,7 +417,7 @@
 								Value = ""
 							},
 						},
-						delay = Input { Value = 16, },
+						delay = Input { Value = 14, },
 					},
 					ViewInfo = OperatorInfo { Pos = { -186.832, 10.0877 } },
 					UserControls = ordered() { delay = { INP_MaxAllowed = 20, INP_Integer = true, INPID_InputControl = "SliderControl", INP_MaxScale = 20, INP_Default = 20, INP_MinScale = 1, INP_MinAllowed = 1, LINKID_DataType = "Number", ICS_ControlPage = "Controls", ICD_Center = 20, LINKS_Name = "delay" } }
@@ -415,7 +428,7 @@
 					Inputs = {
 						DelayType = Input { Value = 2, },
 						Delay = Input {
-							Value = 16,
+							Value = 20,
 							Expression = "name.delay",
 						},
 						Text = Input { Value = "Алена АПИНА", },
@@ -451,6 +464,7 @@
 					ViewInfo = OperatorInfo { Pos = { -186.832, 81.2271 } },
 				},
 				Background1 = Background {
+					CtrlWShown = false,
 					Inputs = {
 						GlobalIn = Input { Value = 1, },
 						GlobalOut = Input { Value = 249, },
@@ -506,6 +520,7 @@
 					}
 				},
 				Rectangle = RectangleMask {
+					CtrlWShown = false,
 					Inputs = {
 						Filter = Input { Value = FuID { "Fast Gaussian" }, },
 						MaskWidth = Input { Value = 1920, },
@@ -547,6 +562,7 @@
 					}
 				}
 			},
+
 		}
 	},
 	ActiveTool = "SHTV_10s_concert"
