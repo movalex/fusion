@@ -12,11 +12,11 @@
         Written by Sven Neve (sven[AT]houseofsecrets[DOT]nl)
         Copyright (c) 2013 House of Secrets
         (http://www.svenneve.com)
-
-        2019/6/30
-        updates by Alexey Bogomolov 
+    Updates:
+        by Alexey Bogomolov
         (mail@abogomolov.com)
         v.6:
+        2019/6/30
             -- update for Fusion 9/16
             -- Python3 is required
             -- update to PySide2
@@ -29,8 +29,10 @@
         2020/10/23
         v.9:
             -- implement PointDelegate with some crazy hacks (it really works now!)
-            -- set FuID (comboboxes) to be line edit temporary until proper ComboDelegate is implemented
+            -- add math operations for Point data
+            -- set FuID (comboboxes) to be line edit until proper ComboDelegate is implemented
             -- further improve logging
+            -- better error handling
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
@@ -64,10 +66,10 @@ import builtins
 import datetime
 import os
 import platform
-from pprint import pprint as pp
 import re
 import subprocess
 import sys
+from pprint import pprint as pp
 
 
 def print(*args, **kwargs):
@@ -142,7 +144,6 @@ except (ImportError, ModuleNotFoundError):
         python_executable = os.path.join(os.__file__.split("lib/")[0], "bin", "python3")
     try:
         import pip
-
         pip_version = int(pip.__version__.split(".")[0])
         if pip_version < 20:
             print("updating pip")
@@ -181,7 +182,7 @@ class FUIDComboDelegate(QItemDelegate):
     def __init__(self, parent):
 
         QItemDelegate.__init__(self, parent)
-        self.items = ["None", "Domain"]
+        self.items = ["None"]
 
     def createEditor(self, parent, option, index):
         combo = QComboBox(parent)
@@ -198,7 +199,7 @@ class FUIDComboDelegate(QItemDelegate):
         editor.blockSignals(True)
         # print(index.model().data(index))
         # editor.setCurrentIndex(self.items.index(str(index.model().data(index))))
-        editor.setData("Domain")
+        # editor.setData("Domain")
         editor.blockSignals(False)
 
     def setModelData(self, editor, model, index):
@@ -574,9 +575,13 @@ class FusionInput():
                         print("setting a math value")
                     else:
                         v = self.fusionInput[key]
+                        print("v", v)
                 values.append(v)
-            value = [float(i) for i in values]
-
+            try:
+                value = [float(i) for i in values]
+            except ValueError:
+                print("Point data must be numbers")
+                return
         self.fusionInput[key] = value
         self.keyFrames = self.fusionInput.GetKeyFrames()
         self.value = self.fusionInput[key]
@@ -646,7 +651,6 @@ class TableModel(QAbstractTableModel):
             toolInputsAttributes = {}
             for v in tool.GetInputList().values():
                 f = FusionInput(v)
-                # if f.Name not in self.inputsToSkip:
                 if f.attributes["INPS_DataType"] not in self.data_types_to_skip:
                     key = f.Name
                     toolInputs[key] = f
@@ -760,7 +764,7 @@ class TableModel(QAbstractTableModel):
                     )
             if r:
                 if isinstance(value, list):
-                    print("setting point data: ", value)
+                    # print("setting point data: ", value)
                     r[comp.CurrentTime] = value
                 else:
                     # print("setting string data: ", str(value))
@@ -1001,7 +1005,7 @@ QTableWidget::item {
 
 # We define fu and comp as globals so we can basically run the same script from console as well from within Fusion
 if __name__ == "__main__":
-    # fu = bmd.scriptapp("Fusion")
+    fu = bmd.scriptapp("Fusion")
     # if fu.GetResolve():
     #     print('This script works only with standalone Fusion')
     #     sys.exit()
