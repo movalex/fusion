@@ -237,8 +237,8 @@ class LineEditDelegate(QItemDelegate):
         model.sourceModel().stored_edit_role_data = editor.text()
         pass
 
-    def valueChanged(self):
-        self.commitData.emit(self.sender())
+    # def valueChanged(self):
+    #     self.commitData.emit(self.sender())
 
 
 class PointDelegate(QItemDelegate):
@@ -500,19 +500,20 @@ class FusionInput():
         return self.fusionInput[item]
 
     def __setitem__(self, key, value):
+        # debug - print input attributes  
         
-        # print input attributes  
         if value == "p" or "p" in value:
             pp(self.attributes)
             return
-        if self.GetExpression() or "=" in value:
+
+        if self.GetExpression() or value[0] == '=':
             if value == "=-x" or "=-x" in value:
                 print("Expression cleared")
                 self.SetExpression(None)
             else:
-                # print("settings expression")
                 self.SetExpression(value.lstrip("="))
             return
+
         if self.attributes["INPS_DataType"] == "Number":
             if value[0:2] in ["+=", "-=", "*=", "/=", "%="] and len(value) >= 3:
                 # expecting an compound assignment
@@ -531,28 +532,21 @@ class FusionInput():
                     elif operator == "%":
                         value = float(self.fusionInput[key] % value)
                     print("setting a math value")
+            if self.attributes["INPID_InputControl"] == "CheckboxControl":
+                if value.lower() in ["0", "no", "off", "false"]:
+                    value = 0
+                elif value.lower() in ["1", "yes", "on", "true"]:
+                    value = 1
+                elif self.is_number(value):
+                    value = round(min(1, max(0, float(value))))
                 else:
                     value = self.fusionInput[key]
+            if self.is_number(value):
+                value = float(value)
             else:
-                if self.attributes["INPID_InputControl"] == "CheckboxControl":
-                    if value.lower() in ["0", "no", "off", "false"]:
-                        value = 0
-                    elif value.lower() in ["1", "yes", "on", "true"]:
-                        value = 1
-                    elif self.is_number(value):
-                        value = round(min(1, max(0, float(value))))
-                    else:
-                        value = self.fusionInput[key]
-                if self.is_number(value):
-                    value = float(value)
-                else:
-                    value = self.fusionInput[key]
-            if self.attributes["INPB_Integer"]:
-                value = int(value)
-            value = min(
-                self.attributes["INPN_MaxAllowed"],
-                max(self.attributes["INPN_MinAllowed"], value),
-            )
+                print("this field require number input")
+                value = self.fusionInput[key]
+
         if self.attributes["INPS_DataType"] == "Point":
             math_ops = ["+=", "-=", "*=", "/=", "%="]
             values = []
