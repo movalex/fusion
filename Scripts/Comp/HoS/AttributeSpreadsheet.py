@@ -81,6 +81,7 @@ def print(*args, **kwargs):
 try:
     from PySide2.QtWidgets import (
         QAbstractItemView,
+        QAbstractButton,
         QApplication,
         QCheckBox,
         QComboBox,
@@ -501,7 +502,6 @@ class FusionInput():
 
     def __setitem__(self, key, value):
         # debug - print input attributes  
-        
         if value == "p" or "p" in value:
             pp(self.attributes)
             return
@@ -704,7 +704,6 @@ class TableModel(QAbstractTableModel):
             return self.attributeDataTypes[index.column()]
         elif role == Qt.BackgroundRole:
             return self.backgroundRoleMethod(index, role)
-
         else:
             return
 
@@ -846,6 +845,7 @@ class MainWindow(QMainWindow):
         h_box.setContentsMargins(0, 0, 0, 0)
         v_box.addLayout(h_box)
         v_box.addWidget(self._tv)
+        self.corner = self._tv.findChild(QAbstractButton)
 
         sizeGrip = QSizeGrip(self)
         # sizeGrip.setParent(self)
@@ -887,6 +887,17 @@ class MainWindow(QMainWindow):
         self.cacheButton.clicked.connect(self.changeCacheMode)
         self.pushButton.pressed.connect(self.reloadFusionData)
         self._tm.communicate.broadcast.connect(self.communication)
+        self.corner.clicked.connect(self.show_clicked)
+
+    def show_clicked(self):
+        """
+        sorting by tool when clicked on corner button
+        """
+        self.proxyModel.sort(-1)
+        # self._tv.setSortingEnabled(True)
+        # self._tv.updateColumns()
+        self._tv.clearSelection()
+
 
     def changeAlwaysOnTop(self):
         if self.alwaysOnTop.checkState():
@@ -952,7 +963,7 @@ class MainWindow(QMainWindow):
 
 css = """
 *, QTableCornerButton::section {
-    font: 9pt 'tahoma';
+    font: 12pt 'tahoma';
     color: rgb(192, 192, 192);
     background-color: rgb(52, 52, 52);
 }
