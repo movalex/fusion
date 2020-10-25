@@ -1,5 +1,5 @@
 """
-    hos_AttributeSpreadsheet
+    AttributeSpreadsheet
 
     About:
         A spreadsheet script to edit the input parameters of multiple Fusion tools at once.
@@ -15,24 +15,29 @@
     Updates:
         by Alexey Bogomolov
         (mail@abogomolov.com)
-        v.6:
+        v.0.1.6:
         2019/6/30
-            -- update for Fusion 9/16
-            -- Python3 is required
+            -- update for Fusion 9/16 and Davinci Resolve (tested in v16)
             -- update to PySide2
+            -- Python3 is required
         2019/12/17
-        v.7:
+        v.0.1.7:
             -- automatic PySide2 package installation for Windows and MacOs (Linux to be tested, but should work too)
         2020/1/24
-        v.81:
+        v.0.1.8:
             -- code cleanup, add some useful logs
         2020/10/23
-        v.9:
-            -- implement PointDelegate with some crazy hacks (it really works now!)
+        v.0.1.9:
+            -- implement PointDelegate with some crazy hacks
             -- add math operations for Point data
-            -- set FuID (comboboxes) to be line edit until proper ComboDelegate is implemented
+            -- set FuID (Comboboxes) data to be line edit, until proper ComboDelegate is implemented
             -- further improve logging
             -- better error handling
+        2020/10/24
+        V.0.2:
+            -- sort tools alphabetically when pressed on corber button
+            -- do not select all tools when pressed this button
+            -- set font to 12pt for MacOS (looks better on Retina Display)
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
@@ -58,7 +63,7 @@
         UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-__VERSION__ = 9
+__VERSION__ = 2
 PKG = "PySide2"
 PKG_VERSION = "5.13.2"
 
@@ -198,6 +203,7 @@ class FUIDComboDelegate(QItemDelegate):
 
     def setEditorData(self, editor, index):
         editor.blockSignals(True)
+        # TODO: implement ComboBox editor
         # print(index.model().data(index))
         # editor.setCurrentIndex(self.items.index(str(index.model().data(index))))
         # editor.setData("Domain")
@@ -308,6 +314,10 @@ class TableView(QTableView):
         # print('Update time : ' + str(datetime.datetime.now()-startTime))
 
     def mousePressEvent(self, event):
+        """
+        TODO: change behavior for Middleclick on Point data to link only X or Y data
+        like 'Point(Center.X, 0.5)'
+        """
         if event.buttons() == Qt.MiddleButton:
             self.mouseIsDown = True
             self.center = self.startCenter = QPoint(event.pos().x(), event.pos().y())
@@ -960,52 +970,54 @@ class MainWindow(QMainWindow):
         self.proxyModel.setFilterRegExp(regExp)
         self._tv.updateColumns()
 
+# increase font size for Retina Display on Mac
+font_size = 12 if platform.system() == "Darwin" else 9
 
-css = """
-*, QTableCornerButton::section {
-    font: 12pt 'tahoma';
+css = f"""
+*, QTableCornerButton::section {{
+    font: {font_size}pt 'tahoma';
     color: rgb(192, 192, 192);
     background-color: rgb(52, 52, 52);
-}
+}}
 
-QMainWindow {
+QMainWindow {{
     border-top: 1px solid rgb(80,80,80);
     border-left: 1px solid rgb(80,80,80);
     border-right: 1px solid rgb(33,33,33);
     border-bottom: 1px solid rgb(33,33,33);
-}
+}}
 
-QTableView {
+QTableView {{
     background-color: rgb(52, 52, 52);
     border-color: rgb(33, 33, 33);
     border-bottom-color: rgb(34, 34, 34);
     color: rgb(192, 192, 192);
     gridline-color: rgb(34, 34, 34);
-}
+}}
 
-QHeaderView::section {
+QHeaderView::section {{
     background-color: rgb(100, 100, 100);
     color: rgb(0,0,0);
     padding: 0;
-}
-QTableView::item {
+}}
+QTableView::item {{
     border: 0px;
     padding-left: 8px;
-}
+}}
 
-QToolButton {
+QToolButton {{
     background-color: rgb(52, 52, 52);
-}
-QToolButton:checked {
+}}
+QToolButton:checked {{
     background-color: rgb(70, 86, 134);
-}
-QTableWidget::item {
+}}
+QTableWidget::item {{
     text-align: top center;
     border-style: outset;
     border-width: 4px;
     background-color: rgb(30,30,30);
-    }
-}
+    }}
+}}
 """
 
 # We define fu and comp as globals so we can basically run the same script from console as well from within Fusion
@@ -1023,7 +1035,7 @@ if __name__ == "__main__":
         main_app = QApplication([])
     main_app.setStyleSheet(css)
     main = MainWindow()
-    main.setWindowTitle("Attribute Spreadsheet 0.1.r{}".format(__VERSION__))
+    main.setWindowTitle("Attribute Spreadsheet 0.{}".format(__VERSION__))
     main.setMinimumSize(QSize(640, 200))
     main.show()
     main.loadFusionData()
