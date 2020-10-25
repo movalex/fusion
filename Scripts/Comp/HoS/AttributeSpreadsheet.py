@@ -35,10 +35,12 @@
             -- better error handling
         2020/10/24
         V.0.2:
-            -- sort tools alphabetically when pressed on corber button
+            -- sort tools by creation time (defaul Fusion sorting order, this may have unpredictable results)
+               TODO: sort tools alphabetically
             -- do not select all tools when pressed this button
             -- set font to 12pt for MacOS (looks better on Retina Display)
             -- add clear search button
+            -- remove chache button because it does not speed up the interface
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
@@ -245,9 +247,6 @@ class LineEditDelegate(QItemDelegate):
         model.sourceModel().stored_edit_role_data = editor.text()
         pass
 
-    # def valueChanged(self):
-    #     self.commitData.emit(self.sender())
-
 
 class PointDelegate(QItemDelegate):
     """
@@ -284,10 +283,13 @@ class PointDelegate(QItemDelegate):
         editor.blockSignals(False)
 
     def setModelData(self, editor, model, index):
-        x = editor.item(0,0).text()
-        y = editor.item(0,1).text()
-        data = [x, y]
-        model.sourceModel().stored_edit_role_data = data
+        try:
+            x = editor.item(0,0).text()
+            y = editor.item(0,1).text()
+            data = [x, y]
+            model.sourceModel().stored_edit_role_data = data
+        except AttributeError:
+            print("Point data not applicable here")
 
 
 class TableView(QTableView):
@@ -306,13 +308,10 @@ class TableView(QTableView):
         self.mouseIsDown = False
 
     def paintEvent(self, event):
-        # startTime = datetime.datetime.now()
         if self.mouseIsDown:
             painter = QPainter(self.viewport())
-            # painter.drawEllipse(self.center,10,10)
             painter.drawLine(self.center, self.startCenter)
         QTableView.paintEvent(self, event)
-        # print('Update time : ' + str(datetime.datetime.now()-startTime))
 
     def mousePressEvent(self, event):
         """
@@ -471,7 +470,7 @@ class FusionInput():
 
     def __init__(self, fusionInput):
         self.fusionInput = fusionInput
-        self.cache = False
+        self.cache = True
         self.keyFrames = fusionInput.GetKeyFrames()
         self.keyFrameValues = dict()
         self.hasKeyFrames = len(self.keyFrames) > 0
@@ -653,7 +652,7 @@ class TableModel(QAbstractTableModel):
 
         comp = fu.GetCurrentComp()
         if not comp:
-            print("No comp data found. Probably both DaVicni and Fusion are loaded?")
+            print("No comp data found. Probably both Resolve and Fusion are loaded?")
             sys.exit()
         self.toolDict.clear()
         self.toolDict = comp.GetToolList(True)
@@ -845,6 +844,7 @@ class MainWindow(QMainWindow):
         self.drawInputInfoColors = QToolButton()
         self.drawInputInfoColors.setCheckable(True)
         self.drawInputInfoColors.setChecked(True)
+        self.drawInputInfoColors.setVisible(False)
         self.drawInputInfoColors.setText("Draw Color Info")
         self.clearButton = QPushButton()
         self.clearButton.setText("Clear")
@@ -855,10 +855,11 @@ class MainWindow(QMainWindow):
         self.lineEdit = QLineEdit(self)
         self.lineEdit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.statusBar().showMessage("System Status | Normal")
-        # self.cacheButton = QToolButton()
-        # self.cacheButton.setCheckable(True)
-        # self.cacheButton.setChecked(False)
-        # self.cacheButton.setText("use cache")
+        self.cacheButton = QToolButton()
+        self.cacheButton.setCheckable(True)
+        self.cacheButton.setChecked(True)
+        self.cacheButton.setVisible(False) # Hide cache button since it is not used. Cache is always enabled
+        self.cacheButton.setText("Use Cache")
 
         v_box = QVBoxLayout()
         h_box = QHBoxLayout()
@@ -868,18 +869,14 @@ class MainWindow(QMainWindow):
         h_box.addWidget(self.clearButton)
         h_box.addWidget(self.pushButton)
         h_box.addWidget(self.drawInputInfoColors)
-        # h_box.addWidget(self.cacheButton)
+        h_box.addWidget(self.cacheButton)
         h_box.setContentsMargins(0, 0, 0, 0)
         v_box.addLayout(h_box)
         v_box.addWidget(self._tv)
         self.corner = self._tv.findChild(QAbstractButton)
 
         sizeGrip = QSizeGrip(self)
-        # sizeGrip.setParent(self)
-        # v_box.addWidget(sizeGrip)
-        # v_box.setAlignment(sizeGrip, Qt.AlignBottom | Qt.AlignRight)
         v_box.setContentsMargins(2, 2, 2, 2)
-        # v_box.setSpacing(0)
         sizeGrip.setWindowFlags(Qt.WindowStaysOnTopHint)
         sizeGrip.move(0, 200)
 
@@ -894,15 +891,11 @@ class MainWindow(QMainWindow):
         self.proxyModel.setDynamicSortFilter(True)
         self.drawInputInfoColors.setChecked(True)
 
-        # self.lineEdit.textChanged.connect(self._tv.updateColumns)
-        # self.proxyModel.setSourceModel(self._tm)
-        # self.proxyModel.filteredKeys = self._tm.attributeNameKeys
         self._tv.setModel(self.proxyModel)
 
         self.progressBar = QProgressBar()
         self.statusBar().addPermanentWidget(self.progressBar)
         # This is simply to show the bar
-        # self.progressBar.setGeometry(30, 40, 200, 25)
         self.progressBar.setValue(0)
 
         # Connections
@@ -911,15 +904,17 @@ class MainWindow(QMainWindow):
         self.drawInputInfoColors.clicked.connect(
             self.changeTableModelBackgroundRoleMethod
         )
-        # self.cacheButton.clicked.connect(self.changeCacheMode)
+        self.cacheButton.clicked.connect(self.changeCacheMode)
         self.clearButton.pressed.connect(self.clear_search)
         self.pushButton.pressed.connect(self.reloadFusionData)
         self._tm.communicate.broadcast.connect(self.communication)
-        self.corner.clicked.connect(self.corner_button_clicked)
+        self.corner.clicked.connect(self.sort_by_first_column)
 
-    def corner_button_clicked(self):
+    def sort_by_first_column(self):
         """
+        WIP
         sorting by tool when clicked on corner button and clear selection
+        Currently returns default Fusion sorting (by time created)
         """
         self.proxyModel.sort(-1)
         self._tv.clearSelection()
@@ -961,16 +956,14 @@ class MainWindow(QMainWindow):
         self._tv.updateColumns()
 
     def changeCacheMode(self):
-        pass
         # Not sure where this goes, is it a method for the TableModel? or should we inherit the dict that has all
         # the fusion input caches and have that cycle through all contained fusion inputs?
-
         # For now we do it here
-        # 
-        # c = self.cacheButton.isChecked()
-        # for input_list in self._tm.toolsInputs:
-        #     for tool_input in list(input_list.values()):
-        #         tool_input.cache = c
+
+        c = self.cacheButton.isChecked()
+        for input_list in self._tm.toolsInputs:
+            for tool_input in list(input_list.values()):
+                tool_input.cache = c
 
     def changeTableModelBackgroundRoleMethod(self):
         if self.drawInputInfoColors.isChecked():
@@ -1044,10 +1037,7 @@ QTableWidget::item {{
 
 # We define fu and comp as globals so we can basically run the same script from console as well from within Fusion
 if __name__ == "__main__":
-    # fu = bmd.scriptapp("Fusion")
-    # if fu.GetResolve():
-    #     print('This script works only with standalone Fusion')
-    #     sys.exit()
+    fu = bmd.scriptapp("Fusion")
     if not fu:
         raise Exception("No instance of Fusion found running.")
     comp = fu.GetCurrentComp()
