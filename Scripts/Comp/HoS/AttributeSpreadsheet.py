@@ -38,6 +38,7 @@
             -- sort tools alphabetically when pressed on corber button
             -- do not select all tools when pressed this button
             -- set font to 12pt for MacOS (looks better on Retina Display)
+            -- add clear search button
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
@@ -416,9 +417,14 @@ class TableView(QTableView):
                     input_name = self.model().headerData(s.column(), Qt.Horizontal, Qt.DisplayRole)
                     tool_name = self.model().headerData(s.row(), Qt.Vertical, Qt.DisplayRole)
                     input_name = input_name.replace("\n", " ").strip()
-                    print(
-                        f"setting {tool_name} [{input_name}] to {value}"
-                    )
+                    if isinstance(value, list) and len(value) == 2:
+                        try:
+                            x, y = [float(i) for i in value]
+                        except ValueError:
+                            x, y = value
+                        print(f"setting {tool_name} [{input_name}] to [{x} : {y}]")
+                    else:
+                        print(f"setting {tool_name} [{input_name}] to {value}")
                     tm.setData(self.model().mapToSource(s), value, Qt.EditRole)
             comp.EndUndo(True)
         except Exception as e:
@@ -516,13 +522,17 @@ class FusionInput():
             pp(self.attributes)
             return
 
-        if self.GetExpression() or value[0] == '=':
-            if value == "=-x" or "=-x" in value:
+        if self.GetExpression():
+            if value == "-x" or "-x" in value:
                 print("Expression cleared")
                 self.SetExpression(None)
             else:
-                self.SetExpression(value.lstrip("="))
+                print("This input is linked by expression. Use '-x' to clear expression")
             return
+
+        if value[0] == "=":
+             self.SetExpression(value.lstrip("="))
+             return
 
         if self.attributes["INPS_DataType"] == "Number":
             if value[0:2] in ["+=", "-=", "*=", "/=", "%="] and len(value) >= 3:
@@ -541,8 +551,7 @@ class FusionInput():
                         value = float(self.fusionInput[key] * value)
                     elif operator == "%":
                         value = float(self.fusionInput[key] % value)
-                    print("setting a math value")
-            if self.attributes["INPID_InputControl"] == "CheckboxControl":
+            if self.attributes["INPID_InputControl"] == "MultiButtonIDControl":
                 if value.lower() in ["0", "no", "off", "false"]:
                     value = 0
                 elif value.lower() in ["1", "yes", "on", "true"]:
@@ -558,6 +567,9 @@ class FusionInput():
                 value = self.fusionInput[key]
 
         if self.attributes["INPS_DataType"] == "Point":
+            if "=" in value:
+                self.SetExpression(value.lstrip("="))
+                return
             math_ops = ["+=", "-=", "*=", "/=", "%="]
             values = []
             for i, v in enumerate(value):
@@ -576,10 +588,8 @@ class FusionInput():
                             v = float(self.fusionInput[key][float(i+1)] * v)
                         elif operator == "%":
                             v = float(self.fusionInput[key][float(i+1)] % v)
-                        print("setting a math value")
                     else:
                         v = self.fusionInput[key]
-                        print("v", v)
                 values.append(v)
             try:
                 value = [float(i) for i in values]
@@ -642,6 +652,9 @@ class TableModel(QAbstractTableModel):
         startTime = datetime.datetime.now()
 
         comp = fu.GetCurrentComp()
+        if not comp:
+            print("No comp data found. Probably both DaVicni and Fusion are loaded?")
+            sys.exit()
         self.toolDict.clear()
         self.toolDict = comp.GetToolList(True)
         self.attributeNameKeys = []  # List of unique attribute name keys
@@ -833,25 +846,29 @@ class MainWindow(QMainWindow):
         self.drawInputInfoColors.setCheckable(True)
         self.drawInputInfoColors.setChecked(True)
         self.drawInputInfoColors.setText("Draw Color Info")
+        self.clearButton = QPushButton()
+        self.clearButton.setText("Clear")
+        self.clearButton.setFixedSize(QSize(70, 20))
         self.pushButton = QPushButton()
         self.pushButton.setText("Refresh")
-        self.pushButton.setFixedSize(QSize(128, 20))
+        self.pushButton.setFixedSize(QSize(70, 20))
         self.lineEdit = QLineEdit(self)
         self.lineEdit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.statusBar().showMessage("System Status | Normal")
-        self.cacheButton = QToolButton()
-        self.cacheButton.setCheckable(True)
-        self.cacheButton.setChecked(False)
-        self.cacheButton.setText("use cache")
+        # self.cacheButton = QToolButton()
+        # self.cacheButton.setCheckable(True)
+        # self.cacheButton.setChecked(False)
+        # self.cacheButton.setText("use cache")
 
         v_box = QVBoxLayout()
         h_box = QHBoxLayout()
         h_box.setAlignment(Qt.AlignRight)
         h_box.addWidget(self.alwaysOnTop)
         h_box.addWidget(self.lineEdit)
+        h_box.addWidget(self.clearButton)
         h_box.addWidget(self.pushButton)
         h_box.addWidget(self.drawInputInfoColors)
-        h_box.addWidget(self.cacheButton)
+        # h_box.addWidget(self.cacheButton)
         h_box.setContentsMargins(0, 0, 0, 0)
         v_box.addLayout(h_box)
         v_box.addWidget(self._tv)
@@ -894,20 +911,21 @@ class MainWindow(QMainWindow):
         self.drawInputInfoColors.clicked.connect(
             self.changeTableModelBackgroundRoleMethod
         )
-        self.cacheButton.clicked.connect(self.changeCacheMode)
+        # self.cacheButton.clicked.connect(self.changeCacheMode)
+        self.clearButton.pressed.connect(self.clear_search)
         self.pushButton.pressed.connect(self.reloadFusionData)
         self._tm.communicate.broadcast.connect(self.communication)
-        self.corner.clicked.connect(self.show_clicked)
+        self.corner.clicked.connect(self.corner_button_clicked)
 
-    def show_clicked(self):
+    def corner_button_clicked(self):
         """
-        sorting by tool when clicked on corner button
+        sorting by tool when clicked on corner button and clear selection
         """
         self.proxyModel.sort(-1)
-        # self._tv.setSortingEnabled(True)
-        # self._tv.updateColumns()
         self._tv.clearSelection()
 
+    def clear_search(self):
+        self.lineEdit.clear()
 
     def changeAlwaysOnTop(self):
         if self.alwaysOnTop.checkState():
@@ -943,14 +961,16 @@ class MainWindow(QMainWindow):
         self._tv.updateColumns()
 
     def changeCacheMode(self):
+        pass
         # Not sure where this goes, is it a method for the TableModel? or should we inherit the dict that has all
         # the fusion input caches and have that cycle through all contained fusion inputs?
 
         # For now we do it here
-        c = self.cacheButton.isChecked()
-        for input_list in self._tm.toolsInputs:
-            for tool_input in list(input_list.values()):
-                tool_input.cache = c
+        # 
+        # c = self.cacheButton.isChecked()
+        # for input_list in self._tm.toolsInputs:
+        #     for tool_input in list(input_list.values()):
+        #         tool_input.cache = c
 
     def changeTableModelBackgroundRoleMethod(self):
         if self.drawInputInfoColors.isChecked():
@@ -978,14 +998,14 @@ css = f"""
     font: {font_size}pt 'tahoma';
     color: rgb(192, 192, 192);
     background-color: rgb(52, 52, 52);
-}}
+    }}
 
 QMainWindow {{
     border-top: 1px solid rgb(80,80,80);
     border-left: 1px solid rgb(80,80,80);
     border-right: 1px solid rgb(33,33,33);
     border-bottom: 1px solid rgb(33,33,33);
-}}
+    }}
 
 QTableView {{
     background-color: rgb(52, 52, 52);
@@ -993,36 +1013,38 @@ QTableView {{
     border-bottom-color: rgb(34, 34, 34);
     color: rgb(192, 192, 192);
     gridline-color: rgb(34, 34, 34);
-}}
+    }}
 
 QHeaderView::section {{
     background-color: rgb(100, 100, 100);
     color: rgb(0,0,0);
     padding: 0;
-}}
+    }}
+
 QTableView::item {{
     border: 0px;
     padding-left: 8px;
-}}
+    }}
 
 QToolButton {{
     background-color: rgb(52, 52, 52);
-}}
+    }}
+
 QToolButton:checked {{
     background-color: rgb(70, 86, 134);
-}}
+    }}
+
 QTableWidget::item {{
     text-align: top center;
     border-style: outset;
     border-width: 4px;
     background-color: rgb(30,30,30);
     }}
-}}
 """
 
 # We define fu and comp as globals so we can basically run the same script from console as well from within Fusion
 if __name__ == "__main__":
-    fu = bmd.scriptapp("Fusion")
+    # fu = bmd.scriptapp("Fusion")
     # if fu.GetResolve():
     #     print('This script works only with standalone Fusion')
     #     sys.exit()
