@@ -1036,6 +1036,9 @@ QTableWidget::item {{
 """
 
 # We define fu and comp as globals so we can basically run the same script from console as well from within Fusion
+# If both Resolve and Fusion are running, Fusion data may load improperly. So we check for scriptapp,
+# and the script would not load if there's a confusion about which instance of Fusion to use. 
+
 if __name__ == "__main__":
     fu = bmd.scriptapp("Fusion")
     if not fu:
