@@ -7,7 +7,7 @@
     Requires:
         Python 3.6
         Fusion 9/16, Davinci Resolve 16
-        PySide2, installed automatically on Windows, MacOs or (not tested) Linux
+        PySide2, installed automatically on first launch
     Notice:
         Written by Sven Neve (sven[AT]houseofsecrets[DOT]nl)
         Copyright (c) 2013 House of Secrets
@@ -35,12 +35,12 @@
             -- better error handling
         2020/10/24
         V.0.2:
-            -- sort tools by creation time (defaul Fusion sorting order, this may have unpredictable results)
+            -- sort tools by creation time by clicking on corner button (default Fusion sorting order used, this may have unpredictable results)
                TODO: sort tools alphabetically
-            -- do not select all tools when pressed this button
+            -- do not select all tools when the corner button is pressed
             -- set font to 12pt for MacOS (looks better on Retina Display)
             -- add clear search button
-            -- remove chache button because it does not speed up the interface
+            -- remove enable/disable chache button, cache is enabled by default
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
