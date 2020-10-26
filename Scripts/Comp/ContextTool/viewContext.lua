@@ -1,7 +1,3 @@
--- if not CONTEXT then
---     CONTEXT = 1
--- end
-
 function has_value (tab, val)
     for index, value in ipairs(tab) do
         if value == val then
@@ -28,31 +24,28 @@ function switchContext(toolName)
     local currentView = comp.CurrentFrame.CurrentView
     viewNumber = getViewer(currentView)
     if viewNumber then
-        -- previousTool = comp:GetData("Context.previousTool")
-        -- if previousTool ~= nil and previousTool ~= toolName then
-        --     print("prev and tool", previousTool, toolName)
-        --     comp:SetData("Context.previousTool")
-        --     comp.CurrentFrame:ViewOn(currentView, comp:FindTool(previousTool))
-        --     return
-        -- end
-        local viewOutput = currentView:GetPreview():GetConnectedOutput()
-        if not viewOutput then
-            -- no toolName in current viewer
-            comp.CurrentFrame:ViewOn(comp:FindTool(toolName), viewNumber)
-            -- comp:SetData("ContextTool."..CONTEXT, toolName)
-            return
+        contextTool = comp:FindTool(toolName)
+        viewOutput = currentView:GetPreview():GetConnectedOutput()
+        if viewOutput then
+            currentlyViewedTool = viewOutput:GetTool()
+            prevTool = comp:GetData("ContextTool.previousTool") or toolName
+            if currentlyViewedTool and toolName ~= currentlyViewedTool.Name then
+                comp.CurrentFrame:ViewOn(contextTool, viewNumber)
+                comp:SetData("ContextTool.previousTool", currentlyViewedTool.Name)
+            else
+                comp.CurrentFrame:ViewOn(comp:FindTool(prevTool), viewNumber)
+                comp:SetData("ContextTool.previousTool", toolName)
+            end
         end
-        local currentlyViewedTool = viewOutput:GetTool() 
-        if currentlyViewedTool ~= nil then
-            -- comp:SetData("ContextTool.previousTool", currentlyViewedTool.Name)
-            local contextTool = comp:FindTool(toolName)
-            comp.CurrentFrame:ViewOn(contextTool, viewNumber)
-        end
+    else
+        print("click on a viewer, then switch context")
     end
 end
-print(CONTEXT)
+
 local toolName = comp:GetData("ContextTool."..CONTEXT)
+
 if toolName then
     switchContext(toolName)
-else print("add at least one context tool")
+else 
+    print("add at least one context tool")
 end
