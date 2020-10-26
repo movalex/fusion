@@ -37,8 +37,6 @@ function switchContext(toolName)
                 comp:SetData("ContextTool.previousTool", toolName)
             end
         end
-    else
-        print("click on a viewer, then switch context")
     end
 end
 
@@ -47,5 +45,5 @@ local toolName = comp:GetData("ContextTool."..CONTEXT)
 if toolName then
     switchContext(toolName)
 else 
-    print("add at least one context tool")
+    print("no context tool found")
 end
