@@ -517,7 +517,7 @@ class FusionInput():
 
     def __setitem__(self, key, value):
         # debug - print input attributes  
-        if value == "p" or "p" in value:
+        if value == "p":
             pp(self.attributes)
             return
 
@@ -529,7 +529,7 @@ class FusionInput():
                 print("This input is linked by expression. Use '-x' to clear expression")
             return
 
-        if value[0] == "=":
+        if not isinstance(value, list) and value[0] == "=":
              self.SetExpression(value.lstrip("="))
              return
 
@@ -568,6 +568,9 @@ class FusionInput():
         if self.attributes["INPS_DataType"] == "Point":
             if "=" in value:
                 self.SetExpression(value.lstrip("="))
+                return
+            if value[0] == "p":
+                pp(self.attributes)
                 return
             math_ops = ["+=", "-=", "*=", "/=", "%="]
             values = []
