@@ -41,6 +41,7 @@
             -- set font to 12pt for MacOS (looks better on Retina Display)
             -- add clear search button
             -- remove enable/disable chache button, cache is enabled by default
+            -- auto hide progress bar
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
@@ -854,7 +855,7 @@ class MainWindow(QMainWindow):
         self.clearButton.setFixedSize(QSize(70, 20))
         self.pushButton = QPushButton()
         self.pushButton.setText("Refresh")
-        self.pushButton.setFixedSize(QSize(70, 20))
+        self.pushButton.setFixedSize(QSize(130, 20))
         self.lineEdit = QLineEdit(self)
         self.lineEdit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.statusBar().showMessage("System Status | Normal")
@@ -868,8 +869,8 @@ class MainWindow(QMainWindow):
         h_box = QHBoxLayout()
         h_box.setAlignment(Qt.AlignRight)
         h_box.addWidget(self.alwaysOnTop)
-        h_box.addWidget(self.lineEdit)
         h_box.addWidget(self.clearButton)
+        h_box.addWidget(self.lineEdit)
         h_box.addWidget(self.pushButton)
         h_box.addWidget(self.drawInputInfoColors)
         h_box.addWidget(self.cacheButton)
@@ -900,6 +901,7 @@ class MainWindow(QMainWindow):
         self.statusBar().addPermanentWidget(self.progressBar)
         # This is simply to show the bar
         self.progressBar.setValue(0)
+        self.progressBar.setVisible(True)
 
         # Connections
         self.alwaysOnTop.stateChanged.connect(self.changeAlwaysOnTop)
@@ -944,6 +946,9 @@ class MainWindow(QMainWindow):
             self.progressBar.setValue(value)
         if isinstance(value, str):
             self.statusBar().showMessage(value)
+        self.progressBar.setVisible(True)
+        if self.progressBar.value() == 100:
+            self.progressBar.setVisible(False)
 
     def loadFusionData(self):
         self._tm.load_fusion_data()
