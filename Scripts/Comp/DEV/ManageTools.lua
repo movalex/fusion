@@ -251,7 +251,7 @@ function doPassThrough(operation, report)
             print('currently managing ' .. comp:GetData('MT.tool_id') .. '\'s')
         end
         comp:SetData('MT.tool_id', tool)
-        itm['Label'].Text = 'tool:  '.. tool
+        itm['Label'].Text = 'tool: '.. tool
         local allTools = comp:GetToolList(false, tool)
         count = 0
         if itm.checkbox.Checked then
