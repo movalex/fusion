@@ -35,7 +35,7 @@
             -- better error handling
         2020/10/24
         V.0.2:
-            -- sort tools by creation time by clicking on corner button (default Fusion sorting order used, this may have unpredictable results)
+            -- reset sorting by clicking corner button (default Fusion sorting order used)
                TODO: sort tools alphabetically
             -- do not select all tools when the corner button is pressed
             -- set font to 12pt for MacOS (looks better on Retina Display)
@@ -82,7 +82,7 @@ from pprint import pprint as pp
 
 
 def print(*args, **kwargs):
-    """custom print() function"""
+    """override print() function"""
     builtins.print("[AS] : ", end="")
     return builtins.print(*args, **kwargs)
 
@@ -126,7 +126,12 @@ try:
         SLOT,
         Signal,
     )
-    from PySide2.QtGui import QBrush, QPainter, QColor
+    from PySide2.QtGui import (
+        QBrush,
+        QPainter,
+        QColor,
+        QIcon,
+    )
 
 except (ImportError, ModuleNotFoundError):
 
@@ -635,9 +640,7 @@ class TableModel(QAbstractTableModel):
         self.inputsToSkip = {}
         self.data_types_to_skip = {}
 
-        # We optimize drawing speeds by using Python's immutability to assign a method to steer backgroundRole behaviour
         self.backgroundRoleMethod = self.backgroundRole
-        # self.backgroundRoleMethod = self.noRole
 
         self.toolDict = dict()
 
@@ -662,7 +665,6 @@ class TableModel(QAbstractTableModel):
         self.toolDict = comp.GetToolList(True)
         self.attributeNameKeys = []  # List of unique attribute name keys
         self.attributeDataTypes = []  # this list is coupled to the key list
-
         self.toolsInputs = []
         self.toolsAttributes = []
         progress = 0
@@ -681,14 +683,17 @@ class TableModel(QAbstractTableModel):
                 self.toolsInputs.append(toolInputs)
                 self.toolsAttributes.append(toolInputsAttributes)
                 pass
+            self.appendUnique("Name")
+            self.appendUnique("ID")
+            toolInputs["Name"] = tool.Name
+            toolInputs["ID"] = tool.ID
             progress += 1
             self.communicate.send((100.0 / (len(self.toolDict))) * progress)
-
         self.communicate.send(
             "Done loading, execution time : " + str(datetime.datetime.now() - startTime)
         )
 
-    def appendUnique(self, str_to_add, type_to_add):
+    def appendUnique(self, str_to_add, type_to_add=None):
         """
         Helper method to add unique tool name and unique attributes to some lists
         """
@@ -705,7 +710,6 @@ class TableModel(QAbstractTableModel):
     def data(self, index, role=Qt.DisplayRole):
         """
         Default data method with some extra UserRoles and BackgroundRoles for drawing keyframes.
-
         This method needs some extra work as a lot of stuff is not written optimal.
         """
         if not index.isValid():
@@ -716,6 +720,8 @@ class TableModel(QAbstractTableModel):
         )
 
         if role == Qt.DisplayRole:
+            if isinstance(r, str):
+                return r
             if not r or r.attributes.get("INPID_InputControl") == "SplineControl":
                 return None
             return (
@@ -743,6 +749,8 @@ class TableModel(QAbstractTableModel):
         if r:
             b = QBrush()
             b.setStyle(Qt.SolidPattern)
+            if isinstance(r, str):
+                return None
             if r.attributes.get("INPID_InputControl", None) == "SplineControl":
                 b.setColor(QColor(180, 64, 92, 64))
                 return b
@@ -845,11 +853,6 @@ class MainWindow(QMainWindow):
         self._tv = TableView(self)
         self.alwaysOnTop = QCheckBox("Always on top")
         self.alwaysOnTop.setChecked(True)
-        self.drawInputInfoColors = QToolButton()
-        self.drawInputInfoColors.setCheckable(True)
-        self.drawInputInfoColors.setChecked(True)
-        self.drawInputInfoColors.setVisible(False)
-        self.drawInputInfoColors.setText("Draw Color Info")
         self.clearButton = QPushButton()
         self.clearButton.setText("Clear")
         self.clearButton.setFixedSize(QSize(70, 20))
@@ -859,11 +862,6 @@ class MainWindow(QMainWindow):
         self.lineEdit = QLineEdit(self)
         self.lineEdit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.statusBar().showMessage("System Status | Normal")
-        self.cacheButton = QToolButton()
-        self.cacheButton.setCheckable(True)
-        self.cacheButton.setChecked(True)
-        self.cacheButton.setVisible(False) # Hide cache button since it is not used. Cache is always enabled
-        self.cacheButton.setText("Use Cache")
 
         v_box = QVBoxLayout()
         h_box = QHBoxLayout()
@@ -872,8 +870,6 @@ class MainWindow(QMainWindow):
         h_box.addWidget(self.clearButton)
         h_box.addWidget(self.lineEdit)
         h_box.addWidget(self.pushButton)
-        h_box.addWidget(self.drawInputInfoColors)
-        h_box.addWidget(self.cacheButton)
         h_box.setContentsMargins(0, 0, 0, 0)
         v_box.addLayout(h_box)
         v_box.addWidget(self._tv)
@@ -893,7 +889,6 @@ class MainWindow(QMainWindow):
         self.proxyModel.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.proxyModel.setSortCaseSensitivity(Qt.CaseInsensitive)
         self.proxyModel.setDynamicSortFilter(True)
-        self.drawInputInfoColors.setChecked(True)
 
         self._tv.setModel(self.proxyModel)
 
@@ -901,25 +896,19 @@ class MainWindow(QMainWindow):
         self.statusBar().addPermanentWidget(self.progressBar)
         # This is simply to show the bar
         self.progressBar.setValue(0)
-        self.progressBar.setVisible(True)
 
         # Connections
         self.alwaysOnTop.stateChanged.connect(self.changeAlwaysOnTop)
         self.lineEdit.textChanged.connect(self.filterRegExpChanged)
-        self.drawInputInfoColors.clicked.connect(
-            self.changeTableModelBackgroundRoleMethod
-        )
-        self.cacheButton.clicked.connect(self.changeCacheMode)
         self.clearButton.pressed.connect(self.clear_search)
         self.pushButton.pressed.connect(self.reloadFusionData)
         self._tm.communicate.broadcast.connect(self.communication)
-        self.corner.clicked.connect(self.sort_by_first_column)
+        self.corner.clicked.connect(self.reset_sorting)
 
-    def sort_by_first_column(self):
+    def reset_sorting(self):
         """
-        WIP
-        sorting by tool when clicked on corner button and clear selection
-        Currently returns default Fusion sorting (by time created)
+        WIP, current behavior: reset sorting to initial state
+        TODO: sort by tool name
         """
         self.proxyModel.sort(-1)
         self._tv.clearSelection()
@@ -947,7 +936,7 @@ class MainWindow(QMainWindow):
         if isinstance(value, str):
             self.statusBar().showMessage(value)
         self.progressBar.setVisible(True)
-        if self.progressBar.value() == 100:
+        if self.progressBar.value() in [0, 100]:
             self.progressBar.setVisible(False)
 
     def loadFusionData(self):
@@ -972,12 +961,6 @@ class MainWindow(QMainWindow):
         for input_list in self._tm.toolsInputs:
             for tool_input in list(input_list.values()):
                 tool_input.cache = c
-
-    def changeTableModelBackgroundRoleMethod(self):
-        if self.drawInputInfoColors.isChecked():
-            self._tm.backgroundRoleMethod = self._tm.backgroundRole
-        else:
-            self._tm.backgroundRoleMethod = self._tm.noRole
 
     def filterRegExpChanged(self):
         """
