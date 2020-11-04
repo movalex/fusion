@@ -172,7 +172,7 @@ except (ImportError, ModuleNotFoundError):
         ]
         rc = run_command(pyside_cmd)
         if not rc:
-            print("Pyside2 installation successful")
+            print("Pyside2 is installed")
             print("Now try to launch the script again!")
             sys.exit()
         else:
@@ -856,11 +856,11 @@ class MainWindow(QMainWindow):
         self.clearButton = QPushButton()
         self.clearButton.setText("Clear")
         self.clearButton.setFixedSize(QSize(70, 20))
-        self.pushButton = QPushButton()
-        self.pushButton.setText("Refresh")
-        self.pushButton.setFixedSize(QSize(130, 20))
-        self.lineEdit = QLineEdit(self)
-        self.lineEdit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.refreshButton = QPushButton()
+        self.refreshButton.setText("Refresh")
+        self.refreshButton.setFixedSize(QSize(130, 20))
+        self.searchLine = QLineEdit(self)
+        self.searchLine.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.statusBar().showMessage("System Status | Normal")
 
         v_box = QVBoxLayout()
@@ -868,8 +868,8 @@ class MainWindow(QMainWindow):
         h_box.setAlignment(Qt.AlignRight)
         h_box.addWidget(self.alwaysOnTop)
         h_box.addWidget(self.clearButton)
-        h_box.addWidget(self.lineEdit)
-        h_box.addWidget(self.pushButton)
+        h_box.addWidget(self.searchLine)
+        h_box.addWidget(self.refreshButton)
         h_box.setContentsMargins(0, 0, 0, 0)
         v_box.addLayout(h_box)
         v_box.addWidget(self._tv)
@@ -899,9 +899,9 @@ class MainWindow(QMainWindow):
 
         # Connections
         self.alwaysOnTop.stateChanged.connect(self.changeAlwaysOnTop)
-        self.lineEdit.textChanged.connect(self.filterRegExpChanged)
+        self.searchLine.textChanged.connect(self.filterRegExpChanged)
         self.clearButton.pressed.connect(self.clear_search)
-        self.pushButton.pressed.connect(self.reloadFusionData)
+        self.refreshButton.pressed.connect(self.reloadFusionData)
         self._tm.communicate.broadcast.connect(self.communication)
         self.corner.clicked.connect(self.reset_sorting)
 
@@ -914,7 +914,7 @@ class MainWindow(QMainWindow):
         self._tv.clearSelection()
 
     def clear_search(self):
-        self.lineEdit.clear()
+        self.searchLine.clear()
 
     def changeAlwaysOnTop(self):
         if self.alwaysOnTop.checkState():
@@ -969,7 +969,7 @@ class MainWindow(QMainWindow):
         during sorting and filtering.
         """
 
-        regExp = self.lineEdit.text()
+        regExp = self.searchLine.text()
         self.proxyModel.filteredKeys = []
         self.proxyModel.setFilterRegExp(regExp)
         self._tv.updateColumns()
@@ -1035,6 +1035,7 @@ if __name__ == "__main__":
     if not fu:
         raise Exception("No instance of Fusion found running.")
     comp = fu.GetCurrentComp()
+
 
     main_app = QApplication.instance()  # checks if QApplication already exists
     if not main_app:  # create QApplication if it doesnt exist
