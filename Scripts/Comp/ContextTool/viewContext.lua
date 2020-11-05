@@ -36,6 +36,8 @@ function switchContext(toolName)
                 comp.CurrentFrame:ViewOn(comp:FindTool(prevTool), viewNumber)
                 comp:SetData("ContextTool.previousTool", toolName)
             end
+        else
+            comp.CurrentFrame:ViewOn(contextTool, viewNumber)
         end
     end
 end
