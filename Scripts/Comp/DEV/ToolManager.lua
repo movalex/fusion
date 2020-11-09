@@ -181,11 +181,14 @@ function win.On.Select.Clicked(ev)
     local allTools = comp:GetToolList(false)
     local selectedTools = comp:GetToolList(true)
     flow:Select()
-    comment = itm['Line'].Text
+    comment = itm.Line.Text
 
-    if comment == "" and #selectedTools > 0 then
-        toggleTool = selectedTools[1].ID
-        for i, tool in ipairs(comp:GetToolList(false, toggleTool)) do
+    if comment == "" then
+        if #selectedTools == 0 then
+            return
+        end
+        selectedToolId = selectedTools[1].ID
+        for i, tool in ipairs(comp:GetToolList(false, selectedToolId)) do
             flow:Select(tool)
         end
         return
@@ -219,9 +222,12 @@ function win.On.Toggle.Clicked(ev)
     local selectedTools = comp:GetToolList(true)
     local comment = itm.Line.Text
 
-    if comment == "" and #selectedTools > 0 then
-        toggleTool = selectedTools[1].ID
-        for i, tool in ipairs(comp:GetToolList(false, toggleTool)) do
+    if comment == "" then
+        if #selectedTools == 0 then
+            return
+        end
+        selectedToolId = selectedTools[1].ID
+        for i, tool in ipairs(comp:GetToolList(false, selectedToolId)) do
             ToggleTool(tool)
         end
         return
@@ -249,13 +255,20 @@ function doPassThrough(operation, report)
 
     comp:StartUndo(report .. ' tools')
 
+    if comment == "" then
+        if #selectedTools == 0 then
+            return
+        end
+        selectedToolId = selectedTools[1].ID
+        for i, tool in ipairs(comp:GetToolList(false, selectedToolId)) do
+            tool:SetAttrs({TOOLB_PassThrough = operation})
+        end
+        comp:EndUndo()
+        return
+    end
     for _, tool in pairs(allTools) do
     	if tool:GetAttrs().TOOLB_Visible == true and tool:GetAttrs().TOOLS_RegID ~= "Note" then
-            if comment == "" then
-                if #selectedTools > 0 and tool.ID == selectedTools[1].ID then
-                    tool:SetAttrs({TOOLB_PassThrough = operation})
-                end
-            elseif tool.Comments[fu.TIME_UNDEFINED]:sub(2) == comment then
+            if tool.Comments[fu.TIME_UNDEFINED]:sub(2) == comment then
 	            tool:SetAttrs({TOOLB_PassThrough = operation})
 	            count = count + 1
 	        end
