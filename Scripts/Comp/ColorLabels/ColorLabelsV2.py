@@ -34,9 +34,9 @@ import colorsys
 
 
 ###  CONFIG FILE DEFINITION  ###
-
+comp = fu.GetCurrentComp()
 # pathname = os.path.dirname(sys.argv[0])
-pathname = composition.MapPath('GIT:Scripts/Comp')
+pathname = comp.MapPath('GIT:Scripts/Comp')
 filename = 'ColorLabels/ColorLabels.conf'
 cfg_file = os.path.join(pathname, filename)
 
@@ -57,7 +57,7 @@ def createConfigFile():
     # Write config file
     with open(cfg_file, 'w') as outfile:
         json.dump(data, outfile)
-    print ('File config succesfully created.')
+    print('File config succesfully created.')
 
 
 def readConfigFile():
@@ -323,7 +323,6 @@ itm = dlg.GetItems()
 toollist = comp.GetToolList(True)
 itm['BGColor'].Checked = True
 store = 0
-
 # HUE Slider/LineEdit default values
 itm['HueSlider'].Value = hsvColor['H'] * 100
 itm['HueLineEdit'].Text = str(hsvColor['H'])
