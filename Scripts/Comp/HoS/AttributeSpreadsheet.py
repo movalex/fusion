@@ -36,13 +36,16 @@
         2020/10/24
         V.0.2:
             -- reset sorting by clicking corner button (default Fusion sorting order used)
-               TODO: sort tools alphabetically
             -- do not select all tools when the corner button is pressed
             -- set font to 12pt for MacOS (looks better on Retina Display)
             -- add clear search button
-            -- remove enable/disable chache button, cache is enabled by default
+            -- remove enable/disable chache button, cache does not speed anything up
             -- auto hide progress bar
-
+        2020/11/5
+        V.0.2.1
+            -- add tool Name and ID to a table. Now it is possible to sort tool inputs by tool name or tool ID.
+            -- prevent linking tool to itself
+            -- add expressions to a Point data: 
     License:
         The authors hereby grant permission to use, copy, and distribute this
         software and its documentation for any purpose, provided that existing
@@ -67,11 +70,10 @@
         UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-__VERSION__ = 2
+__VERSION__ = 2.1
 PKG = "PySide2"
 PKG_VERSION = "5.13.2"
 
-import builtins
 import datetime
 import os
 import platform
@@ -81,11 +83,11 @@ import sys
 from pprint import pprint as pp
 
 
-def print(*args, **kwargs):
+def dprint(string):
     """override print() function"""
-    builtins.print("[AS] : ", end="")
-    return builtins.print(*args, **kwargs)
+    __builtins__.print(f"[AS] : {string}")
 
+print = dprint
 
 try:
     from PySide2.QtWidgets import (
@@ -94,7 +96,6 @@ try:
         QApplication,
         QCheckBox,
         QComboBox,
-        QDoubleSpinBox,
         QHBoxLayout,
         QHeaderView,
         QItemDelegate,
@@ -130,7 +131,6 @@ try:
         QBrush,
         QPainter,
         QColor,
-        QIcon,
     )
 
 except (ImportError, ModuleNotFoundError):
@@ -178,7 +178,8 @@ except (ImportError, ModuleNotFoundError):
         else:
             print(
                 "Pyside2 installation has failed for some reason, please try again..."
-                " Or not."
+                " Check if internet connection is available."
+                " Please report this issue: mail@abogomolov.com"
             )
             sys.exit()
     except ImportError:
@@ -279,14 +280,18 @@ class PointDelegate(QItemDelegate):
 
     def setEditorData(self, editor, index):
         point_data = str(index.model().data(index))
-        substring = re.sub("[{} ]", "", point_data)
-        dict_point = dict(ss.split(":") for ss in substring.split(","))
-        a = QTableWidgetItem(dict_point["1.0"])
-        b = QTableWidgetItem(dict_point["2.0"])
-        editor.blockSignals(True)
-        editor.setItem(0, 0, a)
-        editor.setItem(0, 1, b)
-        editor.blockSignals(False)
+        try:
+            substring = re.sub("[{} ]", "", point_data)
+            dict_point = dict(ss.split(":") for ss in substring.split(","))
+            a = QTableWidgetItem(dict_point["1.0"])
+            b = QTableWidgetItem(dict_point["2.0"])
+            editor.blockSignals(True)
+            editor.setItem(0, 0, a)
+            editor.setItem(0, 1, b)
+            editor.blockSignals(False)
+        except ValueError:
+            for i in range(2):
+                editor.setItem(0, i, QTableWidgetItem("-x"))
 
     def setModelData(self, editor, model, index):
         try:
@@ -320,10 +325,6 @@ class TableView(QTableView):
         QTableView.paintEvent(self, event)
 
     def mousePressEvent(self, event):
-        """
-        TODO: change behavior for Middleclick on Point data to link only X or Y data
-        like 'Point(Center.X, 0.5)'
-        """
         if event.buttons() == Qt.MiddleButton:
             self.mouseIsDown = True
             self.center = self.startCenter = QPoint(event.pos().x(), event.pos().y())
@@ -333,9 +334,10 @@ class TableView(QTableView):
             QTableView.mousePressEvent(self, event)
 
     def create_value(self, sm, idxs):
+        target_tool = sm.toolDict[idxs.row() + 1].Name
         try:
             value = "={}.{}".format(
-                sm.toolDict[idxs.row() + 1].Name,
+                target_tool,
                 sm.toolsInputs[idxs.row()].get(sm.attributeNameKeys[idxs.column()]).ID,
             )
             self.commitDataDo(value)
@@ -349,6 +351,9 @@ class TableView(QTableView):
             sm = self.model().sourceModel()
             if len(self.selectionModel().selection().indexes()) <= 1:
                 idxt = self.model().mapToSource(self.indexAt(self.startCenter))
+                if idxs.row() == idxt.row() and idxs.column() == idxt.column():
+                    print("cannot link the input to itself")
+                    return
                 if (
                     idxs.row() > -1
                     and idxs.column() > -1
@@ -476,7 +481,7 @@ class FusionInput():
 
     def __init__(self, fusionInput):
         self.fusionInput = fusionInput
-        self.cache = True
+        self.cache = False
         self.keyFrames = fusionInput.GetKeyFrames()
         self.keyFrameValues = dict()
         self.hasKeyFrames = len(self.keyFrames) > 0
@@ -568,18 +573,15 @@ class FusionInput():
             if self.is_number(value):
                 value = float(value)
             else:
-                print("this field require number input")
+                print("this field requires number input")
                 value = self.fusionInput[key]
 
         if self.attributes["INPS_DataType"] == "Point":
-            if "=" in value:
-                self.SetExpression(value.lstrip("="))
-                return
             if value[0] == "p":
                 pp(self.attributes)
                 return
             math_ops = ["+=", "-=", "*=", "/=", "%="]
-            values = []
+            compute_values = []
             for i, v in enumerate(value):
                 if any(op in v[:2] for op in math_ops) and len(v) >= 3:
                     # expecting an compound assignment
@@ -598,11 +600,16 @@ class FusionInput():
                             v = float(self.fusionInput[key][float(i+1)] % v)
                     else:
                         v = self.fusionInput[key]
-                values.append(v)
+                compute_values.append(v)
             try:
-                value = [float(i) for i in values]
+                value = [float(i) for i in compute_values]
             except ValueError:
-                print("Point data must be numbers")
+                x, y = value
+                if x[0] == "=" or y[0] == "=" and len(value) > 1:
+                    value = [v.lstrip("=") for v in value]
+                    self.SetExpression(f"Point({value[0]}, {value[1]})")
+                else:
+                    print("Point data accepts only numbers and expressions")
                 return
         self.fusionInput[key] = value
         self.keyFrames = self.fusionInput.GetKeyFrames()
@@ -783,7 +790,6 @@ class TableModel(QAbstractTableModel):
         Needs more work
         """
         if not index.isValid():
-            print('index not valid')
             return
         elif role == Qt.EditRole:
             r = self.toolsInputs[index.row()].get(
@@ -862,6 +868,11 @@ class MainWindow(QMainWindow):
         self.searchLine = QLineEdit(self)
         self.searchLine.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.statusBar().showMessage("System Status | Normal")
+        # self.cacheButton = QToolButton()
+        # self.cacheButton.setCheckable(True)
+        # self.cacheButton.setChecked(False)
+        # self.cacheButton.setText('use cache')
+
 
         v_box = QVBoxLayout()
         h_box = QHBoxLayout()
@@ -870,9 +881,11 @@ class MainWindow(QMainWindow):
         h_box.addWidget(self.clearButton)
         h_box.addWidget(self.searchLine)
         h_box.addWidget(self.refreshButton)
+        # h_box.addWidget(self.cacheButton)
         h_box.setContentsMargins(0, 0, 0, 0)
         v_box.addLayout(h_box)
         v_box.addWidget(self._tv)
+
         self.corner = self._tv.findChild(QAbstractButton)
 
         sizeGrip = QSizeGrip(self)
@@ -889,7 +902,6 @@ class MainWindow(QMainWindow):
         self.proxyModel.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.proxyModel.setSortCaseSensitivity(Qt.CaseInsensitive)
         self.proxyModel.setDynamicSortFilter(True)
-
         self._tv.setModel(self.proxyModel)
 
         self.progressBar = QProgressBar()
@@ -898,6 +910,7 @@ class MainWindow(QMainWindow):
         self.progressBar.setValue(0)
 
         # Connections
+        # self.cacheButton.clicked.connect(self.setCacheMode)
         self.alwaysOnTop.stateChanged.connect(self.changeAlwaysOnTop)
         self.searchLine.textChanged.connect(self.filterRegExpChanged)
         self.clearButton.pressed.connect(self.clear_search)
@@ -908,7 +921,6 @@ class MainWindow(QMainWindow):
     def reset_sorting(self):
         """
         WIP, current behavior: reset sorting to initial state
-        TODO: sort by tool name
         """
         self.proxyModel.sort(-1)
         self._tv.clearSelection()
@@ -952,15 +964,19 @@ class MainWindow(QMainWindow):
         self._tv.setSortingEnabled(True)
         self._tv.updateColumns()
 
-    def changeCacheMode(self):
+    def setCacheMode(self):
         # Not sure where this goes, is it a method for the TableModel? or should we inherit the dict that has all
         # the fusion input caches and have that cycle through all contained fusion inputs?
-        # For now we do it here
+        # Cache does not seem to speed up things. For now we just disable it
 
-        c = self.cacheButton.isChecked()
+        cache_status = self.cacheButton.isChecked()
         for input_list in self._tm.toolsInputs:
             for tool_input in list(input_list.values()):
-                tool_input.cache = c
+                try:
+                    tool_input.cache = cache_status
+                except AttributeError:
+                    # pass str values
+                    pass
 
     def filterRegExpChanged(self):
         """
@@ -1032,17 +1048,17 @@ QTableWidget::item {{
 
 if __name__ == "__main__":
     fu = bmd.scriptapp("Fusion")
+
     if not fu:
         raise Exception("No instance of Fusion found running.")
     comp = fu.GetCurrentComp()
 
-
-    main_app = QApplication.instance()  # checks if QApplication already exists
+    main_app = QApplication.instance()  # checks if QApplication already exists. Seems to be always None
     if not main_app:  # create QApplication if it doesnt exist
         main_app = QApplication([])
     main_app.setStyleSheet(css)
     main = MainWindow()
-    main.setWindowTitle("Attribute Spreadsheet 0.{}".format(__VERSION__))
+    main.setWindowTitle("Attribute Spreadsheet")
     main.setMinimumSize(QSize(640, 200))
     main.show()
     main.loadFusionData()
