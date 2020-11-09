@@ -1,7 +1,7 @@
 {
     Action
     {
-        ID = "ToggleHandles",
+        ID = "ToggleOffsetHandles",
         Category = 'FrameRanger',
         Targets = 
         {
@@ -15,7 +15,7 @@
                 function minusOffset(offset, s, e)
                     target:SetAttrs({COMPN_RenderStart = s + offset})
                     target:SetAttrs({COMPN_RenderEnd = e - offset})
-                    target:SetData("FrameHandles.set", "true")
+                    target:SetData("FrameRanger.IsSet", "true")
                 end
 
                 function getBounds()
@@ -27,7 +27,7 @@
                 function resetRange()
                     target:SetAttrs({COMPN_RenderStart = gStart})
                     target:SetAttrs({COMPN_RenderEnd = gEnd})
-                    target:SetData("FrameHandles.set", false)
+                    target:SetData("FrameRanger.IsSet", "false")
                     return false
                 end
 
@@ -36,9 +36,9 @@
                     gStart = compAttrs.COMPN_GlobalStart
                     gEnd = compAttrs.COMPN_GlobalEnd
                     target:StartUndo("SetHandles")
-                    local status = target:GetData("FrameHandles.set")
+                    local status = target:GetData("FrameRanger.IsSet")
                     local s, e = getBounds()
-                    currentOffset = target:GetData("FrameHandles.offset") or 24
+                    currentOffset = target:GetData("FrameRanger.offset") or 24
                     if status == nil then
                         resetRange()
                         minusOffset(currentOffset, s, e)
@@ -52,7 +52,7 @@
                         minusOffset(currentOffset, s, e)
                     else
                         resetRange()
-                        target:SetData("FrameHandles.set", "false")
+                        target:SetData("FrameRanger.IsSet", "false")
                     end
                     target:EndUndo()
                 end
@@ -92,7 +92,7 @@
     Hotkeys
     {
       Target = "FuFrame",
-      ALT_F = "ToggleHandles",
+      ALT_F = "ToggleOffsetHandles",
       SHIFT_ALT_F = "SetLoaderBoundaries"
       -- ALT_F = "RunScript{filename = 'Scripts:Utility/FrameRangerDev.lua'}",
     },
