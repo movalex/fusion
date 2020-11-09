@@ -154,6 +154,7 @@ function showUI()
         comp:SetAttrs({COMPN_RenderEnd = gEnd})
         GEnd = comp:GetAttrs().COMPN_GlobalEnd
         GStart = comp:GetAttrs().COMPN_GlobalStart
+        comp:SetData("FrameRanger.IsSet", "false")
     end
 
     function win.On.FrameRanger.Close(ev)
