@@ -10,7 +10,7 @@
 			Composition =
 			{
 				Execute = [[
-                print("Incrementing comp version...")
+                -- print("Incrementing comp version...")
                 comp = obj:Comp()
                 comp:RunScript('Scripts:Comp/DEV/IncrementSave.py')
                 ]],
