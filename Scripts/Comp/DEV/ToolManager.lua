@@ -4,7 +4,7 @@ _VERSION = "1.1"
 
 local ui = fu.UIManager
 local disp = bmd.UIDispatcher(ui)
-local width, height = 460, 300
+local width, height = 360, 360
 
 if not comp then comp = fu:GetCurrentComp() end
 
@@ -41,10 +41,12 @@ win = disp:AddWindow({
         ID = 'root',
         ui:HGroup{
             Weight = 0,
-            ui.LineEdit {ID = 'Line', Text = '', Weight = 0.5, Events = {ReturnPressed = true}},
-            ui.Button {ID = 'SetCommentButton', Text = 'Set or Replace comment', Weight = .4},
-            ui.Button {ID = 'Exit', Text = 'Exit', Weight = .1},
+            ui:Button{ID = 'Disable', Text = 'Disable'},
+            ui:Button{ID = 'Enable', Text = 'Enable'},
+            ui:Button{ID = 'Toggle', Text = 'Toggle'},
+            ui:Button{ID = 'Select', Text = 'Select'},
         },
+
         ui:HGroup{
             Weight = 1,
             ui:Tree{
@@ -56,11 +58,8 @@ win = disp:AddWindow({
         },
         ui:HGroup{
             Weight = 0,
-            ui:Button{ID = 'Disable', Text = 'Disable'},
-            ui:Button{ID = 'Enable', Text = 'Enable'},
-            ui:Button{ID = 'Toggle', Text = 'Toggle'},
-            ui:Button{ID = 'Select', Text = 'Select'},
-            ui:Button{ID = 'Refresh', Text = 'Refresh'},
+            ui.LineEdit {ID = 'Line', Text = '', Weight = 0.7, Events = {ReturnPressed = true}},
+            ui.Button {ID = 'SetCommentButton', Text = 'Set or Replace comment', Weight = .3},
         },
     }
 })
@@ -94,12 +93,9 @@ function SetHeader(count)
     end
 end
 
--- countItems = #GetTreeItems(itm.Tree) 
-
--- SetHeader(countItems)
-
-
+-- Add clear button
 itm.Line:SetClearButtonEnabled(true)
+
 -- Get all nodes
 local tools = comp:GetToolList(false)
 
@@ -159,11 +155,10 @@ end
 
 -- A Tree view row was clicked on
 function win.On.Tree.ItemClicked(ev)
-	itm['Line'].Text = ev.item.Text[0]
+	itm.Line.Text = ev.item.Text[0]
 end
 
 function win.On.Refresh.Clicked(ev)
-    print('[Refreshing comment tree]')
     RefreshTable()
 end
 
@@ -177,19 +172,28 @@ function win.On.Line.ReturnPressed(ev)
 end
 
 function win.On.Tree.ItemDoubleClicked(ev)
-    print('[Refreshing comment tree]')
     RefreshTable()
 end
 
 function win.On.Select.Clicked(ev)
     local comp = fu:GetCurrentComp()
     flow = comp.CurrentFrame.FlowView
-    local tools = comp:GetToolList(false)
+    local allTools = comp:GetToolList(false)
+    local selectedTools = comp:GetToolList(true)
     flow:Select()
     comment = itm['Line'].Text
-    for i, tool in pairs(tools) do
+
+    if comment == "" and #selectedTools > 0 then
+        toggleTool = selectedTools[1].ID
+        for i, tool in ipairs(comp:GetToolList(false, toggleTool)) do
+            flow:Select(tool)
+        end
+        return
+    end
+
+    for i, tool in pairs(allTools) do
     	if tool:GetAttrs().TOOLB_Visible == true and tool:GetAttrs().TOOLS_RegID ~= "Note" then
-	        if tool.Comments[fu.TIME_UNDEFINED]:sub(2) == comment then
+            if tool.Comments[fu.TIME_UNDEFINED]:sub(2) == comment then
 	            flow:Select(tool)
 	        end
         end
@@ -201,30 +205,34 @@ function win.On.SetCommentButton.Clicked(ev)
     SetComment(comp)
 end
 
+function ToggleTool(tool)
+    if tool:GetAttrs().TOOLB_PassThrough == true then
+        tool:SetAttrs({TOOLB_PassThrough = false})
+    else
+        tool:SetAttrs({TOOLB_PassThrough = true})
+    end
+end
+
 function win.On.Toggle.Clicked(ev)
     local comp = fu:GetCurrentComp()
-    comment = itm.Line.Text
-    tools = comp:GetToolList(false)
-    count = 0
+    local allTools = comp:GetToolList(false)
+    local selectedTools = comp:GetToolList(true)
+    local comment = itm.Line.Text
 
-    comp:StartUndo("Toggling all commented tools " .. comment)
-
-    for _, tool in pairs(tools) do
-    	if tool:GetAttrs().TOOLB_Visible == true and tool:GetAttrs().TOOLS_RegID ~= "Note" then
-	        if tool.Comments[fu.TIME_UNDEFINED]:sub(2) == comment then
-	            count = count + 1
-	            if tool:GetAttrs().TOOLB_PassThrough == true then
-	                tool:SetAttrs({TOOLB_PassThrough = false})
-	            else
-	                tool:SetAttrs({TOOLB_PassThrough = true})
-	            end
-	        end
+    if comment == "" and #selectedTools > 0 then
+        toggleTool = selectedTools[1].ID
+        for i, tool in ipairs(comp:GetToolList(false, toggleTool)) do
+            ToggleTool(tool)
+        end
+        return
+    end
+    
+    for _, tool in pairs(allTools) do
+        if tool.Comments[fu.TIME_UNDEFINED]:sub(2) == comment then
+            ToggleTool(tool)
         end
     end
 
-    comp:EndUndo(true)
-
-    if count == 0 then print('no tools with chosen comment in the comp') end
 end
 
 function win.On.Manage.Close(ev)
@@ -234,16 +242,21 @@ end
 function doPassThrough(operation, report)
     local comp = fu:GetCurrentComp()
 
-    local allTools = comp:GetToolList(false, tool)
+    local allTools = comp:GetToolList(false)
+    local selectedTools = comp:GetToolList(true)
     count = 0
     comment = itm['Line'].Text
 
-    comp:StartUndo("Setting " .. comment .. " to " .. report)
+    comp:StartUndo(report .. ' tools')
 
-    for _, curTool in pairs(allTools) do
-    	if curTool:GetAttrs().TOOLB_Visible == true and curTool:GetAttrs().TOOLS_RegID ~= "Note" then
-	        if curTool.Comments[fu.TIME_UNDEFINED]:sub(2) == comment then
-	            curTool:SetAttrs({TOOLB_PassThrough = operation})
+    for _, tool in pairs(allTools) do
+    	if tool:GetAttrs().TOOLB_Visible == true and tool:GetAttrs().TOOLS_RegID ~= "Note" then
+            if comment == "" then
+                if #selectedTools > 0 and tool.ID == selectedTools[1].ID then
+                    tool:SetAttrs({TOOLB_PassThrough = operation})
+                end
+            elseif tool.Comments[fu.TIME_UNDEFINED]:sub(2) == comment then
+	            tool:SetAttrs({TOOLB_PassThrough = operation})
 	            count = count + 1
 	        end
         end
@@ -252,7 +265,6 @@ function doPassThrough(operation, report)
     comp:EndUndo(true)
 
     if count == 0 then
-        print('did not find any tools with comment "' .. comment .. '"')
         return
     elseif count == 1 then
         multiple_tool = ' tool'
