@@ -1,19 +1,10 @@
 local ui = fu.UIManager
 local disp = bmd.UIDispatcher(ui)
-local width, height = 180,100
+local width, height = 250,100
 
 comp = fu:GetCurrentComp()
 
-app:AddConfig("FrameHandles", {
-    Target {
-        ID = "FrameHandles",
-    },
-    Hotkeys {
-        Target = "FrameHandles",
-        Defaults = true,
-        ESCAPE = "Execute{cmd = [[app.UIManager:QueueEvent(obj, 'Close', {})]]}",
-    },
-})
+
 function getBounds()
     compAttrs = comp:GetAttrs()
     rStart = compAttrs.COMPN_RenderStart
@@ -24,115 +15,133 @@ end
 
 function plusOffset(offset, s, e)
     comp = fu:GetCurrentComp()
-    comp:SetAttrs({COMPN_RenderStart = s + offset})
-    comp:SetAttrs({COMPN_RenderEnd = e - offset})
-end
-
-
-function minusOffset(offset, s, e)
-    comp = fu:GetCurrentComp()
     comp:SetAttrs({COMPN_RenderStart = s - offset})
     comp:SetAttrs({COMPN_RenderEnd = e + offset})
 end
 
 
+function minusOffset(offset, s, e)
+    comp = fu:GetCurrentComp()
+    comp:SetAttrs({COMPN_RenderStart = s + offset})
+    comp:SetAttrs({COMPN_RenderEnd = e - offset})
+    comp:SetData("FrameRanger.IsSet", "true")
+end
+
+function leftOffset(offset, s, e)
+    comp = fu:GetCurrentComp()
+    comp:SetAttrs({COMPN_RenderStart = s - offset})
+    comp:SetAttrs({COMPN_RenderEnd = e - offset})
+    comp:SetData("FrameRanger.IsSet", "true")
+end
+
+function rightOffset(offset, s, e)
+    comp = fu:GetCurrentComp()
+    comp:SetAttrs({COMPN_RenderStart = s + offset})
+    comp:SetAttrs({COMPN_RenderEnd = e + offset})
+    comp:SetData("FrameRanger.IsSet", "true")
+end
+
 function showUI()
-    frameOffset = comp:GetData("FrameHandles.offset") or 24
-    local x = 500
-    local y = 600
-    -- local x = fu:GetMousePos()[1]
-    -- local y = fu:GetMousePos()[2]
-    -- if y < 90 then
-    --     y = 130
-    -- end
+    frameOffset = comp:GetData("FrameRanger.offset") or 24
+    local windowPosX = 900
+    local windowPosY = 800
+    local buttonSize = {45, 25}
 
     win = disp:AddWindow({
-        ID = "FrameHandles",
-        TargetID = "FrameHandles",
+        ID = "FrameRanger",
+        TargetID = "FrameRanger",
         WindowTitle = "Frame Ranger",
-        Geometry = {x+20, y, width, height},
-        Spacing = 10,
-        
+        Geometry = {windowPosX +20, windowPosY, width, height},
+
         ui:VGroup{
         ID = 'root',
-        -- GUI elements:
             ui:HGroup{
+                ui:HGap(0.25,0),
                 ui:Label{
                     Weight = 0.8,
                     ID = 'Label',
-                    Text = 'frames to offset:',
-                    Alignment = {AlignRight = true, AlignVCenter = true}
+                    Text = 'Frames to Offset:',
+                    Alignment = {AlignLeft = true, AlignVCenter = true}
                 },
-                ui:LineEdit {
+                ui:SpinBox {
                     Weight = 0.2,
-                    ID = 'offset', Text = tostring(frameOffset),
-                    Alignment = {AlignCenter = true},
-                    Events = {ReturnPressed = true},
-                }
-            },
-            ui:HGroup{
-                VMargin = 3,
-                ui:Button{
-                    ID = 'minus', Text = '-',
-                },
-                    ui:Button{
-                    ID = 'plus', Text = '+',
-                    
-                }
-            },
-            ui:VGroup{
-                VMargin = 3,
-                ui:Button{
-                    ID = 'reset', Text = 'reset globals',
+                    ID = 'offset', Value = frameOffset,
+                    Alignment = {AlignRight = true},
+                    Maximum = comp:GetAttrs().COMPN_GlobalEnd / 2,
+                    Events = {ValueChanged = true, EditingFinished = true},
                 },
             },
-            -- ui:HGroup{
-            --     VMargin = 3,
-            --     ui:Button{
-            --         ID = 'setIn', Text = 'saver IN',
-            --     },
-            --         ui:Button{
-            --         ID = 'setOut', Text = 'saver out',
-            --     }
-            -- },
+            ui:HGroup {
+                ui:Button{
+                    -- MaximumSize = buttonSize,
+                    MinimumSize = buttonSize,
+                    ID = 'minus', Text = '> <',
+                },
+                ui:Button{
+                    -- MaximumSize = buttonSize,
+                    MinimumSize = buttonSize,
+                    ID = 'plus', Text = '< >',
+                },
+                ui:Button{
+                    -- MaximumSize = buttonSize,
+                    MinimumSize = buttonSize,
+                    ID = 'left', Text = '< <',
+                },
+                ui:Button{
+                    -- MaximumSize = buttonSize,
+                    MinimumSize = buttonSize,
+                    ID = 'right', Text = '> >',
+                },
+            },
+            ui:VGroup {
+                ui:Button{
+                    ID = 'reset', Text = 'Reset Globals',
+                },
+            }
         }
     })
     itm = win:GetItems()
     itm.offset:SelectAll()
-    function win.On.minus.Clicked(ev)
-        comp:SetData("FrameHandles.set", true)
-        local s, e = getBounds()
-        local currentOffset = tonumber(itm.offset:GetText())
-        plusOffset(currentOffset, s, e)
+
+    function win.On.offset.ValueChanged(ev)
+        comp:SetData("FrameRanger.offset", itm.offset.Value)
     end
-    function win.On.plus.Clicked(ev)
-        comp:SetData("FrameHandles.set", false)
+
+    function win.On.offset.EditingFinished(ev)
+        comp:SetData("FrameRanger.offset", itm.offset.Value)
+    end
+
+    function win.On.left.Clicked(ev)
         local s, e = getBounds()
-        local currentOffset = tonumber(itm.offset:GetText())
-        local gstart = comp:GetAttrs().COMPN_GlobalStart
-        if s - currentOffset < 0 then
-            comp:SetAttrs({COMPN_GlobalStart = s - currentOffset})
-        end
+        local currentOffset = itm.offset.Value
+        leftOffset(currentOffset, s, e)
+    end
+
+    function win.On.right.Clicked(ev)
+        local s, e = getBounds()
+        local currentOffset = itm.offset.Value
+        rightOffset(currentOffset, s, e)
+    end
+
+    function win.On.minus.Clicked(ev)
+        local s, e = getBounds()
+        local currentOffset = itm.offset.Value
         minusOffset(currentOffset, s, e)
     end
-    function win.On.close.Clicked(ev)
-        disp:ExitLoop()
-    end
-    function win.On.offset.ReturnPressed(ev)
-        frameOffset = comp:SetData("FrameHandles.offset", itm.offset:GetText()) 
-    end 
-    function win.On.setIn.Clicked (ev)
-        tool = comp.ActiveTool
-        if tool and tool.ID == 'Saver' then
-            tool:SetAttrs({TOOLNT_EnabledRegion_Start = comp.CurrentTime})
+
+    function win.On.plus.Clicked(ev)
+        local renderIn, renderOut = getBounds()
+        GEnd = comp:GetAttrs().COMPN_GlobalEnd
+        GStart = comp:GetAttrs().COMPN_GlobalStart
+        local currentOffset = itm.offset.Value
+        if renderIn - currentOffset < GStart or renderOut + currentOffset > GEnd then
+            comp:SetAttrs({COMPN_RenderEnd = GEnd})
+            comp:SetAttrs({COMPN_RenderStart = GStart})
+            return
         end
+        plusOffset(currentOffset, renderIn, renderOut)
     end
-    function win.On.setOut.Clicked (ev)
-        tool = comp.ActiveTool
-        if tool and tool.ID == 'Saver' then
-            tool:SetAttrs({TOOLNT_EnabledRegion_End = comp.CurrentTime})
-        end
-    end
+
     function win.On.reset.Clicked(ev)
         comp = fu:GetCurrentComp()
         gStart = comp:GetAttrs().COMPN_GlobalStart
@@ -143,17 +152,18 @@ function showUI()
         gEnd = comp:GetAttrs().COMPN_GlobalEnd
         comp:SetAttrs({COMPN_RenderStart = gStart})
         comp:SetAttrs({COMPN_RenderEnd = gEnd})
-        comp:SetData("FrameHandles.set", false)
+        GEnd = comp:GetAttrs().COMPN_GlobalEnd
+        GStart = comp:GetAttrs().COMPN_GlobalStart
     end
 
-    function win.On.FrameHandles.Close(ev)
+    function win.On.FrameRanger.Close(ev)
         disp:ExitLoop()
     end
-
 
     win:Show()
     disp:RunLoop()
     win:Hide()
 end
+
 
 showUI()
