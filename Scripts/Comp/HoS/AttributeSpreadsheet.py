@@ -283,8 +283,9 @@ class PointDelegate(QItemDelegate):
         try:
             substring = re.sub("[{} ]", "", point_data)
             dict_point = dict(ss.split(":") for ss in substring.split(","))
-            a = QTableWidgetItem(dict_point["1.0"])
-            b = QTableWidgetItem(dict_point["2.0"])
+            dict_point = {float(k):v for k, v in dict_point.items()}
+            a = QTableWidgetItem(dict_point[1])
+            b = QTableWidgetItem(dict_point[2])
             editor.blockSignals(True)
             editor.setItem(0, 0, a)
             editor.setItem(0, 1, b)
