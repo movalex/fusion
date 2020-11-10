@@ -1,0 +1,18 @@
+{
+	Event {
+		Action = "Comp_New",
+		Targets = {
+			Fusion = {
+				Execute = [[
+					rets = self:Default(ctx, args)
+					comp = fusion.CurrentComp
+                    comp:RunScript(comp:MapPath("Reactor:Deploy/Scripts/Comp/Toolbar16/Toolbar16.lua"))
+                    if comp and fu.Version > 16.1 and fu.Version < 17 and not fusion:GetResolve() then
+                        comp.CurrentFrame:LoadLayout(comp:MapPath("Reactor:Deploy/Layouts/FU16_1mon_bottom-timeview.layout"))
+                    end
+					]]
+			},
+		},
+	}
+}
+
