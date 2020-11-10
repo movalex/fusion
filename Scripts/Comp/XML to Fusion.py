@@ -843,14 +843,13 @@ def projects_selection_list(elements, search=-1):
 # returns True if found and saved sequence, False if not
 def get_sequence(sequence, elements, binname):
     linked_seq = None
-    seqname = None
     try:
-        seqname = sequence.find("./name").text # if we have full sequence definition, we should have a name ...
-        logger.info ("Seq:", seqname)
+        seq_name = sequence.find("./name").text # if we have full sequence definition, we should have a name ...
+        logger.info ("Seq:", seq_name)
     except:
-        seqname = None
-    if seqname is not None: # regular sequence found
-        elements[binname]["Sequences"].update({seqname: sequence}) # we save this sequence and return True
+        seq_name = None
+    if seq_name is not None: # regular sequence found
+        elements[binname]["Sequences"].update({seq_name: sequence}) # we save this sequence and return True
         return True
     else:
         try:
@@ -870,10 +869,10 @@ def get_sequence(sequence, elements, binname):
             return False
     if linked_seq is not None:
         try:
-            seqname = linked_seq.find("./name").text
+            seq_name = linked_seq.find("./name").text
         except:
-            seqname = "Undefined"
-        elements[binname]["Sequences"].update({seqname: linked_seq})# we save this sequence and return True
+            seq_name = "Undefined"
+        elements[binname]["Sequences"].update({seq_name: linked_seq})# we save this sequence and return True
         return True
     else:
         return False
