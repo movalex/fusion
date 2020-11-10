@@ -17,7 +17,7 @@
         (mail@abogomolov.com)
         v.0.1.6:
         2019/6/30
-            -- update for Fusion 9/16 and Davinci Resolve (tested in v16)
+            -- update for Fusion 9/16+ and Davinci Resolve 16+
             -- update to PySide2
             -- Python3 is required
         2019/12/17
@@ -45,7 +45,9 @@
         V.0.2.1
             -- add tool Name and ID to a table. Now it is possible to sort tool inputs by tool name or tool ID.
             -- prevent linking tool to itself
-            -- add expressions to a Point data: 
+            -- add expressions to a Point data
+        V.0.2.2
+            -- make it compatible with Fusion 17 and Davinci Resolve 17
     License:
         The authors hereby grant permission to use, copy, and distribute this
         software and its documentation for any purpose, provided that existing
@@ -70,7 +72,7 @@
         UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-__VERSION__ = 2.1
+__VERSION__ = 2.2
 PKG = "PySide2"
 PKG_VERSION = "5.13.2"
 
@@ -82,6 +84,7 @@ import subprocess
 import sys
 from pprint import pprint as pp
 
+print(f"Attribute Spreadsheet version 0.{__VERSION__}")
 
 def dprint(string):
     """override print() function"""
@@ -236,11 +239,11 @@ class LineEditDelegate(QItemDelegate):
         QItemDelegate.__init__(self, parent)
 
     def createEditor(self, parent, option, index):
-        lineEdit = QLineEdit(parent)
+        line_edit = QLineEdit(parent)
         self.connect(
-            lineEdit, SIGNAL("valueChanged(int)"), self, SLOT("valueChanged()")
+            line_edit, SIGNAL("valueChanged(int)"), self, SLOT("valueChanged()")
         )
-        return lineEdit
+        return line_edit
 
     def setEditorData(self, editor, index):
         editor.blockSignals(True)
@@ -284,15 +287,16 @@ class PointDelegate(QItemDelegate):
             substring = re.sub("[{} ]", "", point_data)
             dict_point = dict(ss.split(":") for ss in substring.split(","))
             dict_point = {float(k):v for k, v in dict_point.items()}
-            a = QTableWidgetItem(dict_point[1])
-            b = QTableWidgetItem(dict_point[2])
+            x_value = QTableWidgetItem(dict_point[1])
+            y_value = QTableWidgetItem(dict_point[2])
             editor.blockSignals(True)
-            editor.setItem(0, 0, a)
-            editor.setItem(0, 1, b)
+            editor.setItem(0, 0, x_value)
+            editor.setItem(0, 1, y_value)
             editor.blockSignals(False)
         except ValueError:
+            print('error occured while parsing the point data. Seting values to default')
             for i in range(2):
-                editor.setItem(0, i, QTableWidgetItem("-x"))
+                editor.setItem(0, i, QTableWidgetItem("0.5"))
 
     def setModelData(self, editor, model, index):
         try:
@@ -667,8 +671,12 @@ class TableModel(QAbstractTableModel):
 
         comp = fu.GetCurrentComp()
         if not comp:
-            print("No comp data found. Probably both Resolve and Fusion are loaded?")
-            sys.exit()
+            if fu.GetResolve():
+                print("No comp data found. Probably both Resolve and Fusion are loaded?")
+                sys.exit()
+            else:
+                print("Unable to find comp data. Please report this issue")
+                sys.exit()
         self.toolDict.clear()
         self.toolDict = comp.GetToolList(True)
         self.attributeNameKeys = []  # List of unique attribute name keys
