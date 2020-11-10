@@ -668,7 +668,6 @@ class TableModel(QAbstractTableModel):
     def load_fusion_data(self):
         self.communicate.send("loading tools and inputs")
         startTime = datetime.datetime.now()
-
         comp = fu.GetCurrentComp()
         if not comp:
             if fu.GetResolve():
@@ -895,6 +894,7 @@ class MainWindow(QMainWindow):
         v_box.addLayout(h_box)
         v_box.addWidget(self._tv)
 
+        # find the corner button
         self.corner = self._tv.findChild(QAbstractButton)
 
         sizeGrip = QSizeGrip(self)
@@ -913,9 +913,9 @@ class MainWindow(QMainWindow):
         self.proxyModel.setDynamicSortFilter(True)
         self._tv.setModel(self.proxyModel)
 
+        # show the progressbar
         self.progressBar = QProgressBar()
         self.statusBar().addPermanentWidget(self.progressBar)
-        # This is simply to show the bar
         self.progressBar.setValue(0)
 
         # Connections
