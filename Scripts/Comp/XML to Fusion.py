@@ -824,14 +824,14 @@ def projects_selection_list(elements, search=-1):
     sel_list = []
     counter = 0
     logger.debug(elements)
-    for element in list(elements.itm()):
+    for element in list(elements.items()):
         if counter == search:
             return element[1]["Bin"], "bin"
         else:
             sel_list.append(element[0] + " - " + str(
                 len(element[1]["Clips"])) + " Clips\n")  # add bin name and number of clips in selection list
         counter += 1
-        for val in list(element[1]["Sequences"].itm()):  # add sequence names in selection list
+        for val in list(element[1]["Sequences"].items()):  # add sequence names in selection list
             if counter == search:
                 return val[1], "seq"
             else:
