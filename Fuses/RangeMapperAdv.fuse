@@ -1,0 +1,2037 @@
+FuRegisterClass("RangeMapperAdv", CT_Tool, {
+	REGS_Category = "Fuses\\..\\..",
+	REGS_OpIconStrInAP = "rMa",
+	REGS_OpDescription = "RangeMapper Advanced",
+	REG_TimeVariant 		= true,		
+	})
+	
+	
+	--- Global Variables
+	OutNum = {}
+	OutPnt = {}
+	
+	an = {}
+	bn = {}
+	ap = {}
+	bp = {}
+	xn0 ={}
+	xn1 ={}
+	xp0 ={}
+	xp1 ={}
+	rn = {}
+	rp = {}	
+	
+	EaseN ={}
+	EaseP ={}
+	RankAN ={}
+	RankAP ={}
+	RankBN ={}
+	RankBP ={}
+	
+	RangeN ={}
+	RangeP ={}	
+
+
+function Create()
+
+	InTiming = self:AddInput("Timing", "cboTiming", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ComboControl",
+		INP_Default = 0.0,
+		INP_Integer = true,
+		ICD_Width = 1,
+		{ CCS_AddString = "Parallel", },
+		{ CCS_AddString = "Ranking In+Out", },				
+		{ CCS_AddString = "Ranking In/Serial", },
+		{ CCS_AddString = "Ranking In/End", },
+		{ CCS_AddString = "Ranking Out/Begin", },
+		{ CCS_AddString = "Individual", },			
+		{ CCS_AddString = "Individual Ease", },					
+		IC_ControlPage = -1,
+		ICD_Width = 0.85,			
+		INP_DoNotifyChanged = true,	
+       })	
+	boolShow = self:AddInput("", "boolShow", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Integer = true,
+		INP_Default = 1,
+		ICD_Width = 0.15,
+		IC_ControlPage = -1,
+		})				
+
+	InLag = self:AddInput("Lag", "lag", {
+        LINKID_DataType    = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_MinScale       = -5,
+        INP_MaxScale       = 5,
+        INP_Default        = 0,
+		IC_ControlPage = -1,
+		IC_Visible = false,
+        })			
+
+	InExtension = self:AddInput("Extension", "slp", {
+        LINKID_DataType    = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_MinScale       = 0.0,
+        INP_MaxScale       = 10.0,
+        INP_Default        = 1.0,
+		IC_ControlPage = -1,
+		IC_Visible = false,
+        })		
+		
+    InRange = self:AddInput("Range", "r", {
+        LINKID_DataType    = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_MinScale       = 0.0,
+        INP_MaxScale       = 1.0,
+        INP_Default        = 0.0,
+        ICD_Center         = 0.5,
+		IC_ControlPage = -1,
+        })				
+
+
+	-------------------------------------------------------
+	--- Number
+	-------------------------------------------------------
+	defSetN = {
+		LINKID_DataType = "Text",	
+		TEC_Lines = 1,		
+		TEC_ReadOnly = false,			
+		INPID_InputControl = "TextEditControl",
+		ICS_ControlPage = "Controls",
+		}
+	
+	defRank = {				
+		LINKID_DataType    = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_MinScale       = 0,
+        INP_MaxScale       = 20.0,
+		ICD_Width          = 0.13,	
+		}
+	
+	defEase = {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ComboControl",	
+		INP_Integer = true,
+		ICD_Width = 0.74,
+		INP_Default = 1,			
+		{ CCS_AddString = "Linear", },	
+		{ CCS_AddString = "Light", },				
+		{ CCS_AddString = "Medium", },		
+		{ CCS_AddString = "I_Back", },
+		{ CCS_AddString = "O_Back", },
+		{ CCS_AddString = "IO_Back", },
+		{ CCS_AddString = "I_Elastic", },
+		{ CCS_AddString = "O_Elastic", },
+		{ CCS_AddString = "IO_Elastic", },
+		{ CCS_AddString = "I_Bounce", },
+		{ CCS_AddString = "O_Bounce", },
+		{ CCS_AddString = "IO_Bounce", },			
+		{ CCS_AddString = "I_revBounce", },		
+		{ CCS_AddString = "O_revBounce", },		
+		{ CCS_AddString = "IO_revBounce", },		
+		{ CCS_AddString = "IO_alt1Bounce", },		
+		{ CCS_AddString = "IO_alt2Bounce", },				
+		}
+		
+	defRange = {				
+				LINKID_DataType    = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_MinScale       = 0.0,
+        INP_MaxScale       = 1.0,
+		}		
+			
+	defNumVar = {
+        LINKID_DataType    = "Number",
+        INPID_InputControl = "SliderControl",	
+	}
+	self:BeginControlNest("", "NestN1", true, {})
+	InSetN1 = self:AddInput("####### Set 1", "sn1", {
+		INPS_DefaultText = "Set OutN1",	
+		defSetN,		
+		})	
+	InRangeN1 = self:AddInput("Range Num  1", "rN1", {
+		INP_Default = 0,
+		defRange,		
+        })				
+	InAN1 = self:AddInput("Min", "an1", {
+		defNumVar,	
+        INP_Default = 0.2,
+		ICS_ControlPage = "Controls",
+        })		
+    InBN1 = self:AddInput("Max", "bn1", {
+		defNumVar,
+        INP_Default = 0.8,
+		ICS_ControlPage = "Controls",
+        }) 
+	InEaseN1 = self:AddInput("", "EaseN1", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAN1 = self:AddInput("", "RankAN1", {
+		INP_Default = 0,
+		defRank,		
+        })		
+	InRankBN1 = self:AddInput("", "RankBN1", {
+		INP_Default = 0,
+		defRank,		
+        })		
+
+		
+		
+	InSetN2 = self:AddInput("####### Set 2", "sn2", {
+		INPS_DefaultText = "Set OutN2",	
+		defSetN,		
+		})
+	InRangeN2 = self:AddInput("Range Num  2", "rN2", {
+		INP_Default = 0,
+		defRange,		
+        })	
+	InAN2 = self:AddInput("Min", "an2", {
+		defNumVar,
+        INP_Default = 0.2,
+		ICS_ControlPage = "Controls",
+        })		
+    InBN2 = self:AddInput("Max", "bn2", {
+		defNumVar,
+        INP_Default = 0.8,
+		ICS_ControlPage = "Controls",
+        }) 
+	InEaseN2 = self:AddInput("", "EaseN2", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAN2 = self:AddInput("", "RankAN2", {
+		INP_Default = 0,
+		defRank,		
+        })		
+	InRankBN2 = self:AddInput("", "RankBN2", {
+		INP_Default = 0,
+		defRank,		
+        })		
+					
+		
+		
+		
+	InSetN3 = self:AddInput("####### Set 3", "sn3", {
+		INPS_DefaultText = "Set OutN3",	
+		defSetN,
+		})
+	InRangeN3 = self:AddInput("Range Num  3", "rN3", {
+		INP_Default = 0,
+		defRange,		
+        })				
+	InAN3 = self:AddInput("Min", "an3", {
+		defNumVar,
+        INP_Default = 0.2,
+		ICS_ControlPage = "Controls",
+        })		
+  InBN3 = self:AddInput("Max", "bn3", {
+		defNumVar,
+        INP_Default = 0.8,
+		ICS_ControlPage = "Controls",
+        }) 
+	InEaseN3 = self:AddInput("", "EaseN3", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAN3 = self:AddInput("", "RankAN3", {
+		INP_Default = 0,
+		defRank,		
+        })			
+	InRankBN3 = self:AddInput("", "RankBN3", {
+		INP_Default = 0,
+		defRank,		
+        })		
+		
+	InSetN4 = self:AddInput("####### Set 4", "sn4", {
+		INPS_DefaultText = "Set OutN4",	
+		defSetN,
+		})
+	InRangeN4 = self:AddInput("Range Num  4", "rN4", {
+		INP_Default = 0,
+		defRange,		
+        })		
+	InAN4 = self:AddInput("Min", "an4", {
+		defNumVar,
+        INP_Default = 0.2,
+		ICS_ControlPage = "Controls",
+        })		
+    InBN4 = self:AddInput("Max", "bn4", {
+		defNumVar,
+        INP_Default = 0.8,
+		ICS_ControlPage = "Controls",
+        }) 
+	InEaseN4 = self:AddInput("", "EaseN4", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAN4 = self:AddInput("", "RankAN4", {
+		INP_Default = 0,
+		defRank,		
+        })	
+	InRankBN4 = self:AddInput("", "RankBN4", {
+		INP_Default = 0,
+		defRank,		
+        })		
+		
+		
+	InSetN5 = self:AddInput("####### Set 5", "sn5", {
+		INPS_DefaultText = "Set OutN5",	
+		defSetN,
+		})
+	InRangeN5 = self:AddInput("Range Num  5", "rN5", {
+		INP_Default = 0,
+		defRange,		
+        })						
+	InAN5 = self:AddInput("Min", "an5", {
+		defNumVar,
+        INP_Default = 0.2,
+		ICS_ControlPage = "Controls",
+        })		
+    InBN5 = self:AddInput("Max", "bn5", {
+		defNumVar,
+        INP_Default = 0.8,
+		ICS_ControlPage = "Controls",
+        }) 
+	InEaseN5 = self:AddInput("", "EaseN5", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAN5 = self:AddInput("", "RankAN5", {
+		INP_Default = 0,
+		defRank,		
+        })			
+	InRankBN5 = self:AddInput("", "RankBN5", {
+		INP_Default = 0,
+		defRank,		
+        })		
+	self:EndControlNest()			
+	
+	
+	self:BeginControlNest("", "NestN2", true, {})
+	InSetN6 = self:AddInput("####### Set 6", "sn6", {
+		INPS_DefaultText = "Set OutN6",	
+		defSetN,
+		})
+	InRangeN6 = self:AddInput("Range Num  6", "rN6", {
+		INP_Default = 0,
+		defRange,		
+        })				
+	InAN6 = self:AddInput("Min", "an6", {
+		defNumVar,
+        INP_Default = 0.2,
+		ICS_ControlPage = "Controls",
+        })		
+    InBN6 = self:AddInput("Max", "bn6", {
+		defNumVar,
+        INP_Default = 0.8,
+		ICS_ControlPage = "Controls",
+        }) 
+	InEaseN6 = self:AddInput("", "EaseN6", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAN6 = self:AddInput("", "RankAN6", {
+		INP_Default = 0,
+		defRank,		
+        })			
+	InRankBN6 = self:AddInput("", "RankBN6", {
+		INP_Default = 0,
+		defRank,		
+        })		
+		
+		
+	InSetN7 = self:AddInput("####### Set 7", "sn7", {
+		INPS_DefaultText = "Set OutN7",	
+		defSetN,
+		})
+	InRangeN7 = self:AddInput("Range Num  7", "rN7", {
+		INP_Default = 0,
+		defRange,		
+        })				
+	InAN7 = self:AddInput("Min", "an7", {
+		defNumVar,
+        INP_Default = 0.2,
+		ICS_ControlPage = "Controls",
+        })		
+    InBN7 = self:AddInput("Max", "bn7", {
+		defNumVar,
+        INP_Default = 0.8,
+		ICS_ControlPage = "Controls",
+        }) 
+	InEaseN7 = self:AddInput("", "EaseN7", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAN7 = self:AddInput("", "RankAN7", {
+		INP_Default = 0,
+		defRank,		
+        })			
+	InRankBN7 = self:AddInput("", "RankBN7", {
+		INP_Default = 0,
+		defRank,		
+        })		
+		
+		
+	InSetN8 = self:AddInput("####### Set 8", "sn8", {
+		INPS_DefaultText = "Set OutN8",	
+		defSetN,
+		})
+	InRangeN8 = self:AddInput("Range Num  8", "rN8", {
+		INP_Default = 0,
+		defRange,		
+        })				
+	InAN8 = self:AddInput("Min", "an8", {
+		defNumVar,
+        INP_Default = 0.2,
+		ICS_ControlPage = "Controls",
+        })		
+    InBN8 = self:AddInput("Max", "bn8", {
+		defNumVar,
+        INP_Default = 0.8,
+		ICS_ControlPage = "Controls",
+        }) 
+	InEaseN8 = self:AddInput("", "EaseN8", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAN8 = self:AddInput("", "RankAN8", {
+		INP_Default = 0,
+		defRank,		
+        })			
+	InRankBN8 = self:AddInput("", "RankBN8", {
+		INP_Default = 0,
+		defRank,		
+        })		
+		
+		
+	InSetN9 = self:AddInput("####### Set 9", "sn9", {
+		INPS_DefaultText = "Set OutN9",	
+		defSetN,
+		})
+	InRangeN9 = self:AddInput("Range Num  9", "rN9", {
+		INP_Default = 0,
+		defRange,		
+        })				
+	InAN9 = self:AddInput("Min", "an9", {
+		defNumVar,
+        INP_Default = 0.2,
+		ICS_ControlPage = "Controls",
+        })		
+    InBN9 = self:AddInput("Max", "bn9", {
+		defNumVar,
+        INP_Default = 0.8,
+		ICS_ControlPage = "Controls",
+        }) 
+	InEaseN9 = self:AddInput("", "EaseN9", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAN9 = self:AddInput("", "RankAN9", {
+		INP_Default = 0,
+		defRank,		
+        })			
+	InRankBN9 = self:AddInput("", "RankBN9", {
+		INP_Default = 0,
+		defRank,		
+        })		
+		
+		
+	InSetN10 = self:AddInput("####### Set 10", "sn10", {
+		INPS_DefaultText = "Set OutN10",	
+		defSetN,
+		})
+	InRangeN10 = self:AddInput("Range Num  10", "rN10", {
+		INP_Default = 0,
+		defRange,		
+        })				
+	InAN10 = self:AddInput("Min", "an10", {
+		defNumVar,
+        INP_Default = 0.2,
+		ICS_ControlPage = "Controls",
+        })		
+    InBN10 = self:AddInput("Max", "bn10", {
+		defNumVar,
+        INP_Default = 0.8,
+		ICS_ControlPage = "Controls",
+        }) 
+	InEaseN10 = self:AddInput("", "EaseN10", {
+		INP_Default = 10,
+		defEase,		
+        })	
+	InRankAN10 = self:AddInput("", "RankAN10", {
+		INP_Default = 0,
+		defRank,		
+        })			
+	InRankBN10 = self:AddInput("", "RankBN10", {
+		INP_Default = 0,
+		defRank,		
+        })		
+		self:EndControlNest()			
+		
+		
+	-------------------------------------------------------
+	--- Point
+	-------------------------------------------------------
+
+	
+	
+	self:BeginControlNest("", "NestP1", true, {ICS_ControlPage = "Point",	})	
+	defSetP = {
+		LINKID_DataType = "Text",	
+		TEC_Lines = 1,		
+		TEC_ReadOnly = false,			
+		INPID_InputControl = "TextEditControl",
+		INP_DoNotifyChanged = true,
+		ICS_ControlPage = "Point",		
+		}
+	InSetP1 = self:AddInput("####### Set 1", "sp1", {
+		INPS_DefaultText = "Set OutP1",	
+		defSetP,
+		})		
+	InRangeP1 = self:AddInput("Range Pnt 1", "rP1", {
+		INP_Default = 0,
+		defRange,		
+        })		
+  InAP1 = self:AddInput("Min", "ap1", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})
+  InBP1 = self:AddInput("Max", "bp1", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})				
+	InEaseP1 = self:AddInput("", "EaseP1", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAP1 = self:AddInput("", "RankAP1", {
+		INP_Default = 0,
+		defRank,		
+        })	
+	InRankBP1 = self:AddInput("", "RankBP1", {
+		INP_Default = 0,
+		defRank,		
+        })		
+
+
+
+	InSetP2 = self:AddInput("####### Set 2", "sp2", {
+		INPS_DefaultText = "Set OutP2",	
+		defSetP,
+		})		
+	InRangeP2 = self:AddInput("Range Pnt 2", "rP2", {
+		INP_Default = 0,
+		defRange,		
+        })		
+  InAP2 = self:AddInput("Min", "ap2", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})
+  InBP2 = self:AddInput("Max", "bp2", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})				
+ 	InEaseP2 = self:AddInput("", "EaseP2", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAP2 = self:AddInput("", "RankAP2", {
+		INP_Default = 0,
+		defRank,		
+        })	
+	InRankBP2 = self:AddInput("", "RankBP2", {
+		INP_Default = 0,
+		defRank,		
+        })		
+
+
+
+	InSetP3 = self:AddInput("####### Set 3", "sp3", {
+		INPS_DefaultText = "Set OutP3",	
+		defSetP,
+		})		
+	InRangeP3 = self:AddInput("Range Pnt 3", "rP3", {
+		INP_Default = 0,
+		defRange,		
+        })		
+  InAP3 = self:AddInput("Min", "ap3", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})
+  InBP3 = self:AddInput("Max", "bp3", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})				
+	InEaseP3 = self:AddInput("", "EaseP3", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAP3 = self:AddInput("", "RankAP3", {
+		INP_Default = 0,
+		defRank,		
+        })	
+	InRankBP3 = self:AddInput("", "RankBP3", {
+		INP_Default = 0,
+		defRank,		
+        })		
+
+
+
+	InSetP4 = self:AddInput("####### Set 4", "sp4", {
+		INPS_DefaultText = "Set OutP4",	
+		defSetP,
+		})		
+	InRangeP4 = self:AddInput("Range Pnt 4", "rP4", {
+		INP_Default = 0,
+		defRange,		
+        })		
+  InAP4 = self:AddInput("Min", "ap4", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})
+  InBP4 = self:AddInput("Max", "bp4", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})				
+	InEaseP4 = self:AddInput("", "EaseP4", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAP4 = self:AddInput("", "RankAP4", {
+		INP_Default = 0,
+		defRank,		
+        })	
+	InRankBP4 = self:AddInput("", "RankBP4", {
+		INP_Default = 0,
+		defRank,		
+        })		
+
+
+
+	InSetP5 = self:AddInput("####### Set 5", "sp5", {
+		INPS_DefaultText = "Set OutP5",	
+		defSetP,
+		})		
+	InRangeP5 = self:AddInput("Range Pnt 5", "rP5", {
+		INP_Default = 0,
+		defRange,		
+        })		
+  InAP5 = self:AddInput("Min", "ap5", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})
+  InBP5 = self:AddInput("Max", "bp5", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})				
+	InEaseP5 = self:AddInput("", "EaseP5", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAP5 = self:AddInput("", "RankAP5", {
+		INP_Default = 0,
+		defRank,		
+        })	
+	InRankBP5 = self:AddInput("", "RankBP5", {
+		INP_Default = 0,
+		defRank,		
+        })		
+	self:EndControlNest()			
+	
+	
+	self:BeginControlNest("", "NestP2", true, {})
+	InSetP6 = self:AddInput("####### Set 6", "sp6", {
+		INPS_DefaultText = "Set OutP6",	
+		defSetP,
+		})		
+	InRangeP6 = self:AddInput("Range Pnt 6", "rP6", {
+		INP_Default = 0,
+		defRange,		
+        })		
+  InAP6 = self:AddInput("Min", "ap6", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})
+  InBP6 = self:AddInput("Max", "bp6", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})				
+	InEaseP6 = self:AddInput("", "EaseP6", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAP6 = self:AddInput("", "RankAP6", {
+		INP_Default = 0,
+		defRank,		
+        })	
+	InRankBP6 = self:AddInput("", "RankBP6", {
+		INP_Default = 0,
+		defRank,		
+        })		
+
+
+
+	InSetP7 = self:AddInput("####### Set 7", "sp7", {
+		INPS_DefaultText = "Set OutP7",	
+		defSetP,
+		})		
+	InRangeP7 = self:AddInput("Range Pnt 7", "rP7", {
+		INP_Default = 0,
+		defRange,		
+        })		
+  InAP7 = self:AddInput("Min", "ap7", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})
+  InBP7 = self:AddInput("Max", "bp7", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})				
+	InEaseP7 = self:AddInput("", "EaseP7", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAP7 = self:AddInput("", "RankAP7", {
+		INP_Default = 0,
+		defRank,		
+        })	
+	InRankBP7 = self:AddInput("", "RankBP7", {
+		INP_Default = 0,
+		defRank,		
+        })		
+
+
+
+	InSetP8 = self:AddInput("####### Set 8", "sp8", {
+		INPS_DefaultText = "Set OutP8",	
+		defSetP,
+		})		
+	InRangeP8 = self:AddInput("Range Pnt 8", "rP8", {
+		INP_Default = 0,
+		defRange,		
+        })		
+  InAP8 = self:AddInput("Min", "ap8", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})
+  InBP8 = self:AddInput("Max", "bp8", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})				
+	InEaseP8 = self:AddInput("", "EaseP8", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAP8 = self:AddInput("", "RankAP8", {
+		INP_Default = 0,
+		defRank,		
+        })	
+	InRankBP8 = self:AddInput("", "RankBP8", {
+		INP_Default = 0,
+		defRank,		
+        })		
+
+
+
+	InSetP9 = self:AddInput("####### Set 9", "sp9", {
+		INPS_DefaultText = "Set OutP9",	
+		defSetP,
+		})		
+	InRangeP9 = self:AddInput("Range Pnt 9", "rP9", {
+		INP_Default = 0,
+		defRange,		
+        })		
+  InAP9 = self:AddInput("Min", "ap9", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})
+  InBP9 = self:AddInput("Max", "bp9", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})				
+	InEaseP9 = self:AddInput("", "EaseP9", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAP9 = self:AddInput("", "RankAP9", {
+		INP_Default = 0,
+		defRank,		
+        })	
+	InRankBP9 = self:AddInput("", "RankBP9", {
+		INP_Default = 0,
+		defRank,		
+        })		
+
+
+
+	InSetP10 = self:AddInput("####### Set 10", "sp10", {
+		INPS_DefaultText = "Set OutP10",	
+		defSetP,
+		})		
+	InRangeP10 = self:AddInput("Range Pnt 10", "rP10", {
+		INP_Default = 0,
+		defRange,		
+        })		
+  InAP10 = self:AddInput("Min", "ap10", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})
+  InBP10 = self:AddInput("Max", "bp10", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		ICS_ControlPage = "Point",
+		DefaultX = 0.5,
+		DefaultY = 0.5,		
+		})				
+	InEaseP10 = self:AddInput("", "EaseP10", {
+		INP_Default = 1,
+		defEase,		
+        })	
+	InRankAP10 = self:AddInput("", "RankAP10", {
+		INP_Default = 0,
+		defRank,		
+        })	
+	InRankBP10 = self:AddInput("", "RankBP10", {
+		INP_Default = 0,
+		defRank,		
+        })		
+	self:EndControlNest()			
+	
+	
+	
+			
+	InImage = self:AddInput("Input", "Input", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})
+	OutImage = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})		
+		
+		
+	OutNum1 = self:AddOutput("OutN1", "OutN1", {
+		LINKID_DataType = "Number",
+	})		
+	OutNum2 = self:AddOutput("OutN2", "OutN2", {
+		LINKID_DataType = "Number",
+	})			
+	OutNum3 = self:AddOutput("OutN3", "OutN3", {
+		LINKID_DataType = "Number",
+	})			
+	OutNum4 = self:AddOutput("OutN4", "OutN4", {
+		LINKID_DataType = "Number",
+	})	
+	OutNum5 = self:AddOutput("OutN5", "OutN5", {
+		LINKID_DataType = "Number",
+	})	
+	OutNum6 = self:AddOutput("OutN6", "OutN6", {
+		LINKID_DataType = "Number",
+	})	
+	OutNum7 = self:AddOutput("OutN7", "OutN7", {
+		LINKID_DataType = "Number",
+	})	
+	OutNum8 = self:AddOutput("OutN8", "OutN8", {
+		LINKID_DataType = "Number",
+	})	
+	OutNum9 = self:AddOutput("OutN9", "OutN9", {
+		LINKID_DataType = "Number",
+	})	
+	OutNum10 = self:AddOutput("OutN10", "OutN10", {
+		LINKID_DataType = "Number",
+	})		
+	
+	
+	OutPnt1 = self:AddOutput("OutP1", "OutP1", {
+		LINKID_DataType = "Point",
+	})		
+	OutPnt2 = self:AddOutput("OutP2", "OutP2", {
+		LINKID_DataType = "Point",
+	})
+	OutPnt3 = self:AddOutput("OutP3", "OutP3", {
+		LINKID_DataType = "Point",
+	})
+	OutPnt4 = self:AddOutput("OutP4", "OutP4", {
+		LINKID_DataType = "Point",
+	})
+	OutPnt5 = self:AddOutput("OutP5", "OutP5", {
+		LINKID_DataType = "Point",
+	})
+	OutPnt6 = self:AddOutput("OutP6", "OutP6", {
+		LINKID_DataType = "Point",
+	})
+	OutPnt7 = self:AddOutput("OutP7", "OutP7", {
+		LINKID_DataType = "Point",
+	})
+	OutPnt8 = self:AddOutput("OutP8", "OutP8", {
+		LINKID_DataType = "Point",
+	})
+	OutPnt9 = self:AddOutput("OutP9", "OutP9", {
+		LINKID_DataType = "Point",
+	})
+	OutPnt10 = self:AddOutput("OutP10", "OutP10", {
+		LINKID_DataType = "Point",
+	})			
+end
+
+
+
+function NotifyChanged(inp, param, time)
+	if inp ~= nil and param ~= nil then
+		if inp == InTiming then
+					
+			InRange:SetAttrs({ IC_Visible = true, })			
+			InLag:SetAttrs({ IC_Visible = true, })
+			InExtension:SetAttrs({ IC_Visible = true, })	
+			
+				InEaseN1:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseN2:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseN3:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseN4:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseN5:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseN6:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseN7:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseN8:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseN9:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseN10:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseP1:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseP2:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseP3:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseP4:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseP5:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseP6:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseP7:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseP8:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseP9:SetAttrs({ ICD_Width = 0.74, })		
+				InEaseP10:SetAttrs({ ICD_Width = 0.74, })			
+			
+				InEaseN1:SetAttrs({ IC_Visible = true, })		
+				InEaseN2:SetAttrs({ IC_Visible = true, })		
+				InEaseN3:SetAttrs({ IC_Visible = true, })		
+				InEaseN4:SetAttrs({ IC_Visible = true, })		
+				InEaseN5:SetAttrs({ IC_Visible = true, })		
+				InEaseN6:SetAttrs({ IC_Visible = true, })		
+				InEaseN7:SetAttrs({ IC_Visible = true, })		
+				InEaseN8:SetAttrs({ IC_Visible = true, })		
+				InEaseN9:SetAttrs({ IC_Visible = true, })		
+				InEaseN10:SetAttrs({ IC_Visible = true, })		
+				InEaseP1:SetAttrs({ IC_Visible = true, })		
+				InEaseP2:SetAttrs({ IC_Visible = true, })		
+				InEaseP3:SetAttrs({ IC_Visible = true, })		
+				InEaseP4:SetAttrs({ IC_Visible = true, })		
+				InEaseP5:SetAttrs({ IC_Visible = true, })		
+				InEaseP6:SetAttrs({ IC_Visible = true, })		
+				InEaseP7:SetAttrs({ IC_Visible = true, })		
+				InEaseP8:SetAttrs({ IC_Visible = true, })		
+				InEaseP9:SetAttrs({ IC_Visible = true, })		
+				InEaseP10:SetAttrs({ IC_Visible = true, })		
+
+				InRankAN1:SetAttrs({ IC_Visible = true, })					
+				InRankAN2:SetAttrs({ IC_Visible = true, })	
+				InRankAN3:SetAttrs({ IC_Visible = true, })					
+				InRankAN4:SetAttrs({ IC_Visible = true, })					
+				InRankAN5:SetAttrs({ IC_Visible = true, })					
+				InRankAN6:SetAttrs({ IC_Visible = true, })	
+				InRankAN7:SetAttrs({ IC_Visible = true, })	
+				InRankAN8:SetAttrs({ IC_Visible = true, })	
+				InRankAN9:SetAttrs({ IC_Visible = true, })					
+				InRankAN10:SetAttrs({ IC_Visible = true, })	
+				InRankAP1:SetAttrs({ IC_Visible = true, })	
+				InRankAP2:SetAttrs({ IC_Visible = true, })	
+				InRankAP3:SetAttrs({ IC_Visible = true, })	
+				InRankAP4:SetAttrs({ IC_Visible = true, })	
+				InRankAP5:SetAttrs({ IC_Visible = true, })	
+				InRankAP6:SetAttrs({ IC_Visible = true, })	
+				InRankAP7:SetAttrs({ IC_Visible = true, })	
+				InRankAP8:SetAttrs({ IC_Visible = true, })					
+				InRankAP9:SetAttrs({ IC_Visible = true, })	
+				InRankAP10:SetAttrs({ IC_Visible = true, })		
+
+				InRankBN1:SetAttrs({ IC_Visible = true, })					
+				InRankBN2:SetAttrs({ IC_Visible = true, })	
+				InRankBN3:SetAttrs({ IC_Visible = true, })					
+				InRankBN4:SetAttrs({ IC_Visible = true, })					
+				InRankBN5:SetAttrs({ IC_Visible = true, })					
+				InRankBN6:SetAttrs({ IC_Visible = true, })	
+				InRankBN7:SetAttrs({ IC_Visible = true, })	
+				InRankBN8:SetAttrs({ IC_Visible = true, })	
+				InRankBN9:SetAttrs({ IC_Visible = true, })					
+				InRankBN10:SetAttrs({ IC_Visible = true, })	
+				InRankBP1:SetAttrs({ IC_Visible = true, })	
+				InRankBP2:SetAttrs({ IC_Visible = true, })	
+				InRankBP3:SetAttrs({ IC_Visible = true, })	
+				InRankBP4:SetAttrs({ IC_Visible = true, })	
+				InRankBP5:SetAttrs({ IC_Visible = true, })	
+				InRankBP6:SetAttrs({ IC_Visible = true, })	
+				InRankBP7:SetAttrs({ IC_Visible = true, })	
+				InRankBP8:SetAttrs({ IC_Visible = true, })					
+				InRankBP9:SetAttrs({ IC_Visible = true, })	
+				InRankBP10:SetAttrs({ IC_Visible = true, })		
+				
+				InRangeN1:SetAttrs({ IC_Visible = false, })					
+				InRangeN2:SetAttrs({ IC_Visible = false, })	
+				InRangeN3:SetAttrs({ IC_Visible = false, })		
+				InRangeN4:SetAttrs({ IC_Visible = false, })		
+				InRangeN5:SetAttrs({ IC_Visible = false, })		
+				InRangeN6:SetAttrs({ IC_Visible = false, })		
+				InRangeN7:SetAttrs({ IC_Visible = false, })		
+				InRangeN8:SetAttrs({ IC_Visible = false, })		
+				InRangeN9:SetAttrs({ IC_Visible = false, })		
+				InRangeN10:SetAttrs({ IC_Visible = false, })	
+				InRangeP1:SetAttrs({ IC_Visible = false, })					
+				InRangeP2:SetAttrs({ IC_Visible = false, })	
+				InRangeP3:SetAttrs({ IC_Visible = false, })		
+				InRangeP4:SetAttrs({ IC_Visible = false, })		
+				InRangeP5:SetAttrs({ IC_Visible = false, })		
+				InRangeP6:SetAttrs({ IC_Visible = false, })		
+				InRangeP7:SetAttrs({ IC_Visible = false, })		
+				InRangeP8:SetAttrs({ IC_Visible = false, })		
+				InRangeP9:SetAttrs({ IC_Visible = false, })		
+				InRangeP10:SetAttrs({ IC_Visible = false, })														
+			
+			if param.Value == 0 then
+				InLag:SetAttrs({ IC_Visible = false, })
+				InExtension:SetAttrs({ IC_Visible = false, })							
+			end
+			if param.Value == 1 then			
+				InLag:SetAttrs({ IC_Visible = false, })
+			end
+			if param.Value == 3 then			
+				InLag:SetAttrs({ IC_Visible = false, })
+			end
+			if param.Value == 4 then			
+				InLag:SetAttrs({ IC_Visible = false, })
+			end			
+
+			if param.Value == 6 then
+				InRange:SetAttrs({ IC_Visible = false, })
+				InLag:SetAttrs({ IC_Visible = false, })
+				InExtension:SetAttrs({ IC_Visible = false, })
+				
+				InEaseN1:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseN2:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseN3:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseN4:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseN5:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseN6:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseN7:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseN8:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseN9:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseN10:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseP1:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseP2:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseP3:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseP4:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseP5:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseP6:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseP7:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseP8:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseP9:SetAttrs({ ICD_Width = 1.00, })		
+				InEaseP10:SetAttrs({ ICD_Width = 1.00, })						
+				
+				InRankAN1:SetAttrs({ IC_Visible = false, })					
+				InRankAN2:SetAttrs({ IC_Visible = false, })	
+				InRankAN3:SetAttrs({ IC_Visible = false, })					
+				InRankAN4:SetAttrs({ IC_Visible = false, })					
+				InRankAN5:SetAttrs({ IC_Visible = false, })					
+				InRankAN6:SetAttrs({ IC_Visible = false, })	
+				InRankAN7:SetAttrs({ IC_Visible = false, })	
+				InRankAN8:SetAttrs({ IC_Visible = false, })	
+				InRankAN9:SetAttrs({ IC_Visible = false, })					
+				InRankAN10:SetAttrs({ IC_Visible = false, })	
+				InRankAP1:SetAttrs({ IC_Visible = false, })	
+				InRankAP2:SetAttrs({ IC_Visible = false, })	
+				InRankAP3:SetAttrs({ IC_Visible = false, })	
+				InRankAP4:SetAttrs({ IC_Visible = false, })	
+				InRankAP5:SetAttrs({ IC_Visible = false, })	
+				InRankAP6:SetAttrs({ IC_Visible = false, })	
+				InRankAP7:SetAttrs({ IC_Visible = false, })	
+				InRankAP8:SetAttrs({ IC_Visible = false, })					
+				InRankAP9:SetAttrs({ IC_Visible = false, })	
+				InRankAP10:SetAttrs({ IC_Visible = false, })		
+
+				InRankBN1:SetAttrs({ IC_Visible = false, })					
+				InRankBN2:SetAttrs({ IC_Visible = false, })	
+				InRankBN3:SetAttrs({ IC_Visible = false, })					
+				InRankBN4:SetAttrs({ IC_Visible = false, })					
+				InRankBN5:SetAttrs({ IC_Visible = false, })					
+				InRankBN6:SetAttrs({ IC_Visible = false, })	
+				InRankBN7:SetAttrs({ IC_Visible = false, })	
+				InRankBN8:SetAttrs({ IC_Visible = false, })	
+				InRankBN9:SetAttrs({ IC_Visible = false, })					
+				InRankBN10:SetAttrs({ IC_Visible = false, })	
+				InRankBP1:SetAttrs({ IC_Visible = false, })	
+				InRankBP2:SetAttrs({ IC_Visible = false, })	
+				InRankBP3:SetAttrs({ IC_Visible = false, })	
+				InRankBP4:SetAttrs({ IC_Visible = false, })	
+				InRankBP5:SetAttrs({ IC_Visible = false, })	
+				InRankBP6:SetAttrs({ IC_Visible = false, })	
+				InRankBP7:SetAttrs({ IC_Visible = false, })	
+				InRankBP8:SetAttrs({ IC_Visible = false, })					
+				InRankBP9:SetAttrs({ IC_Visible = false, })	
+				InRankBP10:SetAttrs({ IC_Visible = false, })					
+				
+				InRangeN1:SetAttrs({ IC_Visible = true, })					
+				InRangeN2:SetAttrs({ IC_Visible = true, })	
+				InRangeN3:SetAttrs({ IC_Visible = true, })		
+				InRangeN4:SetAttrs({ IC_Visible = true, })		
+				InRangeN5:SetAttrs({ IC_Visible = true, })		
+				InRangeN6:SetAttrs({ IC_Visible = true, })		
+				InRangeN7:SetAttrs({ IC_Visible = true, })		
+				InRangeN8:SetAttrs({ IC_Visible = true, })		
+				InRangeN9:SetAttrs({ IC_Visible = true, })		
+				InRangeN10:SetAttrs({ IC_Visible = true, })	
+				InRangeP1:SetAttrs({ IC_Visible = true, })					
+				InRangeP2:SetAttrs({ IC_Visible = true, })	
+				InRangeP3:SetAttrs({ IC_Visible = true, })		
+				InRangeP4:SetAttrs({ IC_Visible = true, })		
+				InRangeP5:SetAttrs({ IC_Visible = true, })		
+				InRangeP6:SetAttrs({ IC_Visible = true, })		
+				InRangeP7:SetAttrs({ IC_Visible = true, })		
+				InRangeP8:SetAttrs({ IC_Visible = true, })		
+				InRangeP9:SetAttrs({ IC_Visible = true, })		
+				InRangeP10:SetAttrs({ IC_Visible = true, })						
+			end
+			
+
+			if param.Value == 5.0 then
+				InRange:SetAttrs({ IC_Visible = false, })
+				InLag:SetAttrs({ IC_Visible = false, })
+				InExtension:SetAttrs({ IC_Visible = false, })
+				
+				InEaseN1:SetAttrs({ IC_Visible = false, })		
+				InEaseN2:SetAttrs({ IC_Visible = false, })		
+				InEaseN3:SetAttrs({ IC_Visible = false, })		
+				InEaseN4:SetAttrs({ IC_Visible = false, })		
+				InEaseN5:SetAttrs({ IC_Visible = false, })		
+				InEaseN6:SetAttrs({ IC_Visible = false, })		
+				InEaseN7:SetAttrs({ IC_Visible = false, })		
+				InEaseN8:SetAttrs({ IC_Visible = false, })		
+				InEaseN9:SetAttrs({ IC_Visible = false, })		
+				InEaseN10:SetAttrs({ IC_Visible = false, })		
+				InEaseP1:SetAttrs({ IC_Visible = false, })		
+				InEaseP2:SetAttrs({ IC_Visible = false, })		
+				InEaseP3:SetAttrs({ IC_Visible = false, })		
+				InEaseP4:SetAttrs({ IC_Visible = false, })		
+				InEaseP5:SetAttrs({ IC_Visible = false, })		
+				InEaseP6:SetAttrs({ IC_Visible = false, })		
+				InEaseP7:SetAttrs({ IC_Visible = false, })		
+				InEaseP8:SetAttrs({ IC_Visible = false, })		
+				InEaseP9:SetAttrs({ IC_Visible = false, })		
+				InEaseP10:SetAttrs({ IC_Visible = false, })						
+
+			
+				InRankAN1:SetAttrs({ IC_Visible = false, })					
+				InRankAN2:SetAttrs({ IC_Visible = false, })	
+				InRankAN3:SetAttrs({ IC_Visible = false, })					
+				InRankAN4:SetAttrs({ IC_Visible = false, })					
+				InRankAN5:SetAttrs({ IC_Visible = false, })					
+				InRankAN6:SetAttrs({ IC_Visible = false, })	
+				InRankAN7:SetAttrs({ IC_Visible = false, })	
+				InRankAN8:SetAttrs({ IC_Visible = false, })	
+				InRankAN9:SetAttrs({ IC_Visible = false, })					
+				InRankAN10:SetAttrs({ IC_Visible = false, })	
+				InRankAP1:SetAttrs({ IC_Visible = false, })	
+				InRankAP2:SetAttrs({ IC_Visible = false, })	
+				InRankAP3:SetAttrs({ IC_Visible = false, })	
+				InRankAP4:SetAttrs({ IC_Visible = false, })	
+				InRankAP5:SetAttrs({ IC_Visible = false, })	
+				InRankAP6:SetAttrs({ IC_Visible = false, })	
+				InRankAP7:SetAttrs({ IC_Visible = false, })	
+				InRankAP8:SetAttrs({ IC_Visible = false, })					
+				InRankAP9:SetAttrs({ IC_Visible = false, })	
+				InRankAP10:SetAttrs({ IC_Visible = false, })		
+
+				InRankBN1:SetAttrs({ IC_Visible = false, })					
+				InRankBN2:SetAttrs({ IC_Visible = false, })	
+				InRankBN3:SetAttrs({ IC_Visible = false, })					
+				InRankBN4:SetAttrs({ IC_Visible = false, })					
+				InRankBN5:SetAttrs({ IC_Visible = false, })					
+				InRankBN6:SetAttrs({ IC_Visible = false, })	
+				InRankBN7:SetAttrs({ IC_Visible = false, })	
+				InRankBN8:SetAttrs({ IC_Visible = false, })	
+				InRankBN9:SetAttrs({ IC_Visible = false, })					
+				InRankBN10:SetAttrs({ IC_Visible = false, })	
+				InRankBP1:SetAttrs({ IC_Visible = false, })	
+				InRankBP2:SetAttrs({ IC_Visible = false, })	
+				InRankBP3:SetAttrs({ IC_Visible = false, })	
+				InRankBP4:SetAttrs({ IC_Visible = false, })	
+				InRankBP5:SetAttrs({ IC_Visible = false, })	
+				InRankBP6:SetAttrs({ IC_Visible = false, })	
+				InRankBP7:SetAttrs({ IC_Visible = false, })	
+				InRankBP8:SetAttrs({ IC_Visible = false, })					
+				InRankBP9:SetAttrs({ IC_Visible = false, })	
+				InRankBP10:SetAttrs({ IC_Visible = false, })		
+				
+				InRangeN1:SetAttrs({ IC_Visible = true, })					
+				InRangeN2:SetAttrs({ IC_Visible = true, })	
+				InRangeN3:SetAttrs({ IC_Visible = true, })		
+				InRangeN4:SetAttrs({ IC_Visible = true, })		
+				InRangeN5:SetAttrs({ IC_Visible = true, })		
+				InRangeN6:SetAttrs({ IC_Visible = true, })		
+				InRangeN7:SetAttrs({ IC_Visible = true, })		
+				InRangeN8:SetAttrs({ IC_Visible = true, })		
+				InRangeN9:SetAttrs({ IC_Visible = true, })		
+				InRangeN10:SetAttrs({ IC_Visible = true, })	
+				InRangeP1:SetAttrs({ IC_Visible = true, })					
+				InRangeP2:SetAttrs({ IC_Visible = true, })	
+				InRangeP3:SetAttrs({ IC_Visible = true, })		
+				InRangeP4:SetAttrs({ IC_Visible = true, })		
+				InRangeP5:SetAttrs({ IC_Visible = true, })		
+				InRangeP6:SetAttrs({ IC_Visible = true, })		
+				InRangeP7:SetAttrs({ IC_Visible = true, })		
+				InRangeP8:SetAttrs({ IC_Visible = true, })		
+				InRangeP9:SetAttrs({ IC_Visible = true, })		
+				InRangeP10:SetAttrs({ IC_Visible = true, })					
+			end			
+		end
+	end
+end
+
+
+function PreCalcProcess(req)
+  -------------------------------------
+	-- Attributes for IN 
+		local img = InImage:GetValue(req)	
+		local out = img:CopyOf()
+	-------------------------------------
+	local r = InRange:GetValue(req).Value 
+	local lag = InLag:GetValue(req).Value - 0.68
+	local timing = InTiming:GetValue(req).Value 
+	local extension = InExtension:GetValue(req).Value	
+	local show = boolShow:GetValue(req).Value 
+	
+	an[1] = InAN1:GetValue(req).Value 
+	an[2] = InAN2:GetValue(req).Value 
+	an[3] = InAN3:GetValue(req).Value 
+	an[4] = InAN4:GetValue(req).Value 
+	an[5] = InAN5:GetValue(req).Value 
+	an[6] = InAN6:GetValue(req).Value 
+	an[7] = InAN7:GetValue(req).Value 
+	an[8] = InAN8:GetValue(req).Value 
+	an[9] = InAN9:GetValue(req).Value 
+	an[10] = InAN10:GetValue(req).Value
+
+	bn[1] = InBN1:GetValue(req).Value 
+	bn[2] = InBN2:GetValue(req).Value 
+	bn[3] = InBN3:GetValue(req).Value 
+	bn[4] = InBN4:GetValue(req).Value 
+	bn[5] = InBN5:GetValue(req).Value 
+	bn[6] = InBN6:GetValue(req).Value 
+	bn[7] = InBN7:GetValue(req).Value 
+	bn[8] = InBN8:GetValue(req).Value 
+	bn[9] = InBN9:GetValue(req).Value 
+	bn[10] = InBN10:GetValue(req).Value 
+	
+
+	ap[1] = InAP1:GetValue(req)
+	ap[2] = InAP2:GetValue(req)
+	ap[3] = InAP3:GetValue(req)
+	ap[4] = InAP4:GetValue(req)
+	ap[5] = InAP5:GetValue(req)
+	ap[6] = InAP6:GetValue(req)
+	ap[7] = InAP7:GetValue(req)
+	ap[8] = InAP8:GetValue(req)
+	ap[9] = InAP9:GetValue(req)
+	ap[10] = InAP10:GetValue(req)	
+ 	
+	bp[1] = InBP1:GetValue(req)
+	bp[2] = InBP2:GetValue(req)
+	bp[3] = InBP3:GetValue(req)
+	bp[4] = InBP4:GetValue(req)
+	bp[5] = InBP5:GetValue(req)
+	bp[6] = InBP6:GetValue(req)
+	bp[7] = InBP7:GetValue(req)
+	bp[8] = InBP8:GetValue(req)
+	bp[9] = InBP9:GetValue(req)
+	bp[10] = InBP10:GetValue(req)			
+
+
+	EaseN[1] =InEaseN1:GetValue(req).Value 
+	EaseP[1] =InEaseP1:GetValue(req).Value 
+	EaseN[2] =InEaseN2:GetValue(req).Value 
+	EaseP[2] =InEaseP2:GetValue(req).Value 
+	EaseN[3] =InEaseN3:GetValue(req).Value 
+	EaseP[3] =InEaseP3:GetValue(req).Value 
+	EaseN[4] =InEaseN4:GetValue(req).Value 
+	EaseP[4] =InEaseP4:GetValue(req).Value 
+	EaseN[5] =InEaseN5:GetValue(req).Value 
+	EaseP[5] =InEaseP5:GetValue(req).Value 
+	EaseN[6] =InEaseN6:GetValue(req).Value 
+	EaseP[6] =InEaseP6:GetValue(req).Value 
+	EaseN[7] =InEaseN7:GetValue(req).Value 
+	EaseP[7] =InEaseP7:GetValue(req).Value 
+	EaseN[8] =InEaseN8:GetValue(req).Value 
+	EaseP[8] =InEaseP8:GetValue(req).Value 
+	EaseN[9] =InEaseN9:GetValue(req).Value 
+	EaseP[9] =InEaseP9:GetValue(req).Value  
+	EaseN[10] =InEaseN10:GetValue(req).Value 
+	EaseP[10] =InEaseP10:GetValue(req).Value 
+
+	RankAN[1] = InRankAN1:GetValue(req).Value 
+	RankAN[2] = InRankAN2:GetValue(req).Value 
+	RankAN[3] = InRankAN3:GetValue(req).Value 
+	RankAN[4] = InRankAN4:GetValue(req).Value 
+	RankAN[5] = InRankAN5:GetValue(req).Value 
+	RankAN[6] = InRankAN6:GetValue(req).Value 
+	RankAN[7] = InRankAN7:GetValue(req).Value 
+	RankAN[8] = InRankAN8:GetValue(req).Value 
+	RankAN[9] = InRankAN9:GetValue(req).Value 
+	RankAN[10] = InRankAN10:GetValue(req).Value 
+	RankAP[1] = InRankAP1:GetValue(req).Value 
+	RankAP[2] = InRankAP2:GetValue(req).Value 
+	RankAP[3] = InRankAP3:GetValue(req).Value 	
+	RankAP[4] = InRankAP4:GetValue(req).Value 	
+	RankAP[5] = InRankAP5:GetValue(req).Value 	
+	RankAP[6] = InRankAP6:GetValue(req).Value 	
+	RankAP[7] = InRankAP7:GetValue(req).Value 	
+	RankAP[8] = InRankAP8:GetValue(req).Value 	
+	RankAP[9] = InRankAP9:GetValue(req).Value 	
+	RankAP[10] = InRankAP10:GetValue(req).Value 	
+
+	RankBN[1] = InRankBN1:GetValue(req).Value 
+	RankBN[2] = InRankBN2:GetValue(req).Value 
+	RankBN[3] = InRankBN3:GetValue(req).Value 
+	RankBN[4] = InRankBN4:GetValue(req).Value 
+	RankBN[5] = InRankBN5:GetValue(req).Value 
+	RankBN[6] = InRankBN6:GetValue(req).Value 
+	RankBN[7] = InRankBN7:GetValue(req).Value 
+	RankBN[8] = InRankBN8:GetValue(req).Value 
+	RankBN[9] = InRankBN9:GetValue(req).Value 
+	RankBN[10] = InRankBN10:GetValue(req).Value 
+	RankBP[1] = InRankBP1:GetValue(req).Value 
+	RankBP[2] = InRankBP2:GetValue(req).Value 
+	RankBP[3] = InRankBP3:GetValue(req).Value 	
+	RankBP[4] = InRankBP4:GetValue(req).Value 	
+	RankBP[5] = InRankBP5:GetValue(req).Value 	
+	RankBP[6] = InRankBP6:GetValue(req).Value 	
+	RankBP[7] = InRankBP7:GetValue(req).Value 	
+	RankBP[8] = InRankBP8:GetValue(req).Value 	
+	RankBP[9] = InRankBP9:GetValue(req).Value 	
+	RankBP[10] = InRankBP10:GetValue(req).Value 	
+
+	RangeN[1] = InRangeN1:GetValue(req).Value 
+	RangeP[1] = InRangeP1:GetValue(req).Value 
+	RangeN[2] = InRangeN2:GetValue(req).Value 
+	RangeP[2] = InRangeP2:GetValue(req).Value 
+	RangeN[3] = InRangeN3:GetValue(req).Value 
+	RangeP[3] = InRangeP3:GetValue(req).Value 
+	RangeN[4] = InRangeN4:GetValue(req).Value 
+	RangeP[4] = InRangeP4:GetValue(req).Value 
+	RangeN[5] = InRangeN5:GetValue(req).Value 
+	RangeP[5] = InRangeP5:GetValue(req).Value 
+	RangeN[6] = InRangeN6:GetValue(req).Value 
+	RangeP[6] = InRangeP6:GetValue(req).Value 
+	RangeN[7] = InRangeN7:GetValue(req).Value 
+	RangeP[7] = InRangeP7:GetValue(req).Value 
+	RangeN[8] = InRangeN8:GetValue(req).Value 
+	RangeP[8] = InRangeP8:GetValue(req).Value 
+	RangeN[9] = InRangeN9:GetValue(req).Value 
+	RangeP[9] = InRangeP9:GetValue(req).Value 
+	RangeN[10] = InRangeN10:GetValue(req).Value 
+	RangeP[10] = InRangeP10:GetValue(req).Value  
+
+
+	for i=1,10 do	
+		xn0[i] = 0
+		xn1[i] = 1
+		xp0[i] = 0
+		xp1[i] = 1			
+		
+		
+		if timing == 1 then  -- Ranking In+Out
+			xn0[i] = (RankAN[i]-1) * extension/10
+			xn1[i] = (RankBN[i]-1) * extension/10
+			xp0[i] = (RankAP[i]-1) * extension/10
+			xp1[i] = (RankBP[i]-1) * extension/10
+		end		
+
+
+		if timing == 2 then
+			xn0[i] = (RankAN[i]-1)/10 * extension/((10-1)/10+(2^-lag)/16)
+			xp0[i] = (RankAP[i]-1)/10 * extension/((10-1)/10+(2^-lag)/16)
+			xn1[i] = ((RankAN[i]-1)/10+(2^-lag)/16) * extension/((10-1)/10+(2^-lag)/16)
+			xp1[i] = ((RankAP[i]-1)/10+(2^-lag)/16) * extension/((10-1)/10+(2^-lag)/16)						
+		end	
+
+
+		if timing==3 then
+			xn0[i] = (RankAN[i]-1) * extension/10
+			xp0[i] = (RankAP[i]-1) * extension/10
+			xn1[i] = 1
+			xp1[i] = 1			
+			
+		end	
+		
+		if timing==4 then
+			xn0[i] = 0
+			xp0[i] = 0		
+			xn1[i] = (RankBN[i]-1)* extension/10
+			xp1[i] = (RankBP[i]-1)* extension/10			
+		end
+		
+
+		
+		
+		if RankAN[i]>RankBN[i] then -- switch off
+			xn0[i] = 0
+			xn1[i] = 1
+		end
+		
+		if RankAP[i]>RankBP[i] then -- switch off
+			xp0[i] = 0
+			xp1[i] = 1
+		end		
+		
+		
+		if timing < 5 then 
+			rn[i] =xs(xn0[i],xn1[i],r,EaseN[i])
+			rp[i] =xs(xp0[i],xp1[i],r,EaseP[i])						
+		end			
+		
+		
+		if timing == 5 then -- Individual
+			xn0[i] = 0
+			xn1[i] = 1
+			xp0[i] = 0
+			xp1[i] = 1			
+			rn[i] = RangeN[i]						
+			rp[i] = RangeP[i]
+		end				
+		
+		if timing == 6 then -- Individual
+			xn0[i] = 0
+			xn1[i] = 1
+			xp0[i] = 0
+			xp1[i] = 1			
+			rn[i] =xs(xn0[i],xn1[i],RangeN[i],EaseN[i])
+			rp[i] =xs(xp0[i],xp1[i],RangeP[i] ,EaseP[i])	
+		end			
+		
+		OutNum[i] = (bn[i] * rn[i]  + an[i] *(1-rn[i])) 
+    OutPnt[i] = Point((bp[i].X * rp[i]  + ap[i].X *(1-rp[i])),(bp[i].Y * rp[i]  + ap[i].Y *(1-rp[i])))	
+
+	end
+	
+	
+	
+
+  -------------------------------------
+		OutImage:Set(req, out)	
+	-------------------------------------
+	OutNum1:Set(req,OutNum[1])
+	OutNum2:Set(req,OutNum[2])
+	OutNum3:Set(req,OutNum[3])
+	OutNum4:Set(req,OutNum[4])
+	OutNum5:Set(req,OutNum[5])
+	OutNum6:Set(req,OutNum[6])
+	OutNum7:Set(req,OutNum[7])
+	OutNum8:Set(req,OutNum[8])
+	OutNum9:Set(req,OutNum[9])
+	OutNum10:Set(req,OutNum[10])
+		
+	OutPnt1:Set(req,OutPnt[1])
+	OutPnt2:Set(req,OutPnt[2])
+	OutPnt3:Set(req,OutPnt[3])
+	OutPnt4:Set(req,OutPnt[4])
+	OutPnt5:Set(req,OutPnt[5])
+	OutPnt6:Set(req,OutPnt[6])
+	OutPnt7:Set(req,OutPnt[7])
+	OutPnt8:Set(req,OutPnt[8])
+	OutPnt9:Set(req,OutPnt[9])
+	OutPnt10:Set(req,OutPnt[10])	
+	
+end
+
+	-- EASING CURVES
+	function xs(x0,x1,x,n)   
+		local xN = clamp((x - x0) / (x1 - x0), 0.0, 1.0)
+		local xs = 0
+		if n==0 then xs = xN end                                         -- Linear
+		if n==1 then xs = (6*xN^5-15*xN^4+10*xN^3) end                   -- Light
+		if n==2 then xs = (1/(1+10^(5*(0.5-xN)))) end                    -- Medium
+		if n==3 then xs = (1-(6*(1-xN)^5-15*(1-xN)^4+10*(1-xN)^2.8)) end -- I_Back   			
+		if n==4 then xs = (6*xN^5-15*xN^4+10*xN^2.8) end                 -- O_Back	
+		if n==5 then xs = (0.5+0.7*math.sin(4.73*xN-2.37)) end           -- IO_Back
+		
+		if n==6 then -- I_Elastic
+			xs = (-math.pow(2, 10 * xN - 10) * math.sin((xN * 10 - 10.75) * ((2 * math.pi) / 3)))
+		end
+		if n==7 then -- O_Elastic
+			xs = (math.pow(2, -10 * xN) * math.sin((xN * 10 - 0.75) * ((2 * math.pi) / 3)) + 1) 
+		end
+		if n==8 then -- IO_Elastic
+			if (xN < 0.5) then
+				xs = (-(math.pow(2, 20 * xN - 10) * math.sin((20 * xN - 11.125) * ((2 * math.pi) / 4.5))) / 2) 
+			else
+				xs = ((math.pow(2, -20 * xN + 10) * math.sin((20 * xN - 11.125) * ((2 * math.pi) / 4.5))) / 2 + 1) 
+			end			
+		end
+		--- BOUNCE
+		local y1=1/(1+10^(3.5*(0.5-xN)))
+		local y2=(1-math.cos(xN*18*3.1415))^0.5		
+		if (n == 9) then  --I_Bounce
+			if xN<=1/3 then 
+				xs = y1*y2
+			end
+			if xN>1/3 then
+				xs = 1.5*xN-0.5
+			end				
+
+		end
+		if (n == 10) then  --O_Bounce
+			if xN>=2/3 then
+				xs = 1-(1-y1)*y2
+			end
+			if xN<2/3 then
+				xs = 1.5*xN
+			end	
+		end
+		if (n == 11) then  --IO_Bounce
+			if xN<=1/3 then 
+				xs = y1*y2
+			end
+			if xN>=2/3 then
+				xs = 1-(1-y1)*y2
+			end
+			if xN>1/3 and xN<2/3 then
+				xs = 3*xN-1
+			end		
+		end				
+		
+		if (n == 12) then  --I_revBounce
+			if xN<=1/3 then 
+				xs = -y1*y2
+			end
+			if xN>1/3 then
+				xs = 1.5*xN-0.5
+			end						
+		end
+		if (n == 13) then  --O_revBounce
+			if xN>=2/3 then
+				xs = 1-(1-y1)*-y2
+			end
+			if xN<2/3 then
+				xs = 1.5*xN
+			end	
+		end
+		if (n == 14) then  --IO_revBounce
+			if xN<=1/3 then 
+				xs = -y1*y2
+			end
+			if xN>=2/3 then
+				xs = 1-(1-y1)*-y2
+			end
+			if xN>1/3 and xN<2/3 then
+				xs = 3*xN-1
+			end		
+		end
+			
+		if (n == 15) then  --IO_aBounce
+			if xN<=1/3 then 
+				xs = -y1*y2
+			end
+			if xN>=2/3 then
+				xs = 1-(1-y1)*y2
+			end
+			if xN>1/3 and xN<2/3 then
+				xs = 3*xN-1
+			end					
+		end
+		
+		if (n == 16) then  --IO_bBounce
+			if xN<=1/3 then 
+				xs = y1*y2
+			end
+			if xN>=2/3 then
+				xs = 1-(1-y1)*-y2
+			end
+			if xN>1/3 and xN<2/3 then
+				xs = 3*xN-1
+			end								
+		end			
+		return xs
+	end
+
+	function clamp(x, lowerlimit, upperlimit) 
+	  if (x < lowerlimit) then x = lowerlimit end
+	  if (x > upperlimit) then x = upperlimit end	  
+	  return x
+	end	
+
+function Process(req)
+  -------------------------------------
+	-- Attributes for IN 
+		local img = InImage:GetValue(req)	
+		local out = img:CopyOf()
+	-------------------------------------
+	local r = InRange:GetValue(req).Value 
+	local lag = InLag:GetValue(req).Value - 0.68
+	local timing = InTiming:GetValue(req).Value 
+	local extension = InExtension:GetValue(req).Value	
+	local show = boolShow:GetValue(req).Value 
+	
+	an[1] = InAN1:GetValue(req).Value 
+	an[2] = InAN2:GetValue(req).Value 
+	an[3] = InAN3:GetValue(req).Value 
+	an[4] = InAN4:GetValue(req).Value 
+	an[5] = InAN5:GetValue(req).Value 
+	an[6] = InAN6:GetValue(req).Value 
+	an[7] = InAN7:GetValue(req).Value 
+	an[8] = InAN8:GetValue(req).Value 
+	an[9] = InAN9:GetValue(req).Value 
+	an[10] = InAN10:GetValue(req).Value
+
+	bn[1] = InBN1:GetValue(req).Value 
+	bn[2] = InBN2:GetValue(req).Value 
+	bn[3] = InBN3:GetValue(req).Value 
+	bn[4] = InBN4:GetValue(req).Value 
+	bn[5] = InBN5:GetValue(req).Value 
+	bn[6] = InBN6:GetValue(req).Value 
+	bn[7] = InBN7:GetValue(req).Value 
+	bn[8] = InBN8:GetValue(req).Value 
+	bn[9] = InBN9:GetValue(req).Value 
+	bn[10] = InBN10:GetValue(req).Value 
+	
+
+	ap[1] = InAP1:GetValue(req)
+	ap[2] = InAP2:GetValue(req)
+	ap[3] = InAP3:GetValue(req)
+	ap[4] = InAP4:GetValue(req)
+	ap[5] = InAP5:GetValue(req)
+	ap[6] = InAP6:GetValue(req)
+	ap[7] = InAP7:GetValue(req)
+	ap[8] = InAP8:GetValue(req)
+	ap[9] = InAP9:GetValue(req)
+	ap[10] = InAP10:GetValue(req)	
+ 	
+	bp[1] = InBP1:GetValue(req)
+	bp[2] = InBP2:GetValue(req)
+	bp[3] = InBP3:GetValue(req)
+	bp[4] = InBP4:GetValue(req)
+	bp[5] = InBP5:GetValue(req)
+	bp[6] = InBP6:GetValue(req)
+	bp[7] = InBP7:GetValue(req)
+	bp[8] = InBP8:GetValue(req)
+	bp[9] = InBP9:GetValue(req)
+	bp[10] = InBP10:GetValue(req)			
+
+
+	EaseN[1] =InEaseN1:GetValue(req).Value 
+	EaseP[1] =InEaseP1:GetValue(req).Value 
+	EaseN[2] =InEaseN2:GetValue(req).Value 
+	EaseP[2] =InEaseP2:GetValue(req).Value 
+	EaseN[3] =InEaseN3:GetValue(req).Value 
+	EaseP[3] =InEaseP3:GetValue(req).Value 
+	EaseN[4] =InEaseN4:GetValue(req).Value 
+	EaseP[4] =InEaseP4:GetValue(req).Value 
+	EaseN[5] =InEaseN5:GetValue(req).Value 
+	EaseP[5] =InEaseP5:GetValue(req).Value 
+	EaseN[6] =InEaseN6:GetValue(req).Value 
+	EaseP[6] =InEaseP6:GetValue(req).Value 
+	EaseN[7] =InEaseN7:GetValue(req).Value 
+	EaseP[7] =InEaseP7:GetValue(req).Value 
+	EaseN[8] =InEaseN8:GetValue(req).Value 
+	EaseP[8] =InEaseP8:GetValue(req).Value 
+	EaseN[9] =InEaseN9:GetValue(req).Value 
+	EaseP[9] =InEaseP9:GetValue(req).Value  
+	EaseN[10] =InEaseN10:GetValue(req).Value 
+	EaseP[10] =InEaseP10:GetValue(req).Value 
+
+	RankAN[1] = InRankAN1:GetValue(req).Value 
+	RankAN[2] = InRankAN2:GetValue(req).Value 
+	RankAN[3] = InRankAN3:GetValue(req).Value 
+	RankAN[4] = InRankAN4:GetValue(req).Value 
+	RankAN[5] = InRankAN5:GetValue(req).Value 
+	RankAN[6] = InRankAN6:GetValue(req).Value 
+	RankAN[7] = InRankAN7:GetValue(req).Value 
+	RankAN[8] = InRankAN8:GetValue(req).Value 
+	RankAN[9] = InRankAN9:GetValue(req).Value 
+	RankAN[10] = InRankAN10:GetValue(req).Value 
+	RankAP[1] = InRankAP1:GetValue(req).Value 
+	RankAP[2] = InRankAP2:GetValue(req).Value 
+	RankAP[3] = InRankAP3:GetValue(req).Value 	
+	RankAP[4] = InRankAP4:GetValue(req).Value 	
+	RankAP[5] = InRankAP5:GetValue(req).Value 	
+	RankAP[6] = InRankAP6:GetValue(req).Value 	
+	RankAP[7] = InRankAP7:GetValue(req).Value 	
+	RankAP[8] = InRankAP8:GetValue(req).Value 	
+	RankAP[9] = InRankAP9:GetValue(req).Value 	
+	RankAP[10] = InRankAP10:GetValue(req).Value 	
+
+	RankBN[1] = InRankBN1:GetValue(req).Value 
+	RankBN[2] = InRankBN2:GetValue(req).Value 
+	RankBN[3] = InRankBN3:GetValue(req).Value 
+	RankBN[4] = InRankBN4:GetValue(req).Value 
+	RankBN[5] = InRankBN5:GetValue(req).Value 
+	RankBN[6] = InRankBN6:GetValue(req).Value 
+	RankBN[7] = InRankBN7:GetValue(req).Value 
+	RankBN[8] = InRankBN8:GetValue(req).Value 
+	RankBN[9] = InRankBN9:GetValue(req).Value 
+	RankBN[10] = InRankBN10:GetValue(req).Value 
+	RankBP[1] = InRankBP1:GetValue(req).Value 
+	RankBP[2] = InRankBP2:GetValue(req).Value 
+	RankBP[3] = InRankBP3:GetValue(req).Value 	
+	RankBP[4] = InRankBP4:GetValue(req).Value 	
+	RankBP[5] = InRankBP5:GetValue(req).Value 	
+	RankBP[6] = InRankBP6:GetValue(req).Value 	
+	RankBP[7] = InRankBP7:GetValue(req).Value 	
+	RankBP[8] = InRankBP8:GetValue(req).Value 	
+	RankBP[9] = InRankBP9:GetValue(req).Value 	
+	RankBP[10] = InRankBP10:GetValue(req).Value 	
+
+	RangeN[1] = InRangeN1:GetValue(req).Value 
+	RangeP[1] = InRangeP1:GetValue(req).Value 
+	RangeN[2] = InRangeN2:GetValue(req).Value 
+	RangeP[2] = InRangeP2:GetValue(req).Value 
+	RangeN[3] = InRangeN3:GetValue(req).Value 
+	RangeP[3] = InRangeP3:GetValue(req).Value 
+	RangeN[4] = InRangeN4:GetValue(req).Value 
+	RangeP[4] = InRangeP4:GetValue(req).Value 
+	RangeN[5] = InRangeN5:GetValue(req).Value 
+	RangeP[5] = InRangeP5:GetValue(req).Value 
+	RangeN[6] = InRangeN6:GetValue(req).Value 
+	RangeP[6] = InRangeP6:GetValue(req).Value 
+	RangeN[7] = InRangeN7:GetValue(req).Value 
+	RangeP[7] = InRangeP7:GetValue(req).Value 
+	RangeN[8] = InRangeN8:GetValue(req).Value 
+	RangeP[8] = InRangeP8:GetValue(req).Value 
+	RangeN[9] = InRangeN9:GetValue(req).Value 
+	RangeP[9] = InRangeP9:GetValue(req).Value 
+	RangeN[10] = InRangeN10:GetValue(req).Value 
+	RangeP[10] = InRangeP10:GetValue(req).Value  
+
+
+	
+	for i=1,10 do	
+		xn0[i] = 0
+		xn1[i] = 1
+		xp0[i] = 0
+		xp1[i] = 1			
+		
+		
+		if timing == 1 then  -- Ranking In+Out
+			xn0[i] = (RankAN[i]-1) * extension/10
+			xn1[i] = (RankBN[i]-1) * extension/10
+			xp0[i] = (RankAP[i]-1) * extension/10
+			xp1[i] = (RankBP[i]-1) * extension/10
+		end		
+
+
+		if timing == 2 then
+			xn0[i] = (RankAN[i]-1)/10 * extension/((10-1)/10+(2^-lag)/16)
+			xp0[i] = (RankAP[i]-1)/10 * extension/((10-1)/10+(2^-lag)/16)
+			xn1[i] = ((RankAN[i]-1)/10+(2^-lag)/16) * extension/((10-1)/10+(2^-lag)/16)
+			xp1[i] = ((RankAP[i]-1)/10+(2^-lag)/16) * extension/((10-1)/10+(2^-lag)/16)						
+		end	
+
+
+		if timing==3 then
+			xn0[i] = (RankAN[i]-1) * extension/10
+			xp0[i] = (RankAP[i]-1) * extension/10
+			xn1[i] = 1
+			xp1[i] = 1			
+			
+		end	
+		
+		if timing==4 then
+			xn0[i] = 0
+			xp0[i] = 0		
+			xn1[i] = (RankBN[i]-1)* extension/10
+			xp1[i] = (RankBP[i]-1)* extension/10			
+		end
+		
+
+		
+		
+		if RankAN[i]>=RankBN[i] then -- switch off
+			xn0[i] = 0
+			xn1[i] = 1
+		end
+		
+		if RankAP[i]>=RankBP[i] then -- switch off
+			xp0[i] = 0
+			xp1[i] = 1
+		end		
+		
+		if timing < 5 then 
+			rn[i] =xs(xn0[i],xn1[i],r,EaseN[i])
+			rp[i] =xs(xp0[i],xp1[i],r,EaseP[i])						
+		end
+		
+		if timing == 5 then -- Individual
+			xn0[i] = 0
+			xn1[i] = 1
+			xp0[i] = 0
+			xp1[i] = 1			
+			rn[i] = RangeN[i]						
+			rp[i] = RangeP[i]
+		end				
+
+
+		if timing == 6 then -- Individual
+			xn0[i] = 0
+			xn1[i] = 1
+			xp0[i] = 0
+			xp1[i] = 1			
+			rn[i] =xs(xn0[i],xn1[i],RangeN[i],EaseN[i])
+			rp[i] =xs(xp0[i],xp1[i],RangeP[i] ,EaseP[i])	
+		end					
+		
+		OutNum[i] = (bn[i] * rn[i]  + an[i] *(1-rn[i])) 
+    OutPnt[i] = Point((bp[i].X * rp[i]  + ap[i].X *(1-rp[i])),(bp[i].Y * rp[i]  + ap[i].Y *(1-rp[i])))	
+
+	end
+	
+	
+	
+
+	-------------- GRAPHICS BEGIN -----------------
+
+	if (out.Height < 50) or (out.Width < 50) then show = 0  end	
+	if show==1 then
+		local cx = 0	
+		local cy = 0.01 * (out.Height * out.YScale) / (out.Width * out.XScale)	 
+		local thickness = 0.6/100
+				
+		local ic = ImageChannel(out, 8)
+		local fs = FillStyle()
+		local cs = ChannelStyle()
+		local cs2 = ChannelStyle()
+							
+		ic:SetStyleFill(fs)
+			
+			
+			
+		-- cursor
+		if timing ~= 5 and timing ~= 6 then 
+				cs.Color = Pixel{R=1,G=0.75,B=0, A = 1}						
+				local sh = Shape()
+				sh:LineTo(0.0,-0.5)
+				sh:LineTo(0,1)
+				sh = sh:OutlineOfShape(thickness/3, "OLT_Solid", "OJT_Bevel", 8, "SWM_Normal", 8)	
+				mat = Matrix4()
+				mat:Identity()
+				mat:Scale(1, 1, 1.0)
+					
+				mat:Move(cx+r, cy, 0)
+				ic:ShapeFill(sh:TransformOfShape(mat))
+				ic:PutToImage("CM_Merge", cs)				
+			
+
+				
+			-- keyframes
+			cs.Color = Pixel{R=1,G=0.5,B=0.5, A = 1}	
+			cs2.Color = Pixel{R=0.5,G=0.5,B=0.5, A = 1}	
+			
+			local sh = Shape()
+			sh:LineTo(0.0,-0.01)
+			sh:LineTo(0,0.01)
+			sh = sh:OutlineOfShape(thickness, "OLT_Solid", "OJT_Bevel", 8, "SWM_Normal", 8)	
+			mat = Matrix4()
+			mat:Identity()
+			mat:Scale(1, 1, 1.0)
+					
+			mat:Move(cx, cy+0.01, 0)
+			ic:ShapeFill(sh:TransformOfShape(mat))
+			for i=1,10 do
+				mat:Move(xn1[i], 0, 0)
+				ic:ShapeFill(sh:TransformOfShape(mat))
+				ic:PutToImage("CM_Merge", cs2)	
+				mat:Move(-xn1[i], 0, 0)														
+				mat:Move(xn0[i], 0, 0)					
+				ic:ShapeFill(sh:TransformOfShape(mat))
+				ic:PutToImage("CM_Merge", cs)	
+				mat:Move(-xn0[i], 0.025, 0)						
+			end					
+			
+			cs.Color = Pixel{R=0,G=0.5,B=1, A = 1}	
+			mat = Matrix4()
+			mat:Identity()
+			mat:Scale(1, 1, 1.0)
+					
+			mat:Move(cx, cy+0.31, 0)
+			ic:ShapeFill(sh:TransformOfShape(mat))
+			for i=1,10 do
+				mat:Move(xp1[i], 0, 0)
+				ic:ShapeFill(sh:TransformOfShape(mat))
+				ic:PutToImage("CM_Merge", cs2)	
+				mat:Move(-xp1[i], 0, 0)														
+				mat:Move(xp0[i], 0, 0)					
+				ic:ShapeFill(sh:TransformOfShape(mat))
+				ic:PutToImage("CM_Merge", cs)	
+				mat:Move(-xp0[i], 0.025, 0)					
+			end		
+		else
+			-- X-axis	
+				cs.Color = Pixel{R=0.3,G=0.3,B=0.3, A = 1}	
+				local sh = Shape()	
+				sh:LineTo(0,0)
+				sh:LineTo(1,0)
+				sh = sh:OutlineOfShape(thickness, "OLT_Solid", "OJT_Round", 8, "SWM_Normal", 8)	
+				mat = Matrix4()
+				mat:Identity()
+				mat:Scale(1, 1, 1.0)
+				mat:Move(cx+0.06, cy+0.275, 0)
+				--mat:Move(cx, cy, 0)
+				ic:ShapeFill(sh:TransformOfShape(mat))
+				ic:PutToImage("CM_Merge", cs)
+				
+				local sh = Shape()	
+				--sh:MoveTo(1,1,0)		
+				sh:LineTo(0,1/5)
+				sh:LineTo(1,1/5)			
+				sh = sh:OutlineOfShape(thickness*0.5, "OLT_Dash", "OJT_Bevel", 8, "SWM_Normal", 8)	
+				ic:ShapeFill(sh:TransformOfShape(mat))
+				ic:PutToImage("CM_Merge", cs)
+				mat:Move(0,-2/5 , 0)
+				ic:ShapeFill(sh:TransformOfShape(mat))
+				ic:PutToImage("CM_Merge", cs)		
+		
+		
+			-- Range 
+			cs.Color = Pixel{R=1,G=0.5,B=0.5, A = 1}	
+			cs2.Color = Pixel{R=0.5,G=0.5,B=0.5, A = 1}	
+			
+			local sh = Shape()
+			sh:LineTo(-0.015,0.0)
+			sh:LineTo(0.015,0.0)
+			sh = sh:OutlineOfShape(thickness, "OLT_Solid", "OJT_Bevel", 8, "SWM_Normal", 8)	
+			mat = Matrix4()
+			mat:Identity()
+			mat:Scale(1, 1, 1.0)
+					
+			mat:Move(cx+0.06, cy+0.275, 0)
+			ic:ShapeFill(sh:TransformOfShape(mat))
+			for i=1,10 do
+				mat:Move(0,rn[i]*0.2, 0)
+				ic:ShapeFill(sh:TransformOfShape(mat))
+				ic:PutToImage("CM_Merge", cs)	
+				mat:Move(0.04,-rn[i]*0.2, 0)														
+			end					
+			
+			cs.Color = Pixel{R=0,G=0.5,B=1, A = 1}	
+			mat = Matrix4()
+			mat:Identity()
+			mat:Scale(1, 1, 1.0)
+					
+			mat:Move(cx+0.56, cy+0.275, 0)
+			ic:ShapeFill(sh:TransformOfShape(mat))
+			for i=1,10 do
+				mat:Move(0,rp[i]*0.2, 0)
+				ic:ShapeFill(sh:TransformOfShape(mat))
+				ic:PutToImage("CM_Merge", cs)	
+				mat:Move(0.04,-rp[i]*0.2, 0)														
+			end		
+	  end
+		
+	end
+	
+	-------------- GRAPHICS END -----------------
+
+  -------------------------------------
+		OutImage:Set(req, out)	
+	-------------------------------------
+	OutNum1:Set(req,OutNum[1])
+	OutNum2:Set(req,OutNum[2])
+	OutNum3:Set(req,OutNum[3])
+	OutNum4:Set(req,OutNum[4])
+	OutNum5:Set(req,OutNum[5])
+	OutNum6:Set(req,OutNum[6])
+	OutNum7:Set(req,OutNum[7])
+	OutNum8:Set(req,OutNum[8])
+	OutNum9:Set(req,OutNum[9])
+	OutNum10:Set(req,OutNum[10])
+		
+	OutPnt1:Set(req,OutPnt[1])
+	OutPnt2:Set(req,OutPnt[2])
+	OutPnt3:Set(req,OutPnt[3])
+	OutPnt4:Set(req,OutPnt[4])
+	OutPnt5:Set(req,OutPnt[5])
+	OutPnt6:Set(req,OutPnt[6])
+	OutPnt7:Set(req,OutPnt[7])
+	OutPnt8:Set(req,OutPnt[8])
+	OutPnt9:Set(req,OutPnt[9])
+	OutPnt10:Set(req,OutPnt[10])	
+end
+	
