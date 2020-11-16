@@ -94,10 +94,7 @@
             {
               Execute = 
                 [[
-                --begin=lua--
-                print('toggle console')
                 target:DoAction("Console_Show", {})
-                --end=lua--
                 ]],
             }
         }
