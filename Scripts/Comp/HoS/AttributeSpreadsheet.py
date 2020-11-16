@@ -87,6 +87,11 @@ from pprint import pprint as pp
 
 print(f"Attribute Spreadsheet version 0.{__VERSION__}")
 
+fu = bmd.scriptapp("Fusion")
+if not fu:
+    raise Exception("No instance of Fusion found running.")
+comp = fu.GetCurrentComp()
+
 
 def print(*args, **kwargs):
     """custom print() function"""
@@ -171,43 +176,43 @@ except (ImportError, ModuleNotFoundError):
         elif platform.system() in ["Darwin", "Linux"]:
             python_executable = os.path.join(os.__file__.split("lib/")[0], "bin", "python3")
 
+        if ask:
+            print("Trying to install Pyside2...")
+
+            try:
+                import pip
+                pip_version = int(pip.__version__.split(".")[0])
+                if pip_version < 20:
+                    print("updating pip")
+                    run_command([python_executable, "-m", "pip", "install", "-U", "pip"])
+                pyside_cmd = [
+                    python_executable,
+                    "-m",
+                    "pip",
+                    "install",
+                    "{}=={}".format(PKG, PKG_VERSION),
+                ]
+                rc = run_command(pyside_cmd)
+                if not rc:
+                    print("Now try to launch the script again!")
+                    sys.exit()
+                else:
+                    print(
+                        "Pyside2 installation has failed for some reason"
+                        " Check if internet connection is available."
+                        " Please report this issue: mail@abogomolov.com"
+                    )
+                    sys.exit()
+            except ImportError:
+                print("Check if pip version 10+ is installed, then launch the script again")
+                sys.exit()
+        else:
+            print("Pyside2 is required to run this script.\nPlease install it manually with following command:"
+                  f"\n{python_executable} -m pip install Pyside2")
+            sys.exit()
+
     except Exception as e:
         raise NameError("Could not find composition data")
-        sys.exit()
-
-    if ask:
-        print("Trying to install Pyside2...")
-
-        try:
-            import pip
-            pip_version = int(pip.__version__.split(".")[0])
-            if pip_version < 20:
-                print("updating pip")
-                run_command([python_executable, "-m", "pip", "install", "-U", "pip"])
-            pyside_cmd = [
-                python_executable,
-                "-m",
-                "pip",
-                "install",
-                "{}=={}".format(PKG, PKG_VERSION),
-            ]
-            rc = run_command(pyside_cmd)
-            if not rc:
-                print("Now try to launch the script again!")
-                sys.exit()
-            else:
-                print(
-                    "Pyside2 installation has failed for some reason, please try again..."
-                    " Check if internet connection is available."
-                    " Please report this issue: mail@abogomolov.com"
-                )
-                sys.exit()
-        except ImportError:
-            print("Check if pip version 10+ is installed, then launch the script again")
-            sys.exit()
-    else:
-        print("Pyside2 is required to run this script.\nPlease install it manually with following command:"
-        f"\n{python_executable} -m pip install Pyside2")
         sys.exit()
 
 
@@ -1076,12 +1081,6 @@ QTableWidget::item {{
 # and the script would not load if there's a confusion about which instance of Fusion to use. 
 
 if __name__ == "__main__":
-    fu = bmd.scriptapp("Fusion")
-
-    if not fu:
-        raise Exception("No instance of Fusion found running.")
-    comp = fu.GetCurrentComp()
-
     main_app = QApplication.instance()  # checks if QApplication already exists. Seems to be always None
     if not main_app:  # create QApplication if it doesnt exist
         main_app = QApplication([])
