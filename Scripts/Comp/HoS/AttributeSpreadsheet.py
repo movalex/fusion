@@ -74,7 +74,7 @@
 
 __VERSION__ = 2.2
 PKG = "PySide2"
-PKG_VERSION = "5.13.2"
+PKG_VERSION = "5.15.0"
 
 import datetime
 import os
@@ -118,6 +118,7 @@ try:
     )
     from PySide2.QtCore import (
         QAbstractTableModel,
+        QCoreApplication,
         QItemSelectionModel,
         QModelIndex,
         QObject,
@@ -154,39 +155,55 @@ except (ImportError, ModuleNotFoundError):
     if sys.version_info.major < 3:
         print("Python 3.6 is required")
         sys.exit()
-    print("No Pyside2 module found, trying to install...")
 
-    if platform.system() == "Windows":
-        python_executable = os.path.join(os.__file__.split("lib")[0], "python.exe")
-    elif platform.system() in ["Darwin", "Linux"]:
-        python_executable = os.path.join(os.__file__.split("lib/")[0], "bin", "python3")
+    # ask user permission to install Pyside manually
+    dialogue = {1: {1: "Warning", "Name": "Warning", 2: "Text", "Readonly": True, "Default": \
+        "Would you like to install\nPyside2 automatically?"}}
     try:
-        import pip
-        pip_version = int(pip.__version__.split(".")[0])
-        if pip_version < 20:
-            print("updating pip")
-            run_command([python_executable, "-m", "pip", "install", "-U", "pip"])
-        pyside_cmd = [
-            python_executable,
-            "-m",
-            "pip",
-            "install",
-            "{}>={}".format(PKG, PKG_VERSION),
-        ]
-        rc = run_command(pyside_cmd)
-        if not rc:
-            print("Pyside2 is installed")
-            print("Now try to launch the script again!")
+        ask = comp.AskUser("Warning", dialogue)
+    except Exception as e:
+        raise NameError("Could not find composition data")
+        sys.exit()
+    if ask:
+        print("Trying to install Pyside2...")
+
+        # find default Python executable, since sys.executable returns fuscript
+        if platform.system() == "Windows":
+            python_executable = os.path.join(os.__file__.split("lib")[0], "python.exe")
+        elif platform.system() in ["Darwin", "Linux"]:
+            python_executable = os.path.join(os.__file__.split("lib/")[0], "bin", "python3")
+
+        try:
+            import pip
+            pip_version = int(pip.__version__.split(".")[0])
+            if pip_version < 20:
+                print("updating pip")
+                run_command([python_executable, "-m", "pip", "install", "-U", "pip"])
+            pyside_cmd = [
+                python_executable,
+                "-m",
+                "pip",
+                "install",
+                "{}=={}".format(PKG, PKG_VERSION),
+            ]
+            rc = run_command(pyside_cmd)
+            if not rc:
+                print("Pyside2 is installed")
+                print("Now try to launch the script again!")
+                sys.exit()
+            else:
+                print(
+                    "Pyside2 installation has failed for some reason, please try again..."
+                    " Check if internet connection is available."
+                    " Please report this issue: mail@abogomolov.com"
+                )
+                sys.exit()
+        except ImportError:
+            print("Check if pip version 10+ is installed, then launch the script again")
             sys.exit()
-        else:
-            print(
-                "Pyside2 installation has failed for some reason, please try again..."
-                " Check if internet connection is available."
-                " Please report this issue: mail@abogomolov.com"
-            )
-            sys.exit()
-    except ImportError:
-        print("Check if pip version 10+ is installed, then launch the script again")
+    else:
+        print("Pyside2 is required to run this script.\nPlease install it manually with following command:"
+        f"\n{python_executable} -m pip install Pyside2")
         sys.exit()
 
 
@@ -1066,6 +1083,9 @@ if __name__ == "__main__":
     if not main_app:  # create QApplication if it doesnt exist
         main_app = QApplication([])
     main_app.setStyleSheet(css)
+    # Enable HiDPI scaling:
+    # main_app.setAttribute(Qt.AA_EnableHighDpiScaling)
+    # QCoreApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
     main = MainWindow()
     main.setWindowTitle("Attribute Spreadsheet")
     main.setMinimumSize(QSize(640, 200))
