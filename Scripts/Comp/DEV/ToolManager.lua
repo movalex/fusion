@@ -44,7 +44,11 @@ win = disp:AddWindow({
             ui:Button{ID = 'Disable', Text = 'Disable'},
             ui:Button{ID = 'Enable', Text = 'Enable'},
             ui:Button{ID = 'Toggle', Text = 'Toggle'},
+        },
+        ui:HGroup{
+            Weight = 0,
             ui:Button{ID = 'Select', Text = 'Select'},
+            ui:Button{ID = 'Lock', Text = 'Lock'},
         },
 
         ui:HGroup{
@@ -208,7 +212,15 @@ function win.On.SetCommentButton.Clicked(ev)
     SetComment(comp)
 end
 
-function ToggleTool(tool)
+function ToggleLock(tool)
+    if tool:GetAttrs().TOOLB_Locked == true then
+        tool:SetAttrs({TOOLB_Locked = false})
+    else
+        tool:SetAttrs({TOOLB_Locked = true})
+    end
+end
+
+function TogglePassThrough(tool)
     if tool:GetAttrs().TOOLB_PassThrough == true then
         tool:SetAttrs({TOOLB_PassThrough = false})
     else
@@ -228,17 +240,44 @@ function win.On.Toggle.Clicked(ev)
         end
         selectedToolId = selectedTools[1].ID
         for i, tool in ipairs(comp:GetToolList(false, selectedToolId)) do
-            ToggleTool(tool)
+            TogglePassThrough(tool)
         end
         return
     end
     
     for _, tool in pairs(allTools) do
-        if tool.Comments[fu.TIME_UNDEFINED]:sub(2) == comment then
-            ToggleTool(tool)
+        if tool.Comments then
+            if tool.Comments[fu.TIME_UNDEFINED]:sub(2) == comment then
+                TogglePassThrough(tool)
+            end
         end
     end
+end
 
+function win.On.Lock.Clicked(ev)
+    local comp = fu:GetCurrentComp()
+    local allTools = comp:GetToolList(false)
+    local selectedTools = comp:GetToolList(true)
+    local comment = itm.Line.Text
+
+    if comment == "" then
+        if #selectedTools == 0 then
+            return
+        end
+        selectedToolId = selectedTools[1].ID
+        for i, tool in ipairs(comp:GetToolList(false, selectedToolId)) do
+            ToggleLock(tool)
+        end
+        return
+    end
+    
+    for _, tool in pairs(allTools) do
+        if tool.Comments then
+            if tool.Comments[fu.TIME_UNDEFINED]:sub(2) == comment then
+                ToggleLock(tool)
+            end
+        end
+    end
 end
 
 function win.On.Manage.Close(ev)
