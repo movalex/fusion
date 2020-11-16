@@ -15,6 +15,7 @@
     Updates:
         by Alexey Bogomolov
         (mail@abogomolov.com)
+        Donate: https://paypal.me/aabogomolov
         v.0.1.6:
         2019/6/30
             -- update for Fusion 9/16+ and Davinci Resolve 16+
@@ -46,8 +47,11 @@
             -- add tool Name and ID to a table. Now it is possible to sort tool inputs by tool name or tool ID.
             -- prevent linking tool to itself
             -- add expressions to a Point data
+        2020/11/16
         V.0.2.2
             -- compatible with Fusion 17 and Davinci Resolve 17
+            -- set active tool on row selection
+
     License:
         The authors hereby grant permission to use, copy, and distribute this
         software and its documentation for any purpose, provided that existing
