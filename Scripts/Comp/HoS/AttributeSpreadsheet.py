@@ -76,6 +76,7 @@ __VERSION__ = 2.2
 PKG = "PySide2"
 PKG_VERSION = "5.15.0"
 
+import builtins
 import datetime
 import os
 import platform
@@ -86,11 +87,12 @@ from pprint import pprint as pp
 
 print(f"Attribute Spreadsheet version 0.{__VERSION__}")
 
-def dprint(string):
-    """override print() function"""
-    __builtins__.print(f"[AS] : {string}")
 
-print = dprint
+def print(*args, **kwargs):
+    """custom print() function"""
+    builtins.print("[AS] : ", end="")
+    return builtins.print(*args, **kwargs)
+
 
 try:
     from PySide2.QtWidgets import (
@@ -156,22 +158,25 @@ except (ImportError, ModuleNotFoundError):
         print("Python 3.6 is required")
         sys.exit()
 
-    # ask user permission to install Pyside manually
-    dialogue = {1: {1: "Warning", "Name": "Warning", 2: "Text", "Readonly": True, "Default": \
-        "Would you like to install\nPyside2 automatically?"}}
     try:
+        # ask user permission to install Pyside manually
+        dialogue = {1: {1: "Warning", "Name": "Warning", 2: "Text", "Readonly": True,
+                        "Default": "Would you like to install\nPyside2 automatically?"}}
+
         ask = comp.AskUser("Warning", dialogue)
-    except Exception as e:
-        raise NameError("Could not find composition data")
-        sys.exit()
-    if ask:
-        print("Trying to install Pyside2...")
 
         # find default Python executable, since sys.executable returns fuscript
         if platform.system() == "Windows":
             python_executable = os.path.join(os.__file__.split("lib")[0], "python.exe")
         elif platform.system() in ["Darwin", "Linux"]:
             python_executable = os.path.join(os.__file__.split("lib/")[0], "bin", "python3")
+
+    except Exception as e:
+        raise NameError("Could not find composition data")
+        sys.exit()
+
+    if ask:
+        print("Trying to install Pyside2...")
 
         try:
             import pip
@@ -188,7 +193,6 @@ except (ImportError, ModuleNotFoundError):
             ]
             rc = run_command(pyside_cmd)
             if not rc:
-                print("Pyside2 is installed")
                 print("Now try to launch the script again!")
                 sys.exit()
             else:
@@ -569,7 +573,6 @@ class FusionInput():
         if self.attributes["INPS_DataType"] == "Number":
             if value[0:2] in ["+=", "-=", "*=", "/=", "%="] and len(value) >= 3:
                 # expecting an compound assignment
-                print("math:", value[2:])
                 if self.is_number(value[2:]):
                     operator = value[0]
                     value = float(value[2:])
@@ -886,10 +889,10 @@ class MainWindow(QMainWindow):
         self.alwaysOnTop.setChecked(True)
         self.clearButton = QPushButton()
         self.clearButton.setText("Clear")
-        self.clearButton.setFixedSize(QSize(70, 20))
+        self.clearButton.setFixedSize(QSize(70, 30))
         self.refreshButton = QPushButton()
         self.refreshButton.setText("Refresh")
-        self.refreshButton.setFixedSize(QSize(130, 20))
+        self.refreshButton.setFixedSize(QSize(140, 30))
         self.searchLine = QLineEdit(self)
         self.searchLine.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.statusBar().showMessage("System Status | Normal")
