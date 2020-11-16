@@ -94,9 +94,14 @@ comp = fu.GetCurrentComp()
 
 
 def print(*args, **kwargs):
-    """custom print() function"""
+    """override print() function"""
     builtins.print("[AS] : ", end="")
     return builtins.print(*args, **kwargs)
+
+
+if sys.version_info.major < 3:
+    print("Python 3.6 is required")
+    sys.exit()
 
 
 try:
@@ -159,10 +164,6 @@ except (ImportError, ModuleNotFoundError):
         rc = process.poll()
         return rc
 
-    if sys.version_info.major < 3:
-        print("Python 3.6 is required")
-        sys.exit()
-
     try:
         # ask user permission to install Pyside manually
         dialogue = {1: {1: "Warning", "Name": "Warning", 2: "Text", "Readonly": True,
@@ -178,7 +179,6 @@ except (ImportError, ModuleNotFoundError):
 
         if ask:
             print("Trying to install Pyside2...")
-
             try:
                 import pip
                 pip_version = int(pip.__version__.split(".")[0])
@@ -242,7 +242,6 @@ class FUIDComboDelegate(QItemDelegate):
 
     def setEditorData(self, editor, index):
         editor.blockSignals(True)
-        # TODO: implement ComboBox editor
         # print(index.model().data(index))
         # editor.setCurrentIndex(self.items.index(str(index.model().data(index))))
         # editor.setData("Domain")
@@ -281,7 +280,6 @@ class LineEditDelegate(QItemDelegate):
         # Rather, we set what the value from the editor is as the data that the FusionInput needs to use to process the
         # actual values. This allows us to do things like compound assignments or setting/editing expressions.
         model.sourceModel().stored_edit_role_data = editor.text()
-        pass
 
 
 class PointDelegate(QItemDelegate):
@@ -343,11 +341,20 @@ class TableView(QTableView):
         QTableView.__init__(self, parent)
         self.resizeRowsToContents()
         self.verticalHeader().setDefaultSectionSize(20)
+        self.verticalHeader().sectionPressed.disconnect() # disable row selection
+        self.verticalHeader().sectionClicked.connect(self.toolSelect)
+        self.horizontalHeader().sectionClicked
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.setHorizontalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.center = QPoint(-10, -10)
         self.startCenter = QPoint(-10, -10)
         self.mouseIsDown = False
+
+    def toolSelect(self, section):
+        """set active tool when vertical header clicked"""
+        tool_name = self.model().headerData(section, Qt.Vertical, Qt.DisplayRole)
+        tool = comp.FindTool(tool_name)
+        comp.SetActiveTool(tool)
 
     def paintEvent(self, event):
         if self.mouseIsDown:
@@ -899,6 +906,7 @@ class MainWindow(QMainWindow):
         self.refreshButton.setText("Refresh")
         self.refreshButton.setFixedSize(QSize(140, 30))
         self.searchLine = QLineEdit(self)
+        self.searchLine.setFixedHeight(30)
         self.searchLine.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.statusBar().showMessage("System Status | Normal")
         # self.cacheButton = QToolButton()
@@ -1033,6 +1041,10 @@ css = f"""
     color: rgb(192, 192, 192);
     background-color: rgb(52, 52, 52);
     }}
+
+QLineEdit {{
+    background-color: rgb(40,40,40);
+}}
 
 QMainWindow {{
     border-top: 1px solid rgb(80,80,80);
