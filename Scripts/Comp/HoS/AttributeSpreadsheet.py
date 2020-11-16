@@ -47,7 +47,7 @@
             -- prevent linking tool to itself
             -- add expressions to a Point data
         V.0.2.2
-            -- make it compatible with Fusion 17 and Davinci Resolve 17
+            -- compatible with Fusion 17 and Davinci Resolve 17
     License:
         The authors hereby grant permission to use, copy, and distribute this
         software and its documentation for any purpose, provided that existing
