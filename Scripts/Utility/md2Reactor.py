@@ -26,7 +26,6 @@ def markdown_to_bbcode(s):
             s = re.sub(r"\[(.*?)\]\((.*?)\)", "[url=\\2]\\1[/url]", s)
             # s = re.sub(r"(https?:\S+)", "[url=\\1]\\1[/url]", s)
             s = re.sub(r"\B([*_]{2})\b(.+?)\1\B", "[b]\\2[/b]", s)
-            # s = re.sub(r"\B([_]{1})\b(.+?)\1\B", "[i]\\2[/i]", s)
             return p % s
         return inline
     
@@ -53,17 +52,21 @@ def markdown_to_bbcode(s):
 
 
 def main():
+    if len(sys.argv) < 2:
+        print("file required")
+        return
     file_path = sys.argv[1]
     file_name, ext = os.path.splitext(file_path)
-    text = ""
+    if not ext.lower() == ".md":
+        print("Use valid markdown file")
+        return
     with open(file_path, "r") as fp:
-        for line in fp:
-            text += line
-    output = markdown_to_bbcode(text)
-    with open(file_name + ".txt", "w") as out:
-        out.write(output)
-    with open(file_name + ".html", "w") as html:
-        html.write(markdown(text))
+        text = fp.read()
+    bbcode = markdown_to_bbcode(text)
+    with open(file_name + ".txt", "w") as bbcode_out:
+        bbcode_out.write(bbcode)
+    with open(file_name + ".html", "w") as html_out:
+        html_out.write(markdown(text))
     print("Done!")
 
 if __name__ == "__main__":
