@@ -89,11 +89,13 @@ import subprocess
 import sys
 from pprint import pprint as pp
 
-print(f"Attribute Spreadsheet version 0.{__VERSION__}")
+print(f"\nAttribute Spreadsheet version 0.{__VERSION__}")
 
 fu = bmd.scriptapp("Fusion")
+
 if not fu:
     raise Exception("No instance of Fusion found running.")
+
 comp = fu.GetCurrentComp()
 
 
@@ -103,10 +105,9 @@ def print(*args, **kwargs):
     return builtins.print(*args, **kwargs)
 
 
-if sys.version_info.major < 3:
-    print("Python 3.6 is required")
+if not sys.version_info[:2] >= (3, 6):
+    sys.stderr.write("Python 3.6 is required")
     sys.exit()
-
 
 try:
     from PySide2.QtWidgets import (
