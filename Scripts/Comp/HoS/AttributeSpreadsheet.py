@@ -169,6 +169,7 @@ except (ImportError, ModuleNotFoundError):
         rc = process.poll()
         return rc
 
+
     try:
         # ask user permission to install Pyside manually
         dialogue = {1: {1: "Warning", "Name": "Warning", 2: "Text", "Readonly": True,
@@ -177,15 +178,16 @@ except (ImportError, ModuleNotFoundError):
         ask = comp.AskUser("Warning", dialogue)
 
         # find default Python executable, since sys.executable returns fuscript
-        if platform.system() == "Windows":
-            python_executable = os.path.join(os.__file__.split("lib")[0], "python.exe")
-        elif platform.system() in ["Darwin", "Linux"]:
+        python_executable = os.path.join(os.__file__.split("lib")[0], "python.exe")
+
+        if platform.system() in ["Darwin", "Linux"]:
             python_executable = os.path.join(os.__file__.split("lib/")[0], "bin", "python3")
 
         if ask:
             print("Trying to install Pyside2...")
             try:
                 import pip
+
                 pip_version = int(pip.__version__.split(".")[0])
                 if pip_version < 20:
                     print("updating pip")
@@ -218,7 +220,6 @@ except (ImportError, ModuleNotFoundError):
 
     except Exception as e:
         raise NameError("Could not find composition data")
-        sys.exit()
 
 
 class FUIDComboDelegate(QItemDelegate):
@@ -230,19 +231,18 @@ class FUIDComboDelegate(QItemDelegate):
     """
 
     def __init__(self, parent):
-
         QItemDelegate.__init__(self, parent)
         self.items = ["None"]
 
     def createEditor(self, parent, option, index):
         combo = QComboBox(parent)
         combo.addItems(self.items)
-        self.connect(
-            combo,
-            SIGNAL("currentIndexChanged(int)"),
-            self,
-            SLOT("currentIndexChanged()"),
-        )
+        # self.connect(
+        #     combo,
+        #     SIGNAL("currentIndexChanged(int)"),
+        #     self,
+        #     SLOT("currentIndexChanged()"),
+        # )
         return combo
 
     def setEditorData(self, editor, index):
@@ -270,9 +270,9 @@ class LineEditDelegate(QItemDelegate):
 
     def createEditor(self, parent, option, index):
         line_edit = QLineEdit(parent)
-        self.connect(
-            line_edit, SIGNAL("valueChanged(int)"), self, SLOT("valueChanged()")
-        )
+        # self.connect(
+        #     line_edit, SIGNAL("valueChanged(int)"), self, SLOT("valueChanged()")
+        # )
         return line_edit
 
     def setEditorData(self, editor, index):
@@ -299,23 +299,21 @@ class PointDelegate(QItemDelegate):
     def createEditor(self, parent, option, index):
         qtable_widget = QTableWidget(1, 2, parent)
         qtable_widget.verticalHeader().setVisible(False)
-        qtable_widget.setMinimumHeight(30)
+        qtable_widget.setMinimumHeight(40)
         qtable_widget.horizontalHeader().setVisible(False)
         qtable_widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.connect(
-            qtable_widget,
-            SIGNAL("currentIndexChanged(int)"),
-            self,
-            SLOT("currentIndexChanged()"),
-        )
         return qtable_widget
 
     def setEditorData(self, editor, index):
         point_data = str(index.model().data(index))
+        print(point_data)
         try:
+            # my attempt of parsing a string like '{1.0:0.5, 2.0:0.5, 3.0:0.0}'
             substring = re.sub("[{} ]", "", point_data)
+            # make it '1.0:0.1,2.0:0.5,3.0:0.0', then convert  to dictionary
             dict_point = dict(ss.split(":") for ss in substring.split(","))
-            dict_point = {float(k):v for k, v in dict_point.items()}
+            # convert keys to float, because Fusion17 returns keys as integers
+            dict_point = {float(k): v for k, v in dict_point.items()}
             x_value = QTableWidgetItem(dict_point[1])
             y_value = QTableWidgetItem(dict_point[2])
             editor.blockSignals(True)
@@ -323,14 +321,14 @@ class PointDelegate(QItemDelegate):
             editor.setItem(0, 1, y_value)
             editor.blockSignals(False)
         except ValueError:
-            print('error occured while parsing the point data. Seting values to default')
+            print('error occurred while parsing the point data. Setting values to default')
             for i in range(2):
                 editor.setItem(0, i, QTableWidgetItem("0.5"))
 
     def setModelData(self, editor, model, index):
         try:
-            x = editor.item(0,0).text()
-            y = editor.item(0,1).text()
+            x = editor.item(0, 0).text()
+            y = editor.item(0, 1).text()
             data = [x, y]
             model.sourceModel().stored_edit_role_data = data
         except AttributeError:
@@ -346,9 +344,8 @@ class TableView(QTableView):
         QTableView.__init__(self, parent)
         self.resizeRowsToContents()
         self.verticalHeader().setDefaultSectionSize(20)
-        self.verticalHeader().sectionPressed.disconnect() # disable row selection
+        self.verticalHeader().sectionPressed.disconnect()  # disable row selection
         self.verticalHeader().sectionClicked.connect(self.toolSelect)
-        self.horizontalHeader().sectionClicked
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.setHorizontalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.center = QPoint(-10, -10)
@@ -376,13 +373,12 @@ class TableView(QTableView):
             self.mouseIsDown = False
             QTableView.mousePressEvent(self, event)
 
-    def create_value(self, sm, idxs):
-        target_tool = sm.toolDict[idxs.row() + 1].Name
+    def create_value(self, source_model, index):
+        target_tool = source_model.tool_dict[index.row() + 1].Name
+        target_input_id = source_model.tools_inputs[index.row()].get(
+            source_model.attribute_name_keys[index.column()]).ID,
         try:
-            value = "={}.{}".format(
-                target_tool,
-                sm.toolsInputs[idxs.row()].get(sm.attributeNameKeys[idxs.column()]).ID,
-            )
+            value = "={}.{}".format(target_tool, target_input_id)
             self.commitDataDo(value)
         except KeyError:
             pass
@@ -390,32 +386,25 @@ class TableView(QTableView):
     def mouseReleaseEvent(self, event):
         if self.mouseIsDown:
             self.mouseIsDown = False
-            idxs = self.model().mapToSource(self.indexAt(self.center))
-            sm = self.model().sourceModel()
+            index_source = self.model().mapToSource(self.indexAt(self.center))
+            source_model = self.model().sourceModel()
             if len(self.selectionModel().selection().indexes()) <= 1:
-                idxt = self.model().mapToSource(self.indexAt(self.startCenter))
-                if idxs.row() == idxt.row() and idxs.column() == idxt.column():
+                index_target = self.model().mapToSource(self.indexAt(self.startCenter))
+                if index_source.row() == index_target.row() and index_source.column() == index_target.column():
                     print("cannot link the input to itself")
                     return
                 if (
-                    idxs.row() > -1
-                    and idxs.column() > -1
-                    and idxt.row() > -1
-                    and idxt.column() > -1
+                        index_source.row() > -1
+                        and index_source.column() > -1
+                        and index_target.row() > -1
+                        and index_target.column() > -1
                 ):
-                    fusionInput = sm.toolsInputs[idxt.row()].get(
-                        sm.attributeNameKeys[idxt.column()]
-                    )
-                    fusionOutput = sm.toolsInputs[idxs.row()].get(
-                        sm.attributeNameKeys[idxs.column()]
-                    )
-                    # Select the first cell by sampling the area
-                    # under the first clicked mouse center
+                    # Select the first cell by sampling the area under the first clicked mouse center
                     self.setSelection(
                         QRect(self.startCenter, self.startCenter),
                         QItemSelectionModel.SelectCurrent,
                     )
-            self.create_value(sm, idxs)
+            self.create_value(source_model, index_source)
             self.viewport().repaint()
         QTableView.mouseReleaseEvent(self, event)
 
@@ -452,10 +441,10 @@ class TableView(QTableView):
 
     def commitData(self, editor):
         """
-        commitData makes sure all multiselecteed cells get the same values applied as the edited cell.
+        commitData makes sure all multiselected cells get the same values applied as the edited cell.
         """
         super(TableView, self).commitData(editor)
-        # We need to remap the model index from the filtered proxymodel indices to the source model indices
+        # We need to remap the model index from the filtered proxy model indices to the source model indices
         tm = self.model().sourceModel()  # mapToSource(self.currentIndex()).model()
         # Use a stored edit role text
         value = tm.stored_edit_role_data
@@ -500,36 +489,36 @@ class TableSortFilterProxyModel(QSortFilterProxyModel):
     def filterAcceptsColumn(self, source_column, source_parent):
         pattern = self.filterRegExp().pattern()
         if pattern == "":
-            self.filteredKeys = self.sourceModel().attributeDataTypes
+            self.filteredKeys = self.sourceModel().attribute_data_types
             return True
 
         index = self.sourceModel().createIndex(0, source_column)
-        attrName = self.sourceModel().data(index, Qt.UserRole)
-        dataType = self.sourceModel().data(index, Qt.UserRole + 1)
+        attr_name = self.sourceModel().data(index, Qt.UserRole)
+        data_type = self.sourceModel().data(index, Qt.UserRole + 1)
 
         keys = pattern.split(" ")
         for key in keys:
             if not key:
                 return False
-            if key.lower() in attrName.lower():
-                self.filteredKeys.append(dataType)
+            if key.lower() in attr_name.lower():
+                self.filteredKeys.append(data_type)
                 return True
         return False
 
 
-class FusionInput():
+class FusionInput:
     """
     A Fusion Input cache/wrapper around the actual Input retrieved from the tool input list.
     """
 
-    def __init__(self, fusionInput):
-        self.fusionInput = fusionInput
+    def __init__(self, fusion_input):
+        self.fusion_input = fusion_input
         self.cache = False
-        self.keyFrames = fusionInput.GetKeyFrames()
-        self.keyFrameValues = dict()
-        self.hasKeyFrames = len(self.keyFrames) > 0
-        self.expression = fusionInput.GetExpression()
-        self.attributes = fusionInput.GetAttrs()
+        self.keyframes = fusion_input.GetKeyFrames()
+        self.keyframe_values = dict()
+        self.has_keyframes = len(self.keyframes) > 0
+        self.expression = fusion_input.GetExpression()
+        self.attributes = fusion_input.GetAttrs()
         self.Name = self.attributes["INPS_Name"]
         self.ID = self.attributes["INPS_ID"]
 
@@ -542,35 +531,35 @@ class FusionInput():
             if self.cache:
                 return self.attributes.get(attr, None)
             else:
-                return self.fusionInput.GetAttrs(attr)
+                return self.fusion_input.GetAttrs(attr)
         else:
             if self.cache:
                 return self.attributes
             else:
-                return self.fusionInput.GetAttrs()
+                return self.fusion_input.GetAttrs()
 
     def GetKeyFrames(self):
         if self.cache:
-            return self.keyFrames
+            return self.keyframes
         else:
-            return self.fusionInput.GetKeyFrames()
+            return self.fusion_input.GetKeyFrames()
 
     def GetExpression(self):
         if self.cache:
             return self.expression
         else:
-            return self.fusionInput.GetExpression()
+            return self.fusion_input.GetExpression()
 
     def SetExpression(self, expression):
         self.expression = expression
-        self.fusionInput.SetExpression(expression)
+        self.fusion_input.SetExpression(expression)
         self.Refresh()
 
     def __getitem__(self, item):
-        return self.fusionInput[item]
+        return self.fusion_input[item]
 
     def __setitem__(self, key, value):
-        # debug - print input attributes  
+        # debug - print input attributes
         if value == "p":
             pp(self.attributes)
             return
@@ -584,8 +573,8 @@ class FusionInput():
             return
 
         if not isinstance(value, list) and value[0] == "=":
-             self.SetExpression(value.lstrip("="))
-             return
+            self.SetExpression(value.lstrip("="))
+            return
 
         if self.attributes["INPS_DataType"] == "Number":
             if value[0:2] in ["+=", "-=", "*=", "/=", "%="] and len(value) >= 3:
@@ -594,15 +583,15 @@ class FusionInput():
                     operator = value[0]
                     value = float(value[2:])
                     if operator == "+":
-                        value = float(self.fusionInput[key] + value)
+                        value = float(self.fusion_input[key] + value)
                     elif operator == "-":
-                        value = float(self.fusionInput[key] - value)
+                        value = float(self.fusion_input[key] - value)
                     elif operator == "/":
-                        value = float(self.fusionInput[key] / value)
+                        value = float(self.fusion_input[key] / value)
                     elif operator == "*":
-                        value = float(self.fusionInput[key] * value)
+                        value = float(self.fusion_input[key] * value)
                     elif operator == "%":
-                        value = float(self.fusionInput[key] % value)
+                        value = float(self.fusion_input[key] % value)
             if self.attributes["INPID_InputControl"] == "MultiButtonIDControl":
                 if value.lower() in ["0", "no", "off", "false"]:
                     value = 0
@@ -611,12 +600,12 @@ class FusionInput():
                 elif self.is_number(value):
                     value = round(min(1, max(0, float(value))))
                 else:
-                    value = self.fusionInput[key]
+                    value = self.fusion_input[key]
             if self.is_number(value):
                 value = float(value)
             else:
                 print("this field requires number input")
-                value = self.fusionInput[key]
+                value = self.fusion_input[key]
 
         if self.attributes["INPS_DataType"] == "Point":
             if value[0] == "p":
@@ -631,17 +620,17 @@ class FusionInput():
                         operator = v[0]
                         v = float(v[2:])
                         if operator == "+":
-                            v = float(self.fusionInput[key][float(i+1)] + v)
+                            v = float(self.fusion_input[key][float(i + 1)] + v)
                         elif operator == "-":
-                            v = float(self.fusionInput[key][float(i+1)] - v)
+                            v = float(self.fusion_input[key][float(i + 1)] - v)
                         elif operator == "/":
-                            v = float(self.fusionInput[key][float(i+1)] / v)
+                            v = float(self.fusion_input[key][float(i + 1)] / v)
                         elif operator == "*":
-                            v = float(self.fusionInput[key][float(i+1)] * v)
+                            v = float(self.fusion_input[key][float(i + 1)] * v)
                         elif operator == "%":
-                            v = float(self.fusionInput[key][float(i+1)] % v)
+                            v = float(self.fusion_input[key][float(i + 1)] % v)
                     else:
-                        v = self.fusionInput[key]
+                        v = self.fusion_input[key]
                 compute_values.append(v)
             try:
                 value = [float(i) for i in compute_values]
@@ -653,9 +642,9 @@ class FusionInput():
                 else:
                     print("Point data accepts only numbers and expressions")
                 return
-        self.fusionInput[key] = value
-        self.keyFrames = self.fusionInput.GetKeyFrames()
-        self.value = self.fusionInput[key]
+        self.fusion_input[key] = value
+        self.keyframes = self.fusion_input.GetKeyFrames()
+        self.value = self.fusion_input[key]
 
     @staticmethod
     def is_number(s):
@@ -685,79 +674,72 @@ class TableModel(QAbstractTableModel):
         QAbstractTableModel.__init__(self, parent)
 
         self.communicate = Communicate()
-
-        self.inputsToSkip = {}
+        self.inputs_to_skip = {}
         self.data_types_to_skip = {}
-
-        self.backgroundRoleMethod = self.backgroundRole
-
-        self.toolDict = dict()
-
-        self.attributeNameKeys = list()  # List of unique attribute name keys
-        self.attributeDataTypes = list()  # this list is coupled to the key list
-
-        self.toolsInputs = list()
-        self.toolsAttributes = list()
+        self.background_role_method = self.backgroundRole
+        self.tool_dict = dict()
+        self.attribute_name_keys = list()  # List of unique attribute name keys
+        self.attribute_data_types = list()  # this list is coupled to the key list
+        self.tools_inputs = list()
+        self.tools_attributes = list()
 
         # this stores the editrole data for multi commits (this way we get inline math to work)
         self.stored_edit_role_data = None
 
     def load_fusion_data(self):
         self.communicate.send("loading tools and inputs")
-        startTime = datetime.datetime.now()
+        start_time = datetime.datetime.now()
         comp = fu.GetCurrentComp()
         if not comp:
             if fu.GetResolve():
                 print("No comp data found. Probably both Resolve and Fusion are loaded?")
-                sys.exit()
             else:
                 print("Unable to find comp data. Please report this issue")
-                sys.exit()
-        self.toolDict.clear()
-        self.toolDict = comp.GetToolList(True)
-        self.attributeNameKeys = []  # List of unique attribute name keys
-        self.attributeDataTypes = []  # this list is coupled to the key list
-        self.toolsInputs = []
-        self.toolsAttributes = []
+            sys.exit()
+        self.tool_dict.clear()
+        self.tool_dict = comp.GetToolList(True)
+        self.attribute_name_keys = []  # List of unique attribute name keys
+        self.attribute_data_types = []  # this list is coupled to the key list
+        self.tools_inputs = []
+        self.tools_attributes = []
         progress = 0
-        for tool in self.toolDict.values():
-            toolInputs = {}
-            toolInputsAttributes = {}
+        for tool in self.tool_dict.values():
+            tool_inputs = {}
+            tool_inputs_attributes = {}
             for v in tool.GetInputList().values():
                 f = FusionInput(v)
                 if f.attributes["INPS_DataType"] not in self.data_types_to_skip:
                     key = f.Name
-                    toolInputs[key] = f
-                    attributeDataType = f.attributes["INPS_DataType"]
-                    toolInputsAttributes[key] = f.attributes
-                    self.appendUnique(key, attributeDataType)
-            if len(toolInputs):
-                self.toolsInputs.append(toolInputs)
-                self.toolsAttributes.append(toolInputsAttributes)
-                pass
-            self.appendUnique("Name")
-            self.appendUnique("ID")
-            toolInputs["Name"] = tool.Name
-            toolInputs["ID"] = tool.ID
+                    tool_inputs[key] = f
+                    attribute_data_type = f.attributes["INPS_DataType"]
+                    tool_inputs_attributes[key] = f.attributes
+                    self.appendUnique(key, attribute_data_type)
+            if len(tool_inputs):
+                self.tools_inputs.append(tool_inputs)
+                self.tools_attributes.append(tool_inputs_attributes)
+            self.appendUnique("Tool Name")
+            self.appendUnique("Tool ID")
+            tool_inputs["Tool Name"] = tool.Name
+            tool_inputs["Tool ID"] = tool.ID
             progress += 1
-            self.communicate.send((100.0 / (len(self.toolDict))) * progress)
+            self.communicate.send((100.0 / (len(self.tool_dict))) * progress)
         self.communicate.send(
-            "Done loading, execution time : " + str(datetime.datetime.now() - startTime)
+            "Done loading, execution time : " + str(datetime.datetime.now() - start_time)
         )
 
     def appendUnique(self, str_to_add, type_to_add=None):
         """
         Helper method to add unique tool name and unique attributes to some lists
         """
-        if str_to_add not in self.attributeNameKeys:
-            self.attributeNameKeys.append(str_to_add)
-            self.attributeDataTypes.append(type_to_add)
+        if str_to_add not in self.attribute_name_keys:
+            self.attribute_name_keys.append(str_to_add)
+            self.attribute_data_types.append(type_to_add)
 
     def rowCount(self, parent=QModelIndex()):
-        return len(self.toolDict)
+        return len(self.tool_dict)
 
     def columnCount(self, parent=QModelIndex()):
-        return len(self.attributeNameKeys)
+        return len(self.attribute_name_keys)
 
     def data(self, index, role=Qt.DisplayRole):
         """
@@ -767,8 +749,8 @@ class TableModel(QAbstractTableModel):
         if not index.isValid():
             return None
 
-        r = self.toolsInputs[index.row()].get(
-            self.attributeNameKeys[index.column()], None
+        r = self.tools_inputs[index.row()].get(
+            self.attribute_name_keys[index.column()], None
         )
 
         if role == Qt.DisplayRole:
@@ -783,11 +765,11 @@ class TableModel(QAbstractTableModel):
         elif role == Qt.EditRole:
             return r[comp.CurrentTime] if r else r
         elif role == Qt.UserRole:
-            return self.attributeNameKeys[index.column()]
+            return self.attribute_name_keys[index.column()]
         elif role == Qt.UserRole + 1:
-            return self.attributeDataTypes[index.column()]
+            return self.attribute_data_types[index.column()]
         elif role == Qt.BackgroundRole:
-            return self.backgroundRoleMethod(index, role)
+            return self.background_role_method(index, role)
         else:
             return
 
@@ -795,8 +777,8 @@ class TableModel(QAbstractTableModel):
         return None
 
     def backgroundRole(self, index, role):
-        r = self.toolsInputs[index.row()].get(
-            self.attributeNameKeys[index.column()], None
+        r = self.tools_inputs[index.row()].get(
+            self.attribute_name_keys[index.column()], None
         )
         if r:
             b = QBrush()
@@ -810,7 +792,7 @@ class TableModel(QAbstractTableModel):
                 b.setColor(QColor(92, 64, 92, 180))
                 return b
             if r.GetAttrs("INPB_Connected"):
-                if comp.CurrentTime in list(r.keyFrames.values()):
+                if comp.CurrentTime in list(r.keyframes.values()):
                     b.setColor(QColor(62, 92, 62, 180))
                 else:
                     b.setColor(QColor(64, 78, 120, 180))
@@ -820,9 +802,9 @@ class TableModel(QAbstractTableModel):
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole:
             if orientation == Qt.Horizontal:
-                return self.splitHeaderName(self.attributeNameKeys[section])
+                return self.splitHeaderName(self.attribute_name_keys[section])
             if orientation == Qt.Vertical:
-                return self.toolDict[section + 1].Name
+                return self.tool_dict[section + 1].Name
         return None
 
     def setData(self, index, value, role=Qt.DisplayRole):
@@ -837,9 +819,9 @@ class TableModel(QAbstractTableModel):
         if not index.isValid():
             return
         elif role == Qt.EditRole:
-            r = self.toolsInputs[index.row()].get(
-                    self.attributeNameKeys[index.column()], None
-                    )
+            r = self.tools_inputs[index.row()].get(
+                self.attribute_name_keys[index.column()], None
+            )
             if r:
                 if isinstance(value, list):
                     # print("setting point data: ", value)
@@ -878,7 +860,7 @@ class TableModel(QAbstractTableModel):
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
-        self.inputsToSkip = {
+        self.inputs_to_skip = {
             "SceneInput": 0,
             "MaterialInput": 1,
             "Diffuse Color Material": 2,
@@ -892,41 +874,34 @@ class MainWindow(QMainWindow):
             "Gradient": 5,
             "MtlGraph3D": 6,
         }
-        self.createWidgets()
-        self.setWindowFlags(
-            self.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint
-        )
-
-    def createWidgets(self):
         self._tm = TableModel(self)
-        self._tm.inputsToSkip = self.inputsToSkip
+        self._tm.inputs_to_skip = self.inputs_to_skip
         self._tm.data_types_to_skip = self.data_types_to_skip
         self._tv = TableView(self)
-        self.alwaysOnTop = QCheckBox("Always on top")
-        self.alwaysOnTop.setChecked(True)
-        self.clearButton = QPushButton()
-        self.clearButton.setText("Clear")
-        self.clearButton.setFixedSize(QSize(70, 30))
-        self.refreshButton = QPushButton()
-        self.refreshButton.setText("Refresh")
-        self.refreshButton.setFixedSize(QSize(140, 30))
-        self.searchLine = QLineEdit(self)
-        self.searchLine.setFixedHeight(30)
-        self.searchLine.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.statusBar().showMessage("System Status | Normal")
+        self.always_on_top = QCheckBox("Always on top")
+        self.always_on_top.setChecked(True)
+        self.clear_button = QPushButton()
+        self.clear_button.setText("Clear")
+        self.clear_button.setFixedSize(QSize(70, 30))
+        self.refresh_button = QPushButton()
+        self.refresh_button.setText("Refresh")
+        self.refresh_button.setFixedSize(QSize(140, 30))
+        self.search_line = QLineEdit(self)
+        self.search_line.setFixedHeight(30)
+        self.search_line.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        # self.statusBar().showMessage("System Status | Normal")
         # self.cacheButton = QToolButton()
         # self.cacheButton.setCheckable(True)
         # self.cacheButton.setChecked(False)
         # self.cacheButton.setText('use cache')
 
-
         v_box = QVBoxLayout()
         h_box = QHBoxLayout()
         h_box.setAlignment(Qt.AlignRight)
-        h_box.addWidget(self.alwaysOnTop)
-        h_box.addWidget(self.clearButton)
-        h_box.addWidget(self.searchLine)
-        h_box.addWidget(self.refreshButton)
+        h_box.addWidget(self.always_on_top)
+        h_box.addWidget(self.clear_button)
+        h_box.addWidget(self.search_line)
+        h_box.addWidget(self.refresh_button)
         # h_box.addWidget(self.cacheButton)
         h_box.setContentsMargins(0, 0, 0, 0)
         v_box.addLayout(h_box)
@@ -935,48 +910,51 @@ class MainWindow(QMainWindow):
         # find the corner button
         self.corner = self._tv.findChild(QAbstractButton)
 
-        sizeGrip = QSizeGrip(self)
+        size_grip = QSizeGrip(self)
         v_box.setContentsMargins(2, 2, 2, 2)
-        sizeGrip.setWindowFlags(Qt.WindowStaysOnTopHint)
-        sizeGrip.move(0, 200)
+        size_grip.setWindowFlags(Qt.WindowStaysOnTopHint)
+        size_grip.move(0, 200)
 
         central_widget = QWidget()
         central_widget.setLayout(v_box)
         self.setCentralWidget(central_widget)
-        self.statusBar()
+        self.status_bar = self.statusBar()
 
-        self.proxyModel = TableSortFilterProxyModel()
-        self.proxyModel.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        self.proxyModel.setSortCaseSensitivity(Qt.CaseInsensitive)
-        self.proxyModel.setDynamicSortFilter(True)
-        self._tv.setModel(self.proxyModel)
+        self.proxy_model = TableSortFilterProxyModel()
+        self.proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self.proxy_model.setSortCaseSensitivity(Qt.CaseInsensitive)
+        self.proxy_model.setDynamicSortFilter(True)
+        self._tv.setModel(self.proxy_model)
 
         # show the progressbar
-        self.progressBar = QProgressBar()
-        self.statusBar().addPermanentWidget(self.progressBar)
-        self.progressBar.setValue(0)
+        self.progress_bar = QProgressBar()
+        self.status_bar.addPermanentWidget(self.progress_bar)
+        self.progress_bar.setValue(0)
 
         # Connections
         # self.cacheButton.clicked.connect(self.setCacheMode)
-        self.alwaysOnTop.stateChanged.connect(self.changeAlwaysOnTop)
-        self.searchLine.textChanged.connect(self.filterRegExpChanged)
-        self.clearButton.pressed.connect(self.clear_search)
-        self.refreshButton.pressed.connect(self.reloadFusionData)
+        self.always_on_top.stateChanged.connect(self.changeAlwaysOnTop)
+        self.search_line.textChanged.connect(self.filterRegExpChanged)
+        self.clear_button.pressed.connect(self.clear_search)
+        self.refresh_button.pressed.connect(self.reloadFusionData)
         self._tm.communicate.broadcast.connect(self.communication)
         self.corner.clicked.connect(self.reset_sorting)
+        self.setWindowFlags(
+            self.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint
+        )
 
     def reset_sorting(self):
         """
-        WIP, current behavior: reset sorting to initial state
+        reset tool sorting to initial state, do not select all
         """
-        self.proxyModel.sort(-1)
+        self.proxy_model.sort(-1)
         self._tv.clearSelection()
 
     def clear_search(self):
-        self.searchLine.clear()
+        self.search_line.clear()
 
     def changeAlwaysOnTop(self):
-        if self.alwaysOnTop.checkState():
+        if self.always_on_top.checkState():
             self.setWindowFlags(
                 self.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint
             )
@@ -991,23 +969,23 @@ class MainWindow(QMainWindow):
         if not value:
             return
         if isinstance(value, float):
-            self.progressBar.setValue(value)
+            self.progress_bar.setValue(value)
         if isinstance(value, str):
-            self.statusBar().showMessage(value)
-        self.progressBar.setVisible(True)
-        if self.progressBar.value() in [0, 100]:
-            self.progressBar.setVisible(False)
+            self.status_bar.showMessage(value)
+        self.progress_bar.setVisible(True)
+        if self.progress_bar.value() in [0, 100]:
+            self.progress_bar.setVisible(False)
 
     def loadFusionData(self):
         self._tm.load_fusion_data()
-        self.proxyModel.setSourceModel(self._tm)
+        self.proxy_model.setSourceModel(self._tm)
         self._tv.setSortingEnabled(True)
         self._tv.updateColumns()
 
     def reloadFusionData(self):
-        self.proxyModel.setSourceModel(None)
+        self.proxy_model.setSourceModel(None)
         self._tm.load_fusion_data()
-        self.proxyModel.setSourceModel(self._tm)
+        self.proxy_model.setSourceModel(self._tm)
         self._tv.setSortingEnabled(True)
         self._tv.updateColumns()
 
@@ -1017,7 +995,7 @@ class MainWindow(QMainWindow):
         # Cache does not seem to speed up things. For now we just disable it
 
         cache_status = self.cacheButton.isChecked()
-        for input_list in self._tm.toolsInputs:
+        for input_list in self._tm.tools_inputs:
             for tool_input in list(input_list.values()):
                 try:
                     tool_input.cache = cache_status
@@ -1032,10 +1010,11 @@ class MainWindow(QMainWindow):
         during sorting and filtering.
         """
 
-        regExp = self.searchLine.text()
-        self.proxyModel.filteredKeys = []
-        self.proxyModel.setFilterRegExp(regExp)
+        regExp = self.search_line.text()
+        self.proxy_model.filteredKeys = []
+        self.proxy_model.setFilterRegExp(regExp)
         self._tv.updateColumns()
+
 
 # increase font size for Retina Display on Mac
 font_size = 12 if platform.system() == "Darwin" else 9
@@ -1102,12 +1081,9 @@ if __name__ == "__main__":
     if not main_app:  # create QApplication if it doesnt exist
         main_app = QApplication([])
     main_app.setStyleSheet(css)
-    # Enable HiDPI scaling:
-    # main_app.setAttribute(Qt.AA_EnableHighDpiScaling)
-    # QCoreApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
     main = MainWindow()
     main.setWindowTitle("Attribute Spreadsheet")
-    main.setMinimumSize(QSize(640, 200))
+    main.setMinimumSize(QSize(740, 200))
     main.show()
     main.loadFusionData()
     main_app.exec_()
