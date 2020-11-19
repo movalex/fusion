@@ -15,10 +15,12 @@ except ImportError:
 INIT_DIR = Path("~/Desktop").expanduser()
 
 
-def show_UI(path):
+def request_file_name(path):
     root = Tk()
     root.withdraw()
-    md_file = filedialog.askopenfilename(initialdir=path, filetypes=[("Markdown files", ".md .MD")])
+    md_file = filedialog.askopenfilename(
+        initialdir=path, filetypes=[("Markdown files", ".md .MD")]
+    )
     return md_file
 
 
@@ -81,12 +83,12 @@ def main(folder_name):
             print(f"file {file_path} not found")
             return
     else:
-        file_path = show_UI(folder_name)
+        file_path = request_file_name(folder_name)
         if file_path:
             fu.SetData("md2reactor.path", file_path)
 
     if not file_path:
-        print('no markdown file selected')
+        print("no markdown file selected")
         return
     file_name, ext = os.path.splitext(file_path)
     with open(file_path, "r") as fp:
@@ -97,11 +99,15 @@ def main(folder_name):
         print(f"created {bbcode_out.name}")
     try:
         from markdown import markdown
+
         with open(file_name + "_atom.html", "w") as html_out:
             html_out.write(markdown(text))
             print(f"created {html_out.name}")
     except ImportError:
-        print("to convert text to HTML, install markdown package with `pip install markdown` command")
+        print(
+            "to convert text to HTML, install markdown package with `pip install"
+            " markdown` command"
+        )
 
     print("Done!")
 
