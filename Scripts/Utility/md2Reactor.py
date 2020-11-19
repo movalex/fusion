@@ -15,10 +15,6 @@ except ImportError:
 INIT_DIR = Path("~/Desktop").expanduser()
 
 
-def get_filepath_data():
-    pass
-
-
 def show_UI(path):
     root = Tk()
     root.withdraw()
