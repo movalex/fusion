@@ -376,7 +376,7 @@ class TableView(QTableView):
     def create_value(self, source_model, index):
         target_tool = source_model.tool_dict[index.row() + 1].Name
         target_input_id = source_model.tools_inputs[index.row()].get(
-            source_model.attribute_name_keys[index.column()]).ID,
+            source_model.attribute_name_keys[index.column()]).ID
         try:
             value = "={}.{}".format(target_tool, target_input_id)
             self.commitDataDo(value)
