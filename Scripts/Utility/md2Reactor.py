@@ -1,8 +1,8 @@
 #!/usr/bin/env python
+
 import re
 import sys
 import os
-from tkinter import filedialog, Tk
 from pathlib import Path
 
 try:
@@ -10,12 +10,18 @@ try:
 
     fu = bmd.scriptapp("Fusion")
 except ImportError:
-    bmd = fu = None
+    print("no Fusion app found running")
+    bmd = None
 
-INIT_DIR = Path("~/Desktop").expanduser()
+DEFAULT_DIR = Path("~/Desktop").expanduser()
 
 
 def request_file_name(path):
+    try:
+        from tkinter import filedialog, Tk
+    except ImportError:
+        print("no tkinter lirary found")
+        return
     root = Tk()
     root.withdraw()
     md_file = filedialog.askopenfilename(
@@ -68,12 +74,28 @@ def markdown_to_bbcode(s):
     s = re.sub(r"(?m)^\d+\.\s+(.*)$", translate("~[list=1]\n[*]%s\n[/list]"), s)
     s = re.sub(r"(?m)^((?!~).*)$", translate(), s)
     s = re.sub(r"(?m)^~\[", "[", s)
-    s = re.sub(r"\[/code]\n\[code(=.*?)?]", "\n", s)
-    s = re.sub(r"\[/quote]\n\[quote]", "\n", s)
-    s = re.sub(r"\[/list]\n\[list(=1)?]\n", "", s)
+    s = re.sub(r"(?m)\[/code]\n\[code(=.*?)?]", "\n", s)
+    s = re.sub(r"(?m)\[/quote]\n\[quote]", "\n", s)
+    s = re.sub(r"(?m)\[/list]\n\[list(=1)?]\n", "", s)
     s = re.sub(r"(?m)\[code=(\d+)]", replace_code, s)
 
     return s
+
+
+def write_file(file_name, text, suffix=None, do_markdown=False):
+    with open(file_name + suffix, "w") as out:
+        if do_markdown:
+            try:
+                from markdown import markdown
+
+                text = markdown(text)
+            except ImportError:
+                print(
+                    "to convert text to HTML, install markdown package with `pip"
+                    " install markdown` command"
+                )
+        out.write(text)
+        print(f"created {out.name}")
 
 
 def main(folder_name):
@@ -84,30 +106,20 @@ def main(folder_name):
             return
     else:
         file_path = request_file_name(folder_name)
-        if file_path:
+        if file_path and bmd:
             fu.SetData("md2reactor.path", file_path)
 
     if not file_path:
         print("no markdown file selected")
         return
+
     file_name, ext = os.path.splitext(file_path)
     with open(file_path, "r") as fp:
         text = fp.read()
-    bbcode = markdown_to_bbcode(text)
-    with open(file_name + "_bbcode.txt", "w") as bbcode_out:
-        bbcode_out.write(bbcode)
-        print(f"created {bbcode_out.name}")
-    try:
-        from markdown import markdown
 
-        with open(file_name + "_atom.html", "w") as html_out:
-            html_out.write(markdown(text))
-            print(f"created {html_out.name}")
-    except ImportError:
-        print(
-            "to convert text to HTML, install markdown package with `pip install"
-            " markdown` command"
-        )
+    bbcode = markdown_to_bbcode(text)
+    write_file(file_name, bbcode, "_bbcode.txt")
+    write_file(file_name, text, "_atom.html", True)
 
     print("Done!")
 
@@ -115,8 +127,7 @@ def main(folder_name):
 if __name__ == "__main__":
     folder = ""
     if bmd:
-        fu = bmd.scriptapp("Fusion")
         folder = fu.GetData("md2reactor.path")
     if not folder:
-        folder = INIT_DIR
+        folder = DEFAULT_DIR
     main(folder)
