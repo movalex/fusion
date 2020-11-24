@@ -7,9 +7,15 @@ function has_value (tab, val)
     return false
 end
 
+-- function set(...)
+--    local ret = {}
+--    for _,k in ipairs({...}) do ret[k] = true end
+--    return ret
+-- end
+
 function getViewer(currentView)
-    local leftViewer = {"Left", "LeftView"}
-    local rightViewer = {"Right", "RightView"}
+    leftViewer = {"Left", "LeftView"}
+    rightViewer = {"Right", "RightView"}
     if has_value(leftViewer, currentView.ID) then
         return 1
     elseif has_value(rightViewer, currentView.ID) then
@@ -21,28 +27,34 @@ function getViewer(currentView)
 end
 
 function switchContext(toolName)
+    contextTool = comp:FindTool(toolName)
     local currentView = comp.CurrentFrame.CurrentView
     viewNumber = getViewer(currentView)
-    if viewNumber then
-        contextTool = comp:FindTool(toolName)
+    prevTool = comp:GetData("ContextTool.previousTool") or toolName
+    if viewNumber and currentView.CurrentViewer then
         viewOutput = currentView:GetPreview():GetConnectedOutput()
         if viewOutput then
             currentlyViewedTool = viewOutput:GetTool()
-            prevTool = comp:GetData("ContextTool.previousTool") or toolName
-            if currentlyViewedTool and toolName ~= currentlyViewedTool.Name then
+        end
+        if currentlyViewedTool then
+            if contextTool.Name ~= currentlyViewedTool.Name then
                 comp.CurrentFrame:ViewOn(contextTool, viewNumber)
                 comp:SetData("ContextTool.previousTool", currentlyViewedTool.Name)
             else
                 comp.CurrentFrame:ViewOn(comp:FindTool(prevTool), viewNumber)
-                comp:SetData("ContextTool.previousTool", toolName)
+                comp:SetData("ContextTool.previousTool", contextTool.Name)
             end
-        else
+        else 
             comp.CurrentFrame:ViewOn(contextTool, viewNumber)
+            comp:SetData("ContextTool.previousTool", contextTool.Name)
         end
+    else
+        comp.CurrentFrame:ViewOn(contextTool, viewNumber)
+        comp:SetData("ContextTool.previousTool", contextTool.Name)
     end
 end
 
-local toolName = comp:GetData("ContextTool."..CONTEXT)
+local toolName = comp:GetData("ContextTool.contexts."..CONTEXT)
 
 if toolName then
     switchContext(toolName)
