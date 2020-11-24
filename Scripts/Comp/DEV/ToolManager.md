@@ -14,4 +14,5 @@ _Usage:_
 2. Select last two merges in a comp, then fill the text field at the bottom of the script: 'last two merges' and click `Set or Replace comment`. The given comment will be applied to the selected tools, ath this comment text will appear in comments list. Next time you click Disable, only these two tools will be disabled. 
 3. This script is a great companion for Attribute spreadsheet script. Use Select button to batch-manage inputs groups of nodes.
 4. The comment added to the tool will be prepended with `@` symbol. Thus ToolManager will not operate other commented tools. 
-5. To clear the vomment, press clear button in text field, then with tools selected press Set comment. The comments will be cleared.
+5. To clear the comment, press clear button in text field, then with tools selected press Set comment. The comments will be cleared.
+6. Doubleclick on comments list to refresh it

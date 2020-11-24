@@ -1,0 +1,47 @@
+<p>I'm a big fan of @svenneve's scripts. All of them are so cleverly written and I use them on a daily basis, especially <a href="https://www.svenneve.com/?p=922">DuplicateTool</a>, <a href="https://www.svenneve.com/?p=175">IncrementalSave</a>, and now - <a href="https://www.svenneve.com/?p=792">Attribute Spreadsheet</a>.</p>
+<p>Attribute Spreadsheet is a spreadsheet script to edit the input parameters of multiple Fusion tools at once.  It is extremely useful for batch tool changes, and a must have for any motion graphics tasks inside Fusion. The most amazing part that it works with any native or third party Fusion tool, such as OFX plugins, macros, Krokodove tools and so on. Any type if data is accessible from a very convenient table view. As far as I know, Attribute Spreadsheet is fastest and most reliable tool for batch changing parameters, and it should definitely be in Reactor.</p>
+<p>Current version 0.2.2 has quite large changelog in comparison with last known version of <code>hos_AttributeSpreadsheet</code>. You can find full list of new features and fixes inside a script file. </p>
+<p><em>The most significant improvements:</em></p>
+<ul>
+<li>Point data with X and Y elements are both adjustable and now work with mathematical modifiers</li>
+<li>Corner button will reset sorting to default state</li>
+<li>Tool name and ID is added to a table to improve sorting abilities</li>
+<li>You can add expressions to Point data values, such as Center.X, Center.Y</li>
+<li>Added logging, most errors are caught with Console feedback</li>
+<li>Set active tool by clicking on row header</li>
+</ul>
+<p><em>Requires:</em></p>
+<ul>
+<li>Python 3.6</li>
+<li>Fusion Standalone v.9 and v.16+, Davinci Resolve v.16+</li>
+<li>PySide2 (can be installed automatically)</li>
+</ul>
+<p><em>Usage:</em></p>
+<ul>
+<li>Select one or more tools in Fusion flow and start the script or press "Refresh" button.</li>
+<li>Select multiple values in a single column, say, "Blend".</li>
+<li>Start typing new numeric value and hit Enter. All Blend values for selected tools will be changed accordingly</li>
+<li>Connect any number of the inputs to a single tool attribute by middle-click and drag toward the cell you are linking to.</li>
+<li>Enter <code>-x</code> to discard the expression. Once the expression is set, you cannot change the values in the table unless the expression is cleared.</li>
+<li>Use <code>+=</code>, <code>-=</code>, <code>*=</code>, <code>/=</code> and <code>%=</code> to do mathematical expressions with current numerical values. for example: enter <code>+=0.2123</code> to Transform's Size value, and it will become <code>1.2123</code></li>
+<li>Use search bar to find inputs you like. You can search for multiple inputs, separated by spaces, like <code>size angle</code> to search both Size and Angle inputs in selected Transform tools.</li>
+<li>Enter expression to any number of point values. For instance, entering <code>=time</code> in the angle value will create <code>=time</code> expression, adding <code>=time</code> and <code>0.5</code> in Center values will create <code>Point(time, 0.5)</code> expression</li>
+<li>Enter <code>p</code> in any table cell and all corresponding input attributes will be listed in Console.</li>
+<li>Click on the row header to activate the tool</li>
+<li>Click on column header to sort inputs</li>
+</ul>
+<p><em>Automatic PySide2 installation</em></p>
+<p>My intention was to make this script as straightforward and easy to use as possible. Usually installing third party package to Python is pretty easy. But it would be much cooler to strip this step and offer automatic installation on a first launch. </p>
+<p>Therefore, if there's no Pyside2 installation on the computer, the script will show a dialogue, whether you want to install the script automatically. If clicked <code>Ok</code>, it attempts to install Pyside2 using standard pip tools. Otherwise the command for manual installation will be shown in Console. Python modules manager <code>pip</code> should be already installed on the computer. It is a part of standard Python3 installation, thus the reason the script will require Python3 (also for maintenance and ideological purposes).</p>
+<p>Automatic PySide2 installation process will be visible in Fusion console. In case installation fails, please report the bug here. Once Pyside2 is installed, launch the script again and standard UI will be shown:</p>
+<p><em>Known issues:</em></p>
+<ul>
+<li>All fields except numerical or point data inputs are treated as text values. This prevents unexpected behavior of the cells. However inputs with list data, such as <code>INPIDT_ComboControl_ID</code> and <code>INPIDT_MultiButtonControl_ID</code> should to be implemented, so you could choose the appropriate values from ComboBox dropdown instead of typing values. This is yet to be done.</li>
+<li>Although script works perfectly both in Resolve and Fusion Standalone separately, when both of this apps are loaded at the same time, the script cannot read the comp data properly. In this case you'll see No comp data found. Probably both Resolve and Fusion are loaded?` error message. I'm looking forward to handle this issue as soon I understand why it is happening.</li>
+<li>You should avoid linking inputs to each other. This is a known bug, I guess: if you link Transform1.Size to Transform2.Size and then try to link expression from Transform2.Size back to Transform1.Size, Fusion will crash immediately. The same will happen if you try to do that with a script. Just don't.</li>
+</ul>
+<p><em>TODO:</em></p>
+<ul>
+<li>(<em>minor priority</em>) Add an option for partial middle-drag/linking Point data, such as link only X values, so the expression would be like <code>Point(Transform1.Center.X, 0.5)</code>. Currently it is possible by manually adding expression text to a Point data.</li>
+<li>(<em>high priority</em>) add a completer with the most commonly used search commands. For instance, if you've already been searching <code>red green blue</code> with the script, this query will be suggested once you type <code>r</code></li>
+</ul>
