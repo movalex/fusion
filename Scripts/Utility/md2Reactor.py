@@ -7,10 +7,11 @@ from pathlib import Path
 
 try:
     import BlackmagicFusion as bmd
-
     fu = bmd.scriptapp("Fusion")
+    if not fu:
+        bmd = None
 except ImportError:
-    print("no Fusion app found running")
+    print("no Fusion found")
     bmd = None
 
 DEFAULT_DIR = Path("~/Desktop").expanduser()
@@ -20,7 +21,7 @@ def request_file_name(path):
     try:
         from tkinter import filedialog, Tk
     except ImportError:
-        print("no tkinter lirary found")
+        print("no tkinter library found")
         return
     root = Tk()
     root.withdraw()
@@ -31,38 +32,28 @@ def request_file_name(path):
 
 
 def markdown_to_bbcode(s):
-    links = {}
     codes = []
-
-    def gather_link(m):
-        links[m.group(1)] = m.group(2)
-        return ""
-
-    def replace_link(m):
-        return "[url=%s]%s[/url]" % (links[m.group(2) or m.group(1)], m.group(1))
 
     def gather_code(m):
         codes.append(m.group(3))
-        return "[c=%d]" % len(codes)
+        return "[code=%d]" % len(codes)
 
     def replace_code(m):
         return "%s" % codes[int(m.group(1)) - 1]
 
-    def translate(p="%s", g=1):
+    def translate(pattern="%s", g=1):
         def inline(m):
             s = m.group(g)
-            s = re.sub(r"(`+)(\s*)(.*?)\2\1", gather_code, s)
-            s = re.sub(r"\[(.*?)\]\[(.*?)\]", replace_link, s)
-            s = re.sub(r"\[(.*?)\]\((.*?)\)", "[url=\\2]\\1[/url]", s)
-            # s = re.sub(r"(https?:\S+)", "[url=\\1]\\1[/url]", s)
+            s = re.sub(r"(`{3})(\s*)(.*?)\2\1", gather_code, s)
             s = re.sub(r"\B([*_]{2})\b(.+?)\1\B", "[b]\\2[/b]", s)
-            return p % s
+            return pattern % s
 
         return inline
 
-    s = re.sub(r"(?m)^\[(.*?)]:\s*(\S+).*$", gather_link, s)
-    s = re.sub(r"(?m)^\s{4}(.*)$", "~[code]\\1[/code]", s)
+    s = re.sub(r"(?m)^!\[\]\((.*?)\)$", "~[img]\\1[/img]", s)
+    s = re.sub(r"(?m)\[(.*?)\]\((https?://\S+)\)", "[url=\\2]\\1[/url]", s)
     s = re.sub(r"(?m)(`)(.*?)(`)", "[c]\\2[/c]", s)
+    s = re.sub(r"(?m)    {4}(.*)$", "~[code]\\1[/code]", s)
     s = re.sub(r"(?m)\b([*_]{1})(.*?)\1\b", "[i]\\2[/i]", s)
     s = re.sub(r"(?m)^(\S.*)\n=+\s*$", translate("~[size=200][b]%s[/b][/size]"), s)
     s = re.sub(r"(?m)^(\S.*)\n-+\s*$", translate("~[size=100][b]%s[/b][/size]"), s)
@@ -94,6 +85,7 @@ def write_file(file_name, text, suffix=None, do_markdown=False):
                     "to convert text to HTML, install markdown package with `pip"
                     " install markdown` command"
                 )
+                sys.exit()
         out.write(text)
         print(f"created {out.name}")
 
