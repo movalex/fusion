@@ -354,6 +354,7 @@ class TableView(QTableView):
 
     def toolSelect(self, section):
         """set active tool when vertical header clicked"""
+        comp = fu.GetCurrentComp()
         tool_name = self.model().headerData(section, Qt.Vertical, Qt.DisplayRole)
         tool = comp.FindTool(tool_name)
         comp.SetActiveTool(tool)
