@@ -1,0 +1,21 @@
+[size=200][b]md2Reactor script[/b][/size]
+This is a script for converting [c]Markdown[/c] formatted file to [c]BBcode[/c] and [c]HTML[/c] syntax.
+Now you can use single .md file to create a neatly formatted description of Reactor tool for the [url=https://www.steakunderwater.com/wesuckless/viewforum.php?f=33]Reactor Submission page[/url] and also make description for the [url=https://www.steakunderwater.com/wesuckless/viewtopic.php?f=33&t=1799]Atom file[/url].
+
+[i]Requirements:[/i]
+
+[list]
+[*]Python3
+[*]markdown package to create Atom html file. Markdown is installed with [c]python -m pip install markdown[/c] command 
+[/list]
+
+I'm a pretty lazy person and the fact I need to create three differently formatted files to add a single Reactor submission always cheered me down. Now you may just want to create a single .md file, and the script will produce two more files at the same location:
+ 
+[list=1]
+[*][c]filename_bbcode.txt[/c] file for the STU forum submission
+[*][c]filename_atom.html[/c] file for Atom description.
+[/list]
+
+The script is located in Scripts:Utility folder. You can launch it either as a standalone app, or via Fusion folder from [c]File --> Scripts --> md2Reactor[/c]. It will open a filedialog window with a filter for [c].md[/c] files. Default location for the file search is [c]~/Desktop[/c], but the script will save last used folder path as fusion data and next time it is launched, it will open file dialog at the saved place.
+
+You can also use this script as a commandline tool. It accepts .md file as an argument.
