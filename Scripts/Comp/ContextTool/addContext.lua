@@ -16,12 +16,13 @@ end
 
 data = comp:GetData("ContextTool.contexts")
 
-if not CONTEXT then
-    for i = 1, 10 do
-        if data and has_key(data, i) then
+if data and not CONTEXT then
+    for i = 1, 9 do
+        if has_key(data, i) then
             CONTEXT = i + 1
-        else
-            CONTEXT = 1
+        end
+        if CONTEXT > 9 then
+            CONTEXT = 9
         end
     end
 end
