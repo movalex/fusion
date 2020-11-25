@@ -2,11 +2,11 @@
 
 _Copyright:_ Alexey Bogomolov (mail@abogomolov.com)
 
-_License:_ MIT License: https://mit-license.org/
+_MIT License:_ https://mit-license.org/
 
 _version:_ v.1.0 - 2020/06/26
 
-_donations:_ [PaypalMe](https://paypal.me/aabogomolov)
+_donations:_ [PaypalMe](https://paypal.me/aabogomolov/10usd)
 
 _Requirements:_ Python 3.6+
 

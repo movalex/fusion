@@ -1,12 +1,12 @@
 # Attribute Spreadsheet
 
-_License:_ MIT License: https://mit-license.org/
+_MIT License:_ https://mit-license.org/
 
 _version:_ 0.2.2
 
 _current maintainer:_ Alexey Bogomolov (mail@abogomolov.com)
 
-_donations:_ [PaypalMe](https://paypal.me/aabogomolov)
+_donations:_ [PaypalMe](https://paypal.me/aabogomolov/10usd)
 
 I'm a big fan of @svenneve's scripts. All of them are so cleverly written and I use them on a daily basis, especially [DuplicateTool](https://www.svenneve.com/?p=922), [IncrementalSave](https://www.svenneve.com/?p=175), and now - [Attribute Spreadsheet](https://www.svenneve.com/?p=792).
 
@@ -45,7 +45,7 @@ _Usage:_
 
 _Automatic PySide2 installation_
 
-My intention was to make this script as straightforward and easy to use as possible. Usually installing third party package to Python is pretty easy. But it would be much cooler to strip this step and offer automatic installation on a first launch. 
+My intention was to make this script as straightforward and easy to use as possible. Usually installing third party package to Python is pretty painless. But it would be much cooler to strip this step and offer automatic installation on a first launch. 
 
 Therefore, if there's no Pyside2 installation on the computer, the script will show a dialogue, whether you want to install the script automatically. If clicked `Ok`, it attempts to install Pyside2 using standard pip tools. Otherwise the command for manual installation will be shown in Console. Python modules manager `pip` should be already installed on the computer. It is a part of standard Python3 installation, thus the reason the script will require Python3 (also for maintenance and ideological purposes).
 
@@ -53,11 +53,14 @@ Automatic PySide2 installation process will be visible in Fusion console. In cas
 
 _Known issues:_
 
-* All fields except numerical or point data inputs are treated as text values. This prevents unexpected behavior of the cells. However inputs with list data, such as `INPIDT_ComboControl_ID` and `INPIDT_MultiButtonControl_ID` should to be implemented, so you could choose the appropriate values from ComboBox dropdown instead of typing values. This is yet to be done.
-* Although script works perfectly both in Resolve and Fusion Standalone separately, when both of this apps are loaded at the same time, the script cannot read the comp data properly. In this case you'll see No comp data found. Probably both Resolve and Fusion are loaded?` error message. I'm looking forward to handle this issue as soon I understand why it is happening.
-* You should avoid linking inputs to each other. This is a known bug, I guess: if you link Transform1.Size to Transform2.Size and then try to link expression from Transform2.Size back to Transform1.Size, Fusion will crash immediately. The same will happen if you try to do that with a script. Just don't.
+* All fields except numerical or point data inputs are treated as text values. This prevents unexpected behavior when changint cells values. 
+* Although script works perfectly both in Resolve and Fusion Standalone separately, sometimes, when both of this apps are loaded at the same time, the script cannot read the comp data properly. In this case you'll see `No comp data found. Probably both Resolve and Fusion are loaded?` error message. I'm looking forward to handle this issue as soon I understand why it is happening.
+* You should avoid linking inputs to each other. This is a known bug: if you link `Transform1.Size` to `Transform2.Size` and then try to link expression from `Transform2.Size` back to `Transform1.Size`, Fusion will crash immediately. The same will happen if you try to do that with a script. Just don't.
 
 _TODO:_
 
-* (*minor priority*) Add an option for partial middle-drag/linking Point data, such as link only X values, so the expression would be like `Point(Transform1.Center.X, 0.5)`. Currently it is possible by manually adding expression text to a Point data.
-* (*high priority*) add a completer with the most commonly used search commands. For instance, if you've already been searching `red green blue` with the script, this query will be suggested once you type `r`
+* Add combobox to inputs with list data, such as `INPIDT_ComboControl_ID` or `INPIDT_MultiButtonControl_ID`, so you could choose the appropriate values from dropdown instead of typing values manually. This can be tricky, because some Fusion inputs addressed by key ('1.0', '2.0') and some - by value ('Red', 'XYZ' etc). 
+* Add a completer with the most commonly used search commands. For instance, if you've already been searching `red green blue` with the script, this query will be suggested once you type `r`
+* Add an option for partial middle-drag/linking Point data, such as link only X values, so the expression would be like `Point(Transform1.Center.X, 0.5)`. Currently it is possible by manually adding expression text to a Point data, so probably not necessary at all.
+* Add `Select by ID` button to quickly select and load to the table all tools with the same ID as the active tool. However this can be done with ToolManager script, so again questionable.
+* Please suggest any other improvements.

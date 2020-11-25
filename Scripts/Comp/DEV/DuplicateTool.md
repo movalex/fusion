@@ -2,11 +2,11 @@
 
 _Copyright:_ Alexey Bogomolov (mail@abogomolov.com)
 
-_License:_ MIT
+_MIT License:_ https://mit-license.org/
 
 _version:_ 1.2 11.24.2020 
 
-_donations:_ [PaypalMe](https://paypal.me/aabogomolov)
+_donations:_ [PaypalMe](https://paypal.me/aabogomolov/10usd)
 
 ### Description:
 
