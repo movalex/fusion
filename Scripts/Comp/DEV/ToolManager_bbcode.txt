@@ -15,9 +15,9 @@ You can group different tools by assigning a special comment to them. And tool m
 
 [list=1]
 [*]Select single Merge tool, click 'Disable' and all Merge tools in a comp will be disabled.
-[*]Select last two merges in a comp, then fill the text field at the bottom of the script: 'last two merges' and click [c]Set or Replace comment[/c]. The given comment will be applied to the selected tools, ath this comment text will appear in comments list. Next time you click Disable, only these two tools will be disabled. 
-[*]This script is a great companion for Attribute spreadsheet script. Use Select button to batch-manage inputs groups of nodes.
-[*]The comment added to the tool will be prepended with [c]@[/c] symbol. Thus ToolManager will not operate other commented tools. 
-[*]To clear the comment, press clear button in text field, then with tools selected press Set comment. The comments will be cleared.
+[*]Select some nodes, i.e. last two merges, then fill the text field: "[i]my favorite merges[/i]". 
+[*]Click [c]Set or Replace comment[/c] or hit [c]Enter[/c]. The given comment will be applied to the selected tools. ALso this comment will appear in comments list. Next time you click Disable, only these two tools will be disabled. 
+[*]The comment added to the tool will be prepended with [c]@[/c] symbol. Thus ToolManager will not affect other commented tools. 
+[*]To clear the comment, press clear button in text field, then with tools selected press Set comment. The comments will be cleared. This can be applied no any tools with comments, not only the managed ones.
 [*]Doubleclick on comments list to refresh it
 [/list]
