@@ -4,10 +4,13 @@
 
 This script basically copies and pastes everything you have selected and tries to duplicate the input connections as well. You can use it to duplicate wireless nodes too. It is based on a hos_Duplicate.lua script, written in 2013 by Sven Neve (House of Secrets).
 
-* _author:_ Alexey Bogomolov
-* _email:_ mail@abogomolov.com
-* _version:_ 1.2
-* _donations:_ [PaypalMe](https://paypal.me/aabogomolov)
+_author:_ Alexey Bogomolov
+
+_email:_ mail@abogomolov.com
+
+_version:_ 1.2
+
+_donations:_ [PaypalMe](https://paypal.me/aabogomolov)
 
 **Usage:**
 
