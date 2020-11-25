@@ -1,6 +1,6 @@
 # Duplicate Tool script
 # Copy and pase tools in Fusion and Resolve Fusion and keep connections. Also works with wireless nodes.
-# This scripts replicates hos_Duplicate tool released by Sven Neve in 2013
+# This script is based on hos_Duplicate.lua tool written by Sven Neve in 2013.
 # Copyright 2020 Alexey Bogomolov (mail@abogomolov.com)
 # License MIT
 # v 1.2 11.24.2020 
