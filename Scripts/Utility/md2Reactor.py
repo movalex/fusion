@@ -88,8 +88,10 @@ def write_file(file_name, text, suffix):
         print(f"created {out.name}")
 
 
-def main(file_path):
-    print(file_path)
+def main(file_path=None):
+    if not file_path or not file_path.exists() or not file_path.suffix.lower() == ".md":
+        print("no markdown file selected")
+        return
 
     with open(file_path, "r") as fp:
         text = fp.read()
@@ -106,8 +108,10 @@ def main(file_path):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        file_path = Path(sys.argv[1]).absolute()
+    if len(sys.argv) >= 2:
+        for file_path in sys.argv[1:]:
+            file_path = Path(file_path).absolute()
+            main(file_path)
     else:
         folder = ""
         if fu:
@@ -115,10 +119,7 @@ if __name__ == "__main__":
         if not folder:
             folder = DEFAULT_DIR
         file_path = request_file_name(folder)
-    if file_path and file_path.exists():
-        if fu:
-            fu.SetData("md2reactor.path", file_path.parent)
-        if file_path.suffix.lower() == ".md":
+        if file_path:
+            if fu:
+                fu.SetData("md2reactor.path", file_path.parent)
             main(file_path)
-        else:
-            print("no markdown file selected")
