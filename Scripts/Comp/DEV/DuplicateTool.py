@@ -1,6 +1,11 @@
-# 1.08.2014 initial lua tool release for Fusion 7 by Sven Neve (House of Secrets) http://www.svenneve.com/?p=922
-# 11.24.2020 Rewritten in Python by Alexey Bogomolov (mail@abogomolov.com).
-# This version properly fixes inputs for Merge3D and Replicate3D in case some inputs were disconnected or rearranged.
+# Duplicate Tool script
+# Copy and pase tools in Fusion and Resolve Fusion and keep connections. Also works with wireless nodes.
+# This scripts replicates hos_Duplicate tool released by Sven Neve in 2013
+# Copyright 2020 Alexey Bogomolov (mail@abogomolov.com)
+# License MIT
+# v 1.2 11.24.2020 
+# -- Properly fix inputs for multi-input tools, like Merge3D or Replicate3D, in case some inputs were disconnected or rearranged.
+
 
 
 def fix_number_of_inputs(dup_tool, inputs_list):
