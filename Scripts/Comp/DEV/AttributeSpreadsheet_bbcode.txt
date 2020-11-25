@@ -67,6 +67,6 @@ Automatic PySide2 installation process will be visible in Fusion console. In cas
 [i]TODO:[/i]
 
 [list]
-[*](*minor priority*) Add an option for partial middle-drag/linking Point data, such as link only X values, so the expression would be like [c]Point(Transform1.Center.X, 0.5)[/c]. Currently it is possible by manually adding expression text to a Point data.
-[*](*high priority*) add a completer with the most commonly used search commands. For instance, if you've already been searching [c]red green blue[/c] with the script, this query will be suggested once you type [c]r[/c]
+[*](_minor priority_) Add an option for partial middle-drag/linking Point data, such as link only X values, so the expression would be like [c]Point(Transform1.Center.X, 0.5)[/c]. Currently it is possible by manually adding expression text to a Point data.
+[*](_high priority_) add a completer with the most commonly used search commands. For instance, if you've already been searching [c]red green blue[/c] with the script, this query will be suggested once you type [c]r[/c]
 [/list]
