@@ -1,14 +1,17 @@
-This is a tool manager script for making basic operations with Fusion nodes, such as:
+# Tool Manager
+This is a comment based tool manager for making basic operations with Fusion nodes, such as: _disable, enable, toggle passthrough (disabled tools become enabled and vice versa), select, lock_
 
-* disable
-* enable
-* toggle passthrough (disabled tools become enabled and vice versa)
-* select 
-* lock
+_version_: 1.0
+
+_email:_ mail@abogomolov.com
+
+_donations:_ [PaypalMe](https://paypal.me/aabogomolov)
+
+**Description:**
 
 You can group different tools by assigning a special comment to them. And tool manager will operate only tools with given comment. List of the comments will be listed in the middle section. If no comment assigned to selected tool, the script will be managing all other tools of the same kind. 
 
-_Usage:_
+**Usage:**
 
 1. Select single Merge tool, click 'Disable' and all Merge tools in a comp will be disabled.
 2. Select last two merges in a comp, then fill the text field at the bottom of the script: 'last two merges' and click `Set or Replace comment`. The given comment will be applied to the selected tools, ath this comment text will appear in comments list. Next time you click Disable, only these two tools will be disabled. 
