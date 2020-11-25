@@ -1,15 +1,20 @@
 <h1>md2Reactor script</h1>
+<p><em>Copyright:</em> Alexey Bogomolov (mail@abogomolov.com)</p>
+<p><em>License:</em> MIT</p>
+<p><em>version:</em> 1.2 11.24.2020 </p>
+<p><em>donations:</em> <a href="https://paypal.me/aabogomolov">PaypalMe</a></p>
 <p>This is a script for converting <code>Markdown</code> formatted file to <code>BBcode</code> and <code>HTML</code> syntax.
-Now you can use single .md file to create a neatly formatted description of Reactor tool for the <a href="https://www.steakunderwater.com/wesuckless/viewforum.php?f=33">Reactor Submission page</a> and also make description for the <a href="https://www.steakunderwater.com/wesuckless/viewtopic.php?f=33&amp;t=1799">Atom file</a>.</p>
+Now you can use single .md file to create a neatly formatted description of Reactor tool for the <a href="https://www.steakunderwater.com/wesuckless/viewforum.php?f=33">Reactor Submission page</a> and also make description for the <a href="https://www.steakunderwater.com/wesuckless/viewtopic.php?f=33&amp;t=1799">Atom file</a>. All my recent submissions are prepared using this script. </p>
 <p><em>Requirements:</em></p>
 <ul>
-<li>Python3</li>
-<li>markdown package to create Atom html file. Markdown is installed with <code>python -m pip install markdown</code> command </li>
+<li>Python 3.6+</li>
+<li><code>markdown</code> package to create Atom html file. This package is installed with <code>python3 -m pip install markdown</code> command </li>
 </ul>
-<p>I'm a pretty lazy person and the fact I need to create three differently formatted files to add a single Reactor submission always cheered me down. Now you may just want to create a single .md file, and the script will produce two more files at the same location:</p>
+<h3>Description</h3>
+<p>I'm a pretty lazy person and the fact I need to create three differently formatted files to add a single Reactor submission always chilled me down. Now you may just want to create a single .md file, and the script will produce two more files at the same location:</p>
 <ol>
 <li><code>filename_bbcode.txt</code> file for the STU forum submission</li>
 <li><code>filename_atom.html</code> file for Atom description.</li>
 </ol>
 <p>The script is located in Scripts:Utility folder. You can launch it either as a standalone app, or via Fusion folder from <code>File --&gt; Scripts --&gt; md2Reactor</code>. It will open a filedialog window with a filter for <code>.md</code> files. Default location for the file search is <code>~/Desktop</code>, but the script will save last used folder path as fusion data and next time it is launched, it will open file dialog at the saved place.</p>
-<p>You can also use this script as a commandline tool. It accepts .md file as an argument.</p>
+<p>You can also use this script as a commandline tool. It accepts multiple .md file as an argument. So you can easily convert multiple <code>.md</code> files with a wildcarded command, like: <code>python3 md2Reactor.py ./*.md</code>. </p>
