@@ -7,6 +7,7 @@
 
 [i]donations:[/i] [url=https://paypal.me/aabogomolov]PaypalMe[/url]
 
+[i]Requirements:[/i] Python 3.6+
 
 The script logic is based on IncrementalSave tool written by S.Neve / House of Secrets. The idea is to have ganular incremention of the Fusion compositions without cluttering current folder with version files. It is also a great companion to a VFX Connect workflow, because sometimes saving VFX Connect version may become a tedious task.
 
@@ -14,19 +15,20 @@ The script logic is based on IncrementalSave tool written by S.Neve / House of S
 
 [list]
 [*]Run the script from [c]Scripts/Comp/IncrementSave[/c] folder or use [c]Alt+S[/c] shortcut
-[*]The comp version will be saved to  IncrementSave/comp_name folder next to the current comp file. If this folder does not exists, it will be created.
+[*]The comp version will be saved to  [c]IncrementSave/<comp_name>[/c] folder next to the current comp file. If this folder does not exists, it will be created.
 [*]versions are saved with [c]0001[/c] incremention
 [*]You can also set $INCREMENT_SAVE_PATH environment variable to have your increment saves in specific folder
 [/list]
 
-[i]Key features:[/i]
+
+[i]NOTE:[/i]
+
+The script requires Python3. If by any chance you prefer to use Lua, feel free to use [c]hos_IncrementSave.lua[/c] script, included to this this Reactor installation. This is original [c]HoS[/c] script, tinkered to support macos file paths. 
+
+However Python3 version of the script has some advangates: 
 
 [list]
-[*]new comp version will be saved next to the current comp in the [c]IncrementSave[/c] folder with a subfolder named as the current comp name. 
-[/list]
-
-[list]
-[*]the script will work correctly if the comp path has non-ascii characters
+[*]it works correctly if the comp path has some non-ascii characters.
 [/list]
 
 [list]
@@ -34,6 +36,4 @@ The script logic is based on IncrementalSave tool written by S.Neve / House of S
 [/list]
 
 
-[i]NOTE:[/i]
 
-The script requires Python3. If you are still using Python2, feel free to use hos_IncrementSave.lua from this Reactor installation
