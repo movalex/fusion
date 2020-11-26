@@ -20,7 +20,7 @@
     v.1.0 - 2020/06/26:
         * initial release
     email: mail@abogomolov.com
-    donations: https://paypal.me/aabogomolov
+    donations: https://paypal.me/aabogomolov/10usd
 """
 
 import os
