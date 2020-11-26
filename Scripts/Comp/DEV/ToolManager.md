@@ -5,7 +5,7 @@ _version_: 1.0
 
 _email:_ mail@abogomolov.com
 
-_donations:_ [PaypalMe](https://paypal.me/aabogomolov)
+_donations:_ [PaypalMe](https://paypal.me/aabogomolov/10usd)
 
 **Description:**
 
