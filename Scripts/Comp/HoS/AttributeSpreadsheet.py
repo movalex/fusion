@@ -78,7 +78,7 @@
 
 __VERSION__ = 2.2
 PKG = "PySide2"
-PKG_VERSION = "5.15.0"
+PKG_VERSION = "5.15.2"
 
 import builtins
 import datetime
