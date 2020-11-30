@@ -1,14 +1,36 @@
 # Attribute Spreadsheet
+ 
+_version:_ 0.2.3
 
-_MIT License:_ https://mit-license.org/
+_copyright:__ 2011-2013, Sven Neve, 2019-2020 additions by Alexey Bogomolov [mail@abogomolov.com](mail@abogomolov.com)
 
-_version:_ 0.2.2
+_license:_ 
 
-_current maintainer:_ Alexey Bogomolov (mail@abogomolov.com)
+>   The authors hereby grant permission to use, copy, and distribute this
+    software and its documentation for any purpose, provided that existing
+    copyright notices are retained in all copies and that this notice is
+    included verbatim in any distributions. Additionally, the authors grant
+    permission to modify this software and its documentation for any
+    purpose, provided that such modifications are not distributed without
+    the explicit consent of the authors and that existing copyright notices
+    are retained in all copies.
+>
+>   IN NO EVENT SHALL THE AUTHORS OR DISTRIBUTORS BE LIABLE TO ANY PARTY FOR
+    DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING
+    OUT OF THE USE OF THIS SOFTWARE, ITS DOCUMENTATION, OR ANY DERIVATIVES
+    THEREOF, EVEN IF THE AUTHORS HAVE BEEN ADVISED OF THE POSSIBILITY OF
+    SUCH DAMAGE.
+>
+>   THE AUTHORS AND DISTRIBUTORS SPECIFICALLY DISCLAIM ANY WARRANTIES,
+    INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+    :wMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+    THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, AND THE AUTHORS AND
+    DISTRIBUTORS HAVE NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT,
+    UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 _donations:_ [PaypalMe](https://paypal.me/aabogomolov/10usd)
 
-I'm a big fan of @svenneve's scripts. All of them are so cleverly written and I use them on a daily basis, especially [DuplicateTool](https://www.svenneve.com/?p=922), [IncrementalSave](https://www.svenneve.com/?p=175), and now - [Attribute Spreadsheet](https://www.svenneve.com/?p=792).
+I'm a big fan of @svenneve's scripts. All of them are so cleverly written and I use them in every project, especially [DuplicateTool](https://www.svenneve.com/?p=922), [IncrementalSave](https://www.svenneve.com/?p=175), and now - [Attribute Spreadsheet](https://www.svenneve.com/?p=792).
 
 Attribute Spreadsheet is a spreadsheet script to edit the input parameters of multiple Fusion tools at once.  It is extremely useful for batch tool changes, and a must have for any motion graphics tasks inside Fusion. The most amazing part that it works with any native or third party Fusion tool, such as OFX plugins, macros, Krokodove tools and so on. Any type if data is accessible from a very convenient table view. As far as I know, Attribute Spreadsheet is fastest and most reliable tool for batch changing parameters, and it should definitely be in Reactor.
 
@@ -48,7 +70,7 @@ _Automatic PySide2 installation_
 
 My intention was to make this script as straightforward and easy to use as possible. Usually installing third party package to Python is pretty painless. But it would be much cooler to strip this step and offer automatic installation on a first launch. 
 
-Therefore, if there's no Pyside2 installation on the computer, the script will show a dialogue, whether you want to install the script automatically. If clicked `Ok`, it attempts to install Pyside2 using standard pip tools. Otherwise the command for manual installation will be shown in Console. Python modules manager `pip` should be already installed on the computer. It is a part of standard Python3 installation, thus the reason the script will require Python3 (also for maintenance and ideological purposes).
+If there's no Pyside2 installation on the computer, the script will show a dialogue, whether you want to install the script automatically. If clicked `Ok`, it attempts to install Pyside2 using standard pip tools. Otherwise the command for manual installation will be shown in Console. Python modules manager `pip` should be already installed on the computer. It is a part of standard Python3 installation, thus the reason the script will require Python3 (also for maintenance and ideological purposes).
 
 Automatic PySide2 installation process will be visible in Fusion console. In case installation fails, please report the bug here. Once Pyside2 is installed, launch the script again and standard UI will be shown:
 
@@ -61,7 +83,7 @@ _Known issues:_
 _TODO:_
 
 * Add combobox to inputs with list data, such as `INPIDT_ComboControl_ID` or `INPIDT_MultiButtonControl_ID`, so you could choose the appropriate values from dropdown instead of typing values manually. This can be tricky, because some Fusion inputs addressed by key ('1.0', '2.0') and some - by value ('Red', 'XYZ' etc). 
-* Add a completer with the most commonly used search commands. For instance, if you've already been searching `red green blue` with the script, this query will be suggested once you type `r`
+* Add a completer with the most commonly used search commands. For instance, if you've already been searching `red green blue`, this query will be suggested once you type `r` in search area.
 * Add an option for partial middle-drag/linking Point data, such as link only X values, so the expression would be like `Point(Transform1.Center.X, 0.5)`. Currently it is possible by manually adding expression text to a Point data, so probably not necessary at all.
 * Add `Select by ID` button to quickly select and load to the table all tools with the same ID as the active tool. However this can be done with ToolManager script, so again questionable.
 * Please suggest any other improvements.

@@ -2,7 +2,7 @@
 
 _Copyright:_ Alexey Bogomolov (mail@abogomolov.com)
 
-_MIT License:_ https://mit-license.org/
+_License:_ [MIT](https://mit-license.org/)
 
 _version:_ 1.2 11.24.2020 
 
@@ -25,7 +25,11 @@ I'm a pretty lazy person and the fact I need to create three differently formatt
 
 The script is located in Scripts:Utility folder. You can launch it either as a standalone app, or via Fusion folder from `File --> Scripts --> md2Reactor`. It will open a filedialog window with a filter for `.md` files. Default location for the file search is `~/Desktop`, but the script will save last used folder path as fusion data and next time it is launched, it will open file dialog at the saved place.
 
-You can also use this script as a commandline tool. It accepts multiple .md file as an argument. So you can easily convert multiple `.md` files with a wildcarded command, like: `python3 md2Reactor.py ./*.md`. 
+You can also use this script as a commandline tool. It accepts multiple .md file as an argument. So you can easily convert multiple `.md` files with a wildcarded command:
 
-And here's a cheat sheet for markdown syntax: https://www.markdownguide.org/cheat-sheet/.
+* for MacOS or linux batch command for current folder would look like `python3 <path-to>/md2Reactor.py ./*.md`
+* for Windows use Powershell: `py <path-to>\md2Reactor.py (Get-Item .*.md)`
+
+Here's a cheat sheet for markdown syntax: https://www.markdownguide.org/cheat-sheet/. 
+
 Only basic markdown syntax is converted to BBcode.
