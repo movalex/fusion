@@ -22,6 +22,7 @@ _The most significant improvements:_
 * You can add expressions to Point data values, such as Center.X, Center.Y
 * Added logging, most errors are caught with Console feedback
 * Set active tool by clicking on row header
+* Use this script as a standalone tool. Provide a remote machine IP as an argument to a script to do remote management
 
 _Requires:_
 
@@ -53,7 +54,7 @@ Automatic PySide2 installation process will be visible in Fusion console. In cas
 
 _Known issues:_
 
-* All fields except numerical or point data inputs are treated as text values. This prevents unexpected behavior when changint cells values. 
+* All fields except numerical or point data inputs are treated as text values. This prevents unexpected behavior when changing cells values. 
 * Although script works perfectly both in Resolve and Fusion Standalone separately, sometimes, when both of this apps are loaded at the same time, the script cannot read the comp data properly. In this case you'll see `No comp data found. Probably both Resolve and Fusion are loaded?` error message. I'm looking forward to handle this issue as soon I understand why it is happening.
 * You should avoid linking inputs to each other. This is a known bug: if you link `Transform1.Size` to `Transform2.Size` and then try to link expression from `Transform2.Size` back to `Transform1.Size`, Fusion will crash immediately. The same will happen if you try to do that with a script. Just don't.
 
