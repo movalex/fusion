@@ -1,11 +1,11 @@
 [size=200][b]IncrementSave.py script[/b][/size]
-[i]Copyright:[/i] Alexey Bogomolov (mail@abogomolov.com)
+[i]Copyright:[/i] Alexey Bogomolov (mail[mention]abogomolov[/mention].com)
 
-[i]License:[/i] MIT License: https://mit-license.org/
+[i]MIT License:[/i] https://mit-license.org/
 
 [i]version:[/i] v.1.0 - 2020/06/26
 
-[i]donations:[/i] [url=https://paypal.me/aabogomolov]PaypalMe[/url]
+[i]donations:[/i] [url=https://paypal.me/aabogomolov/10usd]PaypalMe[/url]
 
 [i]Requirements:[/i] Python 3.6+
 
