@@ -1,5 +1,5 @@
 [size=200][b]md2Reactor script[/b][/size]
-[i]Copyright:[/i] Alexey Bogomolov (mail[mention]abogomolov[/mention].com)
+[i]Copyright:[/i] Alexey Bogomolov (mail@abogomolov.com)
 
 [i]License:[/i] [url=https://mit-license.org/]MIT[/url]
 
@@ -17,8 +17,9 @@ Now you can use single .md file to create a neatly formatted description of Reac
 [*][c]markdown[/c] package to create Atom html file. This package is installed with [c]python3 -m pip install markdown[/c] command 
 [/list]
 
-[b]Description[/b]
-I'm a pretty lazy person and the fact I need to create three differently formatted files to add a single Reactor submission always chilled me down. Now you may just want to create a single .md file, and the script will produce two more files at the same location:
+[i]Description:[/i]
+
+I'm very lazy and the fact I need to create three differently formatted files to add a single Reactor submission always chilled me down. Now you may just want to create a single properly formatted Markdown file, and the script will produce two more files at the same location:
  
 [list=1]
 [*][c]filename_bbcode.txt[/c] file for the STU forum submission
@@ -30,8 +31,8 @@ The script is located in Scripts:Utility folder. You can launch it either as a s
 You can also use this script as a commandline tool. It accepts multiple .md file as an argument. So you can easily convert multiple [c].md[/c] files with a wildcarded command:
 
 [list]
-[*]for MacOS or linux batch command for current folder would look like [c]python3 <path-to>/md2Reactor.py ./*.md[/c]
-[*]for Windows use Powershell: [c]py <path-to>\md2Reactor.py (Get-Item .*.md)[/c]
+[*]for MacOS or linux use this command for current folder: [c]python3 <path-to>/md2Reactor.py ./*.md[/c]
+[*]for Windows with Powershell: [c]py <path-to>\md2Reactor.py (Get-Item .\*.md).FullName[/c]
 [/list]
 
 Here's a cheat sheet for markdown syntax: https://www.markdownguide.org/cheat-sheet/. 
