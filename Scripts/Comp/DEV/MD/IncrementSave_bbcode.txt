@@ -1,7 +1,7 @@
 [size=200][b]IncrementSave.py script[/b][/size]
-[i]Copyright:[/i] Alexey Bogomolov (mail[mention]abogomolov[/mention].com)
+[i]Copyright:[/i] Alexey Bogomolov (mail@abogomolov.com)
 
-[i]MIT License:[/i] https://mit-license.org/
+[i]License:[/i] [url=https://mit-license.org/]MIT[/url]
 
 [i]version:[/i] v.1.0 - 2020/06/26
 

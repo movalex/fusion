@@ -10,8 +10,8 @@ Now you can use single .md file to create a neatly formatted description of Reac
 <li>Python 3.6+</li>
 <li><code>markdown</code> package to create Atom html file. This package is installed with <code>python3 -m pip install markdown</code> command </li>
 </ul>
-<h3>Description</h3>
-<p>I'm a pretty lazy person and the fact I need to create three differently formatted files to add a single Reactor submission always chilled me down. Now you may just want to create a single .md file, and the script will produce two more files at the same location:</p>
+<p><em>Description:</em></p>
+<p>I'm very lazy and the fact I need to create three differently formatted files to add a single Reactor submission always chilled me down. Now you may just want to create a single properly formatted Markdown file, and the script will produce two more files at the same location:</p>
 <ol>
 <li><code>filename_bbcode.txt</code> file for the STU forum submission</li>
 <li><code>filename_atom.html</code> file for Atom description.</li>
@@ -19,8 +19,8 @@ Now you can use single .md file to create a neatly formatted description of Reac
 <p>The script is located in Scripts:Utility folder. You can launch it either as a standalone app, or via Fusion folder from <code>File --&gt; Scripts --&gt; md2Reactor</code>. It will open a filedialog window with a filter for <code>.md</code> files. Default location for the file search is <code>~/Desktop</code>, but the script will save last used folder path as fusion data and next time it is launched, it will open file dialog at the saved place.</p>
 <p>You can also use this script as a commandline tool. It accepts multiple .md file as an argument. So you can easily convert multiple <code>.md</code> files with a wildcarded command:</p>
 <ul>
-<li>for MacOS or linux batch command for current folder would look like <code>python3 &lt;path-to&gt;/md2Reactor.py ./*.md</code></li>
-<li>for Windows use Powershell: <code>py &lt;path-to&gt;\md2Reactor.py (Get-Item .*.md)</code></li>
+<li>for MacOS or linux use this command for current folder: <code>python3 &lt;path-to&gt;/md2Reactor.py ./*.md</code></li>
+<li>for Windows with Powershell: <code>py &lt;path-to&gt;\md2Reactor.py (Get-Item .\*.md).FullName</code></li>
 </ul>
 <p>Here's a cheat sheet for markdown syntax: https://www.markdownguide.org/cheat-sheet/. </p>
 <p>Only basic markdown syntax is converted to BBcode.</p>
