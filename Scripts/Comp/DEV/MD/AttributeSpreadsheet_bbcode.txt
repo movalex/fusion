@@ -1,0 +1,98 @@
+[size=200][b]Attribute Spreadsheet[/b][/size]
+[i]version:[/i] 0.2.3
+
+[i]copyright:_[/i] 2011-2013, Sven Neve, 2019-2020 additions by Alexey Bogomolov [mail[mention]abogomolov[/mention].com](mail[mention]abogomolov[/mention].com)
+
+[i]license:[/i] 
+
+[quote]The authors hereby grant permission to use, copy, and distribute this
+software and its documentation for any purpose, provided that existing
+copyright notices are retained in all copies and that this notice is
+included verbatim in any distributions. Additionally, the authors grant
+permission to modify this software and its documentation for any
+purpose, provided that such modifications are not distributed without
+the explicit consent of the authors and that existing copyright notices
+are retained in all copies.
+
+IN NO EVENT SHALL THE AUTHORS OR DISTRIBUTORS BE LIABLE TO ANY PARTY FOR
+DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING
+OUT OF THE USE OF THIS SOFTWARE, ITS DOCUMENTATION, OR ANY DERIVATIVES
+THEREOF, EVEN IF THE AUTHORS HAVE BEEN ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+
+THE AUTHORS AND DISTRIBUTORS SPECIFICALLY DISCLAIM ANY WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, AND THE AUTHORS AND
+DISTRIBUTORS HAVE NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT,
+UPDATES, ENHANCEMENTS, OR MODIFICATIONS.[/quote]
+
+[i]donations:[/i] [url=https://paypal.me/aabogomolov/10usd]PaypalMe[/url]
+
+I'm a big fan of [mention]svenneve[/mention]'s scripts. All of them are so cleverly written and I use them in every project, especially [url=https://www.svenneve.com/?p=922]DuplicateTool[/url], [url=https://www.svenneve.com/?p=175]IncrementalSave[/url], and now - [url=https://www.svenneve.com/?p=792]Attribute Spreadsheet[/url].
+
+Attribute Spreadsheet is a spreadsheet script to edit the input parameters of multiple Fusion tools at once.  It is extremely useful for batch tool changes, and a must have for any motion graphics tasks inside Fusion. The most amazing part that it works with any native or third party Fusion tool, such as OFX plugins, macros, Krokodove tools and so on. Any type if data is accessible from a very convenient table view. As far as I know, Attribute Spreadsheet is fastest and most reliable tool for batch changing parameters, and it should definitely be in Reactor.
+
+Current version 0.2.2 has quite large changelog in comparison with last known version of [c]hos_AttributeSpreadsheet[/c]. You can find full list of new features and fixes inside a script file. 
+
+[i]The most significant improvements:[/i]
+
+[list]
+[*]Point data with X and Y elements are both adjustable and now work with mathematical modifiers
+[*]Corner button will reset sorting to default state
+[*]Tool name and ID is added to a table to improve sorting abilities
+[*]You can add expressions to Point data values, such as Center.X, Center.Y
+[*]Added logging, most errors are caught with Console feedback
+[*]Set active tool by clicking on row header
+[*]Use this script as a standalone tool. Provide a remote machine IP as an argument to a script to do remote management
+[/list]
+
+[i]Requires:[/i]
+
+[list]
+[*]Python 3.6
+[*]Fusion Standalone v.9 and v.16+, Davinci Resolve v.16+
+[*]PySide2 (can be installed automatically)
+[/list]
+
+[i]Usage:[/i]
+
+[list]
+[*]Select one or more tools in Fusion flow and start the script or press "Refresh" button.
+[*]Select multiple values in a single column, say, "Blend".
+[*]Start typing new numeric value and hit Enter. All Blend values for selected tools will be changed accordingly
+[*]Connect any number of the inputs to a single tool attribute by middle-click and drag toward the cell you are linking to.
+[*]Enter [c]-x[/c] to discard the expression. Once the expression is set, you cannot change the values in the table unless the expression is cleared.
+[*]Use [c]+=[/c], [c]-=[/c], [c]*=[/c], [c]/=[/c] and [c]%=[/c] to do mathematical expressions with current numerical values. for example: enter [c]+=0.2123[/c] to Transform's Size value, and it will become [c]1.2123[/c]
+[*]Use search bar to find inputs you like. You can search for multiple inputs, separated by spaces, like [c]size angle[/c] to search both Size and Angle inputs in selected Transform tools.
+[*]Enter expression to any number of point values. For instance, entering [c]=time[/c] in the angle value will create [c]=time[/c] expression, adding [c]=time[/c] and [c]0.5[/c] in Center values will create [c]Point(time, 0.5)[/c] expression
+[*]Enter [c]p[/c] in any table cell and all corresponding input attributes will be listed in Console.
+[*]Click on the row header to activate the tool
+[*]Click on column header to sort inputs
+[/list]
+
+[i]Automatic PySide2 installation[/i]
+
+My intention was to make this script as straightforward and easy to use as possible. Usually installing third party package to Python is pretty painless. But it would be much cooler to strip this step and offer automatic installation on a first launch. 
+
+If there's no Pyside2 installation on the computer, the script will show a dialogue, whether you want to install the script automatically. If clicked [c]Ok[/c], it attempts to install Pyside2 using standard pip tools. Otherwise the command for manual installation will be shown in Console. Python modules manager [c]pip[/c] should be already installed on the computer. It is a part of standard Python3 installation, thus the reason the script will require Python3 (also for maintenance and ideological purposes).
+
+Automatic PySide2 installation process will be visible in Fusion console. In case installation fails, please report the bug here. Once Pyside2 is installed, launch the script again and standard UI will be shown:
+
+[i]Known issues:[/i]
+
+[list]
+[*]All fields except numerical or point data inputs are treated as text values. This prevents unexpected behavior when changing cells values. 
+[*]Although script works perfectly both in Resolve and Fusion Standalone separately, sometimes, when both of this apps are loaded at the same time, the script cannot read the comp data properly. In this case you'll see [c]No comp data found. Probably both Resolve and Fusion are loaded?[/c] error message. I'm looking forward to handle this issue as soon I understand why it is happening.
+[*]You should avoid linking inputs to each other. This is a known bug: if you link [c]Transform1.Size[/c] to [c]Transform2.Size[/c] and then try to link expression from [c]Transform2.Size[/c] back to [c]Transform1.Size[/c], Fusion will crash immediately. The same will happen if you try to do that with a script. Just don't.
+[/list]
+
+[i]TODO:[/i]
+
+[list]
+[*]Add combobox to inputs with list data, such as [c]INPIDT_ComboControl_ID[/c] or [c]INPIDT_MultiButtonControl_ID[/c], so you could choose the appropriate values from dropdown instead of typing values manually. This can be tricky, because some Fusion inputs addressed by key ('1.0', '2.0') and some - by value ('Red', 'XYZ' etc). 
+[*]Add a completer with the most commonly used search commands. For instance, if you've already been searching [c]red green blue[/c], this query will be suggested once you type [c]r[/c] in search area.
+[*]Add an option for partial middle-drag/linking Point data, such as link only X values, so the expression would be like [c]Point(Transform1.Center.X, 0.5)[/c]. Currently it is possible by manually adding expression text to a Point data, so probably not necessary at all.
+[*]Add [c]Select by ID[/c] button to quickly select and load to the table all tools with the same ID as the active tool. However this can be done with ToolManager script, so again questionable.
+[*]Please suggest any other improvements.
+[/list]

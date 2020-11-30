@@ -3,6 +3,8 @@ This is a comment based tool manager for making basic operations with Fusion nod
 
 _version_: 1.0
 
+_License:_ [MIT](https://mit-license.org/)
+
 _email:_ mail@abogomolov.com
 
 _donations:_ [PaypalMe](https://paypal.me/aabogomolov/10usd)

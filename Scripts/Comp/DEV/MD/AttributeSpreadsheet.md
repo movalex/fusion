@@ -1,34 +1,4 @@
 # Attribute Spreadsheet
- 
-_version:_ 0.2.3
-
-_copyright:__ 2011-2013, Sven Neve, 2019-2020 additions by Alexey Bogomolov [mail@abogomolov.com](mail@abogomolov.com)
-
-_license:_ 
-
->   The authors hereby grant permission to use, copy, and distribute this
-    software and its documentation for any purpose, provided that existing
-    copyright notices are retained in all copies and that this notice is
-    included verbatim in any distributions. Additionally, the authors grant
-    permission to modify this software and its documentation for any
-    purpose, provided that such modifications are not distributed without
-    the explicit consent of the authors and that existing copyright notices
-    are retained in all copies.
->
->   IN NO EVENT SHALL THE AUTHORS OR DISTRIBUTORS BE LIABLE TO ANY PARTY FOR
-    DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING
-    OUT OF THE USE OF THIS SOFTWARE, ITS DOCUMENTATION, OR ANY DERIVATIVES
-    THEREOF, EVEN IF THE AUTHORS HAVE BEEN ADVISED OF THE POSSIBILITY OF
-    SUCH DAMAGE.
->
->   THE AUTHORS AND DISTRIBUTORS SPECIFICALLY DISCLAIM ANY WARRANTIES,
-    INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-    :wMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-    THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, AND THE AUTHORS AND
-    DISTRIBUTORS HAVE NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT,
-    UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
-
-_donations:_ [PaypalMe](https://paypal.me/aabogomolov/10usd)
 
 I'm a big fan of @svenneve's scripts. All of them are so cleverly written and I use them in every project, especially [DuplicateTool](https://www.svenneve.com/?p=922), [IncrementalSave](https://www.svenneve.com/?p=175), and now - [Attribute Spreadsheet](https://www.svenneve.com/?p=792).
 
@@ -87,3 +57,11 @@ _TODO:_
 * Add an option for partial middle-drag/linking Point data, such as link only X values, so the expression would be like `Point(Transform1.Center.X, 0.5)`. Currently it is possible by manually adding expression text to a Point data, so probably not necessary at all.
 * Add `Select by ID` button to quickly select and load to the table all tools with the same ID as the active tool. However this can be done with ToolManager script, so again questionable.
 * Please suggest any other improvements.
+  
+_Version:_ 0.2.3
+
+_Copyright:__ 2011-2013, Sven Neve, 2019-2020 additions by Alexey Bogomolov [mail@abogomolov.com](mail@abogomolov.com)
+
+_License:_ [MIT](https://mit-license.org/)
+
+_Donations:_ [PaypalMe](https://paypal.me/aabogomolov/10usd)
