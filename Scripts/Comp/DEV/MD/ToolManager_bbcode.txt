@@ -3,9 +3,9 @@ This is a comment based tool manager for making basic operations with Fusion nod
 
 [i]version[/i]: 1.0
 
-[i]email:[/i] mail@abogomolov.com
+[i]email:[/i] mail[mention]abogomolov[/mention].com
 
-[i]donations:[/i] [url=https://paypal.me/aabogomolov]PaypalMe[/url]
+[i]donations:[/i] [url=https://paypal.me/aabogomolov/10usd]PaypalMe[/url]
 
 [b]Description:[/b]
 
@@ -17,7 +17,7 @@ You can group different tools by assigning a special comment to them. And tool m
 [*]Select single Merge tool, click 'Disable' and all Merge tools in a comp will be disabled.
 [*]Select some nodes, i.e. last two merges, then fill the text field: "[i]my favorite merges[/i]". 
 [*]Click [c]Set or Replace comment[/c] or hit [c]Enter[/c]. The given comment will be applied to the selected tools. ALso this comment will appear in comments list. Next time you click Disable, only these two tools will be disabled. 
-[*]The comment added to the tool will be prepended with [c]@[/c] symbol. Thus ToolManager will not affect other commented tools. 
+[*]The comment added to the tool will be prepended with [c][mention][/c][/mention] symbol. Thus ToolManager will not affect other commented tools. 
 [*]To clear the comment, press clear button in text field, then with tools selected press Set comment. The comments will be cleared. This can be applied no any tools with comments, not only the managed ones.
 [*]Doubleclick on comments list to refresh it
 [/list]

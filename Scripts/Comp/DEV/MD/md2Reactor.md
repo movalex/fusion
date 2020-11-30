@@ -16,9 +16,9 @@ _Requirements:_
 * Python 3.6+
 * `markdown` package to create Atom html file. This package is installed with `python3 -m pip install markdown` command 
 
-### Description
+_Description:_
 
-I'm a pretty lazy person and the fact I need to create three differently formatted files to add a single Reactor submission always chilled me down. Now you may just want to create a single .md file, and the script will produce two more files at the same location:
+I'm very lazy and the fact I need to create three differently formatted files to add a single Reactor submission always chilled me down. Now you may just want to create a single properly formatted Markdown file, and the script will produce two more files at the same location:
  
 1. `filename_bbcode.txt` file for the STU forum submission
 2. `filename_atom.html` file for Atom description.
@@ -27,8 +27,8 @@ The script is located in Scripts:Utility folder. You can launch it either as a s
 
 You can also use this script as a commandline tool. It accepts multiple .md file as an argument. So you can easily convert multiple `.md` files with a wildcarded command:
 
-* for MacOS or linux batch command for current folder would look like `python3 <path-to>/md2Reactor.py ./*.md`
-* for Windows use Powershell: `py <path-to>\md2Reactor.py (Get-Item .*.md)`
+* for MacOS or linux use this command for current folder: `python3 <path-to>/md2Reactor.py ./*.md`
+* for Windows with Powershell: `py <path-to>\md2Reactor.py (Get-Item .*.md)`
 
 Here's a cheat sheet for markdown syntax: https://www.markdownguide.org/cheat-sheet/. 
 

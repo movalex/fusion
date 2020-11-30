@@ -2,7 +2,7 @@
 
 _Copyright:_ Alexey Bogomolov (mail@abogomolov.com)
 
-_MIT License:_ https://mit-license.org/
+_License:_ [MIT](https://mit-license.org/)
 
 _version:_ 1.2 11.24.2020 
 
