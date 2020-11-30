@@ -1,10 +1,10 @@
 # Attribute Spreadsheet
 
-I'm a big fan of @svenneve's scripts. All of them are so cleverly written and I use them in every project, especially [DuplicateTool](https://www.svenneve.com/?p=922), [IncrementalSave](https://www.svenneve.com/?p=175), and now - [Attribute Spreadsheet](https://www.svenneve.com/?p=792).
+I'm a big fan of @svenneve's scripts. They are so cleverly written and I use them in every project, especially [DuplicateTool](https://www.svenneve.com/?p=922), [IncrementalSave](https://www.svenneve.com/?p=175), and now - [Attribute Spreadsheet](https://www.svenneve.com/?p=792).
 
 Attribute Spreadsheet is a spreadsheet script to edit the input parameters of multiple Fusion tools at once.  It is extremely useful for batch tool changes, and a must have for any motion graphics tasks inside Fusion. The most amazing part that it works with any native or third party Fusion tool, such as OFX plugins, macros, Krokodove tools and so on. Any type if data is accessible from a very convenient table view. As far as I know, Attribute Spreadsheet is fastest and most reliable tool for batch changing parameters, and it should definitely be in Reactor.
 
-Current version 0.2.2 has quite large changelog in comparison with last known version of `hos_AttributeSpreadsheet`. You can find full list of new features and fixes inside a script file. 
+Current version 0.2.3 has quite large changelog in comparison with last known version of `hos_AttributeSpreadsheet`. You can find full list of new features and fixes inside a script file. 
 
 _The most significant improvements:_
 
