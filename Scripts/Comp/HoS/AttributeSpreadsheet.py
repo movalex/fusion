@@ -51,6 +51,10 @@
         V.0.2.2
             -- compatible with Fusion 17 and Davinci Resolve 17
             -- set active tool on row selection
+        2020/11/29
+        V.0.2.3
+            -- use as standalone script
+            -- provide a remote machine IP as an argument to do remote management (a bit slow but working)
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
@@ -85,7 +89,7 @@ import subprocess
 import sys
 from pprint import pprint as pp
 
-__VERSION__ = 2.2
+__VERSION__ = 2.3
 __license__ = "MIT"
 __copyright__ = "2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>, 2019-2020 additions by Alexey Bogomolov <mail@abogomolov.com>"
 PKG = "PySide2"
@@ -348,7 +352,9 @@ class TableView(QTableView):
         self.mouseIsDown = False
 
     def activate_tool(self, section):
-        """set active tool when vertical header clicked"""
+        """
+        set active tool when vertical header clicked
+        """
         comp = fu.GetCurrentComp()
         tool_name = self.model().headerData(section, Qt.Vertical, Qt.DisplayRole)
         tool = comp.FindTool(tool_name)
