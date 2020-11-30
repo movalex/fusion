@@ -76,10 +76,6 @@
         UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-__VERSION__ = 2.2
-PKG = "PySide2"
-PKG_VERSION = "5.15.2"
-
 import builtins
 import datetime
 import os
@@ -89,14 +85,13 @@ import subprocess
 import sys
 from pprint import pprint as pp
 
+__VERSION__ = 2.2
+__license__ = "MIT"
+__copyright__ = "2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>, 2019-2020 additions by Alexey Bogomolov <mail@abogomolov.com>"
+PKG = "PySide2"
+PKG_VERSION = "5.15.2"
+
 print(f"\nAttribute Spreadsheet version 0.{__VERSION__}")
-
-fu = bmd.scriptapp("Fusion")
-
-if not fu:
-    raise Exception("No instance of Fusion found running.")
-
-comp = fu.GetCurrentComp()
 
 
 def print(*args, **kwargs):
@@ -345,14 +340,14 @@ class TableView(QTableView):
         self.resizeRowsToContents()
         self.verticalHeader().setDefaultSectionSize(20)
         self.verticalHeader().sectionPressed.disconnect()  # disable row selection
-        self.verticalHeader().sectionClicked.connect(self.toolSelect)
+        self.verticalHeader().sectionClicked.connect(self.activate_tool)
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.setHorizontalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.center = QPoint(-10, -10)
         self.startCenter = QPoint(-10, -10)
         self.mouseIsDown = False
 
-    def toolSelect(self, section):
+    def activate_tool(self, section):
         """set active tool when vertical header clicked"""
         comp = fu.GetCurrentComp()
         tool_name = self.model().headerData(section, Qt.Vertical, Qt.DisplayRole)
@@ -379,7 +374,7 @@ class TableView(QTableView):
         target_input_id = source_model.tools_inputs[index.row()].get(
             source_model.attribute_name_keys[index.column()]).ID
         try:
-            value = "={}.{}".format(target_tool, target_input_id)
+            value = f"={target_tool}.{target_input_id}"
             self.commitDataDo(value)
         except KeyError:
             pass
@@ -1078,6 +1073,14 @@ QTableWidget::item {{
 # and the script would not load if there's a confusion about which instance of Fusion to use. 
 
 if __name__ == "__main__":
+    import BlackmagicFusion as bmd
+    fu_host = "localhost"
+    if len(sys.argv) == 2:
+        fu_host = sys.argv[1]
+    fu = bmd.scriptapp("Fusion", fu_host)
+    if not fu:
+        raise Exception("No instance of Fusion found!")
+    comp = fu.GetCurrentComp()
     main_app = QApplication.instance()  # checks if QApplication already exists. Seems to be always None
     if not main_app:  # create QApplication if it doesnt exist
         main_app = QApplication([])
