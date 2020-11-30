@@ -91,7 +91,8 @@ from pprint import pprint as pp
 
 __VERSION__ = 2.3
 __license__ = "MIT"
-__copyright__ = "2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>, 2019-2020 additions by Alexey Bogomolov <mail@abogomolov.com>"
+__copyright__ = "2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>, 2019-2020 additions by Alexey Bogomolov <mail@abogomolov.com>"
+
 PKG = "PySide2"
 PKG_VERSION = "5.15.2"
 
@@ -1087,7 +1088,7 @@ if __name__ == "__main__":
     if not fu:
         raise Exception("No instance of Fusion found!")
     comp = fu.GetCurrentComp()
-    main_app = QApplication.instance()  # checks if QApplication already exists. Seems to be always None
+    main_app = QApplication.instance()  # checks if QApplication already exists.
     if not main_app:  # create QApplication if it doesnt exist
         main_app = QApplication([])
     main_app.setStyleSheet(css)
