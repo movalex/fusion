@@ -5,24 +5,18 @@ import sys
 import os
 from pathlib import Path
 
-try:
-    import BlackmagicFusion as bmd
 
-    fu = bmd.scriptapp("Fusion")
-except ImportError:
-    # no Fusion found
-    pass
 
 DEFAULT_DIR = Path("~/Desktop").expanduser()
 
 
-def request_file_name(folder):
+def request_file_name(init_dir):
     from tkinter import filedialog, Tk
 
     root = Tk()
     root.withdraw()
     md_file = filedialog.askopenfilename(
-        initialdir=folder, filetypes=[("Markdown files", ".md .MD")]
+        initialdir=init_dir, filetypes=[("Markdown files", ".md .MD")]
     )
     return Path(md_file)
 
@@ -48,9 +42,9 @@ def markdown_to_bbcode(s):
 
     s = re.sub(r"(?m)^!\[\]\((.*?)\)$", "~[img]\\1[/img]", s)
     s = re.sub(r"(?m)\[(.*?)\]\((https?://\S+)\)", "[url=\\2]\\1[/url]", s)
-    s = re.sub(r"(?m)@(.*?)(['\s .,:!?\"])", "[mention]\\1[/mention]\\2", s)
+    s = re.sub(r"(?m)\B@(.*?)(['\s.,:!?\"])", "[mention]\\1[/mention]\\2", s)
     s = re.sub(r"(?m)(`)(.*?)(`)", "[c]\\2[/c]", s)
-    # s = re.sub(r"(?m)    {4}(.*)$", "~[code]\\1[/code]", s)
+    # s = re.sub(r"(?m) {4}(.*)$", "~[code]\\1[/code]", s)
     s = re.sub(r"(?m)\b([*_]{1})(.*?)\1\b", "[i]\\2[/i]", s)
     s = re.sub(r"(?m)^(\S.*)\n=+\s*$", translate("~[size=200][b]%s[/b][/size]"), s)
     s = re.sub(r"(?m)^(\S.*)\n-+\s*$", translate("~[size=100][b]%s[/b][/size]"), s)
@@ -83,24 +77,25 @@ def markdown_to_html(text=None):
     return text
 
 
-def write_file(file_name, text, suffix):
+def write_file(file_name,  text, suffix):
     with open(file_name + suffix, "w") as out:
         out.write(text)
         print(f"[md2Reactor] created {out.name}")
 
 
-def main(file_path=None):
-    if not file_path or not file_path.exists() or not file_path.suffix.lower() == ".md":
+def main(file):
+    if not file or not file.exists() or not file.suffix.lower() == ".md":
         print("no markdown file selected")
         return
 
-    with open(file_path, "r") as fp:
+    with open(file, "r") as fp:
         text = fp.read()
 
-    file_without_extension = os.path.splitext(file_path)[0]
+    file_without_extension = os.path.splitext(file)[0]
 
     bbcode_text = markdown_to_bbcode(text)
     write_file(file_without_extension, bbcode_text, "_bbcode.txt")
+
     atom_text = markdown_to_html(text)
     if atom_text:
         write_file(file_without_extension, atom_text, "_atom.html")
@@ -114,6 +109,12 @@ if __name__ == "__main__":
             file_path = Path(file_path).absolute()
             main(file_path)
     else:
+        try:
+            import BlackmagicFusion as bmd
+            fu = bmd.scriptapp("Fusion")
+        except ImportError:
+            print("no Fusion app found")
+
         folder = ""
         if fu:
             folder = fu.GetData("md2reactor.path")
