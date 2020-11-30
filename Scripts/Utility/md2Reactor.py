@@ -48,6 +48,7 @@ def markdown_to_bbcode(s):
 
     s = re.sub(r"(?m)^!\[\]\((.*?)\)$", "~[img]\\1[/img]", s)
     s = re.sub(r"(?m)\[(.*?)\]\((https?://\S+)\)", "[url=\\2]\\1[/url]", s)
+    s = re.sub(r"(?m)@(.*?)(['\s .,:!?\"])", "[mention]\\1[/mention]\\2", s)
     s = re.sub(r"(?m)(`)(.*?)(`)", "[c]\\2[/c]", s)
     # s = re.sub(r"(?m)    {4}(.*)$", "~[code]\\1[/code]", s)
     s = re.sub(r"(?m)\b([*_]{1})(.*?)\1\b", "[i]\\2[/i]", s)
@@ -85,7 +86,7 @@ def markdown_to_html(text=None):
 def write_file(file_name, text, suffix):
     with open(file_name + suffix, "w") as out:
         out.write(text)
-        print(f"created {out.name}")
+        print(f"[md2Reactor] created {out.name}")
 
 
 def main(file_path=None):
