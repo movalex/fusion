@@ -2,12 +2,13 @@
 
 I'm a big fan of @svenneve's scripts. They are so cleverly written and I use them in every project, especially [DuplicateTool](https://www.svenneve.com/?p=922), [IncrementalSave](https://www.svenneve.com/?p=175), and now - [Attribute Spreadsheet](https://www.svenneve.com/?p=792).
 
+
 Attribute Spreadsheet is a spreadsheet script to edit the input parameters of multiple Fusion tools at once.  It is extremely useful for batch tool changes, and a must have for any motion graphics tasks inside Fusion. The most amazing part that it works with any native or third party Fusion tool, such as OFX plugins, macros, Krokodove tools and so on. Any type if data is accessible from a very convenient table view. As far as I know, Attribute Spreadsheet is fastest and most reliable tool for batch changing parameters, and it should definitely be in Reactor.
 
 Current version 0.2.3 has quite large changelog in comparison with last known version of `hos_AttributeSpreadsheet`. You can find full list of new features and fixes inside a script file. 
 
 _The most significant improvements:_
-
+    
 * Point data with X and Y elements are both adjustable and now work with mathematical modifiers
 * Corner button will reset sorting to default state
 * Tool name and ID is added to a table to improve sorting abilities
@@ -16,13 +17,13 @@ _The most significant improvements:_
 * Set active tool by clicking on row header
 * Use this script as a standalone tool. Provide a remote machine IP as an argument to a script to do remote management
 
-_Requires:_
+*Requires:*
 
 * Python 3.6
 * Fusion Standalone v.9 and v.16+, Davinci Resolve v.16+
 * PySide2 (can be installed automatically)
 
-_Usage:_
+*Usage:*
 
 * Select one or more tools in Fusion flow and start the script or press "Refresh" button.
 * Select multiple values in a single column, say, "Blend".
@@ -36,7 +37,7 @@ _Usage:_
 * Click on the row header to activate the tool
 * Click on column header to sort inputs
 
-_Automatic PySide2 installation_
+*Automatic PySide2 installation*
 
 My intention was to make this script as straightforward and easy to use as possible. Usually installing third party package to Python is pretty painless. But it would be much cooler to strip this step and offer automatic installation on a first launch. 
 
@@ -44,13 +45,13 @@ If there's no Pyside2 installation on the computer, the script will show a dialo
 
 Automatic PySide2 installation process will be visible in Fusion console. In case installation fails, please report the bug here. Once Pyside2 is installed, launch the script again and standard UI will be shown:
 
-_Known issues:_
+*Known issues:*
 
 * All fields except numerical or point data inputs are treated as text values. This prevents unexpected behavior when changing cells values. 
 * Although script works perfectly both in Resolve and Fusion Standalone separately, sometimes, when both of this apps are loaded at the same time, the script cannot read the comp data properly. In this case you'll see `No comp data found. Probably both Resolve and Fusion are loaded?` error message. I'm looking forward to handle this issue as soon I understand why it is happening.
 * You should avoid linking inputs to each other. This is a known bug: if you link `Transform1.Size` to `Transform2.Size` and then try to link expression from `Transform2.Size` back to `Transform1.Size`, Fusion will crash immediately. The same will happen if you try to do that with a script. Just don't.
 
-_TODO:_
+*TODO:*
 
 * Add combobox to inputs with list data, such as `INPIDT_ComboControl_ID` or `INPIDT_MultiButtonControl_ID`, so you could choose the appropriate values from dropdown instead of typing values manually. This can be tricky, because some Fusion inputs addressed by key ('1.0', '2.0') and some - by value ('Red', 'XYZ' etc). 
 * Add a completer with the most commonly used search commands. For instance, if you've already been searching `red green blue`, this query will be suggested once you type `r` in search area.
@@ -58,10 +59,10 @@ _TODO:_
 * Add `Select by ID` button to quickly select and load to the table all tools with the same ID as the active tool. However this can be done with ToolManager script, so again questionable.
 * Please suggest any other improvements.
   
-_Version:_ 0.2.3
+*Version:* 0.2.3
 
-_Copyright:__ 2011-2013, Sven Neve, 2019-2020 additions by Alexey Bogomolov [mail@abogomolov.com](mail@abogomolov.com)
+*Copyright:* 2011-2013, Sven Neve, 2019-2020 additions by Alexey Bogomolov [mail@abogomolov.com](mail@abogomolov.com)
 
-_License:_ [MIT](https://mit-license.org/)
+*License:* [MIT](https://mit-license.org/)
 
-_Donations:_ [PaypalMe](https://paypal.me/aabogomolov/10usd)
+*Donations:* [PaypalMe](https://paypal.me/aabogomolov/10usd)
