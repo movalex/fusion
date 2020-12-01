@@ -5,8 +5,6 @@ import sys
 import os
 from pathlib import Path
 
-
-
 DEFAULT_DIR = Path("~/Desktop").expanduser()
 
 
@@ -26,37 +24,43 @@ def markdown_to_bbcode(s):
 
     # def gather_code(m):
     #     codes.append(m.group(3))
-    #     return "[code=%d]" % len(codes)
+    #     return "[code={}]".format(len(codes))
 
     # def replace_code(m):
-    #     return "%s" % codes[int(m.group(1)) - 1]
+    #     return "{}".format(codes[int(m.group(1)) - 1])
 
-    def translate(pattern="%s", g=1):
-        def inline(m):
-            s = m.group(g)
-            # s = re.sub(r"(`{3})(\s*)(.*?)\2\1", gather_code, s)
-            s = re.sub(r"\B([*_]{2})\b(.+?)\1\B", "[b]\\2[/b]", s)
-            return pattern % s
-
+    def translate(pattern="{}", g=1):
+        def inline(match):
+            s = match.group(g)
+            return pattern.format(s)
         return inline
 
-    s = re.sub(r"(?m)^!\[\]\((.*?)\)$", "~[img]\\1[/img]", s)
+    # s = re.sub(r"(`{3})(\s*)(.*?)\2\1", gather_code, s)
     s = re.sub(r"(?m)\[(.*?)\]\((https?://\S+)\)", "[url=\\2]\\1[/url]", s)
     s = re.sub(r"(?m)\B@(.*?)(['\s.,:!?\"])", "[mention]\\1[/mention]\\2", s)
+    s = re.sub(r"(?m) {4}(.*)$", "~[code]\\1[/code]", s)
+    s = re.sub(r"(?m)^!\[\]\((.*?)\)$", "~[img]\\1[/img]", s)
+    # bold ** and __
+    s = re.sub(r"(?m)([*_]{2})(\w+?)\1", "[b]\\2[/b]", s)
+    # emphasize *
+    s = re.sub(r"(?m)\B([*])\b(\S.+?)\1", "[i]\\2[/i]", s)
+    # emphasize _
+    s = re.sub(r"(?:^|\s)[^@#\s_`]*(_([^_]+)_)", "[i]\\2[/i]", s)
+    # header1 with underscore
+    s = re.sub(r"(?m)^(\S.*)\n=+\s*$", translate("~[size=200][b]{}[/b][/size]"), s)
+    # header2 with underscore
     s = re.sub(r"(?m)(`)(.*?)(`)", "[c]\\2[/c]", s)
-    # s = re.sub(r"(?m) {4}(.*)$", "~[code]\\1[/code]", s)
-    s = re.sub(r"(?m)\b([*_]{1})(.*?)\1\b", "[i]\\2[/i]", s)
-    s = re.sub(r"(?m)^(\S.*)\n=+\s*$", translate("~[size=200][b]%s[/b][/size]"), s)
-    s = re.sub(r"(?m)^(\S.*)\n-+\s*$", translate("~[size=100][b]%s[/b][/size]"), s)
-    s = re.sub(r"(?m)^#\s+(.*?)\s*#*$", translate("~[size=200][b]%s[/b][/size]"), s)
-    s = re.sub(r"(?m)^##\s+(.*?)\s*#*$", translate("~[size=100][b]%s[/b][/size]"), s)
-    s = re.sub(r"(?m)^###\s+(.*?)\s*#*$", translate("~[b]%s[/b]"), s)
-    s = re.sub(r"(?m)^> (.*)$", translate("~[quote]%s[/quote]"), s)
-    s = re.sub(r"(?m)^[-+*]\s+(.*)$", translate("~[list]\n[*]%s\n[/list]"), s)
-    s = re.sub(r"(?m)^\d+\.\s+(.*)$", translate("~[list=1]\n[*]%s\n[/list]"), s)
+    s = re.sub(r"(?m)^(\S.*)\n-+\s*$", translate("~[size=100][b]{}[/b][/size]"), s)
+    s = re.sub(r"(?m)^#\s+(.*?)\s*#*$", translate("~[size=200][b]{}[/b][/size]"), s)
+    s = re.sub(r"(?m)^##\s+(.*?)\s*#*$", translate("~[size=100][b]{}[/b][/size]"), s)
+    s = re.sub(r"(?m)^###\s+(.*?)\s*#*$", translate("~[b]{}[/b]"), s)
+    s = re.sub(r"(?m)^> (.*)$", translate("~[quote]{}[/quote]"), s)
+    s = re.sub(r"(?m)^[-+*]\s+(.*)$", translate("~[list]\n[*]{}\n[/list]"), s)
+    s = re.sub(r"(?m)^\d+\.\s+(.*)$", translate("~[list=1]\n[*]{}\n[/list]"), s)
     s = re.sub(r"(?m)^((?!~).*)$", translate(), s)
     s = re.sub(r"(?m)^~\[", "[", s)
-    # s = re.sub(r"(?m)\[/code]\n\[code(=.*?)?]", "\n", s)
+    s = re.sub(r"(?m)\[/code]\n\[code(=.*?)?]", "\n", s)
+    s = re.sub(r"(?m)\[code(=.*?)?]\[/code]", "", s)
     s = re.sub(r"(?m)\[/quote]\n\[quote]", "\n", s)
     s = re.sub(r"(?m)\[/list]\n\[list(=1)?]\n", "", s)
     # s = re.sub(r"(?m)\[code=(\d+)]", replace_code, s)
@@ -77,7 +81,7 @@ def markdown_to_html(text=None):
     return text
 
 
-def write_file(file_name,  text, suffix):
+def write_file(file_name, text, suffix):
     with open(file_name + suffix, "w") as out:
         out.write(text)
         print(f"[md2Reactor] created {out.name}")
@@ -111,6 +115,7 @@ if __name__ == "__main__":
     else:
         try:
             import BlackmagicFusion as bmd
+
             fu = bmd.scriptapp("Fusion")
         except ImportError:
             print("no Fusion app found")
