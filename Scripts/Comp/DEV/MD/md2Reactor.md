@@ -14,7 +14,7 @@ Now you can use single .md file to create a neatly formatted description of Reac
 _Requirements:_
 
 * Python 3.6+
-* `markdown` package to create Atom html file. This package is installed with `python3 -m pip install markdown` command 
+* Markdown package to create Atom html file. This package is installed with `python3 -m pip install markdown` command 
 
 _Description:_
 
@@ -30,6 +30,4 @@ You can also use this script as a commandline tool. It accepts multiple .md file
 * for MacOS or linux use this command for current folder: `python3 <path-to>/md2Reactor.py ./*.md`
 * for Windows with Powershell: `py <path-to>\md2Reactor.py (Get-Item .\*.md).FullName`
 
-Here's a cheat sheet for markdown syntax: https://www.markdownguide.org/cheat-sheet/. 
-
-Only basic markdown syntax is converted to BBcode.
+Here's a [cheat sheet](https://www.markdownguide.org/cheat-sheet/) for markdown syntax. Only basic markdown syntax is converted to BBCode.
