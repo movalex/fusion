@@ -1,15 +1,7 @@
 # md2Reactor script
 
-_Copyright:_ Alexey Bogomolov (mail@abogomolov.com)
-
-_License:_ [MIT](https://mit-license.org/)
-
-_version:_ 1.2 11.24.2020 
-
-_donations:_ [PaypalMe](https://paypal.me/aabogomolov/10usd)
-
 This is a script for converting `Markdown` formatted file to `BBcode` and `HTML` syntax.
-Now you can use single .md file to create a neatly formatted description of Reactor tool for the [Reactor Submission page](https://www.steakunderwater.com/wesuckless/viewforum.php?f=33) and also make description for the [Atom file](https://www.steakunderwater.com/wesuckless/viewtopic.php?f=33&t=1799). All my recent submissions are prepared using this script. 
+Now you can use single `.md` file to create a neatly formatted description of Reactor tool for the [Reactor Submission page](https://www.steakunderwater.com/wesuckless/viewforum.php?f=33) and also make description for the [Atom file](https://www.steakunderwater.com/wesuckless/viewtopic.php?f=33&t=1799). All my recent submissions are prepared using this script. 
 
 _Requirements:_
 
@@ -18,16 +10,28 @@ _Requirements:_
 
 _Description:_
 
-I'm very lazy and the fact I need to create three differently formatted files to add a single Reactor submission always chilled me down. Now you may just want to create a single properly formatted Markdown file, and the script will produce two more files at the same location:
+Create a neatly formatted tool description os any other forum submission, then run the sciprt, and it will produce two files at the same location:
  
 1. `filename_bbcode.txt` file for the STU forum submission
 2. `filename_atom.html` file for Atom description.
 
-The script is located in Scripts:Utility folder. You can launch it either as a standalone app, or via Fusion folder from `File --> Scripts --> md2Reactor`. It will open a filedialog window with a filter for `.md` files. Default location for the file search is `~/Desktop`, but the script will save last used folder path as fusion data and next time it is launched, it will open file dialog at the saved place.
+The Md2Reactor script is installed in Scripts:Utility folder. You can launch it either as a standalone app, or via Fusion folder from `File --> Scripts --> md2Reactor`. It will open a filedialog window with a filter for `.md` files. Default location for the file search is `~/Desktop`, but the script will save last used folder path as fusion data and next time it is launched, it will open file dialog at the saved place.
 
 You can also use this script as a commandline tool. It accepts multiple .md file as an argument. So you can easily convert multiple `.md` files with a wildcarded command:
 
 * for MacOS or linux use this command for current folder: `python3 <path-to>/md2Reactor.py ./*.md`
-* for Windows with Powershell: `py <path-to>\md2Reactor.py (Get-Item .\*.md).FullName`
+* for Windows with Powershell: `py <path-to>\md2Reactor.py (Get-Item .\*.md).FullName`. Or create a `.bat` file:
+
+    
+
+, put it to a $Path environment and lanch
 
 Here's a [cheat sheet](https://www.markdownguide.org/cheat-sheet/) for markdown syntax. Only basic markdown syntax is converted to BBCode.
+
+_Copyright:_ Alexey Bogomolov (mail@abogomolov.com)
+
+_License:_ [MIT](https://mit-license.org/)
+
+_version:_ 1.2 - [2020.11.24] 
+
+_Donations:_ [PayPal.Me](https://paypal.me/aabogomolov/5usd)
