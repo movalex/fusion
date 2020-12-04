@@ -4,7 +4,6 @@ The idea that you can view some key nodes from entire comp, or just the very las
 
 You can assign Context tool with [c]Shift+Alt+[1-9][/c] shortcut. When you run [c]View Context[/c] script, the tool will be shown in a selected viewer. Run View Context script again and previous tool will be loaded back to the viewer.
 You can store up to 9 contexts.  View context with [c]Alt+[1-9][/c] shortcuts.
-
 [i]Usage:[/i]
 
 [list=1]
@@ -12,6 +11,7 @@ You can store up to 9 contexts.  View context with [c]Alt+[1-9][/c] shortcuts.
 [*]Click on the left or right Viewer and load context tool with [c]Alt+1[/c] shortcut. At least one Fusion viewer has to be activated. 
 [*]Click [c]Alt+1[/c] once again to bring previous tool back to viewer.
 [/list]
-
-
-
+[i]Copyright:[/i] Alexey Bogomolov (mail@abogomolov.com)
+[i]License:[/i] [url=https://mit-license.org/]MIT[/url]
+[i]Version:[/i] v.1.0 - [2020/11/29]
+[i]Donations:[/i] [url=https://paypal.me/aabogomolov/10usd]PayPal.Me[/url]

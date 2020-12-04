@@ -1,23 +1,6 @@
 <h1>Attribute Spreadsheet</h1>
 <p>I'm a big fan of @svenneve's scripts. They are so cleverly written and I use them in every project, especially <a href="https://www.svenneve.com/?p=922">DuplicateTool</a>, <a href="https://www.svenneve.com/?p=175">IncrementalSave</a>, and now - <a href="https://www.svenneve.com/?p=792">Attribute Spreadsheet</a>.</p>
-<p>Attribute Spreadsheet is a spreadsheet script to edit the input parameters of multiple Fusion tools at once.  It is extremely useful for batch tool changes, and a must have for any motion graphics tasks inside Fusion. The most amazing part that it works with any native or third party Fusion tool, such as OFX plugins, macros, Krokodove tools and so on. Any type if data is accessible from a very convenient table view. As far as I know, Attribute Spreadsheet is fastest and most reliable tool for batch changing parameters, and it should definitely be in Reactor.</p>
-<p>Current version 0.2.2 has quite large changelog in comparison with last known version of <code>hos_AttributeSpreadsheet</code>. You can find full list of new features and fixes inside a script file. </p>
-<p><em>The most significant improvements:</em></p>
-<ul>
-<li>Point data with X and Y elements are both adjustable and now work with mathematical modifiers</li>
-<li>Corner button will reset sorting to default state</li>
-<li>Tool name and ID is added to a table to improve sorting abilities</li>
-<li>You can add expressions to Point data values, such as Center.X, Center.Y</li>
-<li>Added logging, most errors are caught with Console feedback</li>
-<li>Set active tool by clicking on row header</li>
-<li>Use this script as a standalone tool. Provide a remote machine IP as an argument to a script to do remote management</li>
-</ul>
-<p><em>Requires:</em></p>
-<ul>
-<li>Python 3.6</li>
-<li>Fusion Standalone v.9 and v.16+, Davinci Resolve v.16+</li>
-<li>PySide2 (can be installed automatically)</li>
-</ul>
+<p>Attribute Spreadsheet is a spreadsheet script to edit the input parameters of multiple Fusion tools at once.  It is extremely useful for batch tool changes, and a great help for any motion graphics tasks. The most amazing part that it works with any native or third party Fusion tool, such as OFX plugins, macros, Krokodove tools and so on. Any available input is accessible from a very convenient table view. You can link any input to another withexpression by a middle mouse drag. Besides some inputs, such at Text+ Font or Style, does not even allow to set expression manually. With Attribute spreadsheet you can do that easily too. As far as I know, this script is the fastest and the most reliable tool for batch changing parameters, and it should definitely be in Reactor.</p>
 <p><em>Usage:</em></p>
 <ul>
 <li>Select one or more tools in Fusion flow and start the script or press "Refresh" button.</li>
@@ -31,6 +14,23 @@
 <li>Enter <code>p</code> in any table cell and all corresponding input attributes will be listed in Console.</li>
 <li>Click on the row header to activate the tool</li>
 <li>Click on column header to sort inputs</li>
+</ul>
+<p>Current version (0.2.3) has quite large changelog in comparison to the last known version of <code>hos_AttributeSpreadsheet</code>. You can find full list of new features and fixes inside a script file. </p>
+<p><em>The most significant improvements:</em></p>
+<ul>
+<li>Point data with X and Y elements are both adjustable and now work with mathematical modifiers</li>
+<li>Corner button will reset sorting to default state</li>
+<li>Tool name and ID is added to a table to improve sorting abilities</li>
+<li>You can add expressions to Point data values, such as Center.X, Center.Y</li>
+<li>Added logging, most errors are caught with Console feedback</li>
+<li>Set active tool by clicking on row header</li>
+<li>Use this script as a standalone tool (Fusion Studio feature). Provide a remote machine IP as an argument to a script to do remote management</li>
+</ul>
+<p><em>Requirements:</em></p>
+<ul>
+<li>Python 3.6</li>
+<li>Fusion Standalone v.9 and v.16+, Davinci Resolve v.16+</li>
+<li>PySide2 (can be installed automatically)</li>
 </ul>
 <p><em>Automatic PySide2 installation</em></p>
 <p>My intention was to make this script as straightforward and easy to use as possible. Usually installing third party package to Python is pretty painless. But it would be much cooler to strip this step and offer automatic installation on a first launch. </p>
@@ -50,7 +50,7 @@
 <li>Add <code>Select by ID</code> button to quickly select and load to the table all tools with the same ID as the active tool. However this can be done with ToolManager script, so again questionable.</li>
 <li>Please suggest any other improvements.</li>
 </ul>
-<p><em>Version:</em> 0.2.3</p>
-<p>_Copyright:__ 2011-2013, Sven Neve, 2019-2020 additions by Alexey Bogomolov <a href="mail@abogomolov.com">mail@abogomolov.com</a></p>
+<p><em>Version:</em> 0.2.3 - 2020/12/04</p>
+<p><em>Copyright:</em> 2011-2013, Sven Neve, 2019-2020 additions by Alexey Bogomolov <a href="mail@abogomolov.com">mail@abogomolov.com</a></p>
 <p><em>License:</em> <a href="https://mit-license.org/">MIT</a></p>
-<p><em>Donations:</em> <a href="https://paypal.me/aabogomolov/10usd">PaypalMe</a></p>
+<p><em>Donations:</em> <a href="https://paypal.me/aabogomolov/10usd">PayPal.Me</a></p>
