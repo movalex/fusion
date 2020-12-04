@@ -2,26 +2,7 @@
 
 I'm a big fan of @svenneve's scripts. They are so cleverly written and I use them in every project, especially [DuplicateTool](https://www.svenneve.com/?p=922), [IncrementalSave](https://www.svenneve.com/?p=175), and now - [Attribute Spreadsheet](https://www.svenneve.com/?p=792).
 
-
-Attribute Spreadsheet is a spreadsheet script to edit the input parameters of multiple Fusion tools at once.  It is extremely useful for batch tool changes, and a must have for any motion graphics tasks inside Fusion. The most amazing part that it works with any native or third party Fusion tool, such as OFX plugins, macros, Krokodove tools and so on. Any type if data is accessible from a very convenient table view. As far as I know, Attribute Spreadsheet is fastest and most reliable tool for batch changing parameters, and it should definitely be in Reactor.
-
-Current version 0.2.3 has quite large changelog in comparison with last known version of `hos_AttributeSpreadsheet`. You can find full list of new features and fixes inside a script file. 
-
-_The most significant improvements:_
-    
-* Point data with X and Y elements are both adjustable and now work with mathematical modifiers
-* Corner button will reset sorting to default state
-* Tool name and ID is added to a table to improve sorting abilities
-* You can add expressions to Point data values, such as Center.X, Center.Y
-* Added logging, most errors are caught with Console feedback
-* Set active tool by clicking on row header
-* Use this script as a standalone tool. Provide a remote machine IP as an argument to a script to do remote management
-
-*Requires:*
-
-* Python 3.6
-* Fusion Standalone v.9 and v.16+, Davinci Resolve v.16+
-* PySide2 (can be installed automatically)
+Attribute Spreadsheet is a spreadsheet script to edit the input parameters of multiple Fusion tools at once.  It is extremely useful for batch tool changes, and a great help for any motion graphics tasks. The most amazing part that it works with any native or third party Fusion tool, such as OFX plugins, macros, Krokodove tools and so on. Any available input is accessible from a very convenient table view. You can link any input to another withexpression by a middle mouse drag. Besides some inputs, such at Text+ Font or Style, does not even allow to set expression manually. With Attribute spreadsheet you can do that easily too. As far as I know, this script is the fastest and the most reliable tool for batch changing parameters, and it should definitely be in Reactor.
 
 *Usage:*
 
@@ -36,6 +17,24 @@ _The most significant improvements:_
 * Enter `p` in any table cell and all corresponding input attributes will be listed in Console.
 * Click on the row header to activate the tool
 * Click on column header to sort inputs
+
+Current version (0.2.3) has quite large changelog in comparison to the last known version of `hos_AttributeSpreadsheet`. You can find full list of new features and fixes inside a script file. 
+
+_The most significant improvements:_
+    
+* Point data with X and Y elements are both adjustable and now work with mathematical modifiers
+* Corner button will reset sorting to default state
+* Tool name and ID is added to a table to improve sorting abilities
+* You can add expressions to Point data values, such as Center.X, Center.Y
+* Added logging, most errors are caught with Console feedback
+* Set active tool by clicking on row header
+* Use this script as a standalone tool (Fusion Studio feature). Provide a remote machine IP as an argument to a script to do remote management
+
+*Requirements:*
+
+* Python 3.6
+* Fusion Standalone v.9 and v.16+, Davinci Resolve v.16+
+* PySide2 (can be installed automatically)
 
 *Automatic PySide2 installation*
 
@@ -59,10 +58,10 @@ Automatic PySide2 installation process will be visible in Fusion console. In cas
 * Add `Select by ID` button to quickly select and load to the table all tools with the same ID as the active tool. However this can be done with ToolManager script, so again questionable.
 * Please suggest any other improvements.
   
-*Version:* 0.2.3
+*Version:* 0.2.3 - 2020/12/04
 
 *Copyright:* 2011-2013, Sven Neve, 2019-2020 additions by Alexey Bogomolov [mail@abogomolov.com](mail@abogomolov.com)
 
 *License:* [MIT](https://mit-license.org/)
 
-*Donations:* [PaypalMe](https://paypal.me/aabogomolov/10usd)
+*Donations:* [PayPal.Me](https://paypal.me/aabogomolov/10usd)
