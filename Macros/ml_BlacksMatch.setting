@@ -1,0 +1,408 @@
+{
+	Tools = ordered() {
+		ml_BlacksMatch = MacroOperator {
+			CtrlWZoom = false,
+			Inputs = ordered() {
+				Background = InstanceInput {
+					SourceOp = "AlphaDivide1_1",
+					Source = "Input",
+				},
+				Foreground = InstanceInput {
+					SourceOp = "AlphaDivide1",
+					Source = "Input",
+				},
+				Red = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "NumberIn1",
+					ControlGroup = 1,
+					Page = "Controls",
+				},
+				Green = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "NumberIn2",
+					ControlGroup = 1,
+					Page = "Controls",
+				},
+				Blue = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "NumberIn3",
+					ControlGroup = 1,
+					Page = "Controls",
+				},
+				Blank2 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "Blank1",
+				},
+				Curve = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "NumberIn5",
+					Page = "Controls",
+					Default = 1,
+					MaxScale = 2,
+				},
+				Multiyply = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "NumberIn6",
+					Page = "Controls",
+					Default = 2,
+					MaxScale = 5,
+				},
+				Offset = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "NumberIn4",
+					Page = "Controls",
+					Default = 0,
+				},
+				Blend = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "Blend",
+					Page = "Common",
+					Default = 1,
+				},
+				ProcessWhenBlendIs00 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "ProcessWhenBlendIs00",
+					Default = 0,
+				},
+				ProcessRed = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "ProcessRed",
+					Name = "Process",
+					ControlGroup = 7,
+					Default = 1,
+				},
+				ProcessGreen = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "ProcessGreen",
+					ControlGroup = 7,
+					Default = 1,
+				},
+				ProcessBlue = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "ProcessBlue",
+					ControlGroup = 7,
+					Default = 1,
+				},
+				ProcessAlpha = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "ProcessAlpha",
+					ControlGroup = 7,
+					Default = 1,
+				},
+				Blank1 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "Blank1",
+				},
+				Input14 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "ApplyMaskInverted",
+					Default = 0,
+				},
+				Input15 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "MultiplyByMask",
+					Default = 0,
+				},
+				Input16 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "FitMask",
+				},
+				Input17 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "Blank2",
+				},
+				Input18 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "MaskChannel",
+					Default = 3,
+				},
+				Input19 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "MaskLow",
+					ControlGroup = 14,
+					Default = 0,
+				},
+				Input20 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "MaskHigh",
+					ControlGroup = 14,
+					Default = 1,
+				},
+				Input21 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "MaskClipBlack",
+					Name = "Black",
+					Default = 1,
+				},
+				Input22 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "MaskClipWhite",
+					Name = "White",
+					Default = 1,
+				},
+				Input23 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "Blank4",
+				},
+				Input24 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "UseObject",
+					Default = 0,
+				},
+				Input25 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "UseMaterial",
+					Default = 0,
+				},
+				Input26 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "CorrectEdges",
+				},
+				Input27 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "ObjectID",
+					ControlGroup = 21,
+					Default = 0,
+				},
+				Input28 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "MaterialID",
+					ControlGroup = 21,
+					Default = 0,
+				},
+				Input29 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "Blank5",
+				},
+				Input30 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "MotionBlur",
+					Default = 0,
+				},
+				Input31 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "Quality",
+					Default = 2,
+				},
+				Input32 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "ShutterAngle",
+					Default = 180,
+				},
+				Input33 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "CenterBias",
+					Default = 0,
+				},
+				Input34 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "SampleSpread",
+					Default = 1,
+				},
+				Input35 = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "HideInputs",
+					Default = 0,
+				},
+				EffectMask = InstanceInput {
+					SourceOp = "BlacksMatch",
+					Source = "EffectMask",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "AlphaMultiply1",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 863.333, 267.562 } },
+			Tools = ordered() {
+				AlphaMultiply1 = AlphaMultiply {
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "BlacksMatch",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 62, 107.482 } },
+				},
+				BlacksMatch = Custom {
+					CtrlWShown = false,
+					NameSet = true,
+					CurrentSettings = 2,
+					CustomData = {
+						Settings = {
+						}
+					},
+					Inputs = {
+						LUTIn1 = Input {
+							SourceOp = "BlacksMatchLUTIn1",
+							Source = "Value",
+						},
+						LUTIn2 = Input {
+							SourceOp = "BlacksMatchLUTIn2",
+							Source = "Value",
+						},
+						LUTIn3 = Input {
+							SourceOp = "BlacksMatchLUTIn3",
+							Source = "Value",
+						},
+						LUTIn4 = Input {
+							SourceOp = "BlacksMatchLUTIn4",
+							Source = "Value",
+						},
+						Setup4 = Input { Value = "abs(n4)", },
+						Intermediate1 = Input { Value = "max(0, -((r1+s4)/((r2+abs(n1))*n6))+1)", },
+						Intermediate2 = Input { Value = "max(0, -((g1+s4)/((g2+abs(n2))*n6))+1)", },
+						Intermediate3 = Input { Value = "max(0, -((b1+s4)/((b2+abs(n3))*n6))+1)", },
+						RedExpression = Input { Value = "r1+((r2+abs(n1))*(i1^2))*n5", },
+						GreenExpression = Input { Value = "g1+((g2+abs(n2))*(i2^2))*n5", },
+						BlueExpression = Input { Value = "b1+((b2+abs(n3))*(i3^2))*n5", },
+						NumberControls = Input { Value = 1, },
+						NameforNumber1 = Input { Value = "Red", },
+						NameforNumber2 = Input { Value = "Green", },
+						NameforNumber3 = Input { Value = "Blue", },
+						NameforNumber4 = Input { Value = "Black Point Offset", },
+						NameforNumber5 = Input { Value = "Multiply", },
+						NameforNumber6 = Input { Value = "Curve", },
+						ShowNumber7 = Input { Value = 0, },
+						ShowNumber8 = Input { Value = 0, },
+						ShowPoint1 = Input { Value = 0, },
+						ShowPoint2 = Input { Value = 0, },
+						ShowPoint3 = Input { Value = 0, },
+						ShowPoint4 = Input { Value = 0, },
+						ShowLUT1 = Input { Value = 0, },
+						ShowLUT2 = Input { Value = 0, },
+						ShowLUT3 = Input { Value = 0, },
+						ShowLUT4 = Input { Value = 0, },
+						Image1 = Input {
+							SourceOp = "AlphaDivide1_1",
+							Source = "Output",
+						},
+						Image2 = Input {
+							SourceOp = "AlphaDivide1",
+							Source = "Output",
+						},
+						NumberIn5 = Input { Value = 1, },
+						NumberIn6 = Input { Value = 2, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 62, 56.3191 } },
+					UserControls = ordered() {
+						NumberIn1 = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = false,
+							INPID_InputControl = "ColorControl",
+							CLRC_ColorSpace = "HSV",
+							INP_MaxScale = 1,
+							IC_ControlGroup = 2,
+							INP_MinScale = 0,
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							IC_ControlID = 0,
+							ICS_ControlPage = "Controls",
+							CLRC_ShowWheel = true,
+							LINKS_Name = "Red"
+						},
+						NumberIn2 = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = false,
+							INPID_InputControl = "ColorControl",
+							CLRC_ColorSpace = "HSV",
+							INP_MaxScale = 1,
+							IC_ControlGroup = 2,
+							INP_MinScale = 0,
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							IC_ControlID = 1,
+							ICS_ControlPage = "Controls",
+							CLRC_ShowWheel = true,
+							LINKS_Name = "Green"
+						},
+						NumberIn3 = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = false,
+							INPID_InputControl = "ColorControl",
+							CLRC_ColorSpace = "HSV",
+							INP_MaxScale = 1,
+							IC_ControlGroup = 2,
+							INP_MinScale = 0,
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							IC_ControlID = 2,
+							ICS_ControlPage = "Controls",
+							CLRC_ShowWheel = true,
+							LINKS_Name = "Blue"
+						},
+						NumberIn4 = {
+							INPID_InputControl = "SliderControl",
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							LINKS_Name = "Black Point Offset"
+						},
+						NumberIn5 = {
+							INPID_InputControl = "SliderControl",
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							ICD_Center = 1,
+							LINKS_Name = "Multiply"
+						},
+						NumberIn6 = {
+							INPID_InputControl = "SliderControl",
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							ICD_Center = 2,
+							LINKS_Name = "Curve"
+						}
+					}
+				},
+				BlacksMatchLUTIn1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 0, Blue = 0 },
+				},
+				BlacksMatchLUTIn2 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 204, Blue = 0 },
+				},
+				BlacksMatchLUTIn3 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 0, Blue = 204 },
+				},
+				BlacksMatchLUTIn4 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 204, Blue = 204 },
+				},
+				AlphaDivide1_1 = AlphaDivide {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					ViewInfo = OperatorInfo { Pos = { -63.626, 56.3191 } },
+				},
+				AlphaDivide1 = AlphaDivide {
+					CtrlWShown = false,
+					ViewInfo = OperatorInfo { Pos = { 62, 8.03311 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "ml_BlacksMatch"
+}
