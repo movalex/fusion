@@ -4,41 +4,11 @@ local width, height = 250,100
 
 comp = fu:GetCurrentComp()
 
-
 function getBounds()
     compAttrs = comp:GetAttrs()
     rStart = compAttrs.COMPN_RenderStart
     rEnd = compAttrs.COMPN_RenderEnd
     return rStart, rEnd
-end
-
-
-function plusOffset(offset, s, e)
-    comp = fu:GetCurrentComp()
-    comp:SetAttrs({COMPN_RenderStart = s - offset})
-    comp:SetAttrs({COMPN_RenderEnd = e + offset})
-end
-
-
-function minusOffset(offset, s, e)
-    comp = fu:GetCurrentComp()
-    comp:SetAttrs({COMPN_RenderStart = s + offset})
-    comp:SetAttrs({COMPN_RenderEnd = e - offset})
-    comp:SetData("FrameRanger.IsSet", "true")
-end
-
-function leftOffset(offset, s, e)
-    comp = fu:GetCurrentComp()
-    comp:SetAttrs({COMPN_RenderStart = s - offset})
-    comp:SetAttrs({COMPN_RenderEnd = e - offset})
-    comp:SetData("FrameRanger.IsSet", "true")
-end
-
-function rightOffset(offset, s, e)
-    comp = fu:GetCurrentComp()
-    comp:SetAttrs({COMPN_RenderStart = s + offset})
-    comp:SetAttrs({COMPN_RenderEnd = e + offset})
-    comp:SetData("FrameRanger.IsSet", "true")
 end
 
 function showUI()
@@ -58,13 +28,13 @@ function showUI()
             ui:HGroup{
                 ui:HGap(0.25,0),
                 ui:Label{
-                    Weight = 0.8,
+                    Weight = 0.6,
                     ID = 'Label',
                     Text = 'Frames to Offset:',
                     Alignment = {AlignLeft = true, AlignVCenter = true}
                 },
                 ui:SpinBox {
-                    Weight = 0.2,
+                    Weight = 0.4,
                     ID = 'offset', Value = frameOffset,
                     Alignment = {AlignRight = true},
                     Maximum = comp:GetAttrs().COMPN_GlobalEnd / 2,
@@ -112,34 +82,83 @@ function showUI()
     end
 
     function win.On.left.Clicked(ev)
-        local s, e = getBounds()
+        comp = fu:GetCurrentComp()
         local currentOffset = itm.offset.Value
-        leftOffset(currentOffset, s, e)
-    end
-
-    function win.On.right.Clicked(ev)
-        local s, e = getBounds()
-        local currentOffset = itm.offset.Value
-        rightOffset(currentOffset, s, e)
-    end
-
-    function win.On.minus.Clicked(ev)
-        local s, e = getBounds()
-        local currentOffset = itm.offset.Value
-        minusOffset(currentOffset, s, e)
-    end
-
-    function win.On.plus.Clicked(ev)
         local renderIn, renderOut = getBounds()
         GEnd = comp:GetAttrs().COMPN_GlobalEnd
         GStart = comp:GetAttrs().COMPN_GlobalStart
-        local currentOffset = itm.offset.Value
-        if renderIn - currentOffset < GStart or renderOut + currentOffset > GEnd then
-            comp:SetAttrs({COMPN_RenderEnd = GEnd})
-            comp:SetAttrs({COMPN_RenderStart = GStart})
-            return
+        midPoint = (renderIn+renderOut)/2
+        newIn = renderIn - currentOffset
+        newOut = renderOut - currentOffset
+        if newIn < GStart then
+            newIn = GStart
         end
-        plusOffset(currentOffset, renderIn, renderOut)
+        if newOut < GStart + currentOffset then
+            newOut = GStart + currentOffset
+        end
+        comp:SetAttrs({COMPN_RenderStart = newIn})
+        comp:SetAttrs({COMPN_RenderEnd = newOut})
+        comp:SetData("FrameRanger.IsSet", "true")
+    end
+
+    function win.On.right.Clicked(ev)
+        comp = fu:GetCurrentComp()
+        local currentOffset = itm.offset.Value
+        local renderIn, renderOut = getBounds()
+        GEnd = comp:GetAttrs().COMPN_GlobalEnd
+        GStart = comp:GetAttrs().COMPN_GlobalStart
+        midPoint = (renderIn+renderOut)/2
+        newIn = renderIn + currentOffset
+        newOut = renderOut + currentOffset
+        if newIn > GEnd - currentOffset then
+            newIn = GEnd - currentOffset
+        end
+        if newOut > GEnd then
+            newOut = GEnd
+        end
+        comp:SetAttrs({COMPN_RenderStart = newIn})
+        comp:SetAttrs({COMPN_RenderEnd = newOut})
+        comp:SetData("FrameRanger.IsSet", "true")
+    end
+
+    function win.On.minus.Clicked(ev)
+        comp = fu:GetCurrentComp()
+        local currentOffset = itm.offset.Value
+        local renderIn, renderOut = getBounds()
+        GEnd = comp:GetAttrs().COMPN_GlobalEnd
+        GStart = comp:GetAttrs().COMPN_GlobalStart
+        midPoint = (renderIn+renderOut)/2
+        newIn = renderIn + currentOffset
+
+        newOut = renderOut - currentOffset
+        if newIn > midPoint then
+            newIn = midPoint
+        end
+        if newOut < midPoint then
+            newOut = midPoint
+        end
+        comp:SetAttrs({COMPN_RenderStart = newIn})
+        comp:SetAttrs({COMPN_RenderEnd = newOut})
+        comp:SetData("FrameRanger.IsSet", "true")
+    end
+
+    function win.On.plus.Clicked(ev)
+        comp = fu:GetCurrentComp()
+        local currentOffset = itm.offset.Value
+        local renderIn, renderOut = getBounds()
+        GEnd = comp:GetAttrs().COMPN_GlobalEnd
+        GStart = comp:GetAttrs().COMPN_GlobalStart
+        newIn = renderIn - currentOffset
+        newOut = renderOut + currentOffset
+        if newIn < GStart then
+            newIn = GStart
+        end
+        if newOut > GEnd then
+            newOut = GEnd
+        end
+        comp:SetAttrs({COMPN_RenderStart = newIn})
+        comp:SetAttrs({COMPN_RenderEnd = newOut})
+        comp:SetData("FrameRanger.IsSet", "true")
     end
 
     function win.On.reset.Clicked(ev)
