@@ -16,7 +16,8 @@ def request_file_name(init_dir):
     md_file = filedialog.askopenfilename(
         initialdir=init_dir, filetypes=[("Markdown files", ".md .MD")]
     )
-    return Path(md_file)
+    if md_file:
+        return md_file
 
 
 def markdown_to_bbcode(s):
@@ -120,13 +121,11 @@ if __name__ == "__main__":
         except ImportError:
             print("no Fusion app found")
 
-        folder = ""
+        folder = DEFAULT_DIR
         if fu:
             folder = fu.GetData("md2reactor.path")
-        if not folder:
-            folder = DEFAULT_DIR
-        file_path = request_file_name(folder)
+        file_path = Path(request_file_name(folder))
         if file_path:
             if fu:
-                fu.SetData("md2reactor.path", file_path.parent)
+                fu.SetData("md2reactor.path", str(file_path.parent))
             main(file_path)
