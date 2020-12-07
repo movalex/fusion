@@ -1,8 +1,8 @@
 # Attribute Spreadsheet
 
-I'm a big fan of @svenneve's scripts. and I use them in every project, especially [DuplicateTool](https://www.svenneve.com/?p=922), [IncrementalSave](https://www.svenneve.com/?p=175), and now - [Attribute Spreadsheet](https://www.svenneve.com/?p=792).
+One of my favorite tools - [Attribute Spreadsheet](https://www.svenneve.com/?p=792), written by Sven Neve in 2013. It's been abandoned for 7 years now. This is my attempt of reviving this script while adding new features to it.
 
-Attribute Spreadsheet is a spreadsheet script to edit the input parameters of multiple Fusion tools at once.  It is extremely useful for batch tool changes, and a great help for any motion graphics tasks. The most amazing part that it works with any native or third party Fusion tool, such as OFX plugins, macros, Krokodove tools and so on. Any available input is accessible from a very convenient table view. You can link any input to another with expression by a middle mouse drag. Some tools, such at Text+ `Font` or `Style`, does not even allow to set expression manually. With _Attribute spreadsheet_ you can do that easily too. As far as I know, this script is the fastest and the most reliable tool for batch changing parameters or linking multiple Fusion nodes. And it should definitely be in Reactor.
+_AttributeSpreadsheet_ is a spreadsheet script to edit the input parameters of multiple Fusion tools at once. It is extremely useful for batch tool changes, and a great help for any motion graphics tasks. The most amazing part that it works with any native or third party Fusion tool, such as OFX plugins, macros, Krokodove tools and so on. Any available input is accessible from a very convenient table view. You can link any input to another with expression by a middle mouse drag. Some tools, such at Text+ `Font` or `Style`, does not even allow to set expression manually. With _AttributeSpreadsheet_ you can do that easily too. As far as I know, this is the fastest and the most reliable tool for batch changing parameters or linking multiple Fusion inputs. And it should definitely be in Reactor.
 
 *Requirements:*
 * Python 3.6
