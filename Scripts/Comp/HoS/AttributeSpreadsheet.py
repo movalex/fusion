@@ -169,11 +169,17 @@ except (ImportError, ModuleNotFoundError):
         rc = process.poll()
         return rc
 
-
     try:
         # ask user permission to install Pyside manually
-        dialogue = {1: {1: "Warning", "Name": "Warning", 2: "Text", "Readonly": True,
-                        "Default": "Would you like to install\nPyside2 automatically?"}}
+        dialogue = {
+            1: {
+                1: "Warning",
+                "Name": "Warning",
+                2: "Text",
+                "Readonly": True,
+                "Default": "Would you like to install\nPyside2 automatically?",
+            }
+        }
 
         ask = comp.AskUser("Warning", dialogue)
 
@@ -181,7 +187,9 @@ except (ImportError, ModuleNotFoundError):
         python_executable = os.path.join(os.__file__.split("lib")[0], "python.exe")
 
         if platform.system() in ["Darwin", "Linux"]:
-            python_executable = os.path.join(os.__file__.split("lib/")[0], "bin", "python3")
+            python_executable = os.path.join(
+                os.__file__.split("lib/")[0], "bin", "python3"
+            )
 
         if ask:
             print("Trying to install Pyside2...")
@@ -191,7 +199,9 @@ except (ImportError, ModuleNotFoundError):
                 pip_version = int(pip.__version__.split(".")[0])
                 if pip_version < 20:
                     print("updating pip")
-                    run_command([python_executable, "-m", "pip", "install", "-U", "pip"])
+                    run_command(
+                        [python_executable, "-m", "pip", "install", "-U", "pip"]
+                    )
                 pyside_cmd = [
                     python_executable,
                     "-m",
@@ -211,11 +221,15 @@ except (ImportError, ModuleNotFoundError):
                     )
                     sys.exit()
             except ImportError:
-                print("Check if pip version 10+ is installed, then launch the script again")
+                print(
+                    "Check if pip version 10+ is installed, then launch the script again"
+                )
                 sys.exit()
         else:
-            print("Pyside2 is required to run this script.\nPlease install it manually with following command:"
-                  f"\n{python_executable} -m pip install Pyside2")
+            print(
+                "Pyside2 is required to run this script.\nPlease install it manually with following command:"
+                f"\n{python_executable} -m pip install Pyside2"
+            )
             sys.exit()
 
     except Exception as e:
@@ -321,7 +335,9 @@ class PointDelegate(QItemDelegate):
             editor.setItem(0, 1, y_value)
             editor.blockSignals(False)
         except ValueError:
-            print('error occurred while parsing the point data. Setting values to default')
+            print(
+                "error occurred while parsing the point data. Setting values to default"
+            )
             for i in range(2):
                 editor.setItem(0, i, QTableWidgetItem("0.5"))
 
@@ -378,8 +394,11 @@ class TableView(QTableView):
 
     def create_value(self, source_model, index):
         target_tool = source_model.tool_dict[index.row() + 1].Name
-        target_input_id = source_model.tools_inputs[index.row()].get(
-            source_model.attribute_name_keys[index.column()]).ID
+        target_input_id = (
+            source_model.tools_inputs[index.row()]
+            .get(source_model.attribute_name_keys[index.column()])
+            .ID
+        )
         try:
             value = f"={target_tool}.{target_input_id}"
             self.commitDataDo(value)
@@ -393,14 +412,17 @@ class TableView(QTableView):
             source_model = self.model().sourceModel()
             if len(self.selectionModel().selection().indexes()) <= 1:
                 index_target = self.model().mapToSource(self.indexAt(self.startCenter))
-                if index_source.row() == index_target.row() and index_source.column() == index_target.column():
+                if (
+                    index_source.row() == index_target.row()
+                    and index_source.column() == index_target.column()
+                ):
                     print("cannot link the input to itself")
                     return
                 if (
-                        index_source.row() > -1
-                        and index_source.column() > -1
-                        and index_target.row() > -1
-                        and index_target.column() > -1
+                    index_source.row() > -1
+                    and index_source.column() > -1
+                    and index_target.row() > -1
+                    and index_target.column() > -1
                 ):
                     # Select the first cell by sampling the area under the first clicked mouse center
                     self.setSelection(
@@ -419,7 +441,7 @@ class TableView(QTableView):
 
     def updateColumns(self):
         """
-        updateColumns sets the QItemDelegates for the columns 
+        updateColumns sets the QItemDelegates for the columns
         (this way we can make a distinction between various data types for Fusion)
 
         The columns are grouped by their attribute/parameter names, so tools with attributes that have conflicting
@@ -459,8 +481,12 @@ class TableView(QTableView):
         try:
             for isr in self.selectionModel().selection():
                 for s in isr.indexes():
-                    input_name = self.model().headerData(s.column(), Qt.Horizontal, Qt.DisplayRole)
-                    tool_name = self.model().headerData(s.row(), Qt.Vertical, Qt.DisplayRole)
+                    input_name = self.model().headerData(
+                        s.column(), Qt.Horizontal, Qt.DisplayRole
+                    )
+                    tool_name = self.model().headerData(
+                        s.row(), Qt.Vertical, Qt.DisplayRole
+                    )
                     input_name = input_name.replace("\n", " ").strip()
                     if isinstance(value, list) and len(value) == 2:
                         try:
@@ -572,7 +598,9 @@ class FusionInput:
                 print("Expression cleared")
                 self.SetExpression(None)
             else:
-                print("This input is linked by expression. Use '-x' to clear expression")
+                print(
+                    "This input is linked by expression. Use '-x' to clear expression"
+                )
             return
 
         if not isinstance(value, list) and value[0] == "=":
@@ -695,7 +723,9 @@ class TableModel(QAbstractTableModel):
         comp = fu.GetCurrentComp()
         if not comp:
             if fu.GetResolve():
-                print("No comp data found. Probably both Resolve and Fusion are loaded?")
+                print(
+                    "No comp data found. Probably both Resolve and Fusion are loaded?"
+                )
             else:
                 print("Unable to find comp data. Please report this issue")
             sys.exit()
@@ -727,7 +757,8 @@ class TableModel(QAbstractTableModel):
             progress += 1
             self.communicate.send((100.0 / (len(self.tool_dict))) * progress)
         self.communicate.send(
-            "Done loading, execution time : " + str(datetime.datetime.now() - start_time)
+            "Done loading, execution time : "
+            + str(datetime.datetime.now() - start_time)
         )
 
     def appendUnique(self, str_to_add, type_to_add=None):
@@ -939,7 +970,7 @@ class MainWindow(QMainWindow):
         self.always_on_top.stateChanged.connect(self.changeAlwaysOnTop)
         self.search_line.textChanged.connect(self.filterRegExpChanged)
         self.clear_button.pressed.connect(self.clear_search)
-        self.refresh_button.pressed.connect(self.reloadFusionData)
+        self.refresh_button.pressed.connect(self.reload_fusion_data)
         self._tm.communicate.broadcast.connect(self.communication)
         self.corner.clicked.connect(self.reset_sorting)
         self.setWindowFlags(
@@ -979,20 +1010,20 @@ class MainWindow(QMainWindow):
         if self.progress_bar.value() in [0, 100]:
             self.progress_bar.setVisible(False)
 
-    def loadFusionData(self):
+    def load_fusion_data(self):
         self._tm.load_fusion_data()
         self.proxy_model.setSourceModel(self._tm)
         self._tv.setSortingEnabled(True)
         self._tv.updateColumns()
 
-    def reloadFusionData(self):
+    def reload_fusion_data(self):
         self.proxy_model.setSourceModel(None)
         self._tm.load_fusion_data()
         self.proxy_model.setSourceModel(self._tm)
         self._tv.setSortingEnabled(True)
         self._tv.updateColumns()
 
-    def setCacheMode(self):
+    def set_cache_mode(self):
         # Not sure where this goes, is it a method for the TableModel? or should we inherit the dict that has all
         # the fusion input caches and have that cycle through all contained fusion inputs?
         # Cache does not seem to speed up things. For now we just disable it
@@ -1077,10 +1108,11 @@ QTableWidget::item {{
 
 # We define fu and comp as globals so we can basically run the same script from console as well from within Fusion
 # If both Resolve and Fusion are running, Fusion data may load improperly. So we check for scriptapp,
-# and the script would not load if there's a confusion about which instance of Fusion to use. 
+# and the script would not load if there's a confusion about which instance of Fusion to use.
 
 if __name__ == "__main__":
     import BlackmagicFusion as bmd
+
     fu_host = "localhost"
     if len(sys.argv) == 2:
         fu_host = sys.argv[1]
@@ -1096,5 +1128,5 @@ if __name__ == "__main__":
     main.setWindowTitle("Attribute Spreadsheet")
     main.setMinimumSize(QSize(740, 200))
     main.show()
-    main.loadFusionData()
+    main.load_fusion_data()
     main_app.exec_()
