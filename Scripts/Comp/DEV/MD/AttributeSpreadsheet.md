@@ -56,6 +56,7 @@ If there's no Pyside2 installation on the computer, the script will show a dialo
 This is a feature review made by the author of the original script 7 years ago. Please note that some of mentioned bugs and/or features are fixed/implemented in this release.
 
 https://www.youtube.com/watch?v=b97Q3mj3an0
+
 https://www.youtube.com/watch?v=uarUXcZpp8Q
   
 *Version:* 0.2.3 - 2020/12/04
