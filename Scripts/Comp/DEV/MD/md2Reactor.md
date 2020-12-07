@@ -32,6 +32,6 @@ _Copyright:_ Alexey Bogomolov (mail@abogomolov.com)
 
 _License:_ [MIT](https://mit-license.org/)
 
-_version:_ 1.2 - [2020.11.24] 
+_Version:_ 1.2 - [2020.11.24] 
 
-_Donations:_ [PayPal.Me](https://paypal.me/aabogomolov/5usd)
+_Donations:_ [PayPal.me](https://paypal.me/aabogomolov/5usd)
