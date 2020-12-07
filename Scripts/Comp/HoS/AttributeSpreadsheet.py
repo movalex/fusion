@@ -320,7 +320,6 @@ class PointDelegate(QItemDelegate):
 
     def setEditorData(self, editor, index):
         point_data = str(index.model().data(index))
-        print(point_data)
         try:
             # my attempt of parsing a string like '{1.0:0.5, 2.0:0.5, 3.0:0.0}'
             substring = re.sub("[{} ]", "", point_data)
