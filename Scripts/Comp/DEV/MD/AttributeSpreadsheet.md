@@ -21,7 +21,7 @@ _AttributeSpreadsheet_ is a spreadsheet script to edit the input parameters of m
 * Enter numerical values or expression to point values, such as `Pivot` or `Center`. For instance, enter `=time` in the Transform Angle cell will create `=time` expression, adding `=time` and `0.35` in Center `X` and `Y` values will create `Point(time, 0.35)` expression.
 * Enter `p` in any table cell and all corresponding input attributes will be listed in Console.
 * Click on the row header (tool name) to activate the tool.
-* Click on column header to sort inputs alphabetically. Click on the conrner button to reset sorting to default state.
+* Click on column header to sort inputs alphabetically. Click on the corner button to reset sorting to default state.
 
 Current version (0.2.3) has quite large changelog in comparison to the last known version of `hos_AttributeSpreadsheet`. You can find full list of new features and fixes inside a script file. The most significant improvements:
     
@@ -37,7 +37,7 @@ Current version (0.2.3) has quite large changelog in comparison to the last know
 
 My intention was to make this script as straightforward and easy to use as possible. Usually installing third party package to Python is a painless task. But it would be much cooler to strip this step and offer automatic installation on a first launch. 
 
-If there's no Pyside2 installation on the computer, the script will show a dialogue, whether you want to install the script automatically. If clicked `Ok`, it attempts to install Pyside2 using standard pip tools. Otherwise the command for manual installation will be shown in Console. Python modules manager `pip` should be already installed on the computer. It is a part of standard Python3 installation, thus the reason the script will require Python3 (also for maintenance and ideological purposes). Automatic PySide2 installation process will be visible in Fusion console. In case installation fails, please report the bug here. Once Pyside2 is installed, launch the script again and standard UI will be shown:
+If there's no Pyside2 installation on the computer, the script will show a dialogue, whether you want to install the script automatically. If clicked `Ok`, it attempts to install Pyside2 using standard pip tools. Otherwise the command for manual installation will be shown in Console. Python modules manager `pip` should be already installed on the computer. It is a part of standard Python3 installation, thus the reason the script will require Python3 (also for maintenance purposes). Automatic PySide2 installation process will be visible in Fusion console. In case installation fails, please report the bug here. Once Pyside2 is installed, launch the script again and standard UI will be shown:
 
 *Known issues:*
 
