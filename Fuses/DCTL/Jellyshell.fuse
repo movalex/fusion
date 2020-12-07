@@ -1,0 +1,1140 @@
+--[[--
+Jellyshell
+
+Based on https://www.shadertoy.com/view/3sjSDw Erstellt von OliverSchaff am 2019-03-31
+
+V0.1 
+V0.2 
+Bugfix OpenCL ( layers++ )
+Scale upside down
+debug parameter hidden
+V0.3 
+V0.4   
+  
+--]] --
+
+--------------------------------
+-- Registry declaration
+
+FuRegisterClass("Jellyshell", CT_SourceTool, {
+  REGS_Category      = "Fuses",
+  REGS_OpIconString  = "JSH",
+  REGS_OpDescription = "Jellyshell",
+
+  REG_NoObjMatCtrls      = true,
+  REG_NoMotionBlurCtrls  = true,
+
+  REG_Source_GlobalCtrls = true,
+  REG_Source_SizeCtrls   = true,
+  REG_Source_AspectCtrls = true,
+  REG_Source_DepthCtrls  = true,
+  REG_Fuse_NoEdit        = true,
+  REG_Fuse_NoReload      = true,
+
+  REG_TimeVariant        = true,
+  --REG_NoPreCalcProcess    = true,  -- call Process for precalc requests (instead of PreCalcProcess)
+  REGS_Company           = "JiPi",
+  REGS_URL               = "https://www.steakunderwater.com/wesuckless/",
+  REG_Version            = 000002,
+  })
+
+version = "Jellyshell V0.2 - 7 Dez 2020"
+
+-----------------------------------
+-- Description of kernel parameters
+
+----------------Titel--------------- 
+JellyshellParams =
+[[
+  float center[2];
+  float scale;
+  float debug;
+  float angle;
+  float pivot[2];
+  float freq;
+  float rotationy;
+  float rotationz;
+  float _union[3];
+  float map[5];
+  float wavemul;
+  float mapsiny;
+  float mapsinz;
+  float mapdeform;
+  float mapmul;
+  float move[7];
+  float blur;
+  float lenslength;
+  float color1[3];
+  float color2[3];
+  float color3[3];
+  float pal;
+  float sc[8];
+  int _texture;
+  float mix_tex;
+  float alpha;
+  int width;
+  int height;
+  float itime;
+  int compOrder;
+]]
+
+-- source of kernel
+JellyshellKernel =
+    [[
+__DEVICE__ float3 cos3f(float3 i) {float3 r; r.x = _cosf(i.x); r.y = _cosf(i.y); r.z = _cosf(i.z); return r;}
+
+__DEVICE__ float2 sin2f(float2 i) {float2 r; r.x = _sinf(i.x); r.y = _sinf(i.y); return r;}
+__DEVICE__ float2 cos2f(float2 i) {float2 r; r.x = _cosf(i.x); r.y = _cosf(i.y); return r;}
+__DEVICE__ float3 max3f(float3 v, float3 i) {return to_float3(_fmaxf(v.x,i.x),_fmaxf(v.y,i.y),_fmaxf(v.z,i.z));} 
+
+#define PI 3.14159265359f
+
+
+// Spectrum colour palette
+// IQ https://www.shadertoy.com/view/ll2GD3
+__DEVICE__ float3 pal( float t,  float3 a,  float3 b,  float3 c,  float3 d , float pal) {
+    return a + b*cos3f( pal*(c*t+d) );
+}
+
+__DEVICE__ float3 spectrum(float n, __CONSTANTREF__ JellyshellParams *params) {
+    return pal( n, to_float3(params->color1[0],params->color1[1],params->color1[2]),to_float3(params->color2[0],params->color2[1],params->color2[2]),to_float3(params->color3[0],params->color3[1],params->color3[2]),to_float3(0.0f,0.33f,0.67f), params->pal );
+    //return pal( n, float3(0.5,0.5,0.5),float3(0.5,0.0,0.5),float3(1.0,1.0,1.0),float3(0.2,0.33,0.67) );
+}
+
+
+// iq's distance functions
+__DEVICE__ float sdSphere( float3 p, float s )
+{
+  return length(p)-s;
+}
+
+__DEVICE__ float opOnion(  float sdf,  float thickness )
+{
+    return _fabs(sdf)-thickness;
+}
+
+__DEVICE__ float sdUnion_s( float a, float b, float k, float _union1, float _union2, float _union3 ) {
+    //float h = clamp( 0.5f+0.5f*(b-a)/k, 0.0f, 1.0f );
+    float h = clamp( 0.5f+0.5f*(b-a)/k, _union1, _union2 );
+    return _mix( b, a, h ) - k*h*(_union3-h);
+}
+
+__DEVICE__ float3 carToPol(float3 p) {
+    float r = length(p);
+    float the = _acosf(p.z/r);
+    float phi = _atan2f(p.y,p.x);
+    return to_float3(r,the,phi);
+}
+
+// 2D rotation : pitch, yaw
+__DEVICE__ float3 *rotationXY( float2 angle ) {                // mat3 
+  float2 c = cos2f( angle );
+  float2 s = sin2f( angle );
+  
+  float3 ret[3];
+  
+  ret[0] = to_float3(c.y      ,  0.0, -s.y);
+  ret[1] = to_float3(s.y * s.x,  c.x,  c.y * s.x);
+  ret[2] = to_float3(s.y * c.x, -s.x,  c.y * c.x);
+  
+  //return float3(c.y      ,  0.0, -s.y,    s.y * s.x,  c.x,  c.y * s.x,    s.y * c.x, -s.x,  c.y * c.x );
+
+  return ret;
+}
+
+__DEVICE__ float map( float3 pos, float itime, __CONSTANTREF__ JellyshellParams *params ){
+    
+    float3 p2 = to_float3(1.7f*_sinf(-0.5f*itime),0.9f*_cosf(-0.5f*itime),0.3f*_cosf(-0.5f*itime));
+    float d2 = sdSphere( pos-p2, params->map[0]);
+    float3 p3 = to_float3(1.9f*_sinf(-0.5f*itime+2.5f),0.3f*_cosf(-0.5f*itime-0.5f),0.9f*_cosf(-0.9f*0.5f*itime));
+    float d3 = sdSphere( pos-p3, params->map[1]);
+    float3 p4 = to_float3(1.9f*_sinf(-0.5f*itime+1.5f),-0.3f*_cosf(-0.6f*itime-4.5f),0.3f*_cosf(-0.4f*itime));
+    float d4 = sdSphere( pos-p4, params->map[2]);
+    float d00 = sdUnion_s(d2,d3,params->map[3], params->_union[0],params->_union[1],params->_union[2] );
+    
+    float d0 = sdUnion_s(d00,d4,params->map[4], params->_union[0],params->_union[1],params->_union[2] );
+
+    float3 pol = carToPol(pos);
+    
+    float d1 = sdSphere( pos, 1.0f );
+    //float wave = 0.25*_sinf(5.0f*(pol.y))*_sinf(2.0f*pol.z);
+    float wave = params->wavemul*_sinf(params->mapsiny*(pol.y))*_sinf(params->mapsinz*pol.z);
+    d1 = opOnion(d1+wave, params->mapdeform);
+    
+    return sdUnion_s(d1,d0,params->mapmul, params->_union[0],params->_union[1],params->_union[2]);
+}
+
+__DEVICE__ float3 selfColor(float3 pos, __CONSTANTREF__ JellyshellParams *params ) {
+    float3 pol = carToPol(pos);
+    //return spectrum(1.0f*pol.z/PI/2.0f+0.5f*pol.y/PI);
+    return spectrum(params->sc[5]*pol.z/PI/params->sc[6]+params->sc[7]*pol.y/PI, params);
+}
+
+__DEVICE__ float3 *calcLookAtMatrix(  float3 ro,  float3 ta,  float roll )      // mat3
+{
+    float3 ww = normalize( ta - ro );
+    float3 uu = normalize( cross(ww,to_float3(_sinf(roll),_cosf(roll),0.0f) ) );     // cross
+    float3 vv = normalize( cross(uu,ww));
+    
+    float3 ret[3];
+  
+    ret[0] = uu;
+    ret[1] = vv;
+    ret[2] = ww;
+    
+    //return mat3( uu, vv, ww );
+    return ret;
+}
+
+__DEVICE__ float3 MatMul( float3 *mat, float3 vec)
+{
+return to_float3(vec.x * mat[0].x + vec.y * mat[1].x + vec.z * mat[2].x , vec.x * mat[0].y + vec.y * mat[1].y + vec.z * mat[2].y, vec.x * mat[0].z + vec.y * mat[1].z + vec.z * mat[2].z);
+}
+
+__DEVICE__ float2 spin(float2 uv, float2 center, float angle, float aspect)
+{
+  float C = _cosf(angle);
+  float S = _sinf(angle);
+   
+  uv -= center;
+  float x = uv.x;
+  uv.x = (x*aspect * C - uv.y * S);
+  uv.y = (x*aspect * S + uv.y * C);
+  uv += center;
+   
+return uv;
+}
+
+
+//############################################################################################################################
+__KERNEL__ void JellyshellKernel(__CONSTANTREF__ JellyshellParams *params, __TEXTURE2D__ iChannel0, __TEXTURE2D_WRITE__ dst)
+{
+  DEFINE_KERNEL_ITERATORS_XY(x, y);
+  //---------------------------------------
+  if (x < params->width && y < params->height) 
+  {
+  
+     //----------Interface-------------
+     float2 fragCoord = to_float2(x, y); 
+     float2 iResolution = to_float2(params->width, params->height);
+     float ratio = (float)params->width/(float)params->height;
+     float itime=params->itime*params->freq;
+     float4 fragColor = to_float4_s(0.0f);
+     //-----------------------
+
+  float2 p = (-iResolution + 2.0f*fragCoord)/iResolution.y;
+
+  // Standardparameter
+  p -=  to_float2( (params->center[0]-0.5f)*ratio*2.0f , (params->center[1]-0.5f)*2.0f);
+  p *= params->scale;
+  float2 pivot = to_float2(((params->pivot[0]-0.5f)*ratio*2.0f),(params->pivot[1]-0.5f)*2.0f);
+  p = spin(p, pivot, params->angle, 1.0f); //params->debug
+    
+    
+  //float3 ro = to_float3( 5.0f*_cosf(0.2*itime+20.5f), 0.0f, 5.0f*_sinf(0.2f*itime+20.5f));
+  float3 ro = to_float3( params->move[0]*_cosf(params->move[1]*itime+params->move[2]), params->move[6], params->move[3]*_sinf(params->move[4]*itime+params->move[5]));
+  float3 ta = to_float3( 0.0f , 0.0f , 0.0f );
+   
+  float aa = 1.0f/min(iResolution.y,iResolution.x);
+    
+  // camera matrix
+  //mat3 camMat = calcLookAtMatrix( ro, ta, 0.0f);  // 0.0 is the camera roll          //
+  float3 *camMat = calcLookAtMatrix( ro, ta, 0.0f);  // 0.0 is the camera roll       
+    
+  // create view ray
+  //float3 rd = normalize( camMat * to_float3(p.xy, 3.0f) ); // 3.0 is the lens length
+  float3 _p   =  to_float3_aw(p, params->lenslength);
+  //float3 _tmp =  to_float3(_p.x * camMat[0].x + _p.y * camMat[1].x + _p.z * camMat[2].x , _p.x * camMat[0].y + _p.y * camMat[1].y + _p.z * camMat[2].y, _p.x * camMat[0].z + _p.y * camMat[1].z + _p.z * camMat[2].z);
+  float3 _tmp = MatMul(camMat,_p);
+  float3 rd = normalize(_tmp);  
+
+  //!!!!!!!!!!!!!!!!!!!!!rotation START!!!!!!!!!!!!!!!!!!!
+  // rotate camera with mouse
+  //mat3 rot = rotationXY( ( iMouse.xy - iResolution.xy * 0.5f ).yx * float2( 0.01f, -0.01f ) );  //iMouse!!
+  //float2 iMouse = to_float2(0.0,0.0);
+  float2 iMouse = to_float2(params->rotationy,params->rotationz);
+  float3 *rot = rotationXY( ( iMouse - iResolution * 0.5f ) * to_float2( 0.01f, -0.01f ) );  //iMouse!!
+  
+  rd = MatMul(rot,rd);
+  ro = MatMul(rot,ro);
+  //!!!!!!!!!!!!!!!!!!!!!rotation END!!!!!!!!!!!!!!!!!!!!!
+
+  float3 col = to_float3_s(1.0f), sp;  //
+    
+  // Ray distance, bail out layer number, surface distance and normalized accumulated distance.
+  float t=0.0f, layers=0.0f, d, aD;
+    
+  // Surface distance threshold. Smaller numbers give a sharper object. Antialiased with aa
+  float thD = params->blur*_sqrtf(aa); 
+
+
+  // Only a few iterations seemed to be enough. Obviously, more looks better, but is slower.
+  for(int i=0; i<80; i++) {
+        
+        // Break conditions. Anything that can help you bail early usually increases frame rate.
+        if(layers>20.0f || col.x<0.0f || t>8.0f) break;
+        
+        // Current ray postion
+        sp = ro + rd*t;
+    
+        d = map(sp,itime, params); // Distance to nearest point in the cube field.
+        
+        // If we get within a certain distance of the surface, accumulate some surface values.
+        // Values further away have less influence on the total.
+        //
+        // aD - Accumulated distance. I interpolated aD on a whim (see below), because it seemed 
+        // to look nicer.
+        //
+        // 1/.(1. + t*t*.25) - Basic distance attenuation. Feel free to substitute your own.
+        
+         // Normalized distance from the surface threshold value to our current isosurface value.
+        aD = (thD-_fabs(d))/thD;
+        
+        // If we're within the surface threshold, accumulate some color.
+        // Two "if" statements in a shader loop makes me nervous. I don't suspect there'll be any
+        // problems, but if there are, let us know.
+        if(aD>0.0f) { 
+            // Smoothly interpolate the accumulated surface distance value, then apply some
+            // basic falloff (fog, if you prefer) using the camera to surface distance, "t."
+            // selfColor is the color of the object at the point sp
+            float3 sc = selfColor(sp, params);
+            //col -= sc*(aD*aD*(3.0f - 2.0f*aD)/(1.0f + t*t*2.25f)*4.5f);
+            col -= sc*(aD*aD*(params->sc[0] - params->sc[1]*aD)/(params->sc[2] + t*t*params->sc[3])*params->sc[4]); 
+            //layers++;
+			layers = layers + 1.0;
+        }
+    
+        // Kind of weird the way this works. I think not allowing the ray to hone in properly is
+        // the very thing that gives an even spread of values. The figures are based on a bit of 
+        // knowledge versus trial and error. If you have a faster computer, feel free to tweak
+        // them a bit.
+        t += _fmaxf(_fabs(d)*0.5f, thD*0.8f); 
+  }
+
+  col = max3f(col, to_float3_s(0.0f));
+
+if (params->_texture == 1)
+{
+   // Texturebackground
+    float4 _col;
+    float2 uv = fragCoord / iResolution;
+    //_col = texture (iChannel0, uv).rgb;
+    _col = _tex2DVecN( iChannel0, uv.x, uv.y, 15);
+    
+    float3 __col = to_float3(_col.x,_col.y,_col.z);
+    
+    if ((col.x == 1.0f) && (col.y == 1.0f) && (col.z == 1.0f))
+    {
+      col = __col;
+    }
+    else
+    {
+        //col = (col*1.5) * _col/.50;
+    }
+    
+    col = _mix(col,__col,params->mix_tex);
+}
+else
+{
+   if (params->alpha < 1.0)
+   {
+      if ((col.x == 1.0f) && (col.y == 1.0f) && (col.z == 1.0f))
+      {
+        col = to_float3_s(0.0);
+      }   
+      //col = _mix(col,to_float3_s(0.0),params->mix_tex);
+      col *= to_float3_s(params->mix_tex);
+   }
+}
+
+   fragColor = to_float4_aw(clamp(col, 0.0f, 1.0f), params->alpha);
+    _tex2DVec4Write(dst, x, y, fragColor);
+  }
+}
+]]
+
+
+
+-------------------------------------------------------------------
+--       Create
+-------------------------------------------------------------------
+mb = 1/5
+
+function Create()
+
+  Sep1 = self:AddInput(string.rep("_", 52), "Separator1", {       --6852
+    LINKID_DataType = "Text",
+    INPID_InputControl = "LabelControl",
+    INP_External = false,
+    INP_Passive = true,
+  })
+
+  --------------- Jellyshell ---------------
+  InCenter = self:AddInput("Center", "Center", {
+    LINKID_DataType = "Point",
+    INPID_InputControl = "OffsetControl",
+    INPID_PreviewControl = "CrosshairControl",
+    INP_DoNotifyChanged = true,
+    })
+
+  InScale = self:AddInput("Scale", "Scale", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    --INPID_PreviewControl = "RectangleControl",
+    RCD_LockAspect     = 1,
+    RC_DoLockAspect    = true,
+    RCID_Center        = "Center", 
+    INP_Default = 1.0,
+    INP_MinAllowed = 0.01,
+    --INP_MaxAllowed = 5.0,
+    })
+
+  InDebug = self:AddInput("Debug", "Debug", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 1.0,
+    --INP_MinScale = 0.0,
+    --INP_MaxScale = 5.0,
+    --INPID_PreviewControl = "RectangleControl",
+    RCD_LockAspect     = 1,
+    RC_DoLockAspect    = true,
+    RCID_Center = "Center",    
+    IC_Visible          = false, 
+  })
+
+  InAngle = self:AddInput("Angle", "Angle", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "ScrewControl",
+    INPID_PreviewControl = "AngleControl",
+    --INP_MinAllowed =   0.0,
+    --INP_MaxScale = 90.0,
+    INP_Default = 0.0,
+    ACID_Center = "Center",
+    --PC_GrabPriority = 1 -- give this a higher priority than the rectangle
+    })    
+  InPivot = self:AddInput("Pivot", "Pivot", {
+    LINKID_DataType = "Point",
+    INPID_InputControl = "OffsetControl",
+    INPID_PreviewControl = "CrosshairControl",
+    CHC_Style = "DiagonalCross",
+    PC_GrabPriority = -1,
+    })
+
+InWidgets = self:AddInput("On-Screen Widgets", "OnScreen Widgets", {
+  LINKID_DataType = "Number",
+  INPID_InputControl = "MultiButtonControl",
+  INP_Default = 0,
+  INP_Integer = true,
+  INP_DoNotifyChanged = true, 
+  MBTNC_ForceButtons = true,
+  MBTNC_StretchToFit = true,
+  { MBTNC_AddButton = "Show", },
+  { MBTNC_AddButton = "Hide", },
+})
+
+
+  Sep2 = self:AddInput(string.rep("_", 52), "Separator2", {
+    LINKID_DataType = "Text",
+    INPID_InputControl = "LabelControl",
+    INP_External = false,
+    INP_Passive = true,
+  })
+
+  InFrequency = self:AddInput("Frequency", "Frequency", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 1.0,
+    INP_MinAllowed = -20.0,
+    INP_MaxAllowed = 20.0,
+    })
+
+  InRotationY = self:AddInput("Rotation Y", "RotationY", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "ScrewControl",
+    INP_Default = 0.0,
+    INP_MinScale = -500,
+    INP_MaxScale = 500,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    })
+
+  InRotationZ = self:AddInput("Rotation Z", "RotationZ", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "ScrewControl",
+    INP_Default = 0.0,
+    INP_MinScale = -500,
+    INP_MaxScale = 500,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    })
+    
+ self:BeginControlNest("Parameter", "Parameter", false, {})   
+  InUnion1 = self:AddInput("Union 1", "Union1", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 0.0,
+    INP_MinScale = -5,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    })
+ InUnion2 = self:AddInput("Union 2", "Union2", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 1.0,
+    INP_MinScale = -5,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    })
+ InUnion3 = self:AddInput("Union 3", "Union3", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 1.0,
+    INP_MinScale = -5,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    })
+ 
+   Sep3 = self:AddInput("______MAP_______", "Separator3", {
+    LINKID_DataType = "Text",
+    INPID_InputControl = "LabelControl",
+    INP_External = false,
+    INP_Passive = true,
+  })
+ 
+ InMap1 = self:AddInput("Map 1", "Map1", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 0.2,
+    INP_MinScale = -5,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    })
+ InMap2 = self:AddInput("Map 2", "Map2", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 0.2,
+    INP_MinScale = -5,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    })
+ InMap3 = self:AddInput("Map 3", "Map3", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 0.2,
+    INP_MinScale = -5,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    })
+ InMap4 = self:AddInput("Map 4", "Map4", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 0.2,
+    INP_MinScale = -5,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    })
+ InMap5 = self:AddInput("Map 5", "Map5", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 0.2,
+    INP_MinScale = -5,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    })
+ InWaveMul = self:AddInput("Wave Muliplikator", "WaveMul", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 0.25,
+    INP_MinScale = -5,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    }) 
+  InMapSinY = self:AddInput("Map Sinus Y", "MapSinY", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 5.0,
+    INP_MinScale = -5,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    }) 
+  InMapSinZ = self:AddInput("Map Sinus Z", "MapSinZ", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 2.0,
+    INP_MinScale = -5,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    }) 
+  InMapDeform = self:AddInput("Map Deform", "MapDeform", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 0.001,
+    INP_MinScale = -5,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    }) 
+  InMapMul = self:AddInput("Map Muliplikator", "MapMul", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 0.3,
+    INP_MinScale = -5,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    }) 
+  
+  Sep5 = self:AddInput("______Movement_______", "Separator5", {
+    LINKID_DataType = "Text",
+    INPID_InputControl = "LabelControl",
+    INP_External = false,
+    INP_Passive = true,
+  })
+  InMove1 = self:AddInput("Move 1", "Move1", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 5.0,
+    INP_MinScale = -10,
+    INP_MaxScale = 10,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    }) 
+  InMove2 = self:AddInput("Move 2", "Move2", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 0.2,
+    INP_MinScale = -5,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    }) 
+  InMove3 = self:AddInput("Move 3", "Move3", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 20.5,
+    INP_MinScale = -50,
+    INP_MaxScale = 50,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    }) 
+  InMove4 = self:AddInput("Move 4", "Move4", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 5.0,
+    INP_MinScale = -10,
+    INP_MaxScale = 10,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    }) 
+  InMove5 = self:AddInput("Move 5", "Move5", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 0.2,
+    INP_MinScale = -5,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    }) 
+  InMove6 = self:AddInput("Move 6", "Move6", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 20.5,
+    INP_MinScale = -50,
+    INP_MaxScale = 50,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    }) 
+  InMove7 = self:AddInput("Move 7", "Move7", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 0.0,
+    INP_MinScale = -5,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    })  
+        
+  InBlur = self:AddInput("Blur", "Blur", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 0.3,
+    INP_MinScale = 0.0,
+    INP_MaxScale = 5.0,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    }) 
+    
+--self:EndControlNest()    
+  InLensLength = self:AddInput("Lens Length", "LensLength", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 3.0,
+    INP_MinScale = 0.0,
+    INP_MaxScale = 10.0,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    }) 
+
+self:EndControlNest()  
+
+  InLensLength2 = self:AddInput("Lens Length2", "LensLength2", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 3.0,
+    INP_MinScale = -5,
+    INP_MaxScale = 5,
+    IC_Visible          = false,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    }) 
+    
+ self:BeginControlNest("Texture", "Texture", false, {})
+  InMixTex = self:AddInput("Mix Texture", "MixTex", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 0.5,
+    INP_MinScale = 0.0,
+    INP_MaxScale = 1.0,
+    INP_MinAllowed = 0.0,
+    INP_MaxAllowed = 1.0,
+    }) 
+  InAlpha = self:AddInput("Alpha", "Alpha", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 1.0,
+    INP_MinScale = 0.0,
+    INP_MaxScale = 1.0,
+    INP_MinAllowed = -1.0,
+    INP_MaxAllowed = 1.0,
+    }) 
+
+  self:EndControlNest() 
+  
+  InLabel = self:AddInput(version, "version", {
+    LINKID_DataType = "Text",
+    INPID_InputControl = "LabelControl",
+    INP_External = false,
+    INP_Passive = true,
+    ICD_Width = 1,
+  })
+--------------------------------------------
+
+ -- Layout --
+self:AddControlPage("Color")
+  Sep6 = self:AddInput("______Color 1_______", "Separator6", {
+    LINKID_DataType = "Text",
+    INPID_InputControl = "LabelControl",
+    INP_External = false,
+    INP_Passive = true,
+  })
+
+  -- color wheel
+  InRed1 = self:AddInput("Red 1", "Red1", {
+    ICS_Name            = "Line Color",
+    LINKID_DataType     = "Number",
+    INPID_InputControl  = "ColorControl",
+    INP_Default         = 0.5,
+    INP_MaxScale        = 1.0,
+    CLRC_ShowWheel      = false,
+    IC_ControlGroup     = 1,
+    IC_ControlID        = 0,
+  })
+  InGreen1 = self:AddInput("Green 1", "Green1", {
+    LINKID_DataType     = "Number",
+    INPID_InputControl  = "ColorControl",
+    INP_Default         = 0.5,
+    IC_ControlGroup     = 1,
+    IC_ControlID        = 1,
+  })
+  InBlue1 = self:AddInput("Blue 1", "Blue1", {
+    LINKID_DataType     = "Number",
+    INPID_InputControl  = "ColorControl",
+    INP_Default         = 0.5,
+    IC_ControlGroup     = 1,
+    IC_ControlID        = 2,
+  })
+
+  Sep7 = self:AddInput("______Color 2_______", "Separator7", {
+    LINKID_DataType = "Text",
+    INPID_InputControl = "LabelControl",
+    INP_External = false,
+    INP_Passive = true,
+  })
+
+  -- color wheel
+  InRed2 = self:AddInput("Red 2", "Red2", {
+    ICS_Name            = "Line Color",
+    LINKID_DataType     = "Number",
+    INPID_InputControl  = "ColorControl",
+    INP_Default         = 0.5,
+    INP_MaxScale        = 1.0,
+    CLRC_ShowWheel      = false,
+    IC_ControlGroup     = 2,
+    IC_ControlID        = 0,
+  })
+  InGreen2 = self:AddInput("Green 2", "Green2", {
+    LINKID_DataType     = "Number",
+    INPID_InputControl  = "ColorControl",
+    INP_Default         = 0.5,
+    IC_ControlGroup     = 2,
+    IC_ControlID        = 1,
+  })
+  InBlue2 = self:AddInput("Blue 2", "Blue2", {
+    LINKID_DataType     = "Number",
+    INPID_InputControl  = "ColorControl",
+    INP_Default         = 0.5,
+    IC_ControlGroup     = 2,
+    IC_ControlID        = 2,
+  })
+  Sep9 = self:AddInput("______Color 3_______", "Separator9", {
+    LINKID_DataType = "Text",
+    INPID_InputControl = "LabelControl",
+    INP_External = false,
+    INP_Passive = true,
+  })
+
+  -- color wheel
+  InRed3 = self:AddInput("Red 3", "Red3", {
+    ICS_Name            = "Line Color",
+    LINKID_DataType     = "Number",
+    INPID_InputControl  = "ColorControl",
+    INP_Default         = 1.0,
+    INP_MaxScale        = 1.0,
+    CLRC_ShowWheel      = false,
+    IC_ControlGroup     = 3,
+    IC_ControlID        = 0,
+  })
+  InGreen3 = self:AddInput("Green 3", "Green3", {
+    LINKID_DataType     = "Number",
+    INPID_InputControl  = "ColorControl",
+    INP_Default         = 1.0,
+    IC_ControlGroup     = 3,
+    IC_ControlID        = 1,
+  })
+  InBlue3 = self:AddInput("Blue 3", "Blue3", {
+    LINKID_DataType     = "Number",
+    INPID_InputControl  = "ColorControl",
+    INP_Default         = 1.0,
+    IC_ControlGroup     = 3,
+    IC_ControlID        = 2,
+  })
+  Sep5 = self:AddInput("______Palette_______", "Separator5", {
+    LINKID_DataType = "Text",
+    INPID_InputControl = "LabelControl",
+    INP_External = false,
+    INP_Passive = true,
+  })
+  
+  InPal = self:AddInput("Palette", "Palette", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 6.28318,
+    INP_MinScale = -15,
+    INP_MaxScale = 15,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    })
+  
+  Sep4 = self:AddInput("______Self Color_______", "Separator4", {
+    LINKID_DataType = "Text",
+    INPID_InputControl = "LabelControl",
+    INP_External = false,
+    INP_Passive = true,
+  }) 
+  InSC1 = self:AddInput("SelfColor 1", "SC1", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 3.0,
+    INP_MinScale = 0.0,
+    INP_MaxScale = 5.0,
+    INP_MinAllowed = 0.0,
+    --INP_MaxAllowed = 1.0,
+    })
+  InSC2 = self:AddInput("SelfColor 2", "SC2", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 2.0,
+    INP_MinScale = -1,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    INP_MaxAllowed = 5.0,
+    })
+  InSC3 = self:AddInput("SelfColor 3", "SC3", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 1.0,
+    INP_MinScale = -1,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    })
+  InSC4 = self:AddInput("SelfColor 4", "SC4", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 2.25,
+    INP_MinScale = 0.0,
+    INP_MaxScale = 5.0,
+    INP_MinAllowed = 0.0,
+    --INP_MaxAllowed = 1.0,
+    })
+  InSC5 = self:AddInput("SelfColor 5", "SC5", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 4.5,
+    INP_MinScale = 0.0,
+    INP_MaxScale = 5.0,
+    INP_MinAllowed = 0.0,
+    --INP_MaxAllowed = 1.0,
+    })
+  InSC6 = self:AddInput("SelfColor 6", "SC6", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 1.0,
+    INP_MinScale = -1,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    })
+  InSC7 = self:AddInput("SelfColor 7", "SC7", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 2.0,
+    INP_MinScale = -1,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    })
+  InSC8 = self:AddInput("SelfColor 8", "SC8", {
+    LINKID_DataType = "Number",
+    INPID_InputControl = "SliderControl",
+    INP_Default = 0.5,
+    INP_MinScale = -1,
+    INP_MaxScale = 5,
+    --INP_MinAllowed = -1.0,
+    --INP_MaxAllowed = 1.0,
+    })
+ 
+  self:EndControlNest()
+
+
+--------------------------------------------
+------------------- In/Out -----------------
+  InImage = self:AddInput("Image", "Image", {
+    LINKID_DataType = "Image",
+    LINK_Main = 1,
+    INP_Required = false
+  })
+  OutImage = self:AddOutput("Output", "Output", {
+    LINKID_DataType = "Image",
+    LINK_Main = 1,
+  })
+end 
+
+
+-------------------------------------------------------------------
+--       NotifyChanged
+-------------------------------------------------------------------
+function NotifyChanged(inp, param, time)
+
+  if inp ~= nil and param ~= nil then
+  
+    if inp == InCenter then
+        -- the center moved, reposition the axis according to the current offset
+        nCenterX = param.X
+        nCenterY = param.Y
+      
+        InPivot:SetAttrs({
+            PCD_OffsetX = nCenterX - 0.5,
+            PCD_OffsetY = nCenterY - 0.5,
+            })
+           
+        InAngle:SetAttrs({
+            PCD_OffsetX = (nCenterX - 0.5)/100,
+            PCD_OffsetY = (nCenterY - 0.5)/100,
+            })
+    end
+  
+  
+    if inp == InWidgets then  
+      if param.Value == 1.0 then
+         InCenter:SetAttrs({ PC_Visible = false })
+         InAngle:SetAttrs({ PC_Visible = false })
+         InPivot:SetAttrs({ PC_Visible = false })
+         InScale:SetAttrs({ PC_Visible = false })
+      else
+         InCenter:SetAttrs({ PC_Visible = true })
+         InAngle:SetAttrs({ PC_Visible = true })
+         InPivot:SetAttrs({ PC_Visible = true })
+         InScale:SetAttrs({ PC_Visible = true })
+      end
+    end  
+  end
+end
+
+-------------------------------------------------------------------
+--       Process
+-------------------------------------------------------------------
+function Process(req)
+    local center = InCenter:GetValue(req)
+    local angle = InAngle:GetValue(req).Value --* math.pi/180 * -1
+    local debug = InDebug:GetValue(req).Value
+    local scale = InScale:GetValue(req).Value
+    local freq = InFrequency:GetValue(req).Value
+
+    local texture = 0;
+--This creates an image for us to work on.
+    local imgattrs = {
+        IMG_Document = self.Comp,
+        { IMG_Channel = "Red", },
+        { IMG_Channel = "Green", },
+        { IMG_Channel = "Blue", },
+        { IMG_Channel = "Alpha", },
+        IMG_Width = Width,
+        IMG_Height = Height,
+        IMG_XScale = XAspect,
+        IMG_YScale = YAspect,
+        IMAT_OriginalWidth = realwidth,
+        IMAT_OriginalHeight = realheight,
+        IMG_Quality = not req:IsQuick(),
+        IMG_MotionBlurQuality = not req:IsNoMotionBlur(),
+        }
+   
+    if not req:IsStampOnly() then
+        imgattrs.IMG_ProxyScale = 1
+    end
+   
+    if SourceDepth ~= 0 then
+        imgattrs.IMG_Depth = SourceDepth
+    end
+    
+    if (InImage:GetValue(req) ~= nil) then
+       src = InImage:GetValue(req)
+       texture = 1
+    else
+       src = Image(imgattrs)
+    
+       local p = Pixel({R=0,G=0,B=0,A=0})
+       src:Fill(p)
+    end
+    
+    local dst = Image {IMG_Like = src, IMG_DeferAlloc = true}
+
+    
+    Sep1:SetAttrs({LINKS_Name = "______________Jellyshell________________",LBLC_LabelColor = 3,})
+    
+    node = DVIPComputeNode(req, "JellyshellKernel", JellyshellKernel, "JellyshellParams", JellyshellParams)
+
+    if not pcall(function () 
+        params.scale = 1/scale
+        params.debug = debug
+        params.freq = freq
+ 
+        params.center[0] = center.X
+        params.center[1] = center.Y
+        params.angle = angle
+        params.pivot[0] = InPivot:GetValue(req).X
+        params.pivot[1] = InPivot:GetValue(req).Y
+        
+        params.rotationy = InRotationY:GetValue(req).Value
+        params.rotationz = InRotationZ:GetValue(req).Value
+      
+        params._union  = {InUnion1:GetValue(req).Value,InUnion2:GetValue(req).Value,InUnion3:GetValue(req).Value}
+        params.map    = {InMap1:GetValue(req).Value,InMap2:GetValue(req).Value,InMap3:GetValue(req).Value,InMap4:GetValue(req).Value,InMap5:GetValue(req).Value}
+        params.wavemul   = InWaveMul:GetValue(req).Value
+        params.mapsiny   = InMapSinY:GetValue(req).Value
+        params.mapsinz   = InMapSinZ:GetValue(req).Value
+        params.mapdeform  = InMapDeform:GetValue(req).Value
+        params.mapmul     = InMapMul:GetValue(req).Value
+        params.move    = {InMove1:GetValue(req).Value,InMove2:GetValue(req).Value,InMove3:GetValue(req).Value, InMove4:GetValue(req).Value, InMove5:GetValue(req).Value, InMove6:GetValue(req).Value, InMove7:GetValue(req).Value}
+        params.blur       = InBlur:GetValue(req).Value
+        params.lenslength = InLensLength:GetValue(req).Value
+        params.color1  = {InRed1:GetValue(req).Value, InGreen1:GetValue(req).Value, InBlue1:GetValue(req).Value}
+        params.color2  = {InRed2:GetValue(req).Value, InGreen2:GetValue(req).Value, InBlue2:GetValue(req).Value}
+        params.color3  = {InRed3:GetValue(req).Value, InGreen3:GetValue(req).Value, InBlue3:GetValue(req).Value}
+        params.pal     = InPal:GetValue(req).Value
+        params.sc      = {InSC1:GetValue(req).Value,InSC2:GetValue(req).Value,InSC3:GetValue(req).Value,InSC4:GetValue(req).Value,InSC5:GetValue(req).Value,InSC6:GetValue(req).Value,InSC7:GetValue(req).Value,InSC8:GetValue(req).Value}
+        params._texture = texture
+        params.mix_tex  = InMixTex:GetValue(req).Value
+        params.alpha    = InAlpha:GetValue(req).Value
+        
+        params.compOrder = 15                   -- params.srcCompOrder = src:IsMask() and 1 or 15
+        params.width  = src.DataWindow:Width()
+        params.height = src.DataWindow:Height()
+    
+        local framerate = self.Comp:GetPrefs("Comp.FrameFormat.Rate") -- get the frame rate of the comp set in the preferences
+        params.itime = req.Time / framerate
+    
+        node:SetParamBlock(params)
+    end) then
+        params = node:GetParamBlock(JellyshellParams)
+    
+        params.scale = 1/scale
+        params.debug = debug
+        params.freq = freq
+ 
+        params.center[0] = center.X
+        params.center[1] = center.Y
+        params.angle = angle
+        params.pivot[0] = InPivot:GetValue(req).X
+        params.pivot[1] = InPivot:GetValue(req).Y
+        
+        params.rotationy = InRotationY:GetValue(req).Value
+        params.rotationz = InRotationZ:GetValue(req).Value
+
+
+        params._union  = {InUnion1:GetValue(req).Value,InUnion2:GetValue(req).Value,InUnion3:GetValue(req).Value}
+        params.map    = {InMap1:GetValue(req).Value,InMap2:GetValue(req).Value,InMap3:GetValue(req).Value,InMap4:GetValue(req).Value,InMap5:GetValue(req).Value}
+        params.wavemul   = InWaveMul:GetValue(req).Value
+        params.mapsiny   = InMapSinY:GetValue(req).Value
+        params.mapsinz   = InMapSinZ:GetValue(req).Value
+        params.mapdeform  = InMapDeform:GetValue(req).Value
+        params.mapmul     = InMapMul:GetValue(req).Value
+        params.move    = {InMove1:GetValue(req).Value,InMove2:GetValue(req).Value,InMove3:GetValue(req).Value, InMove4:GetValue(req).Value, InMove5:GetValue(req).Value, InMove6:GetValue(req).Value, InMove7:GetValue(req).Value}
+        params.blur       = InBlur:GetValue(req).Value
+        params.lenslength = InLensLength:GetValue(req).Value
+        params.color1  = {InRed1:GetValue(req).Value, InGreen1:GetValue(req).Value, InBlue1:GetValue(req).Value}
+        params.color2  = {InRed2:GetValue(req).Value, InGreen2:GetValue(req).Value, InBlue2:GetValue(req).Value}
+        params.color3  = {InRed3:GetValue(req).Value, InGreen3:GetValue(req).Value, InBlue3:GetValue(req).Value}
+        params.pal     = InPal:GetValue(req).Value
+        params.sc      = {InSC1:GetValue(req).Value,InSC2:GetValue(req).Value,InSC3:GetValue(req).Value,InSC4:GetValue(req).Value,InSC5:GetValue(req).Value,InSC6:GetValue(req).Value,InSC7:GetValue(req).Value,InSC8:GetValue(req).Value}
+        params._texture = texture
+        params.mix_tex  = InMixTex:GetValue(req).Value
+        params.alpha    = InAlpha:GetValue(req).Value
+        
+        params.compOrder = 15                   -- params.srcCompOrder = src:IsMask() and 1 or 15
+        params.width  = src.DataWindow:Width()
+        params.height = src.DataWindow:Height()
+    
+        local framerate = self.Comp:GetPrefs("Comp.FrameFormat.Rate") -- get the frame rate of the comp set in the preferences
+        params.itime = req.Time / framerate
+    
+        node:SetParamBlock(params)
+    end
+
+    node:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR,TEX_ADDRESS_MODE_BORDER, TEX_NORMALIZED_COORDS_TRUE)
+
+    node:AddInput("iChannel0", src)
+    node:AddOutput("dst", dst)
+
+    local success = node:RunSession(req)
+    if not success then
+        dst = nil
+        dump(node:GetErrorLog()) -- Fehlerausgabe des DCTL
+    end
+    OutImage:Set(req, dst)
+end
+
+
+
+
