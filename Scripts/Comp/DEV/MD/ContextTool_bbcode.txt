@@ -14,4 +14,4 @@ You can store up to 9 contexts.  View context with [c]Alt+[1-9][/c] shortcuts.
 [i]Copyright:[/i] Alexey Bogomolov (mail@abogomolov.com)
 [i]License:[/i] [url=https://mit-license.org/]MIT[/url]
 [i]Version:[/i] v.1.0 - [2020/11/29]
-[i]Donations:[/i] [url=https://paypal.me/aabogomolov/10usd]PayPal.Me[/url]
+[i]Donations:[/i] [url=https://paypal.me/aabogomolov/10usd]PayPal.me[/url]
