@@ -15,4 +15,4 @@ _License:_ [MIT](https://mit-license.org/)
 
 _Version:_ 1.2 (11.24.2020)
 
-_Donations:_ [PayPal.Me](https://paypal.me/aabogomolov/10usd)
+_Donations:_ [PayPal.me](https://paypal.me/aabogomolov/10usd)
