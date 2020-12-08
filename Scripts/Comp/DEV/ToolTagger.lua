@@ -244,9 +244,9 @@ function win.On.Toggle.Clicked(ev)
     local comp = fu:GetCurrentComp()
     local allTools = comp:GetToolList(false)
     local selectedTools = comp:GetToolList(true)
-    local comment = itm.Line.Text
+    local tagSearch = itm.Line.Text
 
-    if comment == "" then
+    if tagSearch == "" then
         if #selectedTools == 0 then
             return
         end
