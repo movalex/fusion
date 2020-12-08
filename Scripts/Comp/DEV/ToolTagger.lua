@@ -1,6 +1,6 @@
 _author = "Alexey Bogomolov <mail@abogomolov.com>"
-_date = "2020-11-08"
-_VERSION = "1.1"
+_date = "2020-12-08"
+_VERSION = "1.0"
 
 local ui = fu.UIManager
 local disp = bmd.UIDispatcher(ui)
@@ -15,15 +15,15 @@ if fu.Version == 16.2 and FuPLATFORM_MAC == true then
     jit.off()
 end
 
-app:AddConfig("Manage", {
-    Target {ID = "Manage"}, Hotkeys {
-        Target = "Manage",
+app:AddConfig("Tagger", {
+    Target {ID = "Tagger"}, Hotkeys {
+        Target = "Tagger",
         Defaults = true,
         ESCAPE = "Execute{cmd = [[app.UIManager:QueueEvent(obj, 'Close', {})]]}"
     }
 })
 
-mainWin = ui:FindWindow("Manage")
+mainWin = ui:FindWindow("Tagger")
 if mainWin then
     mainWin:Raise()
     mainWin:ActivateWindow()
@@ -31,8 +31,8 @@ if mainWin then
 end
 
 win = disp:AddWindow({
-    ID = 'Manage',
-    TargetID = 'Manage',
+    ID = 'Tagger',
+    TargetID = 'Tagger',
     WindowTitle = 'Tool Tagger',
     Geometry = {800, 500, width, height},
     Spacing = 0,
@@ -65,7 +65,7 @@ win = disp:AddWindow({
             ui.LineEdit {ID = 'Line', Text = '', Events = {ReturnPressed = true}},
             ui:HGroup {
                 ui.Button { ID = 'SetTagButton', Text = 'Set Tag', Weight = .3 },
-                ui.Button { ID = 'SetCommentButton', Text = 'Delete Tag', Weight = .3 },
+                ui.Button { ID = 'DeleteTagButton', Text = 'Delete Tag', Weight = .3 },
             }
         },
     }
@@ -94,9 +94,9 @@ hdr = itm.Tree:NewItem()
 
 function SetHeader(count)
     if count == 0 then
-        hdr.Text[0] = 'Select multiple tools and set comments'
+        hdr.Text[0] = 'Select tools and add tags'
     else
-        hdr.Text[0] = 'Select a comment from a list below to manage tools'
+        hdr.Text[0] = 'Select a tag from a list below to manage tools'
     end
 end
 
@@ -105,9 +105,9 @@ itm.Line:SetClearButtonEnabled(true)
 
 -- Gets all items (useful for getting all items in a nested tree without traversing the tree)
 
-function SetComment(comp)
+function SetTag(comp)
     sel_tools = comp:GetToolList(true)
-    tag = itm.Line.Text
+    tag = tostring(itm.Line.Text)
     if #sel_tools == 0 then
     	return
     end
@@ -118,18 +118,20 @@ function SetComment(comp)
         end
         return
     end
-    data = {}
+    data = comp:GetData("ToolManager."..tag) or {}
     for _, tool in pairs(sel_tools) do
         table.insert(data, tool.Name)
     end
-    comp:SetData("ToolManager."..tostring(tag), data)
+    comp:SetData("ToolManager."..tag, data)
 
     print("new tag [ "..tag.." ] is set")
 
     RefreshTable()
 end
 
+
 function RefreshTable()
+    local currentTag = itm.Line.Text
     comp = fu:GetCurrentComp()
 	itm.Tree:Clear()
     local data = comp:GetData("ToolManager")
@@ -152,9 +154,18 @@ function RefreshTable()
     end
     local treeItems = GetTreeItems(itm.Tree)
     SetHeader(#treeItems)
+    itm.Line.Text = currentTag
+
 end
 
 -- A Tree view row was clicked on
+
+function win.On.DeleteTagButton.Clicked(ev)
+    local currentTag = itm.Line.Text
+    comp:SetData("ToolManager."..currentTag)
+    RefreshTable()
+end
+
 function win.On.Tree.ItemClicked(ev)
 	itm.Line.Text = ev.item.Text[0]
 end
@@ -169,18 +180,16 @@ end
 
 function win.On.Line.ReturnPressed(ev)
     local comp = fu:GetCurrentComp()
-    SetComment(comp)
+    SetTag(comp)
 end
 
 function win.On.Tree.ItemDoubleClicked(ev)
-    currentTag = itm.Line.Text
-    RefreshTable()
-
+    --RefreshTable()
 end
 
-function win.On.SetCommentButton.Clicked(ev)
+function win.On.SetTagButton.Clicked(ev)
     local comp = fu:GetCurrentComp()
-    SetComment(comp)
+    SetTag(comp)
 end
 
 function ToggleLock(tool)
@@ -199,7 +208,7 @@ function TogglePassThrough(tool)
     end
 end
 
-function win.On.Manage.Close(ev)
+function win.On.Tagger.Close(ev)
     disp:ExitLoop()
 end
 
@@ -209,7 +218,7 @@ function win.On.Select.Clicked(ev)
     local allTools = comp:GetToolList(false)
     local selectedTools = comp:GetToolList(true)
     flow:Select()
-    tagSearch = itm.Line.Text
+    local tagSearch = itm.Line.Text
 
     if tagSearch == "" then
         if #selectedTools == 0 then
@@ -222,7 +231,7 @@ function win.On.Select.Clicked(ev)
     else
         local data = comp:GetData("ToolManager")
         for tag, tools in pairs(data) do
-            if tag == tagSearch then
+            if tostring(tag) == tagSearch then
                 for _, tool in ipairs(tools) do
                     flow:Select(comp:FindTool(tool))
                 end
@@ -248,7 +257,7 @@ function win.On.Toggle.Clicked(ev)
     else
          local data = comp:GetData("ToolManager")
          for tag, tools in pairs(data) do
-            if tag == tagSearch then
+            if tostring(tag) == tagSearch then
                 for _, tool in ipairs(tools) do
                     TogglePassThrough(comp:FindTool(tool))
                 end
@@ -261,9 +270,9 @@ function win.On.Lock.Clicked(ev)
     local comp = fu:GetCurrentComp()
     local allTools = comp:GetToolList(false)
     local selectedTools = comp:GetToolList(true)
-    local comment = itm.Line.Text
+    local tagSearch = itm.Line.Text
 
-    if comment == "" then
+    if tagSearch == "" then
         if #selectedTools == 0 then
             return
         end
@@ -274,7 +283,7 @@ function win.On.Lock.Clicked(ev)
     else
         local data = comp:GetData("ToolManager")
         for tag, tools in pairs(data) do
-            if tag == tagSearch then
+            if tostring(tag) == tagSearch then
                 for _, tool in ipairs(tools) do
                     ToggleLock(comp:FindTool(tool))
                 end
@@ -290,7 +299,7 @@ function doPassThrough(operation, report)
     local allTools = comp:GetToolList(false)
     local selectedTools = comp:GetToolList(true)
     count = 0
-    tagSearch = itm['Line'].Text
+    local tagSearch = itm['Line'].Text
 
     comp:StartUndo(report .. ' tools')
 
@@ -306,10 +315,12 @@ function doPassThrough(operation, report)
     else
         local data = comp:GetData("ToolManager")
         for tag, tools in pairs(data) do
-            if tag == tagSearch then
+            if tostring(tag) == tagSearch then
                 for _, tool in ipairs(tools) do
                     tool = comp:FindTool(tool)
-                    tool:SetAttrs({TOOLB_PassThrough = operation})
+                    if tool then
+                        tool:SetAttrs({TOOLB_PassThrough = operation})
+                    end
                     count = count + 1
                 end
             end
