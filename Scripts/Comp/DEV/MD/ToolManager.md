@@ -1,9 +1,9 @@
 # Tool Manager
-This is a comment based tool manager for making basic operations with Fusion nodes, such as: _disable, enable, toggle passthrough (disabled tools become enabled and vice versa), select, lock_
+This is a comment based tool manager for making basic operations with Fusion nodes, such as: _disable, enable, toggle passthrough_ (disabled tools become enabled and vice versa), _select and lock_. 
 
 _Description:_
 
-You can group different tools by assigning a special comment to them. And tool manager will operate only tools with given comment. List of the comments will be listed in the middle section. If no comment assigned to selected tool, the script will be managing all other tools of the same kind. 
+This script is an evolution of @SirEdric's [Priority Passthrough](https://www.steakunderwater.com/VFXPedia/96.0.243.189/images/SE_PriorityPassthrough.eyeonscript) script.  You can group different tools by assigning a special comment to them. And tool manager will operate only tools with given comment. List of the comments will be shown in the middle section. If the text field is empty, the script will be managing tools of the same ID. The script tags tools with a comment rather than internal tool data, in order the tagged tools would be visible in a Flow.
 
 _Usage:_
 
