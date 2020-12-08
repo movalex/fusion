@@ -7,6 +7,8 @@ function has_key(tab, key)
     return false
 end
 
+addComment = false
+
 tool = comp.ActiveTool or comp:GetToolList(true)[1] 
 
 if not tool then
@@ -29,9 +31,12 @@ end
 
 if data then
     local dataToolName = data[CONTEXT]
-    local findToolFromData = comp:FindTool(dataToolName)
-    if findToolFromData and findToolFromData ~= tool then
-        findToolFromData.Comments[fu.TIME_UNDEFINED] = ""
+    local toolFromData = comp:FindTool(dataToolName)
+    if toolFromData and toolFromData ~= tool then
+        toolComment = toolFromData.Comments[1]
+        toolFromData:SetData("ContextTool.context")
+        toolFromData.TileColor = nil
+        toolFromData.Comments = toolComment:gsub("_CONTEXT_ %d\n", "")
     end
     for i, name in ipairs(data) do
         if name == tool.Name and i ~= CONTEXT then
@@ -47,4 +52,8 @@ comp:SetData("ContextTool.contexts", data)
 -- dump(comp:GetData("ContextTool.contexts"))
 
 print(tool.Name ..' is set as context view #'..CONTEXT)
-tool.Comments = 'Context ' .. CONTEXT
+tool:SetData("ContextTool.context", CONTEXT)
+local comment = tool.Comments[1]
+tool.Comments = '_CONTEXT_ ' .. CONTEXT .."\n" .. comment
+purpleColor = {R = 1, G = 0, B = 1}
+tool.TileColor = purpleColor
