@@ -1,10 +1,11 @@
 # Attribute Spreadsheet
 
-One of my favorite tools - [Attribute Spreadsheet](https://www.svenneve.com/?p=792), written by Sven Neve in 2013. It's been abandoned for 7 years now. This is my attempt of reviving this tool while adding new features to it.
+One of my favorite tools - [Attribute Spreadsheet](https://www.svenneve.com/?p=792), was written by Sven Neve in 2013. I did not find any traces of it to be updated to support the latest Fusion and Resolve versions, and it looks like to be abandoned for 7 years now. This is my attempt of reviving this tool while adding new features to it.
 
-_AttributeSpreadsheet_ is a spreadsheet script to edit the input parameters of multiple Fusion tools at once. It is extremely useful for batch tool changes, and a great help for any motion graphics tasks. The most amazing part that it works with any native or third party Fusion tool, such as OFX plugins, macros, Krokodove tools and so on. Any available input is accessible from a very convenient table view. You can link any input to another with expression by a middle mouse drag. Some tools, such at Text+ `Font` or `Style`, does not even allow setting expression manually. With _AttributeSpreadsheet_ you can do that easily too. As far as I know, this is the fastest, and the most reliable tool for a batch changing parameters or linking multiple Fusion inputs. It should definitely be in Reactor.
+_AttributeSpreadsheet_ is a spreadsheet script to edit the input parameters of multiple Fusion tools at once. It is extremely useful for batch tool changes, and a great help for any motion graphics tasks. The most amazing part that it works with any native or third party Fusion tool, such as OFX plugins, macros, Krokodove tools and so on. Any available input is accessible from a very convenient table view. You can also  link any input to another with expression by a middle mouse drag. Some tools, such at Text+ `Font` or `Style`, does not even allow setting expression manually. With _AttributeSpreadsheet_ you can do that easily too. As far as I know, this is the fastest, and the most reliable tool for a batch changing parameters or linking multiple Fusion inputs. It should definitely be in Reactor.
 
 *Requirements:*
+
 * Python 3.6
 * Fusion Standalone v.9 and v.16+, Davinci Resolve v.16+
 * PySide2 (can be installed automatically)
@@ -37,12 +38,12 @@ The current version (0.2.3) has quite large changelog in comparison to the last 
 
 My intention was to make this script as straightforward and easy to use as possible. Usually installing third party package to Python is a painless task. So we go further and strip this step, offering automatic PySide2 installation on a first launch. 
 
-If there's no Pyside2 installation found on the computer, the script will show a dialogue, whether you want to install the package automatically. If clicked `Ok`, it attempts to install Pyside2 using standard pip tools. Otherwise, the command for manual installation will be shown in Console. Python modules manager `pip` should be already installed on the computer. It is a part of standard Python3 installation, thus the reason the script will require Python3 (also for maintenance purposes). Automatic PySide2 installation process will be visible in Fusion console. In case installation fails, please report the bug here. Once Pyside2 is installed, launch the script again and standard UI will be shown:
+If there's no Pyside2 installation found on the computer, the script will show a dialogue, whether you want to install the package automatically. If clicked `Ok`, it attempts to install Pyside2 using standard pip tools. Otherwise, the command for manual installation will be shown in Console. Python modules manager `pip` should be already installed on the computer. It is a part of standard Python3 installation, thus the reason the script will require Python3 (also for maintenance purposes). Automatic PySide2 installation process will be visible in Fusion console. In case installation fails, please report the bug here. Once Pyside2 is installed, launch the script again and UI will appear.
 
 *Known issues:*
 
 * All fields except numerical or point data inputs are treated as text values. This prevents unexpected behavior when changing cells values. 
-* Although script works perfectly both in Resolve and Fusion Standalone separately, sometimes, when both of these apps are loaded, the script cannot read the comp data properly. In this case you'll see `No comp data found. Probably both Resolve and Fusion are loaded?` error message. I'm looking forward to handling this issue as soon I understand why this is happening.
+* Although script works both in Davinci Resolve and Fusion Standalone, sometimes, when both of these apps are loaded, the script cannot read the comp data properly. In this case you'll see `No comp data found. Probably both Resolve and Fusion are loaded?` error message. I'm looking forward to handling this issue as soon I understand why this is happening.
 * You should avoid linking inputs to each other. This is a known bug: if you link `Transform1.Size` to `Transform2.Size` and then try to link expression from `Transform2.Size` back to `Transform1.Size`, Fusion will crash immediately. The same will happen if you try to do that with a script. Just don't.
 
 *TODO:*
@@ -53,7 +54,7 @@ If there's no Pyside2 installation found on the computer, the script will show a
 * Add `Select by ID` button to quickly select and load to the table all tools with the same ID as the active tool. However, this can be done with ToolManager script, so questionable.
 * Please suggest any other improvements.
 
-This is a feature review made by the author of the original script 7 years ago. Please note that some of mentioned bugs and/or features are fixed/implemented in this release.
+Take a look at this feature review made by the author of the original script. Please note that some of mentioned bugs and/or features are fixed/implemented in this release. And yes, this last sentence implies that new bugs could have been implemented as well, although I did my best to avoid them. Please report any issues here.
 
 https://www.youtube.com/watch?v=b97Q3mj3an0
 
@@ -61,7 +62,7 @@ https://www.youtube.com/watch?v=uarUXcZpp8Q
   
 *Version:* 0.2.3 - [2020/12/07]
 
-*Copyright:* 2011-2013, Sven Neve, 2019-2020 additions by Alexey Bogomolov [mail@abogomolov.com](mail@abogomolov.com)
+*Copyright:* 2011-2013, Sven Neve (House of Secrets); 2019-2020 additions by Alexey Bogomolov [mail@abogomolov.com](mail@abogomolov.com)
 
 *License:* [MIT](https://mit-license.org/)
 
