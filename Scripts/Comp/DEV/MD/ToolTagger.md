@@ -3,7 +3,7 @@ This is a comp data driven tool manager for making basic operations with groups 
 
 _Description:_
 
-This is a companion script to the `ToolManager`. This script operates with comp data, and does not change tool comments at all. The idea belongs to @PingKing, here's his proof of concept video: [https://www.youtube.com/watch?v=RmlzyVVHkIM](https://www.youtube.com/watch?v=RmlzyVVHkIM). You can group different tools by assigning a special tag to them. The main difference with ToolManager - you can assign any number of tags to the same tool. So you can manage, say, `Merge1` and `Merge2` with tag "Merges", and `Merge1`, `Merge3` and `Merge4` with different tag. This would be virtually impossible to do with a comment driven script. Unfortunately, unlike ToolManager, there won't be any visual representation of the tagged tools in a flow. 
+This is a companion script to the `Tool Comment Manager`. This script operates with comp data, and does not change tool comments at all. The idea belongs to @PingKing, here's his proof of concept video: [https://www.youtube.com/watch?v=RmlzyVVHkIM](https://www.youtube.com/watch?v=RmlzyVVHkIM). You can group different tools by assigning a special tag to them. The main difference with ToolManager - you can assign any number of tags to the same tool. So you can manage, say, `Merge1` and `Merge2` with tag "Merges", and `Merge1`, `Merge3` and `Merge4` with some different tag. This would be virtually impossible to do with a comment driven script. Unfortunately, unlike Too Comment lManager, there won't be any visual representation of the tagged tools in a flow.
 
 List of the comments will be shown in the middle section. If the text field is empty, the script will be managing tools of the same ID. 
 
