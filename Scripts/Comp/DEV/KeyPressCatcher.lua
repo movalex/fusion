@@ -50,7 +50,7 @@ local win = disp:AddWindow({
 	ID = 'Win',
 	Geometry = {originX, originY, minWidth, minHeight},
 	WindowTitle = 'KeyEvents',
-    WindowFlags = {SplashScreen = true},
+    -- WindowFlags = {SplashScreen = true},
     Events = { Close = true, KeyPress = true, KeyRelease = true, },
     ui:VGroup{
         ui:Button{ID = "Button", Text = "Button",},
