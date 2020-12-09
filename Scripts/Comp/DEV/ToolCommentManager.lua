@@ -62,7 +62,7 @@ win = disp:AddWindow({
         },
         ui:HGroup{
             Weight = 0,
-            ui.LineEdit {ID = 'Line', Text = '', Weight = 0.7, Events = {ReturnPressed = true}},
+            ui.LineEdit {ID = 'Line', Text = '', Weight = 0.7, Events = {ReturnPressed = true, EditingFinished = true}},
             ui.Button {ID = 'SetCommentButton', Text = 'Set or Replace comment', Weight = .3},
         },
     }
@@ -129,6 +129,7 @@ end
 -- Add an new row entries to the list
 function RefreshTable()
     comp = fu:GetCurrentComp()
+    local currentTag = itm.Line.Text
 	itm.Tree:Clear()
     local tools = comp:GetToolList(false)
     for i, tool in ipairs(tools) do
@@ -143,7 +144,6 @@ function RefreshTable()
                         break
                     end
                 end
-
                 if alreadyAdded == false then
                     itRow = itm.Tree:NewItem();
                     itRow.Text[0] = comment
@@ -155,6 +155,7 @@ function RefreshTable()
     end
     local treeItems = GetTreeItems(itm.Tree)
     SetHeader(#treeItems)
+    itm.Line.Text = currentTag
 end
 
 -- A Tree view row was clicked on
@@ -205,6 +206,11 @@ function win.On.Select.Clicked(ev)
 	        end
         end
     end
+end
+
+
+function win.On.Line.EditingFinished(ev)
+    itm.Tree:SetFocus("OtherFocusReason")
 end
 
 function win.On.SetCommentButton.Clicked(ev)
