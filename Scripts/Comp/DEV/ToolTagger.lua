@@ -57,12 +57,12 @@ win = disp:AddWindow({
                 Alignment = {AlignHCenter = true, AlignBottom = true},
                 ID = 'Tree',
                 SortingEnabled = true,
-                Events = {ItemClicked = true, ItemDoubleClicked = true}
+                Events = { ItemClicked = true, ItemDoubleClicked = true, CurrentItemChanged = true, ItemActivated = true }
             }
         },
         ui:VGroup{
             Weight = 0,
-            ui.LineEdit {ID = 'Line', Text = '', Events = {ReturnPressed = true}},
+            ui.LineEdit {ID = 'Line', Text = '', Events = {ReturnPressed = true, EditingFinished = true}},
             ui:HGroup {
                 ui.Button { ID = 'SetTagButton', Text = 'Set Tag', Weight = .3 },
                 ui.Button { ID = 'DeleteTagButton', Text = 'Delete Tag', Weight = .3 },
@@ -164,10 +164,19 @@ function win.On.DeleteTagButton.Clicked(ev)
     local currentTag = itm.Line.Text
     comp:SetData("ToolManager."..currentTag)
     RefreshTable()
+    itm.Tree:SetFocus("OtherFocusReason")
+end
+
+function win.On.Line.EditingFinished(ev)
+    itm.Tree:SetFocus("OtherFocusReason")
 end
 
 function win.On.Tree.ItemClicked(ev)
 	itm.Line.Text = ev.item.Text[0]
+end
+
+function win.On.Tree.ItemActivated(ev)
+    itm.Line.Text = ev.item.Text[0]
 end
 
 function win.On.Refresh.Clicked(ev)
@@ -184,7 +193,18 @@ function win.On.Line.ReturnPressed(ev)
 end
 
 function win.On.Tree.ItemDoubleClicked(ev)
-    --RefreshTable()
+    local currentTag = itm.Line.Text
+    local data = comp:GetData("ToolManager")
+    if data and currentTag ~= "" then
+        for tag, tools in pairs(data) do
+            if tag == currentTag then
+                print("tools tagged with [ "..tag.." ]:")
+                for i, tool in ipairs(tools) do
+                    print("    ".. tool)
+                end
+            end
+        end
+    end
 end
 
 function win.On.SetTagButton.Clicked(ev)
