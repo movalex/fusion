@@ -1,5 +1,5 @@
-# Tool Manager
-This is a comment based tool manager for making basic operations with Fusion nodes, such as: _disable, enable, toggle passthrough_ (disabled tools become enabled and vice versa), _select and lock_. 
+# Tool Comment Manager
+This is a comment based tool manager for making basic operations with Fusion nodes, such as: _disable, enable, toggle passthrough_ (disabled tools become enabled and vice versa), _select_ and _lock_. 
 
 _Description:_
 
