@@ -37,16 +37,16 @@ def markdown_to_bbcode(s):
         return inline
 
     # s = re.sub(r"(`{3})(\s*)(.*?)\2\1", gather_code, s)
-    s = re.sub(r"(?m)\[(.*?)\]\((https?://\S+)\)", "[url=\\2]\\1[/url]", s)
+    s = re.sub(r"(?m)\[(.*?)\]\((https?:\/\/\S+)\)", "[url=\\2]\\1[/url]", s)
+    # bold ** and __
+    s = re.sub(r"(?m)([*_]{2})(\w+?)\1", "[b]\\2[/b]", s)
+    # emphasize _
+    s = re.sub(r"(?m)(?:^| )[^@#\s_`]?_([^_]+)_", "[i]\\1[/i]", s)
+    # emphasize *
+    s = re.sub(r"(?m)\B([*])\b(\S.+?)\1", "[i]\\2[/i]", s)
     s = re.sub(r"(?m)\B@(.*?)(['\s.,:!?\"])", "[mention]\\1[/mention]\\2", s)
     s = re.sub(r"(?m) {4}(.*)$", "~[code]\\1[/code]", s)
     s = re.sub(r"(?m)^!\[\]\((.*?)\)$", "~[img]\\1[/img]", s)
-    # bold ** and __
-    s = re.sub(r"(?m)([*_]{2})(\w+?)\1", "[b]\\2[/b]", s)
-    # emphasize *
-    s = re.sub(r"(?m)\B([*])\b(\S.+?)\1", "[i]\\2[/i]", s)
-    # emphasize _
-    s = re.sub(r"(?:^|\s)[^@#\s_`]*(_([^_]+)_)", "[i]\\2[/i]", s)
     # header1 with underscore
     s = re.sub(r"(?m)^(\S.*)\n=+\s*$", translate("~[size=200][b]{}[/b][/size]"), s)
     # header2 with underscore
