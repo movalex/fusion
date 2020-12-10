@@ -29,14 +29,19 @@ if data and not CONTEXT then
     end
 end
 
+local comment = tool.Comments[1]
+
 if data then
     local dataToolName = data[CONTEXT]
     local toolFromData = comp:FindTool(dataToolName)
-    if toolFromData and toolFromData ~= tool then
+    if toolFromData then
         toolComment = toolFromData.Comments[1]
-        toolFromData:SetData("ContextTool.context")
-        toolFromData.TileColor = nil
-        toolFromData.Comments = toolComment:gsub("_CONTEXT_ %d\n", "")
+        if toolFromData ~= tool then
+            toolFromData.TileColor = nil
+            toolFromData.Comments = toolComment:gsub("_CONTEXT_ %d\n", "")
+        else
+            toolFromData.Comments = toolComment:gsub("(_CONTEXT_) %d", "%1 "..CONTEXT)
+        end
     end
     for i, name in ipairs(data) do
         if name == tool.Name and i ~= CONTEXT then
@@ -47,13 +52,16 @@ else
     data = {}
 end
 
+mm = comment:match("_CONTEXT_")
+if mm then
+    tool.Comments = comment:gsub("(_CONTEXT_ )%d", "%1" .. CONTEXT)
+else
+    tool.Comments = '_CONTEXT_ ' .. CONTEXT .."\n" .. comment
+end
+
 data[CONTEXT] = tool.Name
 comp:SetData("ContextTool.contexts", data)
--- dump(comp:GetData("ContextTool.contexts"))
 
 print(tool.Name ..' is set as context view #'..CONTEXT)
-tool:SetData("ContextTool.context", CONTEXT)
-local comment = tool.Comments[1]
-tool.Comments = '_CONTEXT_ ' .. CONTEXT .."\n" .. comment
 purpleColor = {R = 1, G = 0, B = 1}
 tool.TileColor = purpleColor
