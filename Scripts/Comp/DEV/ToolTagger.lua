@@ -4,7 +4,7 @@ _VERSION = "1.0"
 
 local ui = fu.UIManager
 local disp = bmd.UIDispatcher(ui)
-local width, height = 360, 360
+local width, height = 300, 360
 
 if not comp then comp = fu:GetCurrentComp() end
 
@@ -41,14 +41,20 @@ win = disp:AddWindow({
         ID = 'root',
         ui:HGroup{
             Weight = 0,
-            ui:Button{ID = 'Disable', Text = 'Disable'},
-            ui:Button{ID = 'Enable', Text = 'Enable'},
-            ui:Button{ID = 'Toggle', Text = 'Toggle'},
+            ui:Button{ID = 'TogglePT', Text = 'Toggle PT'},
+            ui:HGroup{
+                ui:Button{ID = 'Disable', Text = 'Disable'},
+                ui:Button{ID = 'Enable', Text = 'Enable'},
+            },
         },
         ui:HGroup{
             Weight = 0,
             ui:Button{ID = 'Select', Text = 'Select'},
-            ui:Button{ID = 'Lock', Text = 'Lock'},
+
+            ui:HGroup{
+                ui:Button{ID = 'ToolLock', Text = 'Lock'},
+                ui:Button{ID = 'ToolUnlock', Text = 'Unlock'},
+            },
         },
 
         ui:HGroup{
@@ -212,14 +218,6 @@ function win.On.SetTagButton.Clicked(ev)
     SetTag(comp)
 end
 
-function ToggleLock(tool)
-    if tool:GetAttrs().TOOLB_Locked == true then
-        tool:SetAttrs({TOOLB_Locked = false})
-    else
-        tool:SetAttrs({TOOLB_Locked = true})
-    end
-end
-
 function TogglePassThrough(tool)
     if tool:GetAttrs().TOOLB_PassThrough == true then
         tool:SetAttrs({TOOLB_PassThrough = false})
@@ -235,7 +233,6 @@ end
 function win.On.Select.Clicked(ev)
     local comp = fu:GetCurrentComp()
     flow = comp.CurrentFrame.FlowView
-    local allTools = comp:GetToolList(false)
     local selectedTools = comp:GetToolList(true)
     flow:Select()
     local tagSearch = itm.Line.Text
@@ -260,9 +257,8 @@ function win.On.Select.Clicked(ev)
     end
 end
 
-function win.On.Toggle.Clicked(ev)
+function win.On.TogglePT.Clicked(ev)
     local comp = fu:GetCurrentComp()
-    local allTools = comp:GetToolList(false)
     local selectedTools = comp:GetToolList(true)
     local tagSearch = itm.Line.Text
 
@@ -286,9 +282,8 @@ function win.On.Toggle.Clicked(ev)
     end
 end
 
-function win.On.Lock.Clicked(ev)
+function ToolLock(isLocked)
     local comp = fu:GetCurrentComp()
-    local allTools = comp:GetToolList(false)
     local selectedTools = comp:GetToolList(true)
     local tagSearch = itm.Line.Text
 
@@ -298,28 +293,34 @@ function win.On.Lock.Clicked(ev)
         end
         selectedToolId = selectedTools[1].ID
         for i, tool in ipairs(comp:GetToolList(false, selectedToolId)) do
-            ToggleLock(tool)
+            tool:SetAttrs({TOOLB_Locked = isLocked})
         end
     else
         local data = comp:GetData("ToolManager")
         for tag, tools in pairs(data) do
             if tostring(tag) == tagSearch then
                 for _, tool in ipairs(tools) do
-                    ToggleLock(comp:FindTool(tool))
+                    tool = comp:FindTool(tool)
+                    tool:SetAttrs({TOOLB_Locked = isLocked})
                 end
             end
         end
     end
 end
 
+function win.On.ToolLock.Clicked(ev)
+    ToolLock(true)
+end
+function win.On.ToolUnlock.Clicked(ev)
+    ToolLock(false)
+end
+
 
 function doPassThrough(operation, report)
     local comp = fu:GetCurrentComp()
-
-    local allTools = comp:GetToolList(false)
     local selectedTools = comp:GetToolList(true)
-    count = 0
     local tagSearch = itm['Line'].Text
+    count = 0
 
     comp:StartUndo(report .. ' tools')
 
