@@ -4,7 +4,7 @@ _VERSION = "1.1"
 
 local ui = fu.UIManager
 local disp = bmd.UIDispatcher(ui)
-local width, height = 360, 360
+local width, height = 300, 360
 
 if not comp then comp = fu:GetCurrentComp() end
 
@@ -33,7 +33,7 @@ end
 win = disp:AddWindow({
     ID = 'Manage',
     TargetID = 'Manage',
-    WindowTitle = 'Tool Manager',
+    WindowTitle = 'Tool Comment Manager',
     Geometry = {800, 500, width, height},
     Spacing = 0,
 
@@ -41,16 +41,21 @@ win = disp:AddWindow({
         ID = 'root',
         ui:HGroup{
             Weight = 0,
-            ui:Button{ID = 'Disable', Text = 'Disable'},
-            ui:Button{ID = 'Enable', Text = 'Enable'},
-            ui:Button{ID = 'Toggle', Text = 'Toggle'},
+            ui:Button{ID = 'TogglePT', Text = 'Toggle PT'},
+            ui:HGroup{
+                ui:Button{ID = 'Disable', Text = 'Disable'},
+                ui:Button{ID = 'Enable', Text = 'Enable'},
+            },
         },
         ui:HGroup{
             Weight = 0,
             ui:Button{ID = 'Select', Text = 'Select'},
-            ui:Button{ID = 'Lock', Text = 'Lock'},
-        },
 
+            ui:HGroup{
+                ui:Button{ID = 'ToolLock', Text = 'Lock'},
+                ui:Button{ID = 'ToolUnlock', Text = 'Unlock'},
+            },
+        },
         ui:HGroup{
             Weight = 1,
             ui:Tree{
@@ -58,7 +63,7 @@ win = disp:AddWindow({
                 ID = 'Tree',
                 SortingEnabled = true,
                 Events = {ItemClicked = true, ItemDoubleClicked = true}
-            }
+            },
         },
         ui:HGroup{
             Weight = 0,
@@ -69,6 +74,8 @@ win = disp:AddWindow({
 })
 
 itm = win:GetItems()
+-- Add clear button
+itm.Line:SetClearButtonEnabled(true)
 
 local function GetTreeItems(tree)
 	return tree:FindItems("*",
@@ -97,8 +104,6 @@ function SetHeader(count)
     end
 end
 
--- Add clear button
-itm.Line:SetClearButtonEnabled(true)
 
 -- Get all nodes
 local tools = comp:GetToolList(false)
@@ -218,13 +223,7 @@ function win.On.SetCommentButton.Clicked(ev)
     SetComment(comp)
 end
 
-function ToggleLock(tool)
-    if tool:GetAttrs().TOOLB_Locked == true then
-        tool:SetAttrs({TOOLB_Locked = false})
-    else
-        tool:SetAttrs({TOOLB_Locked = true})
-    end
-end
+
 
 function TogglePassThrough(tool)
     if tool:GetAttrs().TOOLB_PassThrough == true then
@@ -259,6 +258,15 @@ function win.On.Toggle.Clicked(ev)
         end
     end
 end
+
+--function ToggleLock(tool)
+--    if tool:GetAttrs().TOOLB_Locked == true then
+--        tool:SetAttrs({TOOLB_Locked = false})
+--    else
+--        tool:SetAttrs({TOOLB_Locked = true})
+--    end
+--end
+
 
 function win.On.Lock.Clicked(ev)
     local comp = fu:GetCurrentComp()
