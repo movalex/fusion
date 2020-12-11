@@ -210,19 +210,15 @@ end
 
 function win.On.Tree.ItemDoubleClicked(ev)
     local currentTag = itm.Line.Text
-    local data = comp:GetData("ToolManager")
-    if #data[currentTag] == 0 then
+    local data = comp:GetData("ToolManager.".. currentTag)
+    if #data == 0 then
         print("not tools assigned to the tag")
         return
     end
     if currentTag ~= "" then
-        for tag, tools in pairs(data) do
-            if tag == currentTag then
-                print("tools tagged with [ "..tag.." ]:")
-                for i, tool in ipairs(tools) do
-                    print("    ".. tool)
-                end
-            end
+        print("tools tagged with [ "..currentTag.." ]:")
+        for i, tool in ipairs(data) do
+            print("    ".. tool)
         end
     else
         print('select tag from the list or add a new one')
