@@ -4,7 +4,7 @@ _VERSION = "1.0"
 
 local ui = fu.UIManager
 local disp = bmd.UIDispatcher(ui)
-local width, height = 300, 360
+local width, height = 310, 360
 
 if not comp then comp = fu:GetCurrentComp() end
 
@@ -72,6 +72,7 @@ win = disp:AddWindow({
             ui:HGroup {
                 ui.Button { ID = 'SetTagButton', Text = 'Set Tag', Weight = .3 },
                 ui.Button { ID = 'DeleteTagButton', Text = 'Delete Tag', Weight = .3 },
+                ui.Button { ID = 'ExcludeButton', Text = 'Exclude Tool', Weight = .3 },
             }
         },
     }
@@ -111,6 +112,16 @@ itm.Line:SetClearButtonEnabled(true)
 
 -- Gets all items (useful for getting all items in a nested tree without traversing the tree)
 
+function hasValue(tab, val)
+    for i, item in pairs(tab) do
+        if item == val then
+            return true
+        end
+    end
+    return false
+end
+
+
 function SetTag(comp)
     sel_tools = comp:GetToolList(true)
     tag = tostring(itm.Line.Text)
@@ -126,12 +137,11 @@ function SetTag(comp)
     end
     data = comp:GetData("ToolManager."..tag) or {}
     for _, tool in pairs(sel_tools) do
-        table.insert(data, tool.Name)
+        if not hasValue(data, tool.Name) then
+            table.insert(data, tool.Name)
+        end
     end
     comp:SetData("ToolManager."..tag, data)
-
-    print("new tag [ "..tag.." ] is set")
-
     RefreshTable()
 end
 
@@ -201,7 +211,11 @@ end
 function win.On.Tree.ItemDoubleClicked(ev)
     local currentTag = itm.Line.Text
     local data = comp:GetData("ToolManager")
-    if data and currentTag ~= "" then
+    if #data[currentTag] == 0 then
+        print("not tools assigned to the tag")
+        return
+    end
+    if currentTag ~= "" then
         for tag, tools in pairs(data) do
             if tag == currentTag then
                 print("tools tagged with [ "..tag.." ]:")
@@ -210,7 +224,29 @@ function win.On.Tree.ItemDoubleClicked(ev)
                 end
             end
         end
+    else
+        print('select tag from the list or add a new one')
     end
+end
+
+function win.On.ExcludeButton.Clicked(ev)
+    local tag = itm.Line.Text
+    data = comp:GetData("ToolManager.".. tag)
+    local selectedTools = comp:GetToolList(true)
+    if not data or not selectedTools then
+        return
+    end
+
+    for k, tool in pairs(selectedTools) do
+        for i, name in pairs(data) do
+            if tool.Name == name then
+                table.remove(data, i)
+                print("removed '" ..tool.Name.."' from tag `"..tag.."`")
+            end
+        end
+    end
+    comp:SetData("ToolManager."..tag, data)
+    RefreshTable()
 end
 
 function win.On.SetTagButton.Clicked(ev)
