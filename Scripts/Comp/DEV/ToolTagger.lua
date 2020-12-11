@@ -1,6 +1,6 @@
 _author = "Alexey Bogomolov <mail@abogomolov.com>"
-_date = "2020-12-08"
-_VERSION = "1.0"
+_date = "2020-12-10"
+_VERSION = "1.1"
 
 local ui = fu.UIManager
 local disp = bmd.UIDispatcher(ui)
