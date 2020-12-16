@@ -55,6 +55,9 @@
         V.0.2.3
             -- use as standalone script
             -- provide a remote machine IP as an argument to do remote management (a bit slow but working)
+        V.0.2.4
+            -- set empty value to Text inputs, such as Comments
+            -- cache is enabled by default
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
@@ -89,7 +92,7 @@ import subprocess
 import sys
 from pprint import pprint as pp
 
-__VERSION__ = 2.3
+__VERSION__ = 2.4
 __license__ = "MIT"
 __copyright__ = "2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>, 2019-2020 additions by Alexey Bogomolov <mail@abogomolov.com>"
 
@@ -541,7 +544,6 @@ class FusionInput:
 
     def __init__(self, fusion_input):
         self.fusion_input = fusion_input
-        self.cache = False
         self.keyframes = fusion_input.GetKeyFrames()
         self.keyframe_values = dict()
         self.has_keyframes = len(self.keyframes) > 0
@@ -551,34 +553,22 @@ class FusionInput:
         self.ID = self.attributes["INPS_ID"]
 
     def Refresh(self):
-        self.GetAttrs()
-        self.GetKeyFrames()
+        self.get_attributes()
+        self.get_keyframes()
 
-    def GetAttrs(self, attr=None):
+    def get_attributes(self, attr=None):
         if attr:
-            if self.cache:
-                return self.attributes.get(attr, None)
-            else:
-                return self.fusion_input.GetAttrs(attr)
+            return self.attributes.get(attr, None)
         else:
-            if self.cache:
-                return self.attributes
-            else:
-                return self.fusion_input.GetAttrs()
+            return self.attributes
 
-    def GetKeyFrames(self):
-        if self.cache:
-            return self.keyframes
-        else:
-            return self.fusion_input.GetKeyFrames()
+    def get_keyframes(self):
+        return self.keyframes
 
-    def GetExpression(self):
-        if self.cache:
-            return self.expression
-        else:
-            return self.fusion_input.GetExpression()
+    def get_expression(self):
+        return self.expression
 
-    def SetExpression(self, expression):
+    def set_expression(self, expression):
         self.expression = expression
         self.fusion_input.SetExpression(expression)
         self.Refresh()
@@ -592,10 +582,15 @@ class FusionInput:
             pp(self.attributes)
             return
 
-        if self.GetExpression():
+        if value == "":
+            if self.attributes["INPS_DataType"] in ["Text", "Clip"]:
+                self.fusion_input[key] = value
+            return
+
+        if self.get_expression():
             if value == "-x" or "-x" in value:
                 print("Expression cleared")
-                self.SetExpression(None)
+                self.set_expression(None)
             else:
                 print(
                     "This input is linked by expression. Use '-x' to clear expression"
@@ -603,7 +598,7 @@ class FusionInput:
             return
 
         if not isinstance(value, list) and value[0] == "=":
-            self.SetExpression(value.lstrip("="))
+            self.set_expression(value.lstrip("="))
             return
 
         if self.attributes["INPS_DataType"] == "Number":
@@ -668,7 +663,7 @@ class FusionInput:
                 x, y = value
                 if x[0] == "=" or y[0] == "=" and len(value) > 1:
                     value = [v.lstrip("=") for v in value]
-                    self.SetExpression(f"Point({value[0]}, {value[1]})")
+                    self.set_expression(f"Point({value[0]}, {value[1]})")
                 else:
                     print("Point data accepts only numbers and expressions")
                 return
@@ -708,10 +703,11 @@ class TableModel(QAbstractTableModel):
         self.data_types_to_skip = {}
         self.background_role_method = self.backgroundRole
         self.tool_dict = dict()
-        self.attribute_name_keys = list()  # List of unique attribute name keys
-        self.attribute_data_types = list()  # this list is coupled to the key list
-        self.tools_inputs = list()
-        self.tools_attributes = list()
+        self.attribute_name_keys = []  # List of unique attribute name keys
+        self.attribute_data_types = []  # this list is coupled to the key list
+        self.tools_inputs = []
+        self.tools_attributes = []
+
 
         # this stores the editrole data for multi commits (this way we get inline math to work)
         self.stored_edit_role_data = None
@@ -779,58 +775,48 @@ class TableModel(QAbstractTableModel):
         Default data method with some extra UserRoles and BackgroundRoles for drawing keyframes.
         This method needs some extra work as a lot of stuff is not written optimal.
         """
-        if not index.isValid():
-            return None
+        if index.isValid():
+            fusion_input = self.tools_inputs[index.row()].get(
+                    self.attribute_name_keys[index.column()]
+                )
+            if role == Qt.DisplayRole:
+                if isinstance(fusion_input, str):
+                    return fusion_input
+                if not fusion_input or fusion_input.attributes.get("INPID_InputControl") == "SplineControl":
+                    return None
+                # force it to be string so it shows EVERYTHING
+                return str(fusion_input[comp.CurrentTime]) if fusion_input else fusion_input
+            elif role == Qt.EditRole:
+                return fusion_input
+            elif role == Qt.UserRole:
+                return self.attribute_name_keys[index.column()]
+            elif role == Qt.UserRole + 1:
+                return self.attribute_data_types[index.column()]
+            elif role == Qt.BackgroundRole:
+                return self.background_role_method(index, role)
 
-        r = self.tools_inputs[index.row()].get(
-            self.attribute_name_keys[index.column()], None
-        )
-
-        if role == Qt.DisplayRole:
-            if isinstance(r, str):
-                return r
-            if not r or r.attributes.get("INPID_InputControl") == "SplineControl":
-                return None
-            return (
-                str(r[comp.CurrentTime]) if r else r
-            )  # force it to be string so it shows EVERYTHING
-
-        elif role == Qt.EditRole:
-            return r[comp.CurrentTime] if r else r
-        elif role == Qt.UserRole:
-            return self.attribute_name_keys[index.column()]
-        elif role == Qt.UserRole + 1:
-            return self.attribute_data_types[index.column()]
-        elif role == Qt.BackgroundRole:
-            return self.background_role_method(index, role)
-        else:
-            return
-
-    def noRole(self, index, role):
-        return None
-
-    def backgroundRole(self, index, role):
-        r = self.tools_inputs[index.row()].get(
-            self.attribute_name_keys[index.column()], None
-        )
-        if r:
+    def backgroundRole(self, index, role=None):
+        if index.isValid():
+            fusion_input = self.tools_inputs[index.row()].get(
+                self.attribute_name_keys[index.column()]
+            )
             b = QBrush()
             b.setStyle(Qt.SolidPattern)
-            if isinstance(r, str):
-                return None
-            if r.attributes.get("INPID_InputControl", None) == "SplineControl":
-                b.setColor(QColor(180, 64, 92, 64))
-                return b
-            if r.GetExpression():
-                b.setColor(QColor(92, 64, 92, 180))
-                return b
-            if r.GetAttrs("INPB_Connected"):
-                if comp.CurrentTime in list(r.keyframes.values()):
-                    b.setColor(QColor(62, 92, 62, 180))
-                else:
-                    b.setColor(QColor(64, 78, 120, 180))
-                return b
-        return None
+            if fusion_input:
+                if isinstance(fusion_input, str):
+                    return None
+                if fusion_input.attributes.get("INPID_InputControl", None) == "SplineControl":
+                    b.setColor(QColor(180, 64, 92, 64))
+                    return b
+                if fusion_input.get_expression():
+                    b.setColor(QColor(92, 64, 92, 180))
+                    return b
+                if fusion_input.attributes.get("INPB_Connected"):
+                    if comp.CurrentTime in list(fusion_input.keyframes.values()):
+                        b.setColor(QColor(62, 92, 62, 180))
+                    else:
+                        b.setColor(QColor(64, 78, 120, 180))
+                    return b
 
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole:
@@ -838,7 +824,6 @@ class TableModel(QAbstractTableModel):
                 return self.splitHeaderName(self.attribute_name_keys[section])
             if orientation == Qt.Vertical:
                 return self.tool_dict[section + 1].Name
-        return None
 
     def setData(self, index, value, role=Qt.DisplayRole):
         """
@@ -849,20 +834,18 @@ class TableModel(QAbstractTableModel):
 
         Needs more work
         """
-        if not index.isValid():
-            return
-        elif role == Qt.EditRole:
-            r = self.tools_inputs[index.row()].get(
-                self.attribute_name_keys[index.column()], None
-            )
-            if r:
-                if isinstance(value, list):
-                    # print("setting point data: ", value)
-                    r[comp.CurrentTime] = value
-                else:
-                    # print("setting string data: ", str(value))
-                    r[comp.CurrentTime] = str(value)
-        return True
+        if index.isValid():
+            if role == Qt.EditRole:
+                fusion_input = self.tools_inputs[index.row()].get(
+                    self.attribute_name_keys[index.column()], None
+                )
+                if fusion_input:
+                    if isinstance(value, list):
+                        # print("setting point data: ", value)
+                        fusion_input[comp.CurrentTime] = value
+                    else:
+                        # print("setting string data: ", str(value))
+                        fusion_input[comp.CurrentTime] = str(value)
 
     def flags(self, index):
         if not index.isValid():
@@ -922,11 +905,6 @@ class MainWindow(QMainWindow):
         self.search_line = QLineEdit(self)
         self.search_line.setFixedHeight(30)
         self.search_line.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        # self.statusBar().showMessage("System Status | Normal")
-        # self.cacheButton = QToolButton()
-        # self.cacheButton.setCheckable(True)
-        # self.cacheButton.setChecked(False)
-        # self.cacheButton.setText('use cache')
 
         v_box = QVBoxLayout()
         h_box = QHBoxLayout()
@@ -935,7 +913,6 @@ class MainWindow(QMainWindow):
         h_box.addWidget(self.clear_button)
         h_box.addWidget(self.search_line)
         h_box.addWidget(self.refresh_button)
-        # h_box.addWidget(self.cacheButton)
         h_box.setContentsMargins(0, 0, 0, 0)
         v_box.addLayout(h_box)
         v_box.addWidget(self._tv)
@@ -943,10 +920,10 @@ class MainWindow(QMainWindow):
         # find the corner button
         self.corner = self._tv.findChild(QAbstractButton)
 
-        size_grip = QSizeGrip(self)
+        # size_grip = QSizeGrip(self)
         v_box.setContentsMargins(2, 2, 2, 2)
-        size_grip.setWindowFlags(Qt.WindowStaysOnTopHint)
-        size_grip.move(0, 200)
+        # size_grip.setWindowFlags(Qt.WindowStaysOnTopHint)
+        # size_grip.move(0, 200)
 
         central_widget = QWidget()
         central_widget.setLayout(v_box)
@@ -965,7 +942,6 @@ class MainWindow(QMainWindow):
         self.progress_bar.setValue(0)
 
         # Connections
-        # self.cacheButton.clicked.connect(self.setCacheMode)
         self.always_on_top.stateChanged.connect(self.changeAlwaysOnTop)
         self.search_line.textChanged.connect(self.filterRegExpChanged)
         self.clear_button.pressed.connect(self.clear_search)
@@ -975,6 +951,7 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(
             self.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint
         )
+        self.load_fusion_data()
 
     def reset_sorting(self):
         """
@@ -1021,20 +998,6 @@ class MainWindow(QMainWindow):
         self.proxy_model.setSourceModel(self._tm)
         self._tv.setSortingEnabled(True)
         self._tv.updateColumns()
-
-    def set_cache_mode(self):
-        # Not sure where this goes, is it a method for the TableModel? or should we inherit the dict that has all
-        # the fusion input caches and have that cycle through all contained fusion inputs?
-        # Cache does not seem to speed up things. For now we just disable it
-
-        cache_status = self.cacheButton.isChecked()
-        for input_list in self._tm.tools_inputs:
-            for tool_input in list(input_list.values()):
-                try:
-                    tool_input.cache = cache_status
-                except AttributeError:
-                    # pass str values
-                    pass
 
     def filterRegExpChanged(self):
         """
@@ -1127,5 +1090,4 @@ if __name__ == "__main__":
     main.setWindowTitle("Attribute Spreadsheet")
     main.setMinimumSize(QSize(740, 200))
     main.show()
-    main.load_fusion_data()
     main_app.exec_()
