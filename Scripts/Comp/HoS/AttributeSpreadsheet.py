@@ -208,7 +208,6 @@ except ImportError:
         rc = process.poll()
         return rc
 
-
     try:
         # ask user permission to install Pyside manually
         dialogue = {
@@ -437,8 +436,8 @@ class TableView(QTableView):
         target_tool = source_model.tool_dict[index.row() + 1].Name
         target_input_id = (
             source_model.tools_inputs[index.row()]
-                .get(source_model.attribute_name_keys[index.column()])
-                .ID
+            .get(source_model.attribute_name_keys[index.column()])
+            .ID
         )
         try:
             value = "={}.{}".format(target_tool, target_input_id)
@@ -454,16 +453,16 @@ class TableView(QTableView):
             if len(self.selectionModel().selection().indexes()) <= 1:
                 index_target = self.model().mapToSource(self.indexAt(self.startCenter))
                 if (
-                        index_source.row() == index_target.row()
-                        and index_source.column() == index_target.column()
+                    index_source.row() == index_target.row()
+                    and index_source.column() == index_target.column()
                 ):
                     print("cannot link the input to itself")
                     return
                 if (
-                        index_source.row() > -1
-                        and index_source.column() > -1
-                        and index_target.row() > -1
-                        and index_target.column() > -1
+                    index_source.row() > -1
+                    and index_source.column() > -1
+                    and index_target.row() > -1
+                    and index_target.column() > -1
                 ):
                     # Select the first cell by sampling the area under the first clicked mouse center
                     self.setSelection(
@@ -827,17 +826,13 @@ class TableModel(QAbstractTableModel):
                 if isinstance(fusion_input, str):
                     return fusion_input
                 if (
-                        not fusion_input
-                        or fusion_input.attributes.get("INPID_InputControl")
-                        == "SplineControl"
+                    not fusion_input
+                    or fusion_input.attributes.get("INPID_InputControl")
+                    == "SplineControl"
                 ):
                     return None
                 # force it to be string so it shows EVERYTHING
-                return (
-                    str(fusion_input[comp.CurrentTime])
-                    if fusion_input
-                    else fusion_input
-                )
+                return str(fusion_input[comp.CurrentTime])
             elif role == Qt.EditRole:
                 return fusion_input
             elif role == Qt.UserRole:
@@ -857,10 +852,7 @@ class TableModel(QAbstractTableModel):
             if fusion_input:
                 if isinstance(fusion_input, str):
                     return None
-                if (
-                        fusion_input.attributes.get("INPID_InputControl", None)
-                        == "SplineControl"
-                ):
+                if fusion_input.attributes.get("INPID_InputControl", None) == "SplineControl":
                     b.setColor(QColor(180, 64, 92, 64))
                     return b
                 if fusion_input.get_expression():
@@ -975,10 +967,7 @@ class MainWindow(QMainWindow):
         # find the corner button
         self.corner = self._tv.findChild(QAbstractButton)
 
-        # size_grip = QSizeGrip(self)
         v_box.setContentsMargins(2, 2, 2, 2)
-        # size_grip.setWindowFlags(Qt.WindowStaysOnTopHint)
-        # size_grip.move(0, 200)
 
         central_widget = QWidget()
         central_widget.setLayout(v_box)
@@ -995,7 +984,7 @@ class MainWindow(QMainWindow):
         self.progress_bar = QProgressBar()
         self.status_bar.addPermanentWidget(self.progress_bar)
         self.progress_bar.setValue(0)
-
+        self.progress_bar.setVisible(False)
         # Connections
         self.always_on_top.stateChanged.connect(self.changeAlwaysOnTop)
         self.search_line.textChanged.connect(self.filterRegExpChanged)
@@ -1006,7 +995,11 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(
             self.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint
         )
-        self.load_fusion_data()
+        tool_list = comp.GetToolList(True)
+        if tool_list and len(tool_list.values()) <= 5:
+            self.load_fusion_data()
+        else:
+            self.status_bar.showMessage("Click Refresh button to load selected tools")
 
     def reset_sorting(self):
         """
