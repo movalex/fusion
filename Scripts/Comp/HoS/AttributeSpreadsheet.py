@@ -1,5 +1,5 @@
 """
-    AttributeSpreadsheet
+    Attribute Spreadsheet script
 
     About:
         A spreadsheet script to edit the input parameters of multiple Fusion tools at once.
@@ -58,6 +58,7 @@
         V.0.2.4
             -- set empty value to Text inputs, such as Comments
             -- cache is enabled by default
+            -- catch wrong Python version early
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
@@ -83,7 +84,7 @@
         UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-import builtins
+from __future__ import print_function
 import datetime
 import os
 import platform
@@ -94,23 +95,58 @@ from pprint import pprint as pp
 
 __VERSION__ = 2.4
 __license__ = "MIT"
-__copyright__ = "2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>, 2019-2020 additions by Alexey Bogomolov <mail@abogomolov.com>"
+__copyright__ = "2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>,\
+2019-2020 additions by Alexey Bogomolov <mail@abogomolov.com>"
 
 PKG = "PySide2"
 PKG_VERSION = "5.15.2"
 
-print(f"\nAttribute Spreadsheet version 0.{__VERSION__}")
+print("_____________________\nAttribute Spreadsheet version 0.{}".format(__VERSION__))
+
+
+def init_fusion(host, python_version):
+    try:
+        import BlackmagicFusion as bmd
+
+        if not python_version >= (3, 6):
+            sys.stderr.write("Python 3.6 is required\n")
+            print(
+                "Python 3.6 and later is required to run this script\n"
+                "Set Python interpreter in Fusion Preferences -> Global Settings -> Script -> Default Script Version"
+            )
+            fu.ShowPrefs("PrefsScript")
+            sys.exit()
+    except ImportError:
+        return None
+    fusion = bmd.scriptapp("Fusion", host)
+    return fusion
+
+
+fu_host = "localhost"
+py_version = sys.version_info[:2]
+
+if len(sys.argv) == 2:
+    fu_host = sys.argv[1]
+
+fu = init_fusion(fu_host, py_version)
+
+if not fu:
+    raise Exception("No instance of Fusion found!")
+
+comp = fu.GetCurrentComp()
 
 
 def print(*args, **kwargs):
+    import builtins
+
     """override print() function"""
     builtins.print("[AS] : ", end="")
     return builtins.print(*args, **kwargs)
 
 
-if not sys.version_info[:2] >= (3, 6):
-    sys.stderr.write("Python 3.6 is required")
-    sys.exit()
+class PackageInstallationError(Exception):
+    pass
+
 
 try:
     from PySide2.QtWidgets import (
@@ -157,7 +193,7 @@ try:
         QColor,
     )
 
-except (ImportError, ModuleNotFoundError):
+except ImportError:
 
     def run_command(command):
         process = subprocess.Popen(
@@ -171,6 +207,7 @@ except (ImportError, ModuleNotFoundError):
                 print(output.strip())
         rc = process.poll()
         return rc
+
 
     try:
         # ask user permission to install Pyside manually
@@ -231,12 +268,14 @@ except (ImportError, ModuleNotFoundError):
         else:
             print(
                 "Pyside2 is required to run this script.\nPlease install it manually with following command:"
-                f"\n{python_executable} -m pip install Pyside2"
+                "\n{} -m pip install Pyside2".format(python_executable)
             )
             sys.exit()
 
-    except Exception as e:
-        raise NameError("Could not find composition data")
+    except Exception:
+        print(
+            "Could not install Pyside automatically or the installation process is interrupted"
+        )
 
 
 class FUIDComboDelegate(QItemDelegate):
@@ -287,9 +326,9 @@ class LineEditDelegate(QItemDelegate):
 
     def createEditor(self, parent, option, index):
         line_edit = QLineEdit(parent)
-        # self.connect(
-        #     line_edit, SIGNAL("valueChanged(int)"), self, SLOT("valueChanged()")
-        # )
+        self.connect(
+            line_edit, SIGNAL("valueChanged(int)"), self, SLOT("valueChanged()")
+        )
         return line_edit
 
     def setEditorData(self, editor, index):
@@ -398,11 +437,11 @@ class TableView(QTableView):
         target_tool = source_model.tool_dict[index.row() + 1].Name
         target_input_id = (
             source_model.tools_inputs[index.row()]
-            .get(source_model.attribute_name_keys[index.column()])
-            .ID
+                .get(source_model.attribute_name_keys[index.column()])
+                .ID
         )
         try:
-            value = f"={target_tool}.{target_input_id}"
+            value = "={}.{}".format(target_tool, target_input_id)
             self.commitDataDo(value)
         except KeyError:
             pass
@@ -415,16 +454,16 @@ class TableView(QTableView):
             if len(self.selectionModel().selection().indexes()) <= 1:
                 index_target = self.model().mapToSource(self.indexAt(self.startCenter))
                 if (
-                    index_source.row() == index_target.row()
-                    and index_source.column() == index_target.column()
+                        index_source.row() == index_target.row()
+                        and index_source.column() == index_target.column()
                 ):
                     print("cannot link the input to itself")
                     return
                 if (
-                    index_source.row() > -1
-                    and index_source.column() > -1
-                    and index_target.row() > -1
-                    and index_target.column() > -1
+                        index_source.row() > -1
+                        and index_source.column() > -1
+                        and index_target.row() > -1
+                        and index_target.column() > -1
                 ):
                     # Select the first cell by sampling the area under the first clicked mouse center
                     self.setSelection(
@@ -495,9 +534,15 @@ class TableView(QTableView):
                             x, y = [float(i) for i in value]
                         except ValueError:
                             x, y = value
-                        print(f"setting {tool_name} [{input_name}] to [{x} : {y}]")
+                        print(
+                            "setting {} [{}] to [{} : {}]".format(
+                                tool_name, input_name, x, y
+                            )
+                        )
                     else:
-                        print(f"setting {tool_name} [{input_name}] to {value}")
+                        print(
+                            "setting {} [{}] to {}".format(tool_name, input_name, value)
+                        )
                     tm.setData(self.model().mapToSource(s), value, Qt.EditRole)
             comp.EndUndo(True)
         except Exception as e:
@@ -663,7 +708,7 @@ class FusionInput:
                 x, y = value
                 if x[0] == "=" or y[0] == "=" and len(value) > 1:
                     value = [v.lstrip("=") for v in value]
-                    self.set_expression(f"Point({value[0]}, {value[1]})")
+                    self.set_expression("Point({}, {})".format(value[0], value[1]))
                 else:
                     print("Point data accepts only numbers and expressions")
                 return
@@ -707,7 +752,6 @@ class TableModel(QAbstractTableModel):
         self.attribute_data_types = []  # this list is coupled to the key list
         self.tools_inputs = []
         self.tools_attributes = []
-
 
         # this stores the editrole data for multi commits (this way we get inline math to work)
         self.stored_edit_role_data = None
@@ -777,15 +821,23 @@ class TableModel(QAbstractTableModel):
         """
         if index.isValid():
             fusion_input = self.tools_inputs[index.row()].get(
-                    self.attribute_name_keys[index.column()]
-                )
+                self.attribute_name_keys[index.column()]
+            )
             if role == Qt.DisplayRole:
                 if isinstance(fusion_input, str):
                     return fusion_input
-                if not fusion_input or fusion_input.attributes.get("INPID_InputControl") == "SplineControl":
+                if (
+                        not fusion_input
+                        or fusion_input.attributes.get("INPID_InputControl")
+                        == "SplineControl"
+                ):
                     return None
                 # force it to be string so it shows EVERYTHING
-                return str(fusion_input[comp.CurrentTime]) if fusion_input else fusion_input
+                return (
+                    str(fusion_input[comp.CurrentTime])
+                    if fusion_input
+                    else fusion_input
+                )
             elif role == Qt.EditRole:
                 return fusion_input
             elif role == Qt.UserRole:
@@ -805,7 +857,10 @@ class TableModel(QAbstractTableModel):
             if fusion_input:
                 if isinstance(fusion_input, str):
                     return None
-                if fusion_input.attributes.get("INPID_InputControl", None) == "SplineControl":
+                if (
+                        fusion_input.attributes.get("INPID_InputControl", None)
+                        == "SplineControl"
+                ):
                     b.setColor(QColor(180, 64, 92, 64))
                     return b
                 if fusion_input.get_expression():
@@ -1015,16 +1070,16 @@ class MainWindow(QMainWindow):
 # increase font size for Retina Display on Mac
 font_size = 12 if platform.system() == "Darwin" else 9
 
-css = f"""
+css = """
 *, QTableCornerButton::section {{
-    font: {font_size}pt 'tahoma';
+    font: {}pt 'tahoma';
     color: rgb(192, 192, 192);
     background-color: rgb(52, 52, 52);
     }}
 
 QLineEdit {{
     background-color: rgb(40,40,40);
-}}
+    }}
 
 QMainWindow {{
     border-top: 1px solid rgb(80,80,80);
@@ -1066,28 +1121,21 @@ QTableWidget::item {{
     border-width: 4px;
     background-color: rgb(30,30,30);
     }}
-"""
+""".format(
+    font_size
+)
 
 # We define fu and comp as globals so we can basically run the same script from console as well from within Fusion
 # If both Resolve and Fusion are running, Fusion data may load improperly. So we check for scriptapp,
 # and the script would not load if there's a confusion about which instance of Fusion to use.
 
 if __name__ == "__main__":
-    import BlackmagicFusion as bmd
-
-    fu_host = "localhost"
-    if len(sys.argv) == 2:
-        fu_host = sys.argv[1]
-    fu = bmd.scriptapp("Fusion", fu_host)
-    if not fu:
-        raise Exception("No instance of Fusion found!")
-    comp = fu.GetCurrentComp()
     main_app = QApplication.instance()  # checks if QApplication already exists.
     if not main_app:  # create QApplication if it doesnt exist
         main_app = QApplication([])
     main_app.setStyleSheet(css)
     main = MainWindow()
-    main.setWindowTitle("Attribute Spreadsheet")
+    main.setWindowTitle("Attribute Spreadsheet 0.{}".format(__VERSION__))
     main.setMinimumSize(QSize(740, 200))
     main.show()
     main_app.exec_()
