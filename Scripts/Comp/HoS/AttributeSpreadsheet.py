@@ -100,6 +100,8 @@ __copyright__ = "2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>,\
 
 PKG = "PySide2"
 PKG_VERSION = "5.15.2"
+# do not auto-load tools on startup if more than 8 tools selected to speedup UI loading
+TOOLS_AUTOLOAD = 8
 
 print("_____________________\nAttribute Spreadsheet version 0.{}".format(__VERSION__))
 
@@ -767,13 +769,16 @@ class TableModel(QAbstractTableModel):
             else:
                 print("Unable to find comp data. Please report this issue")
             sys.exit()
-        self.tool_dict.clear()
-        self.tool_dict = comp.GetToolList(True)
         self.attribute_name_keys = []  # List of unique attribute name keys
         self.attribute_data_types = []  # this list is coupled to the key list
         self.tools_inputs = []
         self.tools_attributes = []
         progress = 0
+        self.tool_dict.clear()
+        self.tool_dict = comp.GetToolList(True)
+        if not self.tool_dict.values():
+            self.communicate.send("Select some tools and click Refresh button")
+            return
         for tool in self.tool_dict.values():
             tool_inputs = {}
             tool_inputs_attributes = {}
@@ -995,11 +1000,13 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(
             self.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint
         )
-        tool_list = comp.GetToolList(True)
-        if tool_list and len(tool_list.values()) <= 5:
-            self.load_fusion_data()
-        else:
+        self.tool_list = comp.GetToolList(True)
+        if not self.tool_list:
+            self.status_bar.showMessage("Select some tools and click Refresh button")
+        if len(self.tool_list.values()) >= TOOLS_AUTOLOAD:
             self.status_bar.showMessage("Click Refresh button to load selected tools")
+        else:
+            self.load_fusion_data()
 
     def reset_sorting(self):
         """
