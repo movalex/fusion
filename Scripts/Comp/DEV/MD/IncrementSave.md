@@ -22,6 +22,6 @@ _License:_ [MIT](https://mit-license.org/)
 
 _Version:_ v.1.0 - 2020/06/26
 
-_Donations:_ [PayPal.me](https://paypal.me/aabogomolov/10usd)
+_Donations:_ [PayPal.me](https://paypal.me/aabogomolov/5usd)
 
 _Requirements:_ Python 3.6+
