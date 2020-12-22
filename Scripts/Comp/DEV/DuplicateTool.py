@@ -1,11 +1,10 @@
 # Duplicate Tool script
-# Copy and pase tools in Fusion and Resolve Fusion and keep connections. Also works with wireless nodes.
+# Copy and paste tools in Fusion and Resolve Fusion and keep connections. Also works with wireless nodes.
 # This script is based on hos_Duplicate.lua tool written by Sven Neve in 2013.
 # Copyright 2020 Alexey Bogomolov (mail@abogomolov.com)
 # License MIT
-# v 1.2 11.24.2020 
-# -- Properly fix inputs for multi-input tools, like Merge3D or Replicate3D, in case some inputs were disconnected or rearranged.
-
+# v 1.2 11.24.2020
+# -- Fix inputs for multi-input tools, like Merge3D or Replicate3D, if some inputs were disconnected.
 
 
 def fix_number_of_inputs(dup_tool, inputs_list):
@@ -34,9 +33,7 @@ def duplicate(orig_tool_list, dup_tool_list):
                 try:
                     duplicate_input = dup_tool.GetInputList()[j]
                     if not duplicate_input.GetAttrs()["INPB_Connected"]:
-                        duplicate_input.ConnectTo(
-                            original_input.GetConnectedOutput()
-                        )
+                        duplicate_input.ConnectTo(original_input.GetConnectedOutput())
                 except KeyError:
                     pass
         fix_number_of_inputs(dup_tool, inputs_to_connect)
@@ -57,4 +54,4 @@ if __name__ == "__main__":
         duplicate(original_tool_list, duplicate_tool_list)
         comp.EndUndo()
     else:
-        print('no tools to duplicate')
+        print("no tools to duplicate")
