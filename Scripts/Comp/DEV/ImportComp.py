@@ -8,6 +8,11 @@ root.withdraw()
 
 file_path = filedialog.askopenfilename(filetypes=[("Fusion Comp", ".comp")])
 
+# use AskUser dialogue if you prefer native file browser:
+
+# dialogue = {1:{1:"Select .comp file", 2: "FileBrowse"}}
+# file_path = comp.AskUser("Open comp", dialogue)["Select .comp file"]
+
 
 def main(filepath=None):
     if not filepath:
