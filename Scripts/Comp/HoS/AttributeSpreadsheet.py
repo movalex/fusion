@@ -110,18 +110,18 @@ def init_fusion(host, python_version):
     try:
         import BlackmagicFusion as bmd
 
+        fusion = bmd.scriptapp("Fusion", host)
         if not python_version >= (3, 6):
             sys.stderr.write("Python 3.6 is required\n")
             print(
                 "Python 3.6 and later is required to run this script\n"
                 "Set Python interpreter in Fusion Preferences -> Global Settings -> Script -> Default Script Version"
             )
-            fu.ShowPrefs("PrefsScript")
+            fusion.ShowPrefs("PrefsScript")
             sys.exit()
+        return fusion
     except ImportError:
         return None
-    fusion = bmd.scriptapp("Fusion", host)
-    return fusion
 
 
 fu_host = "localhost"
@@ -133,15 +133,16 @@ if len(sys.argv) == 2:
 fu = init_fusion(fu_host, py_version)
 
 if not fu:
-    raise Exception("No instance of Fusion found!")
+    raise Exception("No Fusion instance found!")
 
 comp = fu.GetCurrentComp()
 
 
 def print(*args, **kwargs):
+    """override print() function"""
+
     import builtins
 
-    """override print() function"""
     builtins.print("[AS] : ", end="")
     return builtins.print(*args, **kwargs)
 
@@ -438,8 +439,8 @@ class TableView(QTableView):
         target_tool = source_model.tool_dict[index.row() + 1].Name
         target_input_id = (
             source_model.tools_inputs[index.row()]
-            .get(source_model.attribute_name_keys[index.column()])
-            .ID
+                .get(source_model.attribute_name_keys[index.column()])
+                .ID
         )
         try:
             value = "={}.{}".format(target_tool, target_input_id)
@@ -455,16 +456,16 @@ class TableView(QTableView):
             if len(self.selectionModel().selection().indexes()) <= 1:
                 index_target = self.model().mapToSource(self.indexAt(self.startCenter))
                 if (
-                    index_source.row() == index_target.row()
-                    and index_source.column() == index_target.column()
+                        index_source.row() == index_target.row()
+                        and index_source.column() == index_target.column()
                 ):
                     print("cannot link the input to itself")
                     return
                 if (
-                    index_source.row() > -1
-                    and index_source.column() > -1
-                    and index_target.row() > -1
-                    and index_target.column() > -1
+                        index_source.row() > -1
+                        and index_source.column() > -1
+                        and index_target.row() > -1
+                        and index_target.column() > -1
                 ):
                     # Select the first cell by sampling the area under the first clicked mouse center
                     self.setSelection(
@@ -831,9 +832,9 @@ class TableModel(QAbstractTableModel):
                 if isinstance(fusion_input, str):
                     return fusion_input
                 if (
-                    not fusion_input
-                    or fusion_input.attributes.get("INPID_InputControl")
-                    == "SplineControl"
+                        not fusion_input
+                        or fusion_input.attributes.get("INPID_InputControl")
+                        == "SplineControl"
                 ):
                     return None
                 # force it to be string so it shows EVERYTHING

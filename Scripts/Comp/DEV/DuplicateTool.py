@@ -8,19 +8,13 @@
 
 
 def fix_number_of_inputs(dup_tool, inputs_list):
-    if dup_tool.ID in [
-        "Merge3D",
-        "Replicate3D",
-        "Fuse.Switch",
-        "Fuse.SwitchElse",
-    ]:
-        count = 1
-        for inp in inputs_list:
-            if inp.GetConnectedOutput():
-                dup_input = dup_tool.FindMainInput(count)
-                count += 1
-                if dup_input and not dup_input.GetAttrs()["INPB_Connected"]:
-                    dup_input.ConnectTo(inp)
+    count = 1
+    for inp in inputs_list:
+        if inp.GetConnectedOutput():
+            dup_input = dup_tool.FindMainInput(count)
+            count += 1
+            if dup_input and not dup_input.GetAttrs()["INPB_Connected"]:
+                dup_input.ConnectTo(inp)
 
 
 def duplicate(orig_tool_list, dup_tool_list):
@@ -36,7 +30,14 @@ def duplicate(orig_tool_list, dup_tool_list):
                         duplicate_input.ConnectTo(original_input.GetConnectedOutput())
                 except KeyError:
                     pass
-        fix_number_of_inputs(dup_tool, inputs_to_connect)
+
+        if tool.ID in [
+            "Merge3D",
+            "Replicate3D",
+            "Fuse.Switch",
+            "Fuse.SwitchElse",
+        ]:
+            fix_number_of_inputs(dup_tool, inputs_to_connect)
 
 
 if __name__ == "__main__":
