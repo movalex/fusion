@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import filedialog
 
 comp = fu.GetCurrentComp()
-
+comp_name = comp.GetAttrs()["COMPS_FileName"]
 root = tk.Tk()
 root.withdraw()
 
@@ -18,21 +18,16 @@ def main(filepath=None):
     if not filepath:
         return
     comp_load = fu.LoadComp(filepath, True)
-
     tools = comp_load.GetToolList(False)
-
     flow = comp_load.CurrentFrame.FlowView
-
     for tool in tools.values():
         flow.Select(tool)
-
     comp_load.Copy()
-
     flow.Select()
-
-    comp_load.Close()
-
+    # comp_load.Close()
+    fu.LoadComp(comp_name, True)
     comp.Paste()
+    fu.SetData("SourceComp", filepath)
 
 
 if __name__ == "__main__":
