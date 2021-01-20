@@ -61,8 +61,6 @@ function deleteAndGetPositions(comp)
             tool:Delete()
         end
     end
-    dump(inps)
-    dump(outs)
     return {destTools, inps, outs}
 end
 
