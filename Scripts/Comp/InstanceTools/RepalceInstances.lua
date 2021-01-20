@@ -27,16 +27,6 @@ function getOutputs(tool)
             return inp:GetConnectedOutput()
         end
     end
-    -- while true do
-    --     out = tool:FindMainOutput(index)
-    --     if out == nil then
-    --         break
-    --     end
-    --     for i, input in pairs(out:GetConnectedInputs()) do
-    --         inputList[input:GetAttrs()["INPS_Name"]] = input
-    --     end
-    --     index = index + 1
-    -- end
 end
 
 function getInputs(tool)
@@ -117,10 +107,6 @@ function process()
             local out = tool:FindMainOutput(1)
             inp:ConnectTo(out)
         end
-        -- local output = tool:FindMainOutput(1)
-        -- inps[tool.Name]["Input"]:ConnectTo(output)
-        -- dump(outs[tool.Name]["Output"])
-        -- inps[tool.Name][1]:ConnectTo(inps[tool.Name][2])
     end
 end
 
