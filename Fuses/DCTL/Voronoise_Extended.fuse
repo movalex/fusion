@@ -1,0 +1,883 @@
+
+--[[--
+
+License: 
+Author:  iq am 2014-02-05
+Smooth Voronoi
+https://www.shadertoy.com/view/ldB3zc
+
+Changes:
+v0.1 
+v0.2
+v0.3
+
+--]]--
+
+
+FuRegisterClass("Voronoise_Extended", CT_SourceTool, {
+	REGS_Category      = "Fuses",
+	REGS_OpIconString  = "TMP",
+	REGS_OpDescription = "DCTL Voronoi",
+
+	REG_NoObjMatCtrls      = true,
+	REG_NoMotionBlurCtrls  = true,
+
+	REG_Source_GlobalCtrls = true,
+	REG_Source_SizeCtrls   = true,
+	REG_Source_AspectCtrls = true,
+	REG_Source_DepthCtrls  = true,
+	REG_OpNoMask           = false,
+	REG_Fuse_NoEdit        = false,
+	REG_Fuse_NoReload      = false,
+
+	REG_TimeVariant        = true,
+	REGS_Company           = "Tida",
+	REGS_URL               = "https://www.steakunderwater.com/wesuckless/",
+	REG_Version            = 000003,
+	})
+	
+
+ 
+SmoothVoronoiParams = [[
+
+
+	float iC0_Width;
+	float iC0_Height;
+	
+	
+	float Center[2];
+	float Angle;
+	float Pivot[2];
+	float Scale;
+	
+	float iTime;
+
+	
+	// ----------- BEGIN Voronoise_Extended Parameters ----------------
+	
+	float Smoothen;
+	float contrastV;
+	float pivotV;
+
+	float Colored;
+
+	
+	float Col_Red;
+	float Col_Green;
+	float Col_Blue;	
+
+	float Option;
+	float DotSize;
+	float MeltSize;
+	
+	// ----------- END   Voronoise_Extended Parameters ----------------	
+	
+
+
+	float Color_Sat;
+	float Color_AddHue;
+	float Color_Hue;
+	float Color_Low;
+	float Color_High;
+	float Color_Contrast;
+	float Color_Pivot;
+	
+	float Alpha_Show;
+	float Alpha_Apply;
+	float Alpha_Red;
+	float Alpha_Green;
+	float Alpha_Blue;
+
+	float Alpha_Low;
+	float Alpha_High;
+	float Alpha_Contrast;
+	float Alpha_Pivot;
+	
+
+
+]]
+ 
+
+
+SmoothVoronoiKernel = [[
+
+	// ---------- BEGIN reliable functions ---------------
+
+
+	__DEVICE__ inline float pow_f(float x, float y) {
+		float ret = _powf(x,y);
+		if (isnan(ret)) {
+			ret = 0.0001f;
+		}
+		return ret;
+	}	
+
+	
+	__DEVICE__ float fract1f(float a) {return (a - _floor(a));}
+	__DEVICE__ float2 fract2f(float2 a) {return to_float2(a.x-_floor(a.x),a.y-_floor(a.y));}	
+
+
+	__DEVICE__ float2 floor2f(float2 c){return to_float2(_floor(c.x), _floor(c.y));}
+
+
+	// ---------- END reliable functions ---------------
+
+
+	// ------------- BEGIN COLOR + ALPHA ---------------------
+	// saturation, contrast_curve, RGB_to_HSV, HSV_to_RGB, rotate_Hue
+
+	__DEVICE__ float3 saturation( float3 A, float p_Sat) {
+		float luma = A.x * 0.2126f + A.y * 0.7152f + A.z * 0.0722f;
+		A.x = (1.0f - p_Sat) * luma + A.x * p_Sat;
+		A.y = (1.0f - p_Sat) * luma + A.y * p_Sat;
+		A.z = (1.0f - p_Sat) * luma + A.z * p_Sat;
+		return A;
+	}	
+	
+	
+	__DEVICE__ float contrast_curve( float ch_in, float ch_low, float ch_high, float contrast, float pivot) {
+		float ch_out = 0.0f;		
+		float q = 2.0f / (1.0f - contrast) - 1.0f;
+		if (ch_in < 0.0f) {ch_out = ch_low;}
+		if (ch_in > 1.0f) {ch_out = ch_high;}
+			
+		if (ch_in <= pivot && ch_in >= 0.0f) {	ch_out =         pow_f(ch_in    , q) / pow_f(pivot        , q - 1.0f)  * (ch_high - ch_low) + ch_low; }		
+		if (ch_in >  pivot && ch_in <= 1.0f) {	ch_out = (1.0f - pow_f(1.0f - ch_in , q) / pow_f(1.0f - pivot , q - 1.0f)) * (ch_high - ch_low) + ch_low; }
+			
+		return ch_out;
+	}	
+	
+	
+	__DEVICE__ void RGB_to_HSV( float r, float g, float b, float *h, float *s, float *v ) { 
+		float Vmin = _fminf(_fminf(r, g), b);
+		float Vmax = _fmaxf(_fmaxf(r, g), b);
+		*v = Vmax;
+		float delta = Vmax - Vmin;
+		if (Vmax != 0.0f) {
+			*s = delta / Vmax;
+		} else {
+			*s = 0.0f;
+			*h = 0.0f;
+			return;
+		}
+		if (delta == 0.) {
+			*h = 0.f;
+		} else if (r == Vmax) {
+			*h = (g - b) / delta;
+		} else if (g == Vmax) {
+			*h = 2.0f + (b - r) / delta;
+		} else {
+			*h = 4.0f + (r - g) / delta;
+		}
+		*h *= 1.0f / 6.0f;
+		if (*h < 0) {
+			*h += 1.0f;
+		}
+	}
+
+	__DEVICE__ void HSV_to_RGB(float H, float S, float V, float *r, float *g, float *b) {
+		if (S == 0.0f) {
+			*r = *g = *b = V;
+			return;
+		}
+		H *= 6.0f;
+		int i = _floor(H);
+		float f = H - i;
+		i = (i >= 0) ? (i % 6) : (i % 6) + 6;
+		float p = V * (1.0f - S);
+		float q = V * (1.0f - S * f);
+		float t = V * (1.0f - S * (1.0f - f));
+		*r = i == 0 ? V : i == 1 ? q : i == 2 ? p : i == 3 ? p : i == 4 ? t : V;
+		*g = i == 0 ? t : i == 1 ? V : i == 2 ? V : i == 3 ? q : i == 4 ? p : p;
+		*b = i == 0 ? p : i == 1 ? p : i == 2 ? t : i == 3 ? V : i == 4 ? V : q;
+	}
+
+	__DEVICE__ float3 rotate_Hue(float3 RGB, float rotate, float addhue)
+	{
+		float r, g, b, h, s, v;
+		RGB_to_HSV( RGB.x, RGB.y, RGB.z, &h, &s, &v);
+		if (addhue == 1.0f){h = rotate;} else {h += rotate;}
+		h = h < 0 ? h + 1 : h > 1 ? h - 1 : h;
+		
+		HSV_to_RGB( h, s, v, &r, &g, &b);
+		
+		return to_float3(r, g, b);
+	}
+
+	// ------------- END COLOR + ALPHA ---------------------
+
+ 
+
+
+
+	__DEVICE__ float2 spin(float2 uv, float2 center, float angle, float aspect) {
+		float C = _cosf(angle);
+		float S = _sinf(angle);
+		   
+		uv -= center;
+		float x = uv.x;
+		uv.x = (x*aspect * C - uv.y * S);
+		uv.y = (x*aspect * S + uv.y * C);
+		uv += center;
+		return uv;
+	} 
+	
+	//------------END Vector ------------
+
+
+
+
+
+	// ------------- BEGIN Voronoise_Extended FUNCTION --------------
+	
+	__DEVICE__ float hash1( float n ) { return fract1f(_sinf(n)*43758.5453f); }
+
+	__DEVICE__ float2  hash2( float2  p ) 
+	{ 
+		p = to_float2( dot(p,to_float2(127.1f,311.7f)), dot(p,to_float2(269.5f,183.3f)) ); 
+		return fract2f(to_float2(_sinf(p.x)*43758.5453f,_sinf(p.y)*43758.5453f)); 
+	}		
+
+		
+	__DEVICE__ float4 voronoi(float2 x, float w, float T, float3 col3, float contrast, float pivot, float DSize, float DMelt )	
+	{
+
+    float2 n = floor2f( x );
+    float2 f = fract2f( x );
+
+	float4 m = to_float4( 8.0f, 0.0f, 0.0f, 0.0f);
+
+    for( float j=-2.0f; j<= 2.0f; j+= 1.0f )
+	{
+		for( float i=-2.0f; i<= 2.0f; i+= 1.0f )
+		{
+			
+			float2 g = to_float2( i,j );
+
+			float2 o = hash2( n + g );
+						
+			// animate
+			o = 0.5f + 0.5f * to_float2(_sinf( T + 6.2831f *o.x ),_sinf( T + 6.2831f *o.y ));			
+
+			// distance to cell		
+			float d = length(g - f + o);
+				
+			// do the smoth min for colors and distances		
+			float3 col;
+			col.x =  0.5f + 0.5f *_sinf( hash1(dot(n+g,to_float2(7.0f,113.0f)))*2.5f + 3.5f + 3.0f*col3.x);
+			col.y =  0.5f + 0.5f *_sinf( hash1(dot(n+g,to_float2(7.0f,113.0f)))*2.5f + 3.5f + 3.0f*col3.y);
+			col.z =  0.5f + 0.5f *_sinf( hash1(dot(n+g,to_float2(7.0f,113.0f)))*2.5f + 3.5f + 3.0f*col3.z);
+			
+			//float h = smoothstep( 0.0f, 1.0f, 0.5f + 0.5f *(m.x-d)/w );
+			float h = contrast_curve( 0.5f + 0.5f *(m.x-d)/w, 0.0f, 1.0f, contrast, pivot );
+
+			m.x = _mix( m.x,     d, h ) - h*(DSize*3.0f -h)*w/(1.0f +3.0f *w)*2.0f*DMelt; // distance
+			m.y = _mix( m.y, col.x, h ) - h*(1.0f -h)*w/(1.0f +3.0f *w); // color
+			m.z = _mix( m.z, col.y, h ) - h*(1.0f -h)*w/(1.0f +3.0f *w); // color
+			m.w = _mix( m.w, col.z, h ) - h*(1.0f -h)*w/(1.0f +3.0f *w); // color
+		}
+	}
+	return m;
+	}	
+	
+	
+	// ------------- END   Voronoise_Extended FUNCTION --------------
+		
+
+	
+  __KERNEL__ void SmoothVoronoiKernel(__CONSTANTREF__ SmoothVoronoiParams *params, __TEXTURE2D__ iChannel0, __TEXTURE2D_WRITE__ dst)
+    {
+		
+    DEFINE_KERNEL_ITERATORS_XY(x, y);
+	if (x < params->iC0_Width && y < params->iC0_Height) {
+				
+		float2 fragCoord 	= to_float2(x, y); 
+		float2 iResolution 	= to_float2(params->iC0_Width, params->iC0_Height);
+		float ratio 		= (float)params->iC0_Width/(float)params->iC0_Height;		
+		float2 uv 			= (fragCoord - 0.5f*iResolution)/iResolution.y;
+		float T 			= 	params->iTime;							
+				
+		// ### Change Dimensions - Scale/Spin/Move ###
+		uv -=  to_float2( (params->Center[0]-0.5f)*ratio, (params->Center[1]-0.5f)); 
+		uv = uv / _powf(10,-3+params->Scale);
+		float2 Pivot = to_float2(((params->Pivot[0]-0.5f)*ratio),(params->Pivot[1]-0.5f));
+		uv = spin(uv, Pivot, params->Angle, 1.0f);					
+				
+		
+
+		
+	// ------------- BEGIN Voronoise_Extended KERNEL FUNCTION -------------
+
+	
+	float2 p = uv;
+	float Te =1.0f-params->Smoothen;
+	float k = 2.0f + 70.0f * _powf( 0.5f + 0.5f *Te, 4.0f);
+	k = 0.5f - 0.5f *Te;
+			
+		float contrastV = params->contrastV;
+		float pivotV = params->pivotV;
+	
+	float DSize = params->DotSize;	
+	float DMelt = params->MeltSize;	
+	float3 col3 = to_float3(params->Col_Red,params->Col_Green,params->Col_Blue);
+    float4 c = voronoi( 6.0f *p, k,T, col3, contrastV, pivotV, DSize, DMelt );
+
+    float3 col = to_float3_s(1.0f);	
+	
+	if (params->Colored) col = to_float3(c.y,c.z,c.w);	
+											 
+	if (params->Option>3.0f) col *= 1.0f - 0.8f *c.x;
+	
+	
+	if (params->Option==2.0f || params->Option==4.0f)col *= _mix(c.x,1.0f,0.0f);
+	if (params->Option==3.0f || params->Option==5.0f)col -= _mix(c.x,1.0f,0.0f);
+	if (params->Option==1.0f)col *= _mix( to_float3(params->Col_Red,params->Col_Green,params->Col_Blue), to_float3_s(0.0f), smoothstep( 0.04f, 0.07f, c.x ) );		
+
+  float4 iC0 = to_float4_aw( col, 1.0f);	
+	float3 c0	 =  to_float3(iC0.x ,iC0.y ,iC0.z);
+
+
+	// ------------- END Voronoise_Extended KERNEL FUNCTION -------------		
+
+	
+
+		float3 color;		
+		color.x = contrast_curve(c0.x , params->Color_Low , params->Color_High , params->Color_Contrast , params->Color_Pivot);
+		color.y = contrast_curve(c0.y , params->Color_Low , params->Color_High , params->Color_Contrast , params->Color_Pivot);
+		color.z = contrast_curve(c0.z , params->Color_Low , params->Color_High , params->Color_Contrast , params->Color_Pivot);			
+		color = saturation(color , params->Color_Sat);				
+		color = rotate_Hue(color, params->Color_Hue, params->Color_AddHue);
+				
+		float luma;
+		luma = (c0.x * params->Alpha_Red + c0.y * params->Alpha_Green + c0.z * params->Alpha_Blue);			
+				
+		float alpha;
+		alpha = contrast_curve(luma , params->Alpha_Low , params->Alpha_High, params->Alpha_Contrast , params->Alpha_Pivot);
+			
+			
+		float4 fragColor;								
+		if (params->Alpha_Show > 0.0f && params->Alpha_Apply) {
+			color = to_float3(alpha,alpha,alpha);
+		}				
+		if (params->Alpha_Apply) {
+			fragColor = to_float4_aw(color, alpha);
+		}
+		else {					
+			fragColor = to_float4_aw(color, 1.0f);
+		}	
+				
+		//_tex2DVec4Write(dst, x, y, fragColor0);				
+		_tex2DVec4Write(dst, x, y, fragColor);
+
+	}			
+    }
+]]
+
+
+
+function Create()
+	
+	InRNDSeed = self:AddInput("RandomSeed", "RandomSeed", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_Integer  	   	= true,					
+		INP_Default = 250.0,
+		INP_MinAllowed = 0.0,
+		INP_MaxAllowed = 500.0,			
+	})
+	
+		
+	InAutoTime = self:AddInput("Auto", "AutoTime", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Integer = true,
+		INP_Default = 1,			
+		})	
+	
+	InRange = self:AddInput("Range", "Range", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Default = 0.0,
+	})
+		
+	
+	InFrequency = self:AddInput("Frequency", "Frequency", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Default = 1.0,
+		INP_MinScale = 0,
+		INP_MaxScale = 4,			
+		})	
+	
+	self:BeginControlNest("Transform", "Transform", true, {})	
+	
+	
+	InCenter = self:AddInput("Center", "Center", {
+		LINKID_DataType 	= "Point",
+		INPID_InputControl 	= "OffsetControl",
+		INPID_PreviewControl= "CrosshairControl",
+		INP_DoNotifyChanged = true,
+		})
+
+	InScale = self:AddInput("Scale", "Scale", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "SliderControl",
+		RCD_LockAspect     	= 1,
+		RC_DoLockAspect    	= true,
+		RCID_Center        	= "Center", 
+		INP_Default 		= 3.0,
+		INP_MinAllowed 		= 0.0,
+		INP_MaxAllowed 		= 5.0,
+		})
+
+	InAngle = self:AddInput("Angle", "Angle", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "ScrewControl",
+		INPID_PreviewControl= "AngleControl",
+		INP_Default 		= 0,
+		ACID_Center 		= "Center",
+		INP_MinScale 		= 0,
+		INP_MaxScale 		= 360,		
+		})    
+		
+		
+		
+	 InPivot = self:AddInput("Pivot", "Pivot", {
+		LINKID_DataType 	= "Point",
+		INPID_InputControl 	= "OffsetControl",
+		INPID_PreviewControl= "CrosshairControl",
+		CHC_Style 			= "DiagonalCross",
+		})
+	
+	self:EndControlNest()
+
+	
+											
+	-- ============== BEGIN Voronoise_Extended ====================
+
+	self:BeginControlNest("Voronoi", "SmoothVoronoi_01", true, {})	
+	
+
+	
+	InSmoothen = self:AddInput("Smoothen", "Smoothen", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "SliderControl",
+		INP_Default 		= 0.5,
+		INP_MinScale 		= 0.0,
+		INP_MaxScale 		= 1.0,		
+	})			
+	
+	IncontrastV = self:AddInput("Contrast", "contrastV", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "SliderControl",
+		INP_Default 		= 0.5,
+		INP_MinScale 		= 0.0,
+		INP_MaxScale 		= 0.975,		
+	})			
+
+	InpivotV = self:AddInput("Pivot", "pivotV", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "SliderControl",
+		INP_Default 		= 0.5,
+		INP_MinScale 		= 0.0,
+		INP_MaxScale 		= 1.0,		
+	})			
+		
+	
+	
+	InOption = self:AddInput("Option", "Option", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "MultiButtonControl",
+		INP_Default = 6.0,
+		INP_Integer = true,
+		INP_DoNotifyChanged = true,
+		INP_External = false,
+		MBTNC_ForceButtons =    true,
+		INP_MinScale        = 0,
+		INP_MaxScale        = 6,
+		INP_MinAllowed      = 0,
+		INP_MaxAllowed      = 6,
+		MBTNC_ShowBasicButton = true,
+		MBTNC_StretchToFit = true,
+		MBTNC_ShowToolTip = true,
+		{ MBTNC_AddButton = "Flat 3", MBTNCD_ButtonWidth = 1/2, },
+		{ MBTNC_AddButton = "Dots", MBTNCD_ButtonWidth = 1/2, },		
+		{ MBTNC_AddButton = "Flat 2", MBTNCD_ButtonWidth = 1/2, },
+		{ MBTNC_AddButton = "Calottes 3", MBTNCD_ButtonWidth = 1/2, },
+		{ MBTNC_AddButton = "Flat 1", MBTNCD_ButtonWidth = 1/2, },
+		{ MBTNC_AddButton = "Calottes 2", MBTNCD_ButtonWidth = 1/2, },
+		{ MBTNC_AddButton = "Calottes 1", MBTNCD_ButtonWidth = 1/1, },
+	})				
+	
+	InDotSize = self:AddInput("Dot Size", "DotSize", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "SliderControl",
+		INP_Default 		= 0.33,
+		INP_MinScale 		= 0.0,
+		INP_MaxScale 		= 1.0,		
+	})			
+	
+	InMeltSize = self:AddInput("Melt Size", "MeltSize", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "SliderControl",
+		INP_Default 		= 0.5,
+		INP_MinScale 		= 0.0,
+		INP_MaxScale 		= 1.0,		
+	})			
+
+	
+	
+	self:EndControlNest()	
+	
+	
+	-- ============== END Voronoise_Extended ====================
+	
+	
+	
+	
+	
+	self:BeginControlNest("Color", "Color", true, {})	
+		InColored = self:AddInput("Colored", "Colored", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "CheckboxControl",
+		INP_Integer 		= true,
+		INP_Default 		= 1,			
+		})			
+		
+	InCol_Red = self:AddInput("VColor", "Col_Red", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 2.0/3.0,
+		IC_ControlGroup = 1,
+		IC_ControlID = 0,
+		})
+		
+	InCol_Green = self:AddInput("Col Green", "Col_Green", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 1.0,
+		IC_ControlGroup = 1,
+		IC_ControlID = 1,
+		})
+		
+	InCol_Blue = self:AddInput("Col Blue", "Col_Blue", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 0.0,
+		IC_ControlGroup = 1,
+		IC_ControlID = 2,
+		})	
+		
+	
+	InColor_AddHue = self:AddInput("Add Hue", "ColorAddHue", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Integer = true,
+		INP_Default = 0,			
+		})	
+	InColor_Hue = self:AddInput("Hue", "ColorHue", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 0.0,
+		})	
+		
+	InColor_Sat = self:AddInput("Saturation", "Saturation", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 2.0,
+		INP_Default  = 1.0,
+		})			
+	
+	InColorLow = self:AddInput("Low", "ColorLow", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 0.0,
+		})	
+		
+	InColor_High = self:AddInput("High", "ColorHigh", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 1.0,
+		})			
+		
+	InColor_Contrast = self:AddInput("Contrast", "ColorContrast", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = -0.95,
+		INP_MaxScale = 0.95,
+		INP_Default  = 0.0,
+		})	
+	InColor_Pivot = self:AddInput("Pivot", "ColorPivot", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 0.5,
+		})			
+			
+
+  Sep1 = self:AddInput(string.rep("_", 100), "Separator1", {
+    LINKID_DataType = "Text",
+    INPID_InputControl = "LabelControl",
+    INP_External = false,
+    INP_Passive = true,
+  })
+
+	InAlpha_Apply = self:AddInput("Apply Alpha", "Alpha_Apply", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Integer = false,
+		INP_Default = 0,
+		ICD_Width = 1,
+		INP_DoNotifyChanged = true,			
+		})	
+		
+	InAlpha_Red = self:AddInput("Channel", "Alpha_Red", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 0.2126,
+		IC_ControlGroup = 2,
+		IC_ControlID = 0,
+		})
+		
+	InAlpha_Green = self:AddInput("Alpha Green", "Alpha_Green", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 0.7152,
+		IC_ControlGroup = 2,
+		IC_ControlID = 1,
+		})
+		
+	InAlpha_Blue = self:AddInput("Alpha Blue", "Alpha_Blue", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 0.0722,
+		IC_ControlGroup = 2,
+		IC_ControlID = 2,
+		})	
+		
+	InAlpha_Low = self:AddInput("Low", "Alpha_Low", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 0.0,
+		})	
+		
+	InAlpha_High = self:AddInput("High", "Alpha_High", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 1.0,
+		})			
+		
+	InAlpha_Contrast = self:AddInput("Contrast", "Alpha_Contrast", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = -0.95,
+		INP_MaxScale = 0.95,
+		INP_Default  = 0.0,
+		})	
+	InAlpha_Pivot = self:AddInput("Pivot", "Alpha_Pivot", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 0.5,
+		})			
+		
+	InAlpha_Show = self:AddInput("Show", "Alpha_Show", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Integer = false,
+		INP_Default = 0,
+		ICD_Width = 1,
+		INP_DoNotifyChanged = true,			
+		})			
+		
+		self:EndControlNest()	
+		
+		
+		
+    OutImage = self:AddOutput("Output", "Output", {
+        LINKID_DataType 	= "Image",
+        LINK_Main 			= 1,
+    })
+		
+end
+
+function NotifyChanged(inp, param, time)
+	if inp ~= nil and param ~= nil then
+		if inp == InAlpha_Apply then
+			InAlpha_Red:SetAttrs({ IC_Visible = true, })	
+			InAlpha_Low:SetAttrs({ IC_Visible = true, })	
+			InAlpha_High:SetAttrs({ IC_Visible = true, })	
+			InAlpha_Contrast:SetAttrs({ IC_Visible = true, })	
+			InAlpha_Pivot:SetAttrs({ IC_Visible = true, })					
+			InAlpha_Show:SetAttrs({ IC_Visible = true, })				
+			
+			if param.Value == 0 then 				
+				InAlpha_Red:SetAttrs({ IC_Visible = false, })	
+				InAlpha_Low:SetAttrs({ IC_Visible = false, })	
+				InAlpha_High:SetAttrs({ IC_Visible = false, })	
+				InAlpha_Contrast:SetAttrs({ IC_Visible = false, })	
+				InAlpha_Pivot:SetAttrs({ IC_Visible = false, })		
+				InAlpha_Show:SetAttrs({ IC_Visible = false, })								
+			end
+		end
+	end
+end
+
+
+
+
+
+local lastreqtime = -2
+
+function Process(req)
+    local realwidth = Width;
+    local realheight = Height;
+   
+    local img_aspect = Width / Height
+    Width = Width / Scale
+    Height = Height / Scale
+    Scale = 1
+
+
+    local imgattrs = {
+        IMG_Document = self.Comp,
+        { IMG_Channel = "Red", },
+        { IMG_Channel = "Green", },
+        { IMG_Channel = "Blue", },
+        { IMG_Channel = "Alpha", },
+        IMG_Width = Width,
+        IMG_Height = Height,
+        IMG_XScale = XAspect,
+        IMG_YScale = YAspect,
+        IMAT_OriginalWidth = realwidth,
+        IMAT_OriginalHeight = realheight,
+        IMG_Quality = not req:IsQuick(),
+        IMG_MotionBlurQuality = not req:IsNoMotionBlur(),
+        }
+   
+    if not req:IsStampOnly() then
+        imgattrs.IMG_ProxyScale = 1
+    end
+   
+    if SourceDepth ~= 0 then
+        imgattrs.IMG_Depth = SourceDepth
+    end
+	
+	
+        iChannel0 = Image(imgattrs)
+				local p = Pixel({R=0,G=0,B=0,A=0})
+        iChannel0:Fill(p)
+
+
+	
+	
+    
+    local dst = Image{ IMG_Like = iChannel0, IMG_DeferAlloc = true } 
+ 
+    local node = DVIPComputeNode(req, "SmoothVoronoiKernel", SmoothVoronoiKernel, "SmoothVoronoiParams", SmoothVoronoiParams)
+		
+		if (lastreqtime ~= req.Time - 1) then
+			params = node:GetParamBlock(SmoothVoronoiParams)
+		end
+		lastreqtime = req.Time		
+		-----------------
+		params.iC0_Width  	= iChannel0.DataWindow:Width()
+		params.iC0_Height 	= iChannel0.DataWindow:Height()
+				
+		-----------------
+		params.Center[0] 	= InCenter:GetValue(req).X
+		params.Center[1]	= InCenter:GetValue(req).Y		
+		params.Pivot[0] 	= InPivot:GetValue(req).X
+		params.Pivot[1] 	= InPivot:GetValue(req).Y		
+		params.Angle 		= (-InAngle:GetValue(req).Value)/360*3.1415*2
+		params.Scale 		= InScale:GetValue(req).Value						
+		
+		local framerate = self.Comp:GetPrefs("Comp.FrameFormat.Rate")
+		params.iTime = (InRange:GetValue(req).Value*100 + req.Time/ framerate*24*InAutoTime:GetValue(req).Value) * (10^(InFrequency:GetValue(req).Value-3.0)) + InRNDSeed:GetValue(req).Value		
+		-----------------				
+
+	
+		params.Smoothen  	= InSmoothen:GetValue(req).Value	
+		params.contrastV  	= IncontrastV:GetValue(req).Value
+		params.pivotV  	= InpivotV:GetValue(req).Value
+
+		
+
+		params.Colored 	= InColored:GetValue(req).Value	
+		
+
+		params.Col_Red 		= InCol_Red:GetValue(req).Value			
+		params.Col_Green 	= InCol_Green:GetValue(req).Value			
+		params.Col_Blue 	= InCol_Blue:GetValue(req).Value	
+
+		
+		params.Option= InOption:GetValue(req).Value
+		params.DotSize  	= InDotSize:GetValue(req).Value	
+		params.MeltSize  	= InMeltSize:GetValue(req).Value		
+		
+		params.Color_Sat 	= InColor_Sat:GetValue(req).Value		
+		params.Color_AddHue	= InColor_AddHue:GetValue(req).Value			
+		params.Color_Hue 	= InColor_Hue:GetValue(req).Value					
+		params.Color_Low 	= InColorLow:GetValue(req).Value											
+		params.Color_High 	= InColor_High:GetValue(req).Value											
+		params.Color_Contrast = InColor_Contrast:GetValue(req).Value											
+		params.Color_Pivot 	= InColor_Pivot:GetValue(req).Value											
+
+		params.Alpha_Apply 	= InAlpha_Apply:GetValue(req).Value									
+		params.Alpha_Show 	= InAlpha_Show:GetValue(req).Value									
+		params.Alpha_Red 	= InAlpha_Red:GetValue(req).Value			
+		params.Alpha_Green 	= InAlpha_Green:GetValue(req).Value			
+		params.Alpha_Blue 	= InAlpha_Blue:GetValue(req).Value					
+		
+		params.Alpha_Low 	= InAlpha_Low:GetValue(req).Value											
+		params.Alpha_High 	= InAlpha_High:GetValue(req).Value											
+		params.Alpha_Contrast = InAlpha_Contrast:GetValue(req).Value											
+		params.Alpha_Pivot 	= InAlpha_Pivot:GetValue(req).Value	
+		-------------
+
+
+
+    node:SetParamBlock(params)
+    node:AddInput("iChannel0", iChannel0)
+	
+	
+
+	
+	
+	
+    node:AddOutput("dst", dst)
+ 
+    local ok = node:RunSession(req)
+ 
+    if not ok then
+        dst = nil
+		dump(node:GetErrorLog())
+    end
+ 
+    OutImage:Set(req, dst)
+end	
