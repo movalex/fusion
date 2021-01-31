@@ -11,16 +11,20 @@ function hasKey(tab, value)
 end
 
 function getOutputs(tool)
+    local outs = {} 
     for i, inp in ipairs(tool:GetInputList()) do
         if inp:GetAttrs().INPB_Connected then
-            return inp:GetConnectedOutput()
+            local out = inp:GetConnectedOutput()
+            if out then
+                table.insert(outs, out)
+            end
         end
     end
+    return outs
 end
 
 function getInputs(tool)
-    outputList = {}
-    index = 1
+    local index = 1
     while true do
         out = tool:FindMainOutput(index)
         if out == nil then
@@ -32,20 +36,19 @@ function getInputs(tool)
         end
         index = index + 1
     end
-    return outputList
 end
 
 function deleteAndGetPositions(comp)
     destTools = {}
-    inps = {}
-    outs = {}
-    -- delete old tools and save position data
+    local outs = {}
+    local inps = {}
+    -- delete old tools and save inputs, outputs and position data
     for i, tool in ipairs(destComp:GetToolList(false)) do
         if tool:GetData("Instanced") then
             posX, posY = flow:GetPos(tool)
-            destTools[tool.Name] = {tool, {posX, posY}}
-            inps[tool.Name] = getInputs(tool)
+            destTools[tool.Name] = {posX, posY}
             outs[tool.Name] = getOutputs(tool)
+            inps[tool.Name] = getInputs(tool)
             tool:Delete()
         end
     end
@@ -54,9 +57,11 @@ end
 
 function process()
     sourceCompData = fu:GetData("SourceComp")
+
     if not sourceCompData then
         return
     end
+
     local sourceComp = fu:LoadComp(sourceCompData, true) 
     flow = sourceComp.CurrentFrame.FlowView
  
@@ -66,29 +71,51 @@ function process()
         end
     end
     sourceComp:Copy()
-    -- optionally close source comp
-    -- sourceComp:Close()
+    -- sourceComp:Close() -- optionally close source comp
 
     -- load destination comp
     destComp = fu:LoadComp(compName, true)
-
     destTools, inps, outs = unpack(deleteAndGetPositions(destComp))
     -- paste source tools 
     destComp:Paste()
+    -- get destination comp flow
     destflow = destComp.CurrentFrame.FlowView
 
     for i, tool in ipairs(destComp:GetToolList(true)) do
         sourceTool = hasKey(destTools, tool.Name)
         -- fix position approximately
         if sourceTool ~= nil then
-            pos = destTools[tool.Name][2]
+            pos = destTools[tool.Name]
             destflow:SetPos(tool, pos[1],pos[2])
         end
-        local input = tool:FindMainInput(1)
-        input:ConnectTo(outs[tool.Name])
-        for i, inp in pairs(inps[tool.Name]) do
-            local out = tool:FindMainOutput(1)
-            inp:ConnectTo(out)
+            
+        -- reconnect inputs does not work
+        -- local inp = tool:FindMainInput(1)
+        -- for name, out in pairs(outs[tool.Name]) do
+        --     inp:ConnectTo(out)
+        --     print('connected ' ..tool.Name .. ' to output: '.. out:GetTool().Name)
+        -- end
+
+        for i, inp in pairs(tool:GetInputList()) do
+            if inp:GetAttrs().INPS_ID == "Input" or inp:GetAttrs().INPS_ID == "EffectMask" then
+                for i, out in pairs(outs[tool.Name]) do
+                    inp:ConnectTo(out)
+                end
+            end
+            -- dump(inp:GetAttrs())
+        end
+            --     local out = inp:GetConnectedOutput()
+            --     if out then
+            --         table.insert(outs, out)
+
+
+        -- reconnect outputs works
+        local out = tool:FindMainOutput(1)
+        if #out:GetConnectedInputs() == 0 then
+            for i, inp in pairs(inps[tool.Name]) do
+                inp:ConnectTo(out)
+                print('connected ' ..tool.Name .. ' to input: '.. inp:GetTool().Name)
+            end
         end
     end
 end
