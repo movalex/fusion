@@ -96,18 +96,14 @@ function process()
         --     print('connected ' ..tool.Name .. ' to output: '.. out:GetTool().Name)
         -- end
 
+        -- this does not work either
         for i, inp in pairs(tool:GetInputList()) do
             if inp:GetAttrs().INPS_ID == "Input" or inp:GetAttrs().INPS_ID == "EffectMask" then
                 for i, out in pairs(outs[tool.Name]) do
                     inp:ConnectTo(out)
                 end
             end
-            -- dump(inp:GetAttrs())
         end
-            --     local out = inp:GetConnectedOutput()
-            --     if out then
-            --         table.insert(outs, out)
-
 
         -- reconnect outputs works
         local out = tool:FindMainOutput(1)
