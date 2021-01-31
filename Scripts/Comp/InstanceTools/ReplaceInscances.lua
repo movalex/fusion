@@ -97,13 +97,13 @@ function process()
         -- end
 
         -- this does not work either
-        for i, inp in pairs(tool:GetInputList()) do
-            if inp:GetAttrs().INPS_ID == "Input" or inp:GetAttrs().INPS_ID == "EffectMask" then
-                for i, out in pairs(outs[tool.Name]) do
-                    inp:ConnectTo(out)
-                end
-            end
-        end
+        -- for i, inp in pairs(tool:GetInputList()) do
+        --     if inp:GetAttrs().INPS_ID == "Input" or inp:GetAttrs().INPS_ID == "EffectMask" then
+        --         for i, out in pairs(outs[tool.Name]) do
+        --             inp:ConnectTo(out)
+        --         end
+        --     end
+        -- end
 
         -- reconnect outputs works
         local out = tool:FindMainOutput(1)
