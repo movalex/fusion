@@ -26,10 +26,10 @@ count = 0
 for tool in tools.values():
     if tool.ID in TOOL_IDS:
         output = tool.FindMainOutput(1)
-        if output and not tool.GetAttrs()["TOOLB_PathThrough"]:
+        if output and not tool.GetAttrs(["TOOLB_PathThrough"]):
             print("Updating {} tile".format(tool.Name))
-            tool.SetAttrs({"TOOLB_PassThrough": True})
-            tool.SetAttrs({"TOOLB_PassThrough": False})
+            # tool.SetAttrs({"TOOLB_PassThrough": True})
+            # tool.SetAttrs({"TOOLB_PassThrough": False})
             output.GetValue()
             count = count + 1
 
