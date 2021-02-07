@@ -122,7 +122,6 @@ def get_comp():
         fu_host = sys.argv[1]
     try:
         fu = bmd.scriptapp("Fusion", fu_host)
-        print(fu.GetAppInfo()["ShortName"])
         if fu:
             return fu.GetCurrentComp()
     except Exception:
