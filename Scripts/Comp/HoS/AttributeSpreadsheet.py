@@ -805,6 +805,7 @@ class TableModel(QAbstractTableModel):
             tool_inputs_attributes = {}
             for v in tool.GetInputList().values():
                 f = FusionInput(v)
+                QApplication.processEvents()
                 if f.attributes["INPS_DataType"] not in self.data_types_to_skip:
                     key = f.Name
                     tool_inputs[key] = f
