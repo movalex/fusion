@@ -61,6 +61,7 @@
             -- catch wrong Python version early
         V.0.2.5
             -- fix compatibility issue with non-Studio Fusion versions
+            -- catch some exceptions with remote Fusion management
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
@@ -110,23 +111,30 @@ print("_____________________\nAttribute Spreadsheet version 0.{}".format(__VERSI
 
 
 def get_comp():
-    global REMOTE
     try:
         import BlackmagicFusion as bmd
-        fu_host = "localhost"
-        if len(sys.argv) == 2:
-            REMOTE = True
-            fu_host = sys.argv[1]
+    except Exception as e:
+        print('No BlackmagicFusion module found')
+        raise e
+    global REMOTE
+    fu_host = "localhost"
+    if len(sys.argv) == 2:
+        fu_host = sys.argv[1]
+    try:
         fu = bmd.scriptapp("Fusion", fu_host)
+        print(fu.GetAppInfo()["ShortName"])
         if fu:
             return fu.GetCurrentComp()
-    except ImportError:
-        print("No BMD module found")
+    except Exception:
+        print("No remote Fusion instance found or remote instance is not a Studio version")
+
 
 try:
     comp = fu.GetCurrentComp()
 except Exception as e:
     print("remote scripting")
+    REMOTE = True
+    TOOLS_AUTOLOAD = 3
     comp = get_comp()
     if not comp:
         raise ModuleNotFoundError("Comp not found")
@@ -773,10 +781,9 @@ class TableModel(QAbstractTableModel):
     def load_fusion_data(self):
         self.communicate.send("loading tools and inputs")
         start_time = datetime.datetime.now()
-        if not REMOTE:
+        try:
             comp = fu.GetCurrentComp()
-            print(comp)
-        else:
+        except NameError:
             comp = get_comp()
         comp_name = comp.GetAttrs()["COMPS_Name"]
         if comp_name:
