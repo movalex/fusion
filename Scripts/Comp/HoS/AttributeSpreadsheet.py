@@ -59,6 +59,8 @@
             -- set empty value to Text inputs, such as Comments
             -- cache is enabled by default
             -- catch wrong Python version early
+        V.0.2.5
+            -- fix compatibility issue with non-Studio Fusion versions
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
@@ -93,7 +95,7 @@ import subprocess
 import sys
 from pprint import pprint as pp
 
-__VERSION__ = 2.4
+__VERSION__ = 2.5
 __license__ = "MIT"
 __copyright__ = "2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>,\
 2019-2020 additions by Alexey Bogomolov <mail@abogomolov.com>"
@@ -102,12 +104,10 @@ PKG = "PySide2"
 PKG_VERSION = "5.15.2"
 REMOTE = False
 # do not auto-load tools on startup if more than 8 tools selected to speedup UI loading
-TOOLS_AUTOLOAD = 8
+TOOLS_AUTOLOAD = 10
 
 print("_____________________\nAttribute Spreadsheet version 0.{}".format(__VERSION__))
 
-class CompNotFoundError:
-    pass
 
 def get_comp():
     global REMOTE
@@ -115,7 +115,6 @@ def get_comp():
         import BlackmagicFusion as bmd
         fu_host = "localhost"
         if len(sys.argv) == 2:
-            print("remote scripting")
             REMOTE = True
             fu_host = sys.argv[1]
         fu = bmd.scriptapp("Fusion", fu_host)
@@ -127,6 +126,7 @@ def get_comp():
 try:
     comp = fu.GetCurrentComp()
 except Exception as e:
+    print("remote scripting")
     comp = get_comp()
     print(comp.GetAttrs())
     if not comp:
@@ -148,7 +148,9 @@ def check_py_version():
             fu.ShowPrefs("PrefsScript")
         sys.exit()
 
+
 check_py_version()
+
 
 def print(*args, **kwargs):
     """override print() function"""
@@ -157,10 +159,6 @@ def print(*args, **kwargs):
 
     builtins.print("[AS] : ", end="")
     return builtins.print(*args, **kwargs)
-
-
-class PackageInstallationError(Exception):
-    pass
 
 
 try:
@@ -778,6 +776,7 @@ class TableModel(QAbstractTableModel):
         start_time = datetime.datetime.now()
         if not REMOTE:
             comp = fu.GetCurrentComp()
+            print(comp)
         else:
             comp = get_comp()
         comp_name = comp.GetAttrs()["COMPS_Name"]
