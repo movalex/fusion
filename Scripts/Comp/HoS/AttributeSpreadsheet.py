@@ -383,8 +383,9 @@ class PointDelegate(QItemDelegate):
         point_data = str(index.model().data(index))
         try:
             # my attempt of parsing a string like '{1.0:0.5, 2.0:0.5, 3.0:0.0}'
+            # first remove curlybraces and spaces to make it '1.0:0.1,2.0:0.5,3.0:0.0',
             substring = re.sub("[{} ]", "", point_data)
-            # make it '1.0:0.1,2.0:0.5,3.0:0.0', then convert  to dictionary
+            # split by colon and convert to dictionary {'1.0': '0.5', '2.0': '0.5', '3.0': '0.0'}
             dict_point = dict(ss.split(":") for ss in substring.split(","))
             # convert keys to float, because Fusion17 returns keys as integers
             dict_point = {float(k): v for k, v in dict_point.items()}
@@ -1168,3 +1169,4 @@ if __name__ == "__main__":
     main.setMinimumSize(QSize(740, 200))
     main.show()
     main_app.exec_()
+    print("Done")
