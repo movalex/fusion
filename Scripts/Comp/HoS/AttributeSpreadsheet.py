@@ -100,43 +100,55 @@ __copyright__ = "2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>,\
 
 PKG = "PySide2"
 PKG_VERSION = "5.15.2"
+REMOTE = False
 # do not auto-load tools on startup if more than 8 tools selected to speedup UI loading
 TOOLS_AUTOLOAD = 8
 
 print("_____________________\nAttribute Spreadsheet version 0.{}".format(__VERSION__))
 
+class CompNotFoundError:
+    pass
 
-def init_fusion(host, python_version):
+def get_comp():
+    global REMOTE
     try:
         import BlackmagicFusion as bmd
-
-        fusion = bmd.scriptapp("Fusion", host)
-        if not python_version >= (3, 6):
-            sys.stderr.write("Python 3.6 is required\n")
-            print(
-                "Python 3.6 and later is required to run this script\n"
-                "Set Python interpreter in Fusion Preferences -> Global Settings -> Script -> Default Script Version"
-            )
-            fusion.ShowPrefs("PrefsScript")
-            sys.exit()
-        return fusion
+        fu_host = "localhost"
+        if len(sys.argv) == 2:
+            print("remote scripting")
+            REMOTE = True
+            fu_host = sys.argv[1]
+        fu = bmd.scriptapp("Fusion", fu_host)
+        if fu:
+            return fu.GetCurrentComp()
     except ImportError:
-        return None
+        print("No BMD module found")
+
+try:
+    comp = fu.GetCurrentComp()
+except Exception as e:
+    comp = get_comp()
+    print(comp.GetAttrs())
+    if not comp:
+        raise ModuleNotFoundError("Comp not found")
 
 
-fu_host = "localhost"
-py_version = sys.version_info[:2]
+def check_py_version():
+    py_version = sys.version_info[:2] >= (3, 6)
+    if not py_version:
+        msg = "Python 3.6 is required!\nPlease set correct interpreter\nin Fusion settings"
+        sys.stderr.write("Python 3.6 is required!\n")
+        print(
+            "Python 3.6 and later is required to run this script\n"
+            "Set Python interpreter in Fusion Preferences -> Global Settings -> Script -> Default Script Version"
+        )
+        dialog = {1: {1: "", 2: "Text", "ReadOnly": True, "Lines": 3, "Default": msg}}
+        dlg = comp.AskUser("Warning", dialog)
+        if dlg:
+            fu.ShowPrefs("PrefsScript")
+        sys.exit()
 
-if len(sys.argv) == 2:
-    fu_host = sys.argv[1]
-
-fu = init_fusion(fu_host, py_version)
-
-if not fu:
-    raise Exception("No Fusion instance found!")
-
-comp = fu.GetCurrentComp()
-
+check_py_version()
 
 def print(*args, **kwargs):
     """override print() function"""
@@ -211,73 +223,75 @@ except ImportError:
         rc = process.poll()
         return rc
 
-    try:
-        # ask user permission to install Pyside manually
-        dialogue = {
-            1: {
-                1: "Warning",
-                "Name": "Warning",
-                2: "Text",
-                "Readonly": True,
-                "Default": "Would you like to install\nPyside2 automatically?",
-            }
+    dialogue = {
+        1: {
+            1: "Warning",
+            "Name": "Warning",
+            2: "Text",
+            "Readonly": True,
+            "Default": "Would you like to install\nPyside2 automatically? (y/n)",
         }
+    }
+    # find default Python executable, since sys.executable returns fuscript
+    python_executable = os.path.join(os.__file__.split("lib")[0], "python.exe")
 
-        ask = comp.AskUser("Warning", dialogue)
+    if platform.system() in ["Darwin", "Linux"]:
+        python_executable = os.path.join(
+            os.__file__.split("lib/")[0], "bin", "python3"
+        )
 
-        # find default Python executable, since sys.executable returns fuscript
-        python_executable = os.path.join(os.__file__.split("lib")[0], "python.exe")
+    # ask user permission to install Pyside manually
+    if not REMOTE:
+        ask = comp.AskUser("No Pyside2 installation found", dialogue)
+    else:
+        print("No Pyside2 installation found!")
+        ask = input(dialogue[1]["Default"].replace("\n", " "))
+    if ask or ask.lower() != "y":
+        print("Trying to install Pyside2...")
+        try:
+            import pip
 
-        if platform.system() in ["Darwin", "Linux"]:
-            python_executable = os.path.join(
-                os.__file__.split("lib/")[0], "bin", "python3"
-            )
-
-        if ask:
-            print("Trying to install Pyside2...")
-            try:
-                import pip
-
-                pip_version = int(pip.__version__.split(".")[0])
-                if pip_version < 20:
-                    print("updating pip")
-                    run_command(
-                        [python_executable, "-m", "pip", "install", "-U", "pip"]
-                    )
-                pyside_cmd = [
-                    python_executable,
-                    "-m",
-                    "pip",
-                    "install",
-                    "{}=={}".format(PKG, PKG_VERSION),
-                ]
-                rc = run_command(pyside_cmd)
-                if not rc:
-                    print("Now try to launch the script again!")
-                    sys.exit()
-                else:
-                    print(
-                        "Pyside2 installation has failed for some reason"
-                        " Check if internet connection is available."
-                        " Please report this issue: mail@abogomolov.com"
-                    )
-                    sys.exit()
-            except ImportError:
+            pip_version = int(pip.__version__.split(".")[0])
+            if pip_version < 20:
+                print("updating pip")
+                run_command(
+                    [python_executable, "-m", "pip", "install", "-U", "pip"]
+                )
+            pyside_cmd = [
+                python_executable,
+                "-m",
+                "pip",
+                "install",
+                "{}=={}".format(PKG, PKG_VERSION),
+            ]
+            rc = run_command(pyside_cmd)
+            if not rc:
+                print("Now try to launch the script again!")
+                sys.exit()
+            else:
                 print(
-                    "Check if pip version 10+ is installed, then launch the script again"
+                    "Pyside2 installation has failed for some reason"
+                    " Check if internet connection is available."
+                    " Please report this issue: mail@abogomolov.com"
                 )
                 sys.exit()
-        else:
+        except ImportError:
             print(
-                "Pyside2 is required to run this script.\nPlease install it manually with following command:"
-                "\n{} -m pip install Pyside2".format(python_executable)
+                "Check if pip version 10+ is installed, then launch the script again"
             )
             sys.exit()
-
-    except Exception:
+        except Exception as e:
+            print(
+                "Could not install Pyside automatically or the installation process is interrupted"
+            )
+            raise
+            sys.exit()
+    else:
         print(
-            "Could not install Pyside automatically or the installation process is interrupted"
+            "Pyside2 is required to run this script.\nPlease install it manually with following command:"
+            "\n{} -m pip install Pyside2".format(python_executable)
         )
+        sys.exit()
 
 
 class FUIDComboDelegate(QItemDelegate):
@@ -506,6 +520,7 @@ class TableView(QTableView):
             elif v in ["Number", "Float", "Int", "Clip", "Text", "FuID"]:
                 self.setItemDelegateForColumn(k, LineEditDelegate(self))
         self.resizeColumnsToContents()
+        self.resizeRowsToContents()
 
     def commitData(self, editor):
         """
@@ -761,15 +776,17 @@ class TableModel(QAbstractTableModel):
     def load_fusion_data(self):
         self.communicate.send("loading tools and inputs")
         start_time = datetime.datetime.now()
-        comp = fu.GetCurrentComp()
+        if not REMOTE:
+            comp = fu.GetCurrentComp()
+        else:
+            comp = get_comp()
+        comp_name = comp.GetAttrs()["COMPS_Name"]
+        if comp_name:
+            print("currently working with {}".format(comp_name))
         if not comp:
-            if fu.GetResolve():
-                print(
-                    "No comp data found. Probably both Resolve and Fusion are loaded?"
-                )
-            else:
-                print("Unable to find comp data. Please report this issue")
-            sys.exit()
+            print(
+                "No comp data found. Probably both Resolve and Fusion are loaded?"
+            )
         self.attribute_name_keys = []  # List of unique attribute name keys
         self.attribute_data_types = []  # this list is coupled to the key list
         self.tools_inputs = []
@@ -838,7 +855,11 @@ class TableModel(QAbstractTableModel):
                 ):
                     return None
                 # force it to be string so it shows EVERYTHING
-                return str(fusion_input[comp.CurrentTime])
+                return (
+                    str(fusion_input[comp.CurrentTime])
+                    if fusion_input
+                    else fusion_input
+                )
             elif role == Qt.EditRole:
                 return fusion_input
             elif role == Qt.UserRole:
@@ -858,7 +879,10 @@ class TableModel(QAbstractTableModel):
             if fusion_input:
                 if isinstance(fusion_input, str):
                     return None
-                if fusion_input.attributes.get("INPID_InputControl", None) == "SplineControl":
+                if (
+                        fusion_input.attributes.get("INPID_InputControl", None)
+                        == "SplineControl"
+                ):
                     b.setColor(QColor(180, 64, 92, 64))
                     return b
                 if fusion_input.get_expression():
