@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 from tkinter import filedialog
 
@@ -16,6 +17,9 @@ file_path = filedialog.askopenfilename(filetypes=[("Fusion Comp", ".comp")])
 
 def main(filepath=None):
     if not filepath:
+        return
+    if not os.path.exists(filepath):
+        print("Comp file not found")
         return
     comp_load = fu.LoadComp(filepath, True)
     tools = comp_load.GetToolList(False)
