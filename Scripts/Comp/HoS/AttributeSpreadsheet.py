@@ -120,18 +120,17 @@ def get_comp():
     fu_host = "localhost"
     if len(sys.argv) == 2:
         fu_host = sys.argv[1]
-    try:
-        fu = bmd.scriptapp("Fusion", fu_host)
-        if fu:
-            return fu.GetCurrentComp()
-    except Exception:
+    fu = bmd.scriptapp("Fusion", fu_host)
+    if not fu:
         print("No remote Fusion instance found or remote instance is not a Studio version")
+        sys.exit()
+    return fu.GetCurrentComp()
 
 
 try:
     comp = fu.GetCurrentComp()
 except Exception as e:
-    print("remote scripting")
+    print("Starting remote scripting...")
     REMOTE = True
     TOOLS_AUTOLOAD = 3
     comp = get_comp()
