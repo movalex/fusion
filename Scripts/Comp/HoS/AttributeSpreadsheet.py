@@ -160,10 +160,7 @@ check_py_version()
 def print(*args, **kwargs):
     """override print() function"""
 
-    import builtins
-
-    builtins.print("[AS] : ", end="")
-    return builtins.print(*args, **kwargs)
+    __builtins__.print("[AS] : ", *args, **kwargs)
 
 
 try:
