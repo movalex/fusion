@@ -128,7 +128,6 @@ try:
 except Exception as e:
     print("remote scripting")
     comp = get_comp()
-    print(comp.GetAttrs())
     if not comp:
         raise ModuleNotFoundError("Comp not found")
 
