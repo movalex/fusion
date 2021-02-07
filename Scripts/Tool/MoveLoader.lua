@@ -9,11 +9,6 @@ function moveLoader(tool, startFrom)
 end
 
 inPoint = comp:GetAttrs().COMPN_RenderStart
-newStart = comp:GetData("FrameHandles.offset") or inPoint
+-- newStart = comp:GetData("FrameHandles.offset")
 
-
--- if newStart < inPoint then
---     newStart = inPoint
--- end
-
-moveLoader(tool, newStart)
+moveLoader(tool, inPoint)
