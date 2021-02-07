@@ -30,6 +30,7 @@ VERBOSE = true
 FILTER_TOOL_IDS = { 
 	["Loader"]=true,
 	["TextPlus"]=true,
+	["Background"]=true,
 }
 
 -- Main Code
