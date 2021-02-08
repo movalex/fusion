@@ -14,7 +14,8 @@ v 1.0 (01.29.2021):
     - initial release
 v 1.1 (08.02.2021):
     - temporarily set current time to GlobalIn for Loaders 
-    - update all or only selected tools 
+    - update all or only selected tools
+    - skip disabled tools
 """
 
 import time
