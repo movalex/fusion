@@ -62,6 +62,8 @@
         V.0.2.5
             -- fix compatibility issue with non-Studio Fusion versions
             -- catch some exceptions with remote Fusion management
+            -- disable refresh button while processing tools
+            -- catch the comp name on comp switch only
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
