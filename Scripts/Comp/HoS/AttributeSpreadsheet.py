@@ -130,12 +130,14 @@ def get_comp():
 try:
     comp = fu.GetCurrentComp()
 except Exception as e:
-    print("Starting remote scripting...")
+    print("Starting in standalone mode...")
     REMOTE = True
     TOOLS_AUTOLOAD = 3
     comp = get_comp()
     if not comp:
         raise ModuleNotFoundError("Comp not found")
+finally:
+    current_comp_name = comp.GetAttrs()["COMPS_Name"]
 
 
 def check_py_version():
@@ -285,7 +287,6 @@ except ImportError:
                 "Could not install Pyside automatically or the installation process is interrupted"
             )
             raise
-            sys.exit()
     else:
         print(
             "Pyside2 is required to run this script.\nPlease install it manually with following command:"
@@ -380,7 +381,7 @@ class PointDelegate(QItemDelegate):
         point_data = str(index.model().data(index))
         try:
             # my attempt of parsing a string like '{1.0:0.5, 2.0:0.5, 3.0:0.0}'
-            # first remove curlybraces and spaces to make it '1.0:0.1,2.0:0.5,3.0:0.0',
+            # first remove curly braces and spaces to make it '1.0:0.1,2.0:0.5,3.0:0.0',
             substring = re.sub("[{} ]", "", point_data)
             # split by colon and convert to dictionary {'1.0': '0.5', '2.0': '0.5', '3.0': '0.0'}
             dict_point = dict(ss.split(":") for ss in substring.split(","))
@@ -781,9 +782,11 @@ class TableModel(QAbstractTableModel):
             comp = fu.GetCurrentComp()
         except NameError:
             comp = get_comp()
+        global current_comp_name
         comp_name = comp.GetAttrs()["COMPS_Name"]
-        if comp_name:
+        if comp_name and comp_name != current_comp_name:
             print("currently working with {}".format(comp_name))
+            current_comp_name = comp_name
         if not comp:
             print(
                 "No comp data found. Probably both Resolve and Fusion are loaded?"
@@ -798,12 +801,17 @@ class TableModel(QAbstractTableModel):
         if not self.tool_dict.values():
             self.communicate.send("Select some tools and click Refresh button")
             return
+        # disable refresh button during reload process
+        refresh_button = main.refresh_button
+        refresh_button.setEnabled(False)
+        refresh_button.setStyleSheet("color: rgb(128,128,128);")
+
         for tool in self.tool_dict.values():
             tool_inputs = {}
             tool_inputs_attributes = {}
             for v in tool.GetInputList().values():
-                f = FusionInput(v)
                 QApplication.processEvents()
+                f = FusionInput(v)
                 if f.attributes["INPS_DataType"] not in self.data_types_to_skip:
                     key = f.Name
                     tool_inputs[key] = f
@@ -819,6 +827,10 @@ class TableModel(QAbstractTableModel):
             tool_inputs["Tool ID"] = tool.ID
             progress += 1
             self.communicate.send((100.0 / (len(self.tool_dict))) * progress)
+
+        refresh_button.setDisabled(False)
+        refresh_button.setStyleSheet("color: rgb(192,192,192);")
+
         self.communicate.send(
             "Done loading, execution time : "
             + str(datetime.datetime.now() - start_time)
@@ -1021,7 +1033,7 @@ class MainWindow(QMainWindow):
         self.always_on_top.stateChanged.connect(self.changeAlwaysOnTop)
         self.search_line.textChanged.connect(self.filterRegExpChanged)
         self.clear_button.pressed.connect(self.clear_search)
-        self.refresh_button.pressed.connect(self.reload_fusion_data)
+        self.refresh_button.released.connect(self.reload_fusion_data)
         self._tm.communicate.broadcast.connect(self.communication)
         self.corner.clicked.connect(self.reset_sorting)
         self.setWindowFlags(
@@ -1139,6 +1151,10 @@ QToolButton {{
     }}
 
 QToolButton:checked {{
+    background-color: rgb(70, 86, 134);
+    }}
+
+QPushButton:pressed {{
     background-color: rgb(70, 86, 134);
     }}
 
