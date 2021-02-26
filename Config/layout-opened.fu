@@ -6,10 +6,10 @@
 				Execute = [[
 					rets = self:Default(ctx, args)
 					comp = fusion.CurrentComp
-                    comp:RunScript(comp:MapPath("Reactor:Deploy/Scripts/Comp/Toolbar16/Toolbar16.lua"))
-                    -- if comp and fusion.Version > 16.1 and fusion.Version < 17 and not fusion:GetResolve() then
-                    --     comp.CurrentFrame:LoadLayout(comp:MapPath("Reactor:Deploy/Layouts/FU16_1mon_bottom-timeview.layout"))
-                    -- end
+                    if comp and fusion.Version > 16.1 and fusion.Version < 17 and not fusion:GetResolve() then
+                        comp:RunScript(comp:MapPath("Reactor:Deploy/Scripts/Comp/Toolbar16/Toolbar16.lua"))
+                        comp.CurrentFrame:LoadLayout(comp:MapPath("Reactor:Deploy/Layouts/FU16_1mon_bottom-timeview.layout"))
+                    end
 					]]
 			},
 		},

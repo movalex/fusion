@@ -30,7 +30,7 @@ function showUI()
                 ui:Label{
                     Weight = 0.6,
                     ID = 'Label',
-                    Text = 'Frames to Offset:',
+                    Text = 'Frame Handles:',
                     Alignment = {AlignLeft = true, AlignVCenter = true}
                 },
                 ui:SpinBox {
