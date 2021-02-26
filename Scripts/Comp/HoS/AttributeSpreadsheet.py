@@ -87,7 +87,6 @@
         UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-from __future__ import print_function
 import datetime
 import os
 import platform
