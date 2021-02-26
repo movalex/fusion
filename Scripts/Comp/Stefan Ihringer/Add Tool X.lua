@@ -123,7 +123,6 @@ function CopyTable(t)
   end
   return t2
 end
-
 -- retrieve the list of all available tools, macros and scripts which gets saved to the global alltools table.
 -- Cache tool names and IDs first time round, to avoid delays
 function initList()
@@ -132,7 +131,8 @@ function initList()
 	if globals.__addtool_data and (globals.__addtool_data.cached_macros_and_scripts == CACHE_MACROS_AND_SCRIPTS) then
 		alltools = CopyTable(globals.__addtool_data)
 	else
---		print("rescanning tools")
+		-- print("rescanning tools")
+		-- in python alltools = {k:v for k, v in t.items() if v.get("REGS_OpIconString")}
 		alltools = fu:GetRegSummary(CT_Tool)
 		-- Fill in missing entries
 		for i,v in ipairs(alltools) do
