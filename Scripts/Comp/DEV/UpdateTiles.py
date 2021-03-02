@@ -42,7 +42,7 @@ for tool in tools.values():
         output = tool.FindMainOutput(1)
         if output and not tool.GetAttrs(["TOOLB_PathThrough"]):
             print("Updating {} tile".format(tool.Name))
-            if tool.IF == "Loader":
+            if tool.ID == "Loader":
                 comp.CurrentTime = tool.GlobalIn[1]
             output.GetValue()
             count = count + 1
