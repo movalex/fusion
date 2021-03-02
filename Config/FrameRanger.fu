@@ -36,13 +36,9 @@
                     gStart = compAttrs.COMPN_GlobalStart
                     gEnd = compAttrs.COMPN_GlobalEnd
                     target:StartUndo("SetHandles")
-                    local status = target:GetData("FrameRanger.IsSet")
+                    local status = target:GetData("FrameRanger.IsSet") or "false"
                     local s, e = getBounds()
                     currentOffset = target:GetData("FrameRanger.offset") or 24
-                    if status == nil then
-                        resetRange()
-                        minusOffset(currentOffset, s, e)
-                    end
                     if status == 'false' then
                         if s > gStart or e < gEnd then
                             resetRange()
@@ -73,16 +69,17 @@
                 Execute = 
                 [[
                 --begin=lua--
-                    tool = target:GetToolList(true, "Loader")[1]
-                    if tool then
-                        local toolAttrs = tool:GetAttrs()
-                        local clipStart = toolAttrs.TOOLNT_Clip_Start[1]
-                        local clipEnd = toolAttrs.TOOLNT_Clip_End[1]
-                        target:SetAttrs({COMPN_GlobalStart = clipStart})
-                        target:SetAttrs({COMPN_GlobalEnd = clipEnd})
-                        target:SetAttrs({COMPN_RenderStart = clipStart})
-                        target:SetAttrs({COMPN_RenderEnd = clipEnd})
-                    end
+                tool = target:GetToolList(true, "Loader")[1]
+                if tool then
+                    local toolAttrs = tool:GetAttrs()
+                    -- local clipLength = toolAttrs.TOOLIT_Clip_Length[1]
+                    local clipStart = toolAttrs.TOOLNT_Clip_Start[1]
+                    local clipEnd = toolAttrs.TOOLNT_Clip_End[1]
+                    target:SetAttrs({COMPN_GlobalStart = clipStart})
+                    target:SetAttrs({COMPN_GlobalEnd = clipEnd})
+                    target:SetAttrs({COMPN_RenderStart = clipStart})
+                    target:SetAttrs({COMPN_RenderEnd = clipEnd})
+                end
                 --end=lua--
                 ]]
             }

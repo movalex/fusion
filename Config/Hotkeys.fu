@@ -37,7 +37,7 @@
             {
               Execute = 
               [[
-                print('show timeline view')
+                print('show Timeline view')
                 target:DoAction("Fusion_View_Show", {view = "Spline", show = false}) 
                 target:DoAction("Fusion_View_Show", {view = "Nodes", show = false}) 
                 target:DoAction("Fusion_View_Show", {view = "Keyframes", show = true}) 
@@ -56,7 +56,7 @@
             {
               Execute = 
                 [[
-                print('show spline view')
+                print('show Spline view')
                 target:DoAction("Fusion_View_Show", {view = "Keyframes", show = false}) 
                 target:DoAction("Fusion_View_Show", {view = "Nodes", show = false}) 
                 target:DoAction("Fusion_View_Show", {view = "Spline", show = true}) 
@@ -68,14 +68,14 @@
     Action
     {
         ID = "Show_Nodes",
-        Category = 'FuFrame',
+        Category = 'Flow',
         Targets = 
         {
             Composition = 
             {
               Execute = 
                 [[
-                print('show nodes view')
+                print('show Nodes view')
                 target:DoAction("Fusion_View_Show", {view = "Keyframes", show = false}) 
                 target:DoAction("Fusion_View_Show", {view = "Spline", show = false}) 
                 target:DoAction("Fusion_View_Show", {view = "Nodes", show = true}) 
