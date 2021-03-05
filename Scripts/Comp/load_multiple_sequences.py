@@ -144,8 +144,7 @@ def run_folder(input):
         + " sequence(s)/single file(s) in that folder."
     )
 
-    mycode = 'seqlist = comp.AskUser("Load Multiple Sequences", {'
-
+    mycode = "seqlist = comp.AskUser('Load Multiple Sequences', {"
     for i in range(1, sequencelength):
         mycode = (
             mycode
@@ -167,6 +166,7 @@ if input:
     fu.SetData("LMPath", input["filepath"])
     command, full_names_dict, short_seqs = run_folder(input)
     if len(short_seqs) > 30:
+        seqlist = short_seqs.values()
         message = "{} sequences will be loaded.\nProceed?".format(len(short_seqs))
         ret_warning = comp.AskUser(
             "Warning",
@@ -185,21 +185,29 @@ if input:
         if not ret_warning:
             print("|\n|------  Import canceled.\n")
             sys.exit()
-    exec(command)  # show second dialogue with shorneted names, generates seqlist
-    if seqlist:
         comp.Lock()
         for i, short_seq in enumerate(short_seqs.values(), 1):
-            if seqlist["sequence_" + str(i)] == 1:  # if checkbox is set
-                file_name_without_seq = short_seq
-                print("importing: ", file_name_without_seq)
+            file_path = full_names_dict[short_seq]
+            loader = comp.Loader()
+            loader.Clip = file_path
+            if input["color"] != 0.0:
+                loader.TileColor = colordict[str(dropdict[input["color"]])]
+        comp.Unlock()
+
+    else:
+        exec(command)  # show second dialogue with shorneted names, generates seqlist
+        if seqlist:
+            comp.Lock()
+            for i, short_seq in enumerate(short_seqs.values(), 1):
+                if seqlist["sequence_" + str(i)] == 1:  # if checkbox is set
+                    file_name_without_seq = short_seq
+                    print("importing: ", file_name_without_seq)
                 file_path = full_names_dict[file_name_without_seq]
                 loader = comp.Loader()
                 loader.Clip = file_path
                 if input["color"] != 0.0:
                     loader.TileColor = colordict[str(dropdict[input["color"]])]
-        comp.Unlock()
-        print("|\n|------  Import done.\n")
-    else:
-        print("|\n|------  Import canceled.\n")
+            comp.Unlock()
+            print("|\n|------  Import done.\n")
 else:
     print("|\n|------  Import canceled.\n")
