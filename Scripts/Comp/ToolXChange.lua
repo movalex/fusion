@@ -1,60 +1,71 @@
-_VERSION = [[Version 1.4 - Septembre 2, 2019]]
+_VERSION = [[Version 1.5 - Mar-06-2021]]
 --[[  HEADER :
 
       Fusion 9.0.2 build 15 | windows 10 x64, jeremy bepoix - jeremy.bepoix@gmail.com
       Fusion 9.0.2 build 15 | ubuntu 18.04 & centOS 7
-      Fusion 16 on MacOSX
+      Fusion 16 
+      Fusion 17 
 
-      v1.4 - 2019-09-02
+      v1.5 - 2021-03-06
 
       =====Overview======
 
-      This script allows to share tool, group of nodes and more 
+      This script allows sharing tools, group of nodes and more 
 
 
 ]]--
 
 --[[  VERSIONING :
 
+      v1.5
+      update: Alexey Bogomolov (mail@abogomolov.com)
+        - search by Name for more reliable and fast filtering
+        - add Date column for more reliable sorting (not ideal though)
+        - tools publish by enter button
+        - edit name (add EDIT button, add rename tag dialogue window)
+        - filter allowed users by table (more than one username allowed to edit tools). See [c]allowedUsers[/c] variable.
+        - dedicated uuid function. Looks like UUID generation is not random enough, and some tools are constantly overwritten, especially after restart. So I implemented a custom UUID generation.
+        - add entry numbering (in the order of creation)
+        - entry name can have spaces and capital letters;
+
+
 	  v1.4
-	  feedback : Movalex (wsl forum > www.steakunderwater.com )
+	  feedback: Alexey Bogomolov (wsl forum > www.steakunderwater.com )
 	  	- On mac use "USER" environment
 	  	- get current comp: pasting to any comp opened
 
 	  v1.3
-	  add delete button
-	  add time delta on date
-	  complete description 
+        - add delete button
+        - add time delta on date
+        - complete description 
 
 	  v1.2
-	  add replace func uuid() by embed bmd.uuid()
-	  change spaghetti code
-	  add findSys() to find wich system is used (thanks to Reactor creator for those lines)
-	  add error balise
-	  add description
+	    - add replace func uuid() by embed bmd.uuid()
+	    - change spaghetti code
+	    - add findSys() to find wich system is used (thanks to Reactor creator for those lines)
+	    - add error balise
+	    - add description
       
 	  v1.1
-	  add sanity Check (removing special character)
-	  add popup warning same file written
+	    - add sanity Check (removing special character)
+	    - add popup warning same file written
 
-	  v1.0
-      Initial prototype.
+      v1.0
+        - Initial prototype.
+
+
+        TODO:
+        - Edit Description for existing entries
 ]]--
 
-
---[[  TODO :
-    - submit new entry by pressing enter
-    - fix date sorting issue
-    - fix search
-    - add edit button
-]]--
 
 json = require "dkjson"
 
 local ui = fu.UIManager
 local disp = bmd.UIDispatcher(ui)
 local width,height = 800,700
-
+local allowedUsers = {"abogomolov"}
+local dlg = nil
 
 --========================================================================================================================
 --
@@ -64,7 +75,7 @@ local width,height = 800,700
 
 win = disp:AddWindow({
   ID = 'toolsXchange',
-  WindowTitle = "toolsXchange  ".._VERSION,
+  WindowTitle = "ToolXChange  ".._VERSION,
   Geometry = {100, 100, width, height},
   
   ui:VGroup{
@@ -90,12 +101,12 @@ win = disp:AddWindow({
 
 	ui:HGroup{
 		Weight = 3,
-		ui:Tree{ID = 'FileFinder', SortingEnabled=true, UniformRowHeights=true, Events = {ItemDoubleClicked=true, ItemClicked=true,},},
+		ui:Tree{ID = 'TreeUI', SortingEnabled=true, UniformRowHeights=false, Events = {ItemDoubleClicked=true, ItemClicked=true,},},
 		},
 		
 	ui:HGroup{
 		Weight = 0.1,
-		ui:LineEdit{ID='userToolName', PlaceholderText = 'Name your tool ...', },
+		ui:LineEdit{ID='LineEditUI', PlaceholderText = 'Name your tool ...', Events = {ReturnPressed = true, EditingFinished = true}},
 		},
 
 	ui:HGroup{
@@ -116,6 +127,7 @@ win = disp:AddWindow({
 	ui:HGroup{
 		Weight = 0.1,
 		ui:Button{ID = 'publishButton', Text = 'PUBLISH',},
+		ui:Button{ID = 'editButton', Text = 'EDIT',},
 		ui:Button{ID = 'deleteButton', Text = 'DELETE',},
 		ui:Button{ID = 'repoButton', Text = 'OPEN REPOSITORY',},
   	},
@@ -137,6 +149,9 @@ win = disp:AddWindow({
 -- search if ".config" file present in "Profile:" directory
 --
 ---------------------------------------------------------------------------------------------------------
+if not comp then
+    comp = fu.CurrentComp
+end
 fuProfile = comp:MapPath('Profile:\\')
 platform = (FuPLATFORM_WINDOWS and "Windows") or (FuPLATFORM_MAC and "Mac") or (FuPLATFORM_LINUX and "Linux")
 searchFilterText = ""
@@ -148,7 +163,6 @@ function repoPath()
 	repodir = bmd.readdir(fuProfile .. "*.config")
 	for i, f in ipairs(repodir) do
 		filename = tostring(f.Name)
-		print(filename)
 	end
 	-- if not create config file wih firstStart() function
 	if filename == nil then
@@ -285,11 +299,19 @@ function ReadJson()
 		local ret = file:read("*all")
 		local decodeJson = json.decode( ret )
 		file:close()
-		table.insert(jsonList, decodeJson)		
+		table.insert(jsonList, decodeJson)
 	end
 end
 
-
+local function uuid()
+    local random = math.random
+    math.randomseed(os.time())
+    local template ='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+    return string.gsub(template, '[xy]', function (c)
+        local v = (c == 'x') and random(math.random(), 0xf) or random(math.random(), 0xb)
+        return string.format('%x', v)
+    end)
+end
 
 ---------------------------------------------------------------------------------------------------------
 -- createJson()
@@ -298,36 +320,37 @@ end
 --
 ---------------------------------------------------------------------------------------------------------
 function createJson()
-	nameID = bmd.getappuuid()
-	cmp = fusion.CurrentComp
+	nameID = uuid()
+	comp = fu.CurrentComp
 
-	local nodes = bmd.writestring(cmp:CopySettings())
+	local nodes = bmd.writestring(comp:CopySettings(comp:GetToolList(true)))
 
 	-- prompt red text.line.edit if user won't named a selection
-	if itm.userToolName.Text == "" then 
-		itm.userToolName:SetPaletteColor("All", "Base", { R=0.66, G=0.3, B=0.3, A=1.0 })
-		itm.userToolName:SetText("please, name your selection ...")
+	if itm.LineEditUI.Text == "" then 
+		itm.LineEditUI:SetPaletteColor("All", "Base", { R=0.66, G=0.3, B=0.3, A=1.0 })
+		itm.LineEditUI:SetText("please, name your selection ...")
 		print('[Warning] no name mention')
 		bmd.wait(2)
 		clearUI()
 		return	
 	-- prompt red text.line.edit if user won't select a tool
 	elseif string.len(nodes) <= 27 then 
-		itm.userToolName:SetPaletteColor("All", "Base", { R=0.66, G=0.3, B=0.3, A=1.0 })
-		itm.userToolName:SetText("please, select tools and name it...")
+		itm.LineEditUI:SetPaletteColor("All", "Base", { R=0.66, G=0.3, B=0.3, A=1.0 })
+		itm.LineEditUI:SetText("please, select tools and name it...")
 		print('[Warning] no tool selected')
 		bmd.wait(2)
 		clearUI()
 		return
-	-- create JSON with this data : users, usersToolName, usersToolComment, toolRaw, toolDate, toolPathBaseName, toolPathName
+	-- create JSON with this data : num, users, usersToolName, usersToolComment, toolRaw, toolDate, toolPathBaseName, toolPathName
 	else --string.len(nodes) >= 30 then	
-		itm.userToolName.Text = itm.userToolName.Text:gsub('[%p%c%s]', '')
+		-- itm.LineEditUI.Text = itm.LineEditUI.Text:gsub('[%p%c%s]', '') -- disabled
 		json_fileName = tostring(nameID)..".json"
-		-- creat table with main data
+		-- create table with main data
 		tbl = {
-	  		users = { user:lower() },
-	  		usersToolName = { itm.userToolName.Text:lower() },
-	  		usersToolComment = { itm.userToolComment.PlainText:lower() },
+	  		num = { tostring(#jsonList + 1) },
+            users = { user:lower() },
+	  		usersToolName = { itm.LineEditUI.Text },
+	  		usersToolComment = { itm.userToolComment.PlainText },
 	  		toolRaw = { nodes },
 	  		toolDate = { os.date('%m-%d-%Y|%H:%M:%S') },
 	  		toolPathBaseName = { REPOSITORY_FOLDER },
@@ -340,36 +363,11 @@ function createJson()
 		io.close(json_file)
 	end
 	-- if all good, user return with green line.
-	itm.userToolName:SetPaletteColor("All", "Base", { R=0.34, G=0.6, B=0.34, A=1.0 })
-	itm.userToolName:SetText("Published...")	
+	itm.LineEditUI:SetPaletteColor("All", "Base", { R=0.34, G=0.6, B=0.34, A=1.0 })
+	itm.LineEditUI:SetText("Published!")	
 end
 
-
 ---------------------------------------------------------------------------------------------------------
--- MatchFilter()
--- 
--- search bar filter
---
----------------------------------------------------------------------------------------------------------
-function MatchFilter(t, filter)
-	for i,v in pairs(t) do
-		if type(v) == "string" or type(v) == "number" then
-			if tostring(v):lower():match(filter) then
-				return true
-			end
-		elseif type(v) == "table" then
-			if MatchFilter(v, filter) then
-				return true
-			end
-		end
-	end
-
-	return false
-end
-
-
----------------------------------------------------------------------------------------------------------
--- populateTree()
 -- 
 -- creat tree View and populate with Json file data
 --
@@ -378,38 +376,42 @@ function populateTree()
 	-- init TreeView
 	itm.UpdatesEnabled = false
 	itm.SortingEnabled = false
-	itm.FileFinder:Clear()
-
+	itm.TreeUI:Clear()
 	for i,v in ipairs(jsonList) do
 		-- search filter func
-		if #searchFilterText == 0 or MatchFilter(v, searchFilterText:lower()) then
-			itm.FileFinder:SetHeaderLabels({'Author', 'Name', 'Description','Date', 'toolRaw','toolPathName', 'toolPathBaseName' })
+		if #searchFilterText == 0 or v.usersToolName[1]:match(searchFilterText:lower()) then
+            number = tonumber(v.num[1])
+			itm.TreeUI:SetHeaderLabels({'#','Author', 'Name', 'Description','Date', 'Created','toolRaw','toolPathName', 'toolPathBaseName' })
 			-- Number of columns in the Tree list after SetHeaderItem to hide not registred (toolRaw, toolPathName, toolPathBaseName )
-			itm.FileFinder.ColumnCount = 4
+			itm.TreeUI.ColumnCount = 6
 			-- Resize the Columns
-			itm.FileFinder.ColumnWidth[0] = 100
-			itm.FileFinder.ColumnWidth[1] = 180
-			itm.FileFinder.ColumnWidth[2] = 350
-			itm.FileFinder.ColumnWidth[3] = 100
+			itm.TreeUI.ColumnWidth[0] = 40
+			itm.TreeUI.ColumnWidth[1] = 100
+			itm.TreeUI.ColumnWidth[2] = 180
+			itm.TreeUI.ColumnWidth[3] = 250
+			itm.TreeUI.ColumnWidth[4] = 100
+            itm.TreeUI.ColumnWidth[5] = 100
 			-- creat columns
-			itmSettingsFile = itm.FileFinder:NewItem();
+			itmSettingsFile = itm.TreeUI:NewItem();
 			-- append data of Json 
-			itmSettingsFile.Text[0] = v.users[1];
-			itmSettingsFile.Text[1] = v.usersToolName[1];
-			itmSettingsFile.Text[2] = v.usersToolComment[1];
+			itmSettingsFile.Text[0] = string.format("%02d", number);
+			itmSettingsFile.Text[1] = v.users[1];
+			itmSettingsFile.Text[2] = v.usersToolName[1];
+			itmSettingsFile.Text[3] = v.usersToolComment[1];
 			-- get time delta creation
-			itmSettingsFile.Text[3] = get_time_difference(v.toolDate[1])
-			-- creat unregistred columns with data 
-			itmSettingsFile.Text[4] = v.toolRaw[1] --not registred, only data use
-			itmSettingsFile.Text[5] = v.toolPathName[1] --not registred, only data use
-			itmSettingsFile.Text[6] = v.toolPathBaseName[1] --not registred, only data use
+			itmSettingsFile.Text[4] = GetDate(v.toolDate[1])
+            itmSettingsFile.Text[5] = get_time_difference(v.toolDate[1])
+			-- create unregistred columns with data 
+			itmSettingsFile.Text[6] = v.toolRaw[1] --not registred, only data use
+			itmSettingsFile.Text[7] = v.toolPathName[1] --not registred, only data use
+			itmSettingsFile.Text[8] = v.toolPathBaseName[1] --not registred, only data use
 			-- add toolName tooltips
-			itmSettingsFile.ToolTip[0] = v.toolPathName[1]
 			itmSettingsFile.ToolTip[1] = v.toolPathName[1]
 			itmSettingsFile.ToolTip[2] = v.toolPathName[1]
+			itmSettingsFile.ToolTip[3] = v.toolPathName[1]
 			-- sorting columns & order
-			itm.FileFinder:AddTopLevelItem(itmSettingsFile)
-			itm.FileFinder:SortByColumn(3, "AscendingOrder")
+			itm.TreeUI:AddTopLevelItem(itmSettingsFile)
+			itm.TreeUI:SortByColumn(0, "AscendingOrder")
 		end
 	end
 	itm.UpdatesEnabled = true
@@ -438,16 +440,20 @@ function get_time_difference(jsonTime)
 		outString = et.days..daysText..'ago'
 	elseif et.hours > 0 then
 		outString = et.hours..hoursText..'ago'
-	elseif et.mins > 0 then
+	elseif et.mins >= 0 then
 		outString = et.mins..minsText..'ago'
 	else
-		outString = "A few seconds ago"
+		outString = "0 minutes ago"
 	end
 	
 	return outString
 end
 
-
+function GetDate(jsonTime)
+	formatPattern = '^(%d+)-(%d+)-(%d+)|' 
+	month, day, year = jsonTime:match(formatPattern)
+	return year .. '-' .. month .. "-" .. day
+end
 ---------------------------------------------------------------------------------------------------------
 -- ConvertSeconds()
 -- 
@@ -481,22 +487,22 @@ function win.On.SearchText.TextChanged(ev)
 	populateTree()
 
 	if searchFilterText and searchFilterText ~= "" then
-		itm.toolsXchange.WindowTitle = "toolsXchange | Searching for \"" .. tostring(searchFilterText) .. "\""
+		itm.toolsXchange.WindowTitle = "ToolXChange | Searching for \"" .. tostring(searchFilterText) .. "\""
 	else
-		itm.toolsXchange.WindowTitle = "toolsXchange  ".._VERSION
+		itm.toolsXchange.WindowTitle = "ToolXChange  ".._VERSION
 	end
 end
 
 
 ---------------------------------------------------------------------------------------------------------
--- Event FileFinder.ItemDoubleClicked()
+-- Event TreeUI.ItemDoubleClicked()
 -- 
 -- Paste tool when user doubleClic on Item 
 --
 ---------------------------------------------------------------------------------------------------------
-function win.On.FileFinder.ItemDoubleClicked(ev)
-	local cmp = fu:GetCurrentComp()
-    cmp:Paste(bmd.readstring(tostring(ev.item.Text[4])))
+function win.On.TreeUI.ItemDoubleClicked(ev)
+	local comp = fu:GetCurrentComp()
+    comp:Paste(bmd.readstring(tostring(ev.item.Text[6])))
 end
 
 
@@ -507,9 +513,9 @@ end
 --
 ---------------------------------------------------------------------------------------------------------
 function clearUI()
-	itm.userToolName:SetPaletteColor("All", "Base", { R=0.16, G=0.15, B=0.17, A=1.0 })
+	itm.LineEditUI:SetPaletteColor("All", "Base", { R=0.16, G=0.15, B=0.17, A=1.0 })
 	itm.userToolComment:Clear()
-	itm.userToolName:Clear()
+	itm.LineEditUI:Clear()
 end
 
 
@@ -521,7 +527,8 @@ end
 --
 -- publish tool  
 --------------------------------------------------------------------------------------------------------- 
-function win.On.publishButton.Clicked(ev)
+
+function DoPublish()
 	createJson()
 	bmd.wait(1)
 	ReadJson()
@@ -529,19 +536,121 @@ function win.On.publishButton.Clicked(ev)
 	clearUI()
 end
 
+function win.On.publishButton.Clicked(ev)
+    DoPublish()
+end
 
 
+function win.On.LineEditUI.ReturnPressed(ev)
+    DoPublish()
+end
 ---------------------------------------------------------------------------------------------------------
--- Event FileFinder.ItemClicked()
+-- Event TreeUI.ItemClicked()
 -- 
 -- get selectedItem for deleteButton()
 --
 ----------------------------------------------------------------------------------------------------------- 
-function win.On.FileFinder.ItemClicked(ev)
-	selectedItem = ev.item.Text[6]..'\\'..ev.item.Text[5]
-	selectedUser = ev.item.Text[0]
+function win.On.TreeUI.ItemClicked(ev)
+	selectedItem = ev.item.Text[8]..'\\'..ev.item.Text[7]
+    print(ev.item.Text[7])
+	selectedUser = ev.item.Text[1]
 end
 
+function HasValue(tab, val)
+    for i, j in pairs(tab) do
+        if j == val then
+            return true
+        end
+    end
+    return false
+end
+
+
+function win.On.editButton.Clicked(ev)
+    if not selectedItem then
+        return
+    end
+
+    if not bmd.fileexists(selectedItem) then
+        print('JSON file not found')
+        parse = bmd.parseFilename(selectedItem)
+        parse.FullPath = REPOSITORY_FOLDER
+        local sep = package.config:sub(1,1) 
+        selectedItem = parse.FullPath..sep..parse.FullName
+    end
+    
+    local file = io.open(selectedItem, "r")
+    local ret = file:read("*all")
+    local decodeJson = json.decode( ret )
+    file:close()
+    local name = decodeJson.usersToolName[1]
+    win:SetEnabled(false)
+
+    dlg = disp:AddWindow({
+        ID = 'edit',
+        TargetID = "edit",
+        WindowTitle = 'Rename+ Tool',
+        Geometry = {500, 400, 200, 100},
+        ui:VGroup{
+        ID = 'root',
+            ui:HGroup{
+                ui:LineEdit {
+                    ID = 'renameLine', Text = name,
+                    Alignment = {AlignHCenter = true},
+                    Events = {ReturnPressed = true},
+                }
+            },
+         ui:HGroup{
+            ui:VGap(20),
+            ui:Button{
+                ID = 'cancel', Text = 'Cancel',
+                Weight = .7,
+                },
+                ui:Button{
+                ID = 'ok', Text = 'Ok',
+                Weight = .3,
+                
+                }
+            }
+        }
+    })
+
+    dlg:Show()
+    itm_edit = dlg:GetItems()
+    itm_edit.renameLine:SelectAll()
+
+    function dlg.On.cancel.Clicked(ev)
+        dlg:Hide()
+        win:SetEnabled(true)
+    end
+    
+    function DoRename()
+
+        decodeJson.usersToolName[1] = itm_edit.renameLine.Text
+        decodeJson.users[1] = user
+        if parse then
+            decodeJson.toolPathBaseName[1] = parse.FullPath
+        end
+        local jsonEncode = json.encode (decodeJson, { indent = true })
+        json_file = io.open(selectedItem, "w")
+        json_file:write(tostring(jsonEncode))
+        io.close(json_file)
+        dlg:Hide()
+        win:SetEnabled(true)
+        ReadJson()
+        populateTree()
+    end
+
+    function dlg.On.ok.Clicked(ev)
+        DoRename()
+    end    
+
+    function dlg.On.renameLine.ReturnPressed(ev)
+        DoRename()
+    end
+
+
+end
 
 
 ---------------------------------------------------------------------------------------------------------
@@ -551,21 +660,31 @@ end
 --
 -----------------------------------------------------------------------------------------------------------
 function win.On.deleteButton.Clicked(ev)
-	if selectedUser == user then
-		os.remove(selectedItem)
-		itm.userToolName:SetPaletteColor("All", "Base", { R=0.66, G=0.3, B=0.3, A=1.0 })
-		itm.userToolName:SetText("Tool deleted")
-		print('[Info] : '..user..' deleted tool : '..selectedItem)
-		bmd.wait(2)
-		clearUI()
-	else
-		itm.userToolName:SetPaletteColor("All", "Base", { R=0.66, G=0.3, B=0.3, A=1.0 })
-		itm.userToolName:SetText("your are not the creator of this tool")
+    table.insert(allowedUsers, user)
+	if not HasValue(allowedUsers, selectedUser) then
+		itm.LineEditUI:SetPaletteColor("All", "Base", { R=0.66, G=0.3, B=0.3, A=1.0 })
+		itm.LineEditUI:SetText("your are not the creator of this tool")
 		print('[Error] : your are not the creator of this tool')
 		bmd.wait(2)
 		clearUI()
 		return
 	end
+    if not bmd.fileexists(selectedItem) then
+        print('JSON file not found')
+        parse = bmd.parseFilename(selectedItem)
+        parse.FullPath = REPOSITORY_FOLDER
+        local sep = package.config:sub(1,1) 
+        selectedItem = parse.FullPath..sep..parse.FullName
+        if bmd.fileexists(selectedItem) then
+            print("found new path "..selectedItem)
+        end
+    end
+    os.remove(selectedItem)
+    itm.LineEditUI:SetPaletteColor("All", "Base", { R=0.66, G=0.3, B=0.3, A=1.0 })
+    itm.LineEditUI:SetText("Tool deleted")
+    print('[Info] : '..user..' deleted tool : '..selectedItem)
+    bmd.wait(.4)
+    clearUI()
 	-- refresh, 
 	ReadJson()
 	populateTree()
