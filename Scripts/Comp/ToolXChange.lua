@@ -26,7 +26,8 @@ _VERSION = [[Version 1.5 - Mar-06-2021]]
         - filter allowed users by table (more than one username allowed to edit tools). See [c]allowedUsers[/c] variable.
         - dedicated uuid function. Looks like UUID generation is not random enough, and some tools are constantly overwritten, especially after restart. So I implemented a custom UUID generation.
         - add entry numbering (in the order of creation)
-        - entry name can have spaces and capital letters;
+        - entry name can have spaces and capital letters
+        - if there's old data found without the tool position in it, the entry will be placed at the end of the list. 
 
 
 	  v1.4
@@ -377,15 +378,20 @@ function populateTree()
 	itm.UpdatesEnabled = false
 	itm.SortingEnabled = false
 	itm.TreeUI:Clear()
+    number = #jsonList
 	for i,v in ipairs(jsonList) do
 		-- search filter func
 		if #searchFilterText == 0 or v.usersToolName[1]:match(searchFilterText:lower()) then
-            number = tonumber(v.num[1])
+            if not v.num then
+                number = number + 1
+            else
+                number = tonumber(v.num[1])
+            end
 			itm.TreeUI:SetHeaderLabels({'#','Author', 'Name', 'Description','Date', 'Created','toolRaw','toolPathName', 'toolPathBaseName' })
 			-- Number of columns in the Tree list after SetHeaderItem to hide not registred (toolRaw, toolPathName, toolPathBaseName )
 			itm.TreeUI.ColumnCount = 6
 			-- Resize the Columns
-			itm.TreeUI.ColumnWidth[0] = 40
+            itm.TreeUI.ColumnWidth[0] = 40
 			itm.TreeUI.ColumnWidth[1] = 100
 			itm.TreeUI.ColumnWidth[2] = 180
 			itm.TreeUI.ColumnWidth[3] = 250
