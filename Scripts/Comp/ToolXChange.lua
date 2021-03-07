@@ -314,6 +314,25 @@ local function uuid()
     end)
 end
 
+---------------------------------------------------------------------------------------------------------
+-- 
+-- write json file function
+-- 
+--------------------------------------------------------------------------------------------------------- 
+
+function writeJsonFile(filePath, data)
+    local jsonEncode = json.encode(data, {indent = true})
+    local json_file = io.open(filePath, "w")
+    json_file:write(tostring(jsonEncode))
+    io.close(json_file)
+end
+
+---------------------------------------------------------------------------------------------------------
+-- 
+-- create json file structure
+-- 
+--------------------------------------------------------------------------------------------------------- 
+
 function createJson()
 	nameID = uuid()
 	comp = fu.CurrentComp
@@ -352,10 +371,11 @@ function createJson()
 	  		toolPathName = { json_fileName }
 			}
 		-- encode JSON & save-it
-		local jsonEncode = json.encode (tbl, { indent = true })
-		json_file = io.open(REPOSITORY_FOLDER..json_fileName, "w")
-		json_file:write(tostring(jsonEncode))
-		io.close(json_file)
+        writeJsonFile(REPOSITORY_FOLDER..sep..json_fileName, tbl)
+		-- local jsonEncode = json.encode (tbl, { indent = true })
+		-- json_file = io.open(REPOSITORY_FOLDER..json_fileName, "w")
+		-- json_file:write(tostring(jsonEncode))
+		-- io.close(json_file)
 	end
 	-- if all good, user return with green line.
 	itm.LineEditUI:SetPaletteColor("All", "Base", { R=0.34, G=0.6, B=0.34, A=1.0 })
@@ -373,14 +393,18 @@ function populateTree()
 	itm.UpdatesEnabled = false
 	itm.SortingEnabled = false
 	itm.TreeUI:Clear()
+    lastID = 0
     number = #jsonList
+    fixData = {}
 	for i,v in ipairs(jsonList) do
 		-- search filter func
-		if #searchFilterText == 0 or v.usersToolName[1]:match(searchFilterText:lower()) then
+		if #searchFilterText == 0 or v.usersToolName[1]:lower():match(searchFilterText:lower()) then
             if not v.num then
+                table.insert(fixData, v)
                 number = number + 1
             else
                 number = tonumber(v.num[1])
+                lastID = lastID + 1
             end
 			itm.TreeUI:SetHeaderLabels({'#','Author', 'Name', 'Description','Date', 'Created','toolRaw','toolPathName', 'toolPathBaseName' })
 			-- Number of columns in the Tree list after SetHeaderItem to hide not registred (toolRaw, toolPathName, toolPathBaseName )
@@ -415,6 +439,17 @@ function populateTree()
 			itm.TreeUI:SortByColumn(0, "AscendingOrder")
 		end
 	end
+
+    if #fixData > 0 then
+        print("No entry ID found in ".. #fixData .. " file(s)")
+        for i, data in pairs(fixData) do
+            lastID = lastID + 1
+            print("adding ID: " .. lastID)
+            data["num"] = {lastID}
+            writeJsonFile(REPOSITORY_FOLDER..sep..data.toolPathName[1], data)
+        end
+        populateTree()
+    end
 	itm.UpdatesEnabled = true
 	itm.SortingEnabled = true
 end
@@ -569,19 +604,6 @@ end
 
 ---------------------------------------------------------------------------------------------------------
 -- 
--- rewrite json file function
--- 
---------------------------------------------------------------------------------------------------------- 
-
-function rewriteJsonFile(filePath, data)
-    local jsonEncode = json.encode(data, {indent = true})
-    local json_file = io.open(filePath, "w")
-    json_file:write(tostring(jsonEncode))
-    io.close(json_file)
-end
-
----------------------------------------------------------------------------------------------------------
--- 
 -- edit Tree entry, launches separate window, blocking main window from editing
 -- 
 --------------------------------------------------------------------------------------------------------- 
@@ -651,7 +673,7 @@ function win.On.editButton.Clicked(ev)
         if parse then
             decodeJson.toolPathBaseName[1] = parse.FullPath
         end
-        rewriteJsonFile(selectedItem, decodeJson)
+        writeJsonFile(selectedItem, decodeJson)
         dlg:Hide()
         win:SetEnabled(true)
         ReadJson()
@@ -703,7 +725,7 @@ function win.On.deleteButton.Clicked(ev)
         if entry.num and tonumber(entry.num[1]) > tonumber(selectedID) then
             entry.num[1] = tonumber(entry.num[1]) - 1
             local filePath = REPOSITORY_FOLDER .. sep .. entry.toolPathName[1]
-            rewriteJsonFile(filePath, entry)
+            writeJsonFile(filePath, entry)
         end
     end
 
