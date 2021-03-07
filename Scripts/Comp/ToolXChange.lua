@@ -12,7 +12,6 @@ _VERSION = [[Version 1.5 - Mar-06-2021]]
 
       This script allows sharing tools, group of nodes and more 
 
-
 ]]--
 
 --[[  VERSIONING :
@@ -27,7 +26,8 @@ _VERSION = [[Version 1.5 - Mar-06-2021]]
         - dedicated uuid function. Looks like UUID generation is not random enough, and some tools are constantly overwritten, especially after restart. So I implemented a custom UUID generation.
         - add entry numbering (in the order of creation)
         - entry name can have spaces and capital letters
-        - if there's old data found without the tool position in it, the entry will be placed at the end of the list. 
+        - if there's old data found without the tool position in it, the entry will be placed at the end of the list.
+        - fix numbering of the consequent entries if previous entry was deleted
 
 
 	  v1.4
@@ -54,7 +54,6 @@ _VERSION = [[Version 1.5 - Mar-06-2021]]
       v1.0
         - Initial prototype.
 
-
         TODO:
         - Edit Description for existing entries
 ]]--
@@ -67,6 +66,7 @@ local disp = bmd.UIDispatcher(ui)
 local width,height = 800,700
 local allowedUsers = {"abogomolov"}
 local dlg = nil
+local sep = package.config:sub(1,1) 
 
 --========================================================================================================================
 --
@@ -143,16 +143,17 @@ win = disp:AddWindow({
 --
 --========================================================================================================================
 
-
 ---------------------------------------------------------------------------------------------------------
 -- repoPath()
 -- 
 -- search if ".config" file present in "Profile:" directory
 --
 ---------------------------------------------------------------------------------------------------------
+
 if not comp then
     comp = fu.CurrentComp
 end
+
 fuProfile = comp:MapPath('Profile:\\')
 platform = (FuPLATFORM_WINDOWS and "Windows") or (FuPLATFORM_MAC and "Mac") or (FuPLATFORM_LINUX and "Linux")
 searchFilterText = ""
@@ -176,11 +177,11 @@ function repoPath()
 end
 
 ---------------------------------------------------------------------------------------------------------
--- firstStart()
 -- 
 -- Run window for path request, and create "toolXchange.config" file
 --
 ---------------------------------------------------------------------------------------------------------
+
 function firstStart()
 	local width,height = 800,120
 	first_start_win = disp:AddWindow({
@@ -240,13 +241,10 @@ function firstStart()
 
 		disp:ExitLoop()
 	end
-
-
 	
 	first_start_win:Show()
 	disp:RunLoop()
 	first_start_win:Hide()
-	
 
 end
 
@@ -258,9 +256,7 @@ end
 --========================================================================================================================
 
 
-
 ---------------------------------------------------------------------------------------------------------
--- findSys()
 -- 
 -- search the operating system, to determine the user
 --
@@ -273,19 +269,17 @@ function findSys()
 	elseif platform == "Linux" then
 		user = os.getenv("USER")
 	else
-		print("[Error] There is an invalid Fusion platform detected")
+		print("[Error] There is an unknown Fusion platform detected")
 		return
 	end
 end
 
-
-
 ---------------------------------------------------------------------------------------------------------
--- ReadJson() > require "dkjson"
 -- 
 -- read all JSON in the 'REPOSITORY_FOLDER' directory, decodes the JSONs and puts them in a list
 --
 ---------------------------------------------------------------------------------------------------------
+
 function ReadJson()
 	jsonList = {}
 
@@ -304,6 +298,12 @@ function ReadJson()
 	end
 end
 
+---------------------------------------------------------------------------------------------------------
+-- 
+-- get a unique ID for the JSON nomenclature to create
+--
+---------------------------------------------------------------------------------------------------------
+
 local function uuid()
     local random = math.random
     math.randomseed(os.time())
@@ -314,12 +314,6 @@ local function uuid()
     end)
 end
 
----------------------------------------------------------------------------------------------------------
--- createJson()
--- 
--- get a unique ID for the JSON nomenclature to create
---
----------------------------------------------------------------------------------------------------------
 function createJson()
 	nameID = uuid()
 	comp = fu.CurrentComp
@@ -370,9 +364,10 @@ end
 
 ---------------------------------------------------------------------------------------------------------
 -- 
--- creat tree View and populate with Json file data
+-- create tree View and populate with Json file data
 --
 ---------------------------------------------------------------------------------------------------------
+
 function populateTree()
 	-- init TreeView
 	itm.UpdatesEnabled = false
@@ -426,7 +421,6 @@ end
 
 
 ---------------------------------------------------------------------------------------------------------
--- get_time_difference()
 -- 
 -- get time delta between JsonFile date and Now
 --
@@ -460,12 +454,13 @@ function GetDate(jsonTime)
 	month, day, year = jsonTime:match(formatPattern)
 	return year .. '-' .. month .. "-" .. day
 end
+
 ---------------------------------------------------------------------------------------------------------
--- ConvertSeconds()
 -- 
 -- dependent to get_time_difference() convert time to second and deliver day, hour, min
 --
 ---------------------------------------------------------------------------------------------------------
+
 function ConvertSeconds(secondsArg)    
 	local daysDiff = math.floor(secondsArg / 86400)
 	local hoursDiff = math.floor(secondsArg / 3600)
@@ -475,13 +470,12 @@ function ConvertSeconds(secondsArg)
 	return elapsedTable	
 end
 
-
 ---------------------------------------------------------------------------------------------------------
--- Event SearchButton.Clicked() & SearchText.TextChanged()
 -- 
 -- when search button Clicked set text to none to pass with the TextChanged
 --
 ---------------------------------------------------------------------------------------------------------
+
 function win.On.SearchButton.Clicked(ev)
 		itm.SearchText.Text = ""
 	itm.SearchText:SetFocus("OtherFocusReason")
@@ -499,39 +493,34 @@ function win.On.SearchText.TextChanged(ev)
 	end
 end
 
-
 ---------------------------------------------------------------------------------------------------------
--- Event TreeUI.ItemDoubleClicked()
 -- 
--- Paste tool when user doubleClic on Item 
+-- Paste tool when user doubleClicks on Item 
 --
 ---------------------------------------------------------------------------------------------------------
+
 function win.On.TreeUI.ItemDoubleClicked(ev)
 	local comp = fu:GetCurrentComp()
     comp:Paste(bmd.readstring(tostring(ev.item.Text[6])))
 end
 
-
 ---------------------------------------------------------------------------------------------------------
--- clearUI()
 -- 
 -- Clean tool Name & tool Comment
 --
 ---------------------------------------------------------------------------------------------------------
+
 function clearUI()
 	itm.LineEditUI:SetPaletteColor("All", "Base", { R=0.16, G=0.15, B=0.17, A=1.0 })
 	itm.userToolComment:Clear()
 	itm.LineEditUI:Clear()
 end
 
-
-
 ---------------------------------------------------------------------------------------------------------
--- Event publishButton.Clicked()
 -- 
--- dependent func : ReadJson() , populateTree() , clearUI()
+-- dependent func : ReadJson(), populateTree(), clearUI()
+-- publish tool
 --
--- publish tool  
 --------------------------------------------------------------------------------------------------------- 
 
 function DoPublish()
@@ -546,21 +535,28 @@ function win.On.publishButton.Clicked(ev)
     DoPublish()
 end
 
-
 function win.On.LineEditUI.ReturnPressed(ev)
     DoPublish()
 end
+
 ---------------------------------------------------------------------------------------------------------
--- Event TreeUI.ItemClicked()
 -- 
 -- get selectedItem for deleteButton()
 --
------------------------------------------------------------------------------------------------------------ 
+--------------------------------------------------------------------------------------------------------- 
+
 function win.On.TreeUI.ItemClicked(ev)
-	selectedItem = ev.item.Text[8]..'\\'..ev.item.Text[7]
+	selectedItem = ev.item.Text[8] .. sep .. ev.item.Text[7]
     print(ev.item.Text[7])
 	selectedUser = ev.item.Text[1]
+    selectedID = ev.item.Text[0]
 end
+
+---------------------------------------------------------------------------------------------------------
+-- 
+-- check if lua table has sertain value
+-- 
+--------------------------------------------------------------------------------------------------------- 
 
 function HasValue(tab, val)
     for i, j in pairs(tab) do
@@ -571,18 +567,37 @@ function HasValue(tab, val)
     return false
 end
 
+---------------------------------------------------------------------------------------------------------
+-- 
+-- rewrite json file function
+-- 
+--------------------------------------------------------------------------------------------------------- 
+
+function rewriteJsonFile(filePath, data)
+    local jsonEncode = json.encode(data, {indent = true})
+    local json_file = io.open(filePath, "w")
+    json_file:write(tostring(jsonEncode))
+    io.close(json_file)
+end
+
+---------------------------------------------------------------------------------------------------------
+-- 
+-- edit Tree entry, launches separate window, blocking main window from editing
+-- 
+--------------------------------------------------------------------------------------------------------- 
 
 function win.On.editButton.Clicked(ev)
     if not selectedItem then
+        print("select the item to edit")
         return
     end
 
     if not bmd.fileexists(selectedItem) then
-        print('JSON file not found')
+        print('JSON file not found. Trying to fix file path...')
         parse = bmd.parseFilename(selectedItem)
         parse.FullPath = REPOSITORY_FOLDER
-        local sep = package.config:sub(1,1) 
         selectedItem = parse.FullPath..sep..parse.FullName
+        print("Found new path: " .. selectedItem)
     end
     
     local file = io.open(selectedItem, "r")
@@ -631,16 +646,12 @@ function win.On.editButton.Clicked(ev)
     end
     
     function DoRename()
-
         decodeJson.usersToolName[1] = itm_edit.renameLine.Text
         decodeJson.users[1] = user
         if parse then
             decodeJson.toolPathBaseName[1] = parse.FullPath
         end
-        local jsonEncode = json.encode (decodeJson, { indent = true })
-        json_file = io.open(selectedItem, "w")
-        json_file:write(tostring(jsonEncode))
-        io.close(json_file)
+        rewriteJsonFile(selectedItem, decodeJson)
         dlg:Hide()
         win:SetEnabled(true)
         ReadJson()
@@ -654,18 +665,19 @@ function win.On.editButton.Clicked(ev)
     function dlg.On.renameLine.ReturnPressed(ev)
         DoRename()
     end
-
-
 end
 
-
 ---------------------------------------------------------------------------------------------------------
--- Event deleteButton.Clicked()
 -- 
--- match if user are creator and delete
+-- match if user is a creator and delete
 --
------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------
+
 function win.On.deleteButton.Clicked(ev)
+    if not selectedItem then
+        print("select the item to delete")
+        return
+    end
     table.insert(allowedUsers, user)
 	if not HasValue(allowedUsers, selectedUser) then
 		itm.LineEditUI:SetPaletteColor("All", "Base", { R=0.66, G=0.3, B=0.3, A=1.0 })
@@ -685,14 +697,27 @@ function win.On.deleteButton.Clicked(ev)
             print("found new path "..selectedItem)
         end
     end
+    
+    -- decrease each consequent entry number if previous entry was deleted
+    for i, entry in pairs(jsonList) do
+        if entry.num and tonumber(entry.num[1]) > tonumber(selectedID) then
+            entry.num[1] = tonumber(entry.num[1]) - 1
+            local filePath = REPOSITORY_FOLDER .. sep .. entry.toolPathName[1]
+            rewriteJsonFile(filePath, entry)
+        end
+    end
+
     os.remove(selectedItem)
-    itm.LineEditUI:SetPaletteColor("All", "Base", { R=0.66, G=0.3, B=0.3, A=1.0 })
+    itm.LineEditUI:SetPaletteColor("All", "Base", { R=0.34, G=0.6, B=0.34, A=1.0 })
     itm.LineEditUI:SetText("Tool deleted")
     print('[Info] : '..user..' deleted tool : '..selectedItem)
-    bmd.wait(.4)
+
+    bmd.wait(.6)
     clearUI()
-	-- refresh, 
-	ReadJson()
+
+    -- refresh TreeItem
+	
+    ReadJson()
 	populateTree()
 	clearUI()
 end
@@ -700,35 +725,31 @@ end
 
 
 ---------------------------------------------------------------------------------------------------------
--- Event repoButton.Clicked()
 -- 
 -- open Repository folder
 --
------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------
+
 function win.On.repoButton.Clicked(ev)
 	bmd.openfileexternal("Open", REPOSITORY_FOLDER)
 end
 
-
-
 ---------------------------------------------------------------------------------------------------------
--- Event toolsXchange.Close()
 -- 
 -- close window
 --
 -----------------------------------------------------------------------------------------------------------
+
 function win.On.toolsXchange.Close(ev)
     disp:ExitLoop()
 end
 
-
-
 ---------------------------------------------------------------------------------------------------------
--- Main()
 -- 
 -- Main run script
 --
 -----------------------------------------------------------------------------------------------------------
+
 function Main()
 	repoPath()
 	findSys()
