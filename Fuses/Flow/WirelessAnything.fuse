@@ -1,0 +1,410 @@
+--[[--
+Wireless Link Anything v1.5
+Description: Single wireless Link tool with many input types with added options to show input connection wire and rename the node to match the input name including a special prefix.
+
+Version Log:
+Tool originally written by: Sam Treadway (Intelligent Machine on WSL) - 2019.02.22
+Thanks to: Pieter Van Houte and June Yu for your valuable contributions
+
+Based on previous work by: Pieter Van Houte, Isaac Guenard, Blazej Floch, & Tim Vandekerckhove
+
+v1.5 - Added button to rename the WirelessAnything tool to match the input source name including a prefix (e.g. 'w3D_'),
+	 - Changed the reset functionality to be more intuitive and include a cancel button
+	 - Added Checkbox to show/hide input connection wires
+	 - minor bug fixes and code restructure
+	   - Sam Treadway - 2019.02.23
+v1.4 - Minor Cleanup, Added Particles DataType - Sam Treadway - 2019.02.22
+v1.3 - Added Mask Datatype, Added back button return to default select mode - JUNE YU - 2019.02.22
+v1.2 - added reset functionality - Pieter Van Houte - 2019.02.21
+
+Todo:
+- Add option to enable wired mask input for image and mask datatypes
+--]]--
+
+FuRegisterClass('WirelessAnything', CT_Tool, {
+	REGS_Name = 'Wireless Anything',
+	REGS_Category = 'Flow',
+	REGS_OpIconString = 'Wrless',
+	REGS_OpDescription = 'Wireless Link Anything',
+	REG_OpNoMask = true,
+	REG_NoBlendCtrls = true,
+	REG_NoObjMatCtrls = true,
+	REG_NoMotionBlurCtrls = true,
+	REG_SupportsDoD = true,
+	REG_Fuse_NoEdit = true,
+	REG_Fuse_NoReload  = true,
+	REG_Version = 150,
+	})
+
+function Create()
+	self:RemoveControlPage('Controls')
+	self:AddControlPage('Wireless Link')
+
+	InMode = self:AddInput('Data Type', 'DataType', {
+		{ CCS_AddString = '--Select Mode--', CCID_AddID = 'SelectMode', },
+		{ CCS_AddString = 'Image', CCID_AddID = 'Image', },
+		{ CCS_AddString = 'Mask', CCID_AddID = 'Mask', },
+		{ CCS_AddString = '3D', CCID_AddID = '3D', },
+		{ CCS_AddString = 'Material', CCID_AddID = 'Material', },
+		{ CCS_AddString = 'Particles', CCID_AddID = 'Particles', },
+		LINKID_DataType = 'FuID',
+		LINKS_Name = 'Data Type',
+		ICS_ControlPage = 'Wireless Link',
+		INPID_InputControl = 'ComboIDControl',
+		IC_Visible = true,
+		INP_External = false,
+		INP_DoNotifyChanged = true,
+		INP_InitialNotify   = true,
+		INPID_DefaultID = 'SelectMode',
+		INPI_Priority = 1,
+		ICD_Width = 1.0,
+		})
+	GetNewName = [[
+		if tool.InImage then NewName = 'wImg_' .. tool.InImage:GetConnectedOutput():GetTool():GetAttrs()['TOOLS_Name'] end
+		if tool.InMask then NewName = 'wMsk_' .. tool.InMask:GetConnectedOutput():GetTool():GetAttrs()['TOOLS_Name'] end
+		if tool.In3D then NewName = 'w3D_' .. tool.In3D:GetConnectedOutput():GetTool():GetAttrs()['TOOLS_Name'] end
+		if tool.InMtl then NewName = 'wMat_' .. tool.InMtl:GetConnectedOutput():GetTool():GetAttrs()['TOOLS_Name'] end
+		if tool.InPtcl then NewName = 'wPtcl_' .. tool.InPtcl:GetConnectedOutput():GetTool():GetAttrs()['TOOLS_Name'] end
+
+		tool:SetAttrs({TOOLS_Name = NewName})
+		
+		print ('Wireless Anything Tool is now named: ' .. NewName)
+		]]
+	GetSource = [[
+		if tool.InImage then comp:SetActiveTool(tool.InImage:GetConnectedOutput():GetTool()) end
+		if tool.InMask then comp:SetActiveTool(tool.InMask:GetConnectedOutput():GetTool()) end
+		if tool.In3D then comp:SetActiveTool(tool.In3D:GetConnectedOutput():GetTool()) end
+		if tool.InMtl then comp:SetActiveTool(tool.InMtl:GetConnectedOutput():GetTool()) end
+		if tool.InPtcl then comp:SetActiveTool(tool.InPtcl:GetConnectedOutput():GetTool()) end
+		]]
+	ResetAction = [[
+		comp.ActiveTool.DataType = 'SelectMode'
+		comp.ActiveTool.ShowWire = 0
+		tool.ScriptReload[fu.TIME_UNDEFINED] = 1
+		]]
+	ShowWire = self:AddInput("Show Input Connection", "ShowWire", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Integer = true,
+		INP_Default = 0.0,
+		INP_External = false,
+		IC_Visible = false,
+		INP_DoNotifyChanged = true,
+		})
+	ResetBtn = self:AddInput('Reset', 'ResetBtn', {
+		INPID_InputControl = 'ButtonControl',
+		INP_DoNotifyChanged = true,
+		INP_InitialNotify   = false,
+		INP_External = false,
+		IC_Visible = false,
+		ICD_Width = 0.15,
+		})
+	ConfirmResetBtn = self:AddInput('Reset Output / Disconnect', 'ConfirmResetBtn', {
+		INPID_InputControl = 'ButtonControl',
+		INP_DoNotifyChanged = true,
+		INP_InitialNotify   = false,
+		INP_External = false,
+		BTNCS_Execute = ResetAction,
+		IC_Visible = false,
+		ICD_Width = 0.5,
+		})
+	CancelResetBtn = self:AddInput('Cancel', 'CancelResetBtn', {
+		INPID_InputControl = 'ButtonControl',
+		INP_DoNotifyChanged = true,
+		INP_InitialNotify   = false,
+		INP_External = false,
+		IC_Visible = false,
+		ICD_Width = 0.5,
+		})
+end
+
+------------------------- DYNAMIC GUI -------------------------
+function NotifyChanged(inp, param, time)
+	if inp ~= nil and param ~= nil then
+		if inp == ShowWire then
+			if param.Value == 1.0 then
+				if InImage then InImage:SetAttrs({ LINK_Visible = true, }) end
+				if InMask then InMask:SetAttrs({ LINK_Visible = true, }) end
+				if In3D then In3D:SetAttrs({ LINK_Visible = true, }) end
+				if InMtl then InMtl:SetAttrs({ LINK_Visible = true, }) end
+				if InPtcl then InPtcl:SetAttrs({ LINK_Visible = true, }) end
+			else
+				if InImage then InImage:SetAttrs({ LINK_Visible = false, }) end
+				if InMask then InMask:SetAttrs({ LINK_Visible = false, }) end
+				if In3D then In3D:SetAttrs({ LINK_Visible = false, }) end
+				if InMtl then InMtl:SetAttrs({ LINK_Visible = false, }) end
+				if InPtcl then InPtcl:SetAttrs({ LINK_Visible = false, }) end
+			end
+		end
+		if inp == InMode then
+			if param.Value == 'SelectMode' then
+--				Do Nothing
+			elseif param.Value == 'Image' then
+				InMode:SetAttrs({ IC_Visible = false, })
+				ResetBtn:SetAttrs({ IC_Visible = true, })
+				ShowWire:SetAttrs({ IC_Visible = true, })
+				InImage = self:AddInput('Image Input', 'InImage', {
+					LINKID_DataType = 'Image',
+					INPID_InputControl = 'ImageControl',
+					ICS_ControlPage = 'Wireless Link',
+					LINK_Main = 1,
+					LINK_Visible = false,
+					IC_Visible = true,
+					INP_Required = false,
+					INPI_Priority = 1,
+					INP_DoNotifyChanged = true,
+					ICD_Width = 0.85,
+					})
+				RenameBtn = self:AddInput('Rename from Source', 'RenameBtn', {
+					INPID_InputControl = 'ButtonControl',
+					INP_External = false,
+					IC_Visible = true,
+					ICD_Width = 0.5,
+					INPI_Priority = 5,
+					BTNCS_Execute = GetNewName,
+					ICD_Width = 0.5,
+					})
+				ShowImageSource = self:AddInput('Show Source', 'ShowImageSource', {
+					INPID_InputControl = 'ButtonControl',
+					INP_External = false,
+					IC_Visible = true,
+					ICD_Width = 0.5,
+					INPI_Priority = 6,
+					BTNCS_Execute = GetSource,
+					ICD_Width = 0.5,
+					})
+				OutImg = self:AddOutput('Image Output', 'ImageOutput', {
+					LINKID_DataType = 'Image',
+					LINKID_AllowedDataType = 'Mask',
+					LINK_Main = 1,
+					LINK_Visible = true,
+					})
+				ConfirmResetBtn:SetAttrs({ IC_Visible = false, })
+				CancelResetBtn:SetAttrs({ IC_Visible = false, })
+			elseif param.Value == 'Mask' then
+				InMode:SetAttrs({ IC_Visible = false, })
+				ResetBtn:SetAttrs({ IC_Visible = true, })
+				ShowWire:SetAttrs({ IC_Visible = true, })
+				InMask = self:AddInput('Mask Input', 'InMask', {
+					LINKID_DataType = 'Image', --Set as Image first or it will appear below the Show Source Btn
+					INPID_InputControl = 'ImageControl',
+					ICS_ControlPage = 'Wireless Link',
+					LINK_Visible = false,
+					INP_Required = false,
+					ICD_Width = 0.85,
+					})
+				RenameBtn = self:AddInput('Rename from Source', 'RenameBtn', {
+					INPID_InputControl = 'ButtonControl',
+					INP_External = false,
+					IC_Visible = true,
+					ICD_Width = 0.5,
+					INPI_Priority = 5,
+					BTNCS_Execute = GetNewName,
+					ICD_Width = 0.5,
+					})
+				ShowImageSource = self:AddInput('Show Source', 'ShowImageSource', {
+					INPID_InputControl = 'ButtonControl',
+					INP_External = false,
+					IC_Visible = true,
+					ICD_Width = 0.5,
+					INPI_Priority = 6,
+					BTNCS_Execute = GetSource,
+					ICD_Width = 0.5,
+					})
+				InMask:SetAttrs({ LINKID_DataType = 'Mask', LINK_Main = 4, }) --Change to Mask
+				OutMask = self:AddOutput('Mask Output', 'MaskOutput', {
+					LINKID_DataType = 'Mask',
+					LINK_Main = 1,
+					LINK_Visible = true,
+					})
+				ConfirmResetBtn:SetAttrs({ IC_Visible = false, })
+				CancelResetBtn:SetAttrs({ IC_Visible = false, })
+			elseif param.Value == '3D' then
+				InMode:SetAttrs({ IC_Visible = false, })
+				ResetBtn:SetAttrs({ IC_Visible = true, })
+				ShowWire:SetAttrs({ IC_Visible = true, })
+				In3D = self:AddInput('3D Input', 'In3D', {
+					LINKID_DataType = 'DataType3D',
+					INPID_InputControl = 'ImageControl',
+					ICS_ControlPage = 'Wireless Link',
+					LINK_Main = 3,
+					LINK_Visible = false,
+					INP_Required = false,
+					ICD_Width = 0.85,
+					})
+				RenameBtn = self:AddInput('Rename from Source', 'RenameBtn', {
+					INPID_InputControl = 'ButtonControl',
+					INP_External = false,
+					IC_Visible = true,
+					ICD_Width = 0.5,
+					INPI_Priority = 5,
+					BTNCS_Execute = GetNewName,
+					ICD_Width = 0.5,
+					})
+				ShowImageSource = self:AddInput('Show Source', 'ShowImageSource', {
+					INPID_InputControl = 'ButtonControl',
+					INP_External = false,
+					IC_Visible = true,
+					ICD_Width = 0.5,
+					INPI_Priority = 6,
+					BTNCS_Execute = GetSource,
+					ICD_Width = 0.5,
+					})
+				Out3D = self:AddOutput('3D Output', '3DOutput', {
+					LINKID_DataType = 'DataType3D',
+					LINK_Main = 1,
+					LINK_Visible = true,
+					})
+				ConfirmResetBtn:SetAttrs({ IC_Visible = false, })
+				CancelResetBtn:SetAttrs({ IC_Visible = false, })
+			elseif param.Value == 'Material' then
+				InMode:SetAttrs({ IC_Visible = false, })
+				ResetBtn:SetAttrs({ IC_Visible = true, })
+				ShowWire:SetAttrs({ IC_Visible = true, })
+				InMtl = self:AddInput('Material Input', 'InMtl', {
+					LINKID_DataType = 'MtlGraph3D',
+					INPID_InputControl = 'ImageControl',
+					ICS_ControlPage = 'Wireless Link',
+					LINK_Main = 2,
+					LINK_Visible = false,
+					INP_Required = false,
+					ICD_Width = 0.85,
+					})
+				RenameBtn = self:AddInput('Rename from Source', 'RenameBtn', {
+					INPID_InputControl = 'ButtonControl',
+					INP_External = false,
+					IC_Visible = true,
+					ICD_Width = 0.5,
+					INPI_Priority = 5,
+					BTNCS_Execute = GetNewName,
+					ICD_Width = 0.5,
+					})
+				ShowImageSource = self:AddInput('Show Source', 'ShowImageSource', {
+					INPID_InputControl = 'ButtonControl',
+					INP_External = false,
+					IC_Visible = true,
+					ICD_Width = 0.5,
+					INPI_Priority = 6,
+					BTNCS_Execute = GetSource,
+					ICD_Width = 0.5,
+					})
+				OutMtl = self:AddOutput('Material Output', 'MaterialOutput', {
+					LINKID_DataType = 'MtlGraph3D',
+					LINK_Main = 1,
+					LINK_Visible = true,
+					})
+				ConfirmResetBtn:SetAttrs({ IC_Visible = false, })
+				CancelResetBtn:SetAttrs({ IC_Visible = false, })
+			elseif param.Value == 'Particles' then
+				InMode:SetAttrs({ IC_Visible = false, })
+				ResetBtn:SetAttrs({ IC_Visible = true, })
+				ShowWire:SetAttrs({ IC_Visible = true, })
+				InPtcl = self:AddInput('Particles Input', 'InPtcl', {
+					LINKID_DataType = 'Particles',
+					INPID_InputControl = 'ImageControl',
+					ICS_ControlPage = 'Wireless Link',
+					LINK_Main = 5,
+					LINK_Visible = false,
+					INP_Required = false,
+					ICD_Width = 0.85,
+					})
+				RenameBtn = self:AddInput('Rename from Source', 'RenameBtn', {
+					INPID_InputControl = 'ButtonControl',
+					INP_External = false,
+					IC_Visible = true,
+					ICD_Width = 0.5,
+					INPI_Priority = 5,
+					BTNCS_Execute = GetNewName,
+					ICD_Width = 0.5,
+					})
+				ShowImageSource = self:AddInput('Show Source', 'ShowImageSource', {
+					INPID_InputControl = 'ButtonControl',
+					INP_External = false,
+					IC_Visible = true,
+					ICD_Width = 0.5,
+					INPI_Priority = 6,
+					BTNCS_Execute = GetSource,
+					ICD_Width = 0.5,
+					})
+				OutPtcl = self:AddOutput('Particles Output', 'ParticleOutput', {
+					LINKID_DataType = 'Particles',
+					LINK_Main = 1,
+					LINK_Visible = true,
+					})
+				ConfirmResetBtn:SetAttrs({ IC_Visible = false, })
+				CancelResetBtn:SetAttrs({ IC_Visible = false, })
+			end
+		elseif inp == ResetBtn then
+			if param.Value == 1 then
+				if ShowImageSource then ShowImageSource:SetAttrs({ IC_Visible = false, }) end
+				if RenameBtn then RenameBtn:SetAttrs({ IC_Visible = false, }) end
+
+				if InImage then InImage:SetAttrs({ IC_Visible = false, }) end
+				if InMask then InMask:SetAttrs({ IC_Visible = false, }) end
+				if In3D then In3D:SetAttrs({ IC_Visible = false, }) end
+				if InMtl then InMtl:SetAttrs({ IC_Visible = false, }) end
+				if InPtcl then InPtcl:SetAttrs({ IC_Visible = false, }) end
+			
+				ResetBtn:SetAttrs({ IC_Visible = false, })
+				ShowWire:SetAttrs({ IC_Visible = false, })
+				ConfirmResetBtn:SetAttrs({ IC_Visible = true, })
+				CancelResetBtn:SetAttrs({ IC_Visible = true, })
+			end
+		elseif inp == ConfirmResetBtn then
+			if param.Value == 1 then
+				if InImage then InImage = nil end
+				if InMask then InMask = nil end
+				if In3D then In3D = nil end
+				if InMtl then InMtl = nil end
+				if InPtcl then InPtcl = nil end
+			end
+			ShowWire.Value = 0
+		elseif inp == CancelResetBtn then
+			if param.Value == 1 then
+				if ShowImageSource then ShowImageSource:SetAttrs({ IC_Visible = true, }) end
+				if RenameBtn then RenameBtn:SetAttrs({ IC_Visible = true, }) end
+
+				if InImage then InImage:SetAttrs({ IC_Visible = true, }) end
+				if InMask then InMask:SetAttrs({ IC_Visible = true, }) end
+				if In3D then In3D:SetAttrs({ IC_Visible = true, }) end
+				if InMtl then InMtl:SetAttrs({ IC_Visible = true, }) end
+				if InPtcl then InPtcl:SetAttrs({ IC_Visible = true, }) end
+				
+				ResetBtn:SetAttrs({ IC_Visible = true, })
+				ShowWire:SetAttrs({ IC_Visible = true, })
+				ConfirmResetBtn:SetAttrs({ IC_Visible = false, })
+				CancelResetBtn:SetAttrs({ IC_Visible = false, })
+			end
+		elseif inp == ResetBtn then
+			if param.Value == 1 then
+				ResetBtn:SetAttrs({ IC_Visible = false, })
+				ShowWire:SetAttrs({ IC_Visible = false, })
+				InMode:SetAttrs({ IC_Visible = true, })
+			end
+		end
+	end
+end
+---------------------------------------------------------------
+
+function Process(req)
+	local img = nil
+	local in_mode = InMode:GetValue(req).Value
+	if in_mode == 'Image' then
+		img = InImage:GetValue(req)
+		OutImg:Set(req, img)
+	elseif in_mode == 'Mask' then
+		img = InMask:GetValue(req)
+		OutMask:Set(req, img)
+	elseif in_mode == '3D' then
+		img = In3D:GetValue(req)
+		Out3D:Set(req, img)
+	elseif in_mode == 'Material' then
+		img = InMtl:GetValue(req)
+		OutMtl:Set(req, img)
+	elseif in_mode == 'Particles' then
+		img = InPtcl:GetValue(req)
+		OutPtcl:Set(req, img)
+	else
+--		local img = nil
+	end
+end

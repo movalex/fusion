@@ -1,0 +1,223 @@
+--[[
+
+SwitchElse.Fuse
+
+Switch between the available inputs, fallback to Else if the Switch input is nil.
+
+Largely lifted directly from Switch fuse by Stefan Ihringer:
+
+	----------------------------------------------------------------------
+	Copyright (c) 2010, Stefan Ihringer <stefan@bildfehler.de>
+
+	Permission is hereby granted, free of charge, to any person obtaining
+	a copy of this software and associated documentation files (the
+	"Software"), to deal in the Software without restriction, including
+	without limitation the rights to use, copy, modify, merge, publish,
+	distribute, sublicense, and/or sell copies of the Software, and to
+	permit persons to whom the Software is furnished to do so, subject to
+	the following conditions:
+
+	The above copyright notice and this permission notice shall be included
+	in all copies or substantial portions of the Software.
+
+	----------------------------------------------------------------------
+	
+
+ Portions written by Chad Capeland (chad[REMOVE-ME]@indicated.com)
+ Version 0.3 added REG_Version and changed REGS_Category for inclusion with Reactor
+
+ The authors hereby grant permission to use, copy, and distribute this
+ software and its documentation for any purpose, provided that existing
+ copyright notices are retained in all copies and that this notice is
+ included verbatim in any distributions. Additionally, the authors grant
+ permission to modify this software and its documentation for any
+ purpose, provided that such modifications are not distributed without
+ the explicit consent of the authors and that existing copyright notices
+ are retained in all copies. 
+
+ IN NO EVENT SHALL THE AUTHORS OR DISTRIBUTORS BE LIABLE TO ANY PARTY FOR
+ DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING
+ OUT OF THE USE OF THIS SOFTWARE, ITS DOCUMENTATION, OR ANY DERIVATIVES
+ THEREOF, EVEN IF THE AUTHORS HAVE BEEN ADVISED OF THE POSSIBILITY OF
+ SUCH DAMAGE. 
+
+ THE AUTHORS AND DISTRIBUTORS SPECIFICALLY DISCLAIM ANY WARRANTIES,
+ INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+ THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, AND THE AUTHORS AND
+ DISTRIBUTORS HAVE NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT,
+ UPDATES, ENHANCEMENTS, OR MODIFICATIONS. 
+
+	
+--]]
+
+version = "version 1.0 (Jan 04, 2018)"
+
+FuRegisterClass("SwitchElse", CT_Tool, {
+	REGS_Name = "Switch/Else Fuse",
+	REGS_Category = "Flow",
+	REGS_OpIconString = "fSE",
+	REGS_OpDescription = "Switch between multiple inputs, failover to Else",
+	REG_OpNoMask = true,
+	REG_NoCommonCtrls = true,
+	REG_NoPreCalcProcess = true,	
+	REG_Fuse_NoEdit = true,
+	REG_Fuse_NoReload = true,
+	REG_SupportsDoD = true,
+	REG_Version = 100,
+	})
+	
+maxinputs = 64 -- Upper limit to how many inputs are generated.
+
+function Create()
+	InSwitch = self:AddInput("Switch", "Switch", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 1,
+		INP_MaxAllowed = maxinputs,
+		INP_MaxScale = 1,
+		INP_Integer = true,
+		IC_Steps = 1.0,
+		})
+		
+	InElse = self:AddInput("Else", "Else", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 1,
+		INP_MaxAllowed = maxinputs,
+		INP_MaxScale = 1,
+		INP_Integer = true,
+		IC_Steps = 1.0,
+		})
+	
+	InNotify = self:AddInput("Notify if Else", "Notify", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Integer = true,
+		INP_Default = 0,
+		ICD_Width = .45,
+		})			
+		
+	InLabel = self:AddInput(version, "version", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "LabelControl",
+		INP_External = false,
+		INP_Passive = true,
+		ICD_Width = .55,
+		})
+
+	
+	InInput1 = self:AddInput("Input1", "Input1", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		INP_Required = false,
+		INP_SendRequest = false,	-- don't send a request for this branch before we actually need it.
+		})
+
+	OutImage = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})
+end
+
+
+function OnAddToFlow()
+	-- If a comp is reopened, we need to recreate all inputs that might have
+	-- been saved. The weird thing is, that FindInput tells us that an input
+	-- exists while it's not visible in the GUI. So we just call AddInput
+	-- again, which will make the triangle show up in the GUI.
+	-- A problem arises if, for example, inputs 1 and 3 are connected, but 2
+	-- isn't. Since Input2 won't be saved in the comp we first need to look
+	-- for the highest input we need. Afterwards, OnConnected() will be called
+	-- for each of the saved inputs. The additional input needed to connect
+	-- further images will be created there.
+	local highestInput = 1
+	for i = 2, maxinputs do
+		if self:FindInput("Input"..tostring(i)) ~= nil then
+			highestInput = i
+		end
+	end
+
+	for i = 2, highestInput do
+		self:AddInput("Input"..i, "Input"..i, {
+			LINKID_DataType = "Image",
+			LINK_Main = i,
+			INP_Required = false,
+			INP_SendRequest = false,
+			})
+	end
+	InSwitch:SetAttrs({INP_MaxScale = highestInput, INP_MaxAllowed = highestInput})
+	InElse:SetAttrs({INP_MaxScale = highestInput, INP_MaxAllowed = highestInput})
+end
+
+
+-- OnConnected gets called whenever a connection is made to the inputs. A new
+-- input is created if something has been connected to the highest input.
+function OnConnected(inp, old, new)
+	local inpNr = tonumber(string.match(inp:GetAttr("LINKS_Name"), "Input(%d+)"))
+	local maxNr = tonumber(InSwitch:GetAttr("INP_MaxAllowed"))
+	if inpNr then
+		if inpNr >= maxNr and maxNr < maxinputs and new ~= nil then
+			InSwitch:SetAttrs({INP_MaxScale = inpNr, INP_MaxAllowed = inpNr})
+			InElse:SetAttrs({INP_MaxScale = inpNr, INP_MaxAllowed = inpNr})
+			self:AddInput("Input"..(inpNr + 1), "Input"..(inpNr + 1), {
+				LINKID_DataType = "Image",
+				LINK_Main = (inpNr + 1),
+				INP_Required = false,
+				INP_SendRequest = false,
+				})
+		end
+	end
+end
+
+function Process(req)
+	local switchnum = InSwitch:GetValue(req).Value
+	inp = self:FindInput("Input"..switchnum)
+	local notify = (InNotify:GetValue(req).Value > 0.5)
+	if inp ~= nil then
+		local img = inp:GetSource(req.Time, req:GetFlags())
+		if img ~= nil then
+			if req:IsPreCalc() then
+				local img_precalc = Image({IMG_Like = img, IMG_NoData = true})
+				OutImage:Set(req, img_precalc)
+			else
+				--img:Use()
+				OutImage:Set(req, img)
+			end
+		else
+			local elsenum = InElse:GetValue(req).Value
+			inp = self:FindInput("Input"..elsenum)
+			if inp ~= nil then
+				local img = inp:GetSource(req.Time, req:GetFlags())
+				if img ~= nil then
+					if req:IsPreCalc() then
+						local img_precalc = Image({IMG_Like = img, IMG_NoData = true})
+						OutImage:Set(req, img_precalc)
+					else
+						--img:Use()
+						if notify then print (self.Name..": Using Else input at time "..req.Time) end
+						OutImage:Set(req, img)
+					end
+				end
+			end
+		end
+	else 
+		local elsenum = InElse:GetValue(req).Value
+		local notify = (InNotify:GetValue(req).Value > 0.5)
+		inp = self:FindInput("Input"..elsenum)
+		if inp ~= nil then
+			local img = inp:GetSource(req.Time, req:GetFlags())
+			if img ~= nil then
+				if req:IsPreCalc() then
+					local img_precalc = Image({IMG_Like = img, IMG_NoData = true})
+					OutImage:Set(req, img_precalc)
+				else
+					--img:Use()
+					if notify then print (self.Name..": Using Else input at time "..req.Time) end
+					OutImage:Set(req, img)
+				end
+			end
+		end
+	end
+end
+

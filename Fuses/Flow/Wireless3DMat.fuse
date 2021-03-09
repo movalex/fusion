@@ -1,0 +1,50 @@
+--[[-- 
+Brutally Simple Fuse - used to wirelessly connect one 
+part of a composition with another - NOW IN 3D !!!
+
+Written by : Blazej Floch 
+Based on Script by : Isaac Guenard 
+Written on : Nov, 2012
+
+v1.1 - Added REG_Version, adjusted category and added functionality to view the connected source node.
+2017.11.27 - Pieter Van Houte
+--]]--
+FuRegisterClass("Wireless3DMAT", CT_Tool, {
+	REGS_Name = "Wireless Link 3DMaterial",
+	REGS_Category = "Flow",
+	REGS_OpIconString = "Wi3DMAT",
+	REGS_OpDescription = "Wireless Link 3DMaterial",
+	REG_OpNoMask = true,
+	REG_NoBlendCtrls = true,
+	REG_NoObjMatCtrls = true,
+	REG_NoMotionBlurCtrls = true,
+   	REG_NoPreCalcProcess = true,
+	REG_Fuse_NoEdit     = true,
+	REG_Fuse_NoReload   = true,
+	REG_Version = 110,
+	})
+
+function Create()
+	InImage = self:AddInput("Input", "Input", {
+		LINKID_DataType = "MtlGraph3D",				-- can do other datatypes too
+		INPID_InputControl = "ImageControl",
+		})
+		
+	ShowSource = self:AddInput("Show Source", "ShowSource", {
+		INPID_InputControl =  "ButtonControl",
+		INP_External = false,
+		BTNCS_Execute = "comp:SetActiveTool(tool.Input:GetConnectedOutput():GetTool())",
+		})
+
+	OutImage = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "MtlGraph3D",				-- as long as these are matched
+		LINK_Main = 1,
+		})				
+end
+
+function Process(req) 
+	local img = InImage:GetValue(req)
+
+	OutImage:Set(req, img)
+    
+end
