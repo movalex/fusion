@@ -64,6 +64,8 @@
             -- catch some exceptions with remote Fusion management
             -- disable refresh button while processing tools
             -- catch the comp name on comp switch only
+        v 0.2.6
+            -- fix disable refresh button bug if some tools are pre-selected
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
@@ -97,7 +99,7 @@ import subprocess
 import sys
 from pprint import pprint as pp
 
-__VERSION__ = 2.5
+__VERSION__ = 2.6
 __license__ = "MIT"
 __copyright__ = "2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>,\
 2019-2020 additions by Alexey Bogomolov <mail@abogomolov.com>"
@@ -803,9 +805,14 @@ class TableModel(QAbstractTableModel):
             self.communicate.send("Select some tools and click Refresh button")
             return
         # disable refresh button during reload process
-        refresh_button = main.refresh_button
-        refresh_button.setEnabled(False)
-        refresh_button.setStyleSheet("color: rgb(128,128,128);")
+        try:
+            refresh_button = main.refresh_button
+            refresh_button.setEnabled(False)
+            refresh_button.setStyleSheet("color: rgb(128,128,128);")
+        except NameError:
+            refresh_button = None
+            # app is not initiated
+            pass
 
         for tool in self.tool_dict.values():
             tool_inputs = {}
@@ -829,8 +836,9 @@ class TableModel(QAbstractTableModel):
             progress += 1
             self.communicate.send((100.0 / (len(self.tool_dict))) * progress)
 
-        refresh_button.setDisabled(False)
-        refresh_button.setStyleSheet("color: rgb(192,192,192);")
+        if refresh_button:
+            refresh_button.setEnabled(True)
+            refresh_button.setStyleSheet("color: rgb(192,192,192);")
 
         self.communicate.send(
             "Done loading, execution time : "
