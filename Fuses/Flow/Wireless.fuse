@@ -1,0 +1,49 @@
+--[[--
+Brutally Simple Fuse - used to wirelessly connect one part of a composition with another.
+
+Updated to v1.1 as a replacement of the standard Wireless link.
+Added REG_Version, adjusted category and added functionality to view the connected source node.
+2017.11.27 - Pieter Van Houte
+--]]--
+
+FuRegisterClass("Wireless", CT_Tool, {
+	REGS_Name = "Wireless Link",
+	REGS_Category = "Flow",
+	REGS_OpIconString = "Wire",
+	REGS_OpDescription = "Wireless Link",
+	REG_OpNoMask = true,
+	REG_NoBlendCtrls = true,
+	REG_NoObjMatCtrls = true,
+	REG_NoMotionBlurCtrls = true,
+	REG_SupportsDoD = true,
+	REG_Fuse_NoEdit     = true,
+	REG_Fuse_NoReload   = true,
+	REG_Version = 110,
+	})
+
+function Create()
+	local datatype = "Image"  -- can do other datatypes too
+
+	InImage = self:AddInput("Input", "Input", {
+		LINKID_DataType = datatype,
+		INPID_InputControl = "ImageControl",
+		LINK_Visible = false,
+		})
+   
+	ShowSource = self:AddInput("Show Source", "ShowSource", {
+		INPID_InputControl =  "ButtonControl",
+		INP_External = false,
+		BTNCS_Execute = "comp:SetActiveTool(tool.Input:GetConnectedOutput():GetTool())",
+		})
+
+	OutImage = self:AddOutput("Output", "Output", {
+		LINKID_DataType = datatype,
+		LINK_Main = 1,
+		})            
+	end
+
+function Process(req)
+	local img = InImage:GetValue(req)
+   
+	OutImage:Set(req, img)
+end
