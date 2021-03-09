@@ -10,7 +10,6 @@
                 Execute = 
                 [[
                 --begin=lua--
-                -- target = fu:GetCurrentComp()
 
                 function minusOffset(offset, s, e)
                     target:SetAttrs({COMPN_RenderStart = s + offset})
@@ -28,14 +27,13 @@
                     target:SetAttrs({COMPN_RenderStart = gStart})
                     target:SetAttrs({COMPN_RenderEnd = gEnd})
                     target:SetData("FrameRanger.IsSet", "false")
-                    return false
                 end
 
                 function main()
                     compAttrs = target:GetAttrs()
                     gStart = compAttrs.COMPN_GlobalStart
                     gEnd = compAttrs.COMPN_GlobalEnd
-                    target:StartUndo("SetHandles")
+                    target:StartUndo("Set Frame Handles")
                     local status = target:GetData("FrameRanger.IsSet") or "false"
                     local s, e = getBounds()
                     currentOffset = target:GetData("FrameRanger.offset") or 24
@@ -70,14 +68,14 @@
                 [[
                 --begin=lua--
                 tool = target:GetToolList(true, "Loader")[1]
+                dlg = comp:AskUser()
                 if tool then
                     local toolAttrs = tool:GetAttrs()
-                    -- local clipLength = toolAttrs.TOOLIT_Clip_Length[1]
                     local clipStart = toolAttrs.TOOLNT_Clip_Start[1]
                     local clipEnd = toolAttrs.TOOLNT_Clip_End[1]
-                    target:SetAttrs({COMPN_GlobalStart = clipStart})
+                    -- target:SetAttrs({COMPN_GlobalStart = clipStart})
                     target:SetAttrs({COMPN_GlobalEnd = clipEnd})
-                    target:SetAttrs({COMPN_RenderStart = clipStart})
+                    -- target:SetAttrs({COMPN_RenderStart = clipStart})
                     target:SetAttrs({COMPN_RenderEnd = clipEnd})
                 end
                 --end=lua--
