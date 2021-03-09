@@ -23,33 +23,42 @@ import time
 
 VERSION = "1.1"
 MESSAGE = "\nUpdate Tiles script v" + VERSION
+# Tool types to be updated
+TOOL_IDS = ["Loader", "TextPlus", "Background", "MediaIn", "Saver"]
+
 comp = fu.GetCurrentComp()
 print("{}\n{}".format(MESSAGE, "-" * len(MESSAGE)))
 
-# Tool types to be updated
-TOOL_IDS = ["Loader", "TextPlus", "Background"]
-
 tools = comp.GetToolList(True)
-
 if not tools:
     tools = comp.GetToolList(False)
 
-time = comp.CurrentTime
-count = 0
 
-for tool in tools.values():
-    if tool.ID in TOOL_IDS:
-        output = tool.FindMainOutput(1)
-        if output and not tool.GetAttrs(["TOOLB_PathThrough"]):
-            print("Updating {} tile".format(tool.Name))
-            if tool.ID == "Loader":
-                comp.CurrentTime = tool.GlobalIn[1]
-            output.GetValue()
-            count = count + 1
+def move_playhead(loader):
+    if comp.CurrentTime < loader.GlobalIn[1] or comp.CurrentTime > loader.GlobalOut[1]:
+        comp.CurrentTime = loader.GlobalIn[1]
 
-comp.CurrentTime = time
-if count == 0:
-    print("No tools updated.")
 
-print("-"*len(MESSAGE))
+def main(tools=None):
+    if not tools:
+        print("no tools to update")
+        return
+    time = comp.CurrentTime
+    count = 0
+    for tool in tools.values():
+        if tool.ID in TOOL_IDS:
+            output = tool.FindMainOutput(1)
+            if output and not tool.GetAttrs(["TOOLB_PathThrough"]):
+                print("Updating tile: {}".format(tool.Name))
+                if tool.ID == "Loader":
+                    move_playhead(tool)
+                output.GetValue()
+                count = count + 1
+    comp.CurrentTime = time
+    if count == 0:
+        print("No tools updated.")
 
+
+if __name__ == "__main__":
+    main(tools)
+    print("-" * len(MESSAGE))
