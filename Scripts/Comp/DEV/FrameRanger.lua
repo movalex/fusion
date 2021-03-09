@@ -63,7 +63,10 @@ function showUI()
                     ID = 'right', Text = '> >',
                 },
             },
-            ui:VGroup {
+            ui:HGroup {
+                ui:Button{
+                    ID = 'setRange', Text = 'Set Range',
+                },
                 ui:Button{
                     ID = 'reset', Text = 'Reset Globals',
                 },
@@ -72,6 +75,25 @@ function showUI()
     })
     itm = win:GetItems()
     itm.offset:SelectAll()
+    
+    function win.On.setRange.Clicked(ev)
+        comp = fu:GetCurrentComp()
+        local tool = comp:GetToolList("Loader", true)[1]
+        if tool then
+            comp:StartUndo("Set Range based on Loader")
+            local toolAttrs = tool:GetAttrs()
+            local clipStart = toolAttrs.TOOLNT_Clip_Start[1]
+            if clipStart > 
+            local clipEnd = toolAttrs.TOOLNT_Clip_End[1]
+            comp:SetAttrs({COMPN_GlobalEnd = clipEnd})
+            comp:SetAttrs({COMPN_RenderEnd = clipEnd})
+            comp:EndUndo()
+        else
+            print("Select Loader")
+        end
+        -- altPressed = ev.modifiers.AltModifier
+        -- print(altPressed == true)
+    end
 
     function win.On.offset.ValueChanged(ev)
         comp:SetData("FrameRanger.offset", itm.offset.Value)
