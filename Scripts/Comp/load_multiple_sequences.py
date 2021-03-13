@@ -50,7 +50,7 @@ dropdict = {
 
 saved_path = fu.GetData("LMPath")
 
-input = comp.AskUser(
+dlg = comp.AskUser(
     "Load Multiple Sequences",
     {
         1.0: {
@@ -85,17 +85,22 @@ input = comp.AskUser(
             1.0: "only_sequences",
             2.0: "Checkbox",
             "Name": "Search for sequences only",
-            "Default": 0,
+            "Default": 1,
         },
-    },
+        6.0: {
+            1.0: "create_merges",
+            2.0: "Checkbox",
+            "Name": "Create Merges",
+            "Default": 0,
+        },    },
 )
 
 
-def run_folder(input):
-    path = input["filepath"]
+def run_folder(dlg):
+    path = dlg["filepath"]
     path = comp.MapPath(path)
-    seqdigits = str(int(input["seqdigits"]))
-    preselect = str(input["preselect"])
+    seqdigits = str(int(dlg["seqdigits"]))
+    preselect = str(dlg["preselect"])
 
     print("| Path to search: " + str(path))
     print("| Sequence with " + seqdigits + " or more digits.")
@@ -128,7 +133,7 @@ def run_folder(input):
             elif (
                 os.path.splitext(name)[1].lower()
                 in [".avi", ".mkv", ".mov", ".mp4", ".mxf",]
-                and input["only_sequences"] == 0
+                and dlg["only_sequences"] == 0
             ):
                 if not name in short_seqs.values():
                     short_seqs[float(len(short_seqs) + 1)] = name
@@ -160,11 +165,10 @@ def run_folder(input):
     mycode += "})"
     return mycode, full_names_dict, short_seqs
 
-
-if input:
+if dlg:
     seqlist = {}
-    fu.SetData("LMPath", input["filepath"])
-    command, full_names_dict, short_seqs = run_folder(input)
+    fu.SetData("LMPath", dlg["filepath"])
+    command, full_names_dict, short_seqs = run_folder(dlg)
     if len(short_seqs) > 30:
         seqlist = short_seqs.values()
         message = "{} sequences will be loaded.\nProceed?".format(len(short_seqs))
@@ -188,10 +192,12 @@ if input:
         comp.Lock()
         for i, short_seq in enumerate(short_seqs.values(), 1):
             file_path = full_names_dict[short_seq]
-            loader = comp.Loader()
+            loader = comp.AddTool("Loader", 32768, -32768)
+            if dlg["create_merges"] == 0:
+                comp.SetActiveTool()
             loader.Clip = file_path
-            if input["color"] != 0.0:
-                loader.TileColor = colordict[str(dropdict[input["color"]])]
+            if dlg["color"] != 0.0:
+                loader.TileColor = colordict[str(dropdict[dlg["color"]])]
         comp.Unlock()
 
     else:
@@ -203,11 +209,14 @@ if input:
                     file_name_without_seq = short_seq
                     print("importing: ", file_name_without_seq)
                 file_path = full_names_dict[file_name_without_seq]
-                loader = comp.Loader()
+                loader = comp.AddTool("Loader", 32768, -32768)
+                if dlg["create_merges"] == 0:
+                    comp.SetActiveTool()
                 loader.Clip = file_path
-                if input["color"] != 0.0:
-                    loader.TileColor = colordict[str(dropdict[input["color"]])]
+                if dlg["color"] != 0.0:
+                    loader.TileColor = colordict[str(dropdict[dlg["color"]])]
             comp.Unlock()
             print("|\n|------  Import done.\n")
 else:
     print("|\n|------  Import canceled.\n")
+
