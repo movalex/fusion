@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 # VERSION: 1.4
+# Load multiple sequences and files as a Loaders to the Fusion flow.
 # Original script provided by ISOTRON, thanks to Helge, suedlich-t.com
-# This version walks forward through the folders recursively and loads all the sequences and files
-# update: by Alexey Bogomolov
-# email: mail@abogomolov.com
+# updates: by Alexey Bogomolov, mail@abogomolov.com
 # version history:
 # 1.4 - 03/14/2021 - add optional create Merges and correct tool placing
 # 1.3 - 09/14/2020 - cleanup and add recursive file search - by Alexey Bogomolov
-# 1.0 - 08/03/2017 - original script submitted by ISOTRON
+# 1.0 - 08/03/2017 - original script submitted by ISOTRON https://www.steakunderwater.com/wesuckless/viewtopic.php?p=8971#p8971 
 
 # license: MIT
 
