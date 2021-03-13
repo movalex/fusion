@@ -16,7 +16,7 @@
 # - set minimum digits the script should look for at the end of the file
 # - use preselect checkboxes if you want all the sequences to be marked to import (on by default)
 # - image sequences with similar names but in different directories are added
-# - option to search for sequences only (off by default)
+# - option to search for sequences only (on by default)
 # - show warning if more than 30 loaders would be added
 # - filter only image sequence and movie formats (any additions to file extension list?)
 # - optional add Merges to the loaded files (tested on Windows)
