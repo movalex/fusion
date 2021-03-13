@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
-
+# VERSION: 1.4
 # Original script provided by ISOTRON, thanks to Helge, suedlich-t.com
 # This version walks forward through the folders recursively and loads all the sequences and files
 # update: by Alexey Bogomolov
 # email: mail@abogomolov.com
-# version: 1.3 09/14/2020
+# version history:
+# 1.4 - 03/14/2021 - add optional create Merges and correct tool placing
+# 1.3 - 09/14/2020 - cleanup and add recursive file search - by Alexey Bogomolov
+# 1.0 - 08/03/2017 - original script submitted by ISOTRON
+
 # license: MIT
+
 # Features:
 # - walk forward through the folders recursively and load all the sequences or single files
 # - saves last accessed folder to a Fusion data
@@ -15,6 +20,7 @@
 # - option to search for sequences only (off by default)
 # - show warning if more than 30 loaders would be added
 # - filter only image sequence and movie formats (any additions to file extension list?)
+# - optional add Merges to the loaded files (tested on Windows)
 
 
 import os
