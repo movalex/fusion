@@ -664,7 +664,11 @@ function win.On.editButton.Clicked(ev)
         dlg:Hide()
         win:SetEnabled(true)
     end
-    
+    function dlg.On.edit.Close(ev)
+        dlg:Hide()
+        win:SetEnabled(true)
+    end
+        
     function DoRename()
         decodeJson.usersToolName[1] = itm_edit.renameLine.Text
         decodeJson.users[1] = user
