@@ -81,6 +81,7 @@ function showUI()
         local tool = comp:GetToolList("Loader", true)[1]
         if not tool then
             print("Select Loader")
+            return
         end
         comp:StartUndo("Set Range based on Loader")
         altPressed = ev.modifiers.AltModifier
