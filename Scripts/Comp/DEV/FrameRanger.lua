@@ -78,8 +78,9 @@ function showUI()
     
     function win.On.setRange.Clicked(ev)
         comp = fu:GetCurrentComp()
-        local tool = comp:GetToolList("Loader", true)[1]
-        if not tool then
+        -- tool = comp:GetToolList("Loader", true)[1]
+        local tool = comp.ActiveTool or comp:GetToolList(true)[1]
+        if not tool or tool.ID ~= "Loader" then
             print("Select Loader")
             return
         end
