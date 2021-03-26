@@ -79,20 +79,20 @@ function showUI()
     function win.On.setRange.Clicked(ev)
         comp = fu:GetCurrentComp()
         local tool = comp:GetToolList("Loader", true)[1]
-        if tool then
-            comp:StartUndo("Set Range based on Loader")
-            local toolAttrs = tool:GetAttrs()
-            local clipStart = toolAttrs.TOOLNT_Clip_Start[1]
-            if clipStart > 
-            local clipEnd = toolAttrs.TOOLNT_Clip_End[1]
-            comp:SetAttrs({COMPN_GlobalEnd = clipEnd})
-            comp:SetAttrs({COMPN_RenderEnd = clipEnd})
-            comp:EndUndo()
-        else
+        if not tool then
             print("Select Loader")
         end
-        -- altPressed = ev.modifiers.AltModifier
-        -- print(altPressed == true)
+        comp:StartUndo("Set Range based on Loader")
+        altPressed = ev.modifiers.AltModifier
+        if altPressed then
+            print("alt pressed")
+        end
+        local toolAttrs = tool:GetAttrs()
+        local clipStart = toolAttrs.TOOLNT_Clip_Start[1]
+        local clipEnd = toolAttrs.TOOLNT_Clip_End[1]
+        comp:SetAttrs({COMPN_GlobalEnd = clipEnd})
+        comp:SetAttrs({COMPN_RenderEnd = clipEnd})
+        comp:EndUndo()
     end
 
     function win.On.offset.ValueChanged(ev)
