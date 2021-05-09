@@ -151,7 +151,7 @@ function showUI()
     end
     
     function hasValue(tab, val)
-        for index, value in ipairs(tab) do
+        for index, value in pairs(tab) do
             if value[1] == val[1] and value[2] == val[2] then
                 return true
             end
