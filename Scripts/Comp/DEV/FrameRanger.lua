@@ -113,6 +113,7 @@ function showUI()
     -- Resize the Columns
     itm.Tree.ColumnWidth[0] = width / 2 - 12
     itm.Tree.ColumnWidth[1] = width / 2 - 12
+    --itm.Tree:SortByColumn(0,"AscendingOrder")
 
     itm.offset:SelectAll()
 
@@ -172,6 +173,7 @@ function showUI()
         comp:SetData("FrameRanger.InOuts")
         comp:SetData("FrameRanger.InOuts", data)
         RefreshTable()
+        print("saved range [ ".. renderIn .. " - " .. renderOut .." ]")
     end
 
     function win.On.DeleteButton.Clicked(ev)
@@ -195,6 +197,12 @@ function showUI()
         renderStart, renderEnd = ev.item.Text[0], ev.item.Text[1]
         renderStart = tonumber(renderStart)
         renderEnd = tonumber(renderEnd)
+        globalIn = comp:GetAttrs().COMPN_GlobalStart
+        globalOut = comp:GetAttrs().COMPN_GlobalEnd
+        if renderStart > globalOut or renderEnd > globalOut or renderStart < globalIn or renderEnd < globalIn then
+            print("Requested range exceeds working range. Check Global In and Out and try again.")
+            return
+        end
         comp:SetAttrs({COMPN_RenderStart = renderStart})
         comp:SetAttrs({COMPN_RenderEnd = renderEnd})
         local range = renderEnd - renderStart
@@ -204,7 +212,7 @@ function showUI()
         end
         print("Selected render range: " .. renderEnd - renderStart .. " frame" .. ending)
     end
-    
+
     function win.On.setRange.Clicked(ev)
         comp = fu:GetCurrentComp()
         tool = comp.ActiveTool or comp:GetToolList(true, "Loader")[1]
@@ -214,20 +222,22 @@ function showUI()
         end
         comp:StartUndo("Set Range based on Loader")
         toolAttrs = tool:GetAttrs()
-        local clipStart = tool.GlobalIn[1]
-        compIn = comp:GetAttrs().COMPN_RenderStart
+        clipIn = tool.GlobalIn[1]
         globalIn = comp:GetAttrs().COMPN_GlobalStart
-        if clipStart == compIn then
-            comp:SetAttrs({COMPN_RenderStart = globalIn})
-            -- print("Set Render Start Time to Comp Global In")
+        if clipIn ~= globalIn then
+            comp:SetAttrs({ COMPN_GlobalStart = clipIn })
+            comp:SetAttrs({ COMPN_RenderStart = clipIn })
+            globalIn = clipIn
+            print("Global In and Loader In are not the same. Setting Comp Global In to Loader Global In.")
         else
-            comp:SetAttrs({COMPN_RenderStart = clipStart})
-            print("Set Render Start Time to Loader Global In")
+            comp:SetAttrs({ COMPN_GlobalStart = globalIn })
+            comp:SetAttrs({ COMPN_RenderStart = globalIn })
+            -- print("Set Render Start Time to Comp Global In")
         end
-        clipStart = toolAttrs.TOOLIT_Clip_TrimIn[1]
-        clipEnd = toolAttrs.TOOLIT_Clip_TrimOut[1]
-        comp:SetAttrs({COMPN_GlobalEnd = globalIn + (clipEnd - clipStart)})
-        comp:SetAttrs({COMPN_RenderEnd = globalIn + (clipEnd - clipStart)})
+        trimStart = toolAttrs.TOOLIT_Clip_TrimIn[1]
+        trimEnd = toolAttrs.TOOLIT_Clip_TrimOut[1]
+        comp:SetAttrs({ COMPN_GlobalEnd = globalIn + (trimEnd - trimStart)})
+        comp:SetAttrs({ COMPN_RenderEnd = globalIn + (trimEnd - trimStart)})
         comp:EndUndo()
         -- altPressed = ev.modifiers.AltModifier
         -- print(altPressed == true)
