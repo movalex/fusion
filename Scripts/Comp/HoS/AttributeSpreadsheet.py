@@ -234,7 +234,7 @@ except ImportError:
             "Name": "Warning",
             2: "Text",
             "Readonly": True,
-            "Default": "Would you like to install\nPyside2 automatically? (y/n)",
+            "Default": "Would you like to install\nPyside2 automatically?",
         }
     }
     # find default Python executable, since sys.executable returns fuscript
@@ -250,7 +250,7 @@ except ImportError:
         ask = comp.AskUser("No Pyside2 installation found", dialogue)
     else:
         print("No Pyside2 installation found!")
-        ask = input(dialogue[1]["Default"].replace("\n", " "))
+        ask = input(dialogue[1]["Default"].replace("\n", " ") + " (y/n)\n")
     if ask or ask.lower() != "y":
         print("Trying to install Pyside2...")
         try:
