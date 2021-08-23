@@ -1,0 +1,376 @@
+--[[
+FuCode Doodle
+This Fuse is translated from here: http://rosettacode.org/wiki/Voronoi_diagram#Lua
+
+<dunn[at]native-newmedia[dot]com>
+
+v1.0 - 2018-01-04 - added REG_Version, REGS_Name and adjusted REGS_Category for inclusion with Reactor - Pieter Van Houte
+--]]
+
+FuRegisterClass("VORONOI_DIAGRAM", CT_Tool, {
+	REGS_Name          = "Voronoi Diagram",
+	REGS_Category = "Creator",
+	REGS_OpIconString = "VRD",
+	REGS_OpDescription = "Voronoi_Diagram Fuse",
+	REGS_Company        = "Dunn Lewis",
+	REGS_URL            = "http://www.native-newmedia.com",
+	REGS_HelpTopic      = "http://www.steakunderwater.com/wesuckless/viewtopic.php?f=6&p=8669#p8669",
+	-- REG_Fuse_NoEdit     = true,
+	-- REG_Fuse_NoReload   = true,
+	REG_Version = 100,
+
+	REG_TimeVariant = false,
+	})
+
+function Create()
+	InRandomize = self:AddInput("Randomize", "Randomize", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ButtonControl",
+		INP_External        = false,
+		INP_DoNotifyChanged = true,
+		INP_InitialNotify   = false,
+		ICD_Width           = 0.33,
+		})
+
+	InRandomSeed = self:AddInput("Random Seed", "RandomSeed", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Integer        = true,
+		INP_MinAllowed     = 0,
+		INP_MaxScale       = 1000,
+		INP_MaxAllowed     = 1000000,
+		INP_Default        = 0,
+		ICD_Width          = 0.67,
+	})
+
+	InImg_Width = self:AddInput("Width", "img_Width", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed =   0.0,
+		INP_MaxScale   = 100.0,
+		INP_Default    =  10.0,
+	})
+
+	InImg_Height = self:AddInput("Height", "img_Height", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed =   0.0,
+		INP_MaxScale   = 100.0,
+		INP_Default    =  10.0,
+	})
+
+	InCellNumber = self:AddInput("Cell Number", "Cell_Number", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 1.0,
+		INP_MaxScale   = 20.0,
+		INP_Default    = 5.0,
+		INP_Integer    = true,
+	})
+
+	InSides = self:AddInput("Node Sides", "Sides", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 2.0,
+		INP_MaxScale   = 20.0,
+		INP_Default    = 6.0,
+		INP_Integer    = true,
+	})
+
+	InSize = self:AddInput("Node Size", "Size", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 0.001,
+		INP_MaxAllowed = 0.1,
+		INP_Default    = 0.01,
+	})
+
+	InAngle = self:AddInput("Node Angle", "Angle", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_MinScale =   0.0,
+		INP_MaxScale = 360.0,
+		INP_Default  =   0.0,
+	})
+
+	InMain_Scale = self:AddInput("Scale", "Scale", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale =     0.1,
+		INP_MaxScale =    10.0,
+		INP_Default =      3.0,
+	})
+
+	InMain_Rotation = self:AddInput("Rotation", "Rotation", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_MinScale =   0.0,
+		INP_MaxScale = 360.0,
+		INP_Default  =   0.0,
+	})
+
+	InCenter = self:AddInput("Center", "Center", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+	})
+
+	InThickness = self:AddInput("Thickness", "Thickness", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinAllowed = 0.0001,
+		INP_MaxScale   = 0.01,
+		INP_Default    = 0.001,
+	})
+
+	InLineType= self:AddInput("Line Type", "Line_Type", {
+		LINKID_DataType    = "Number",
+		INPID_InputControl = "MultiButtonControl",
+		INP_Default        = 0.0,
+		MBTNC_ShowName     = false,
+		{MBTNC_AddButton   = "Solid", MBTNCD_ButtonWidth = 0.33, },
+		{MBTNC_AddButton   = "Dash",  MBTNCD_ButtonWidth = 0.34, },
+		{MBTNC_AddButton   = "Dot",   MBTNCD_ButtonWidth = 0.33, },
+		{MBTNC_AddButton   = "Dash Dot",     MBTNCD_ButtonWidth = 0.5, },
+		{MBTNC_AddButton   = "Dash Dot Dot", MBTNCD_ButtonWidth = 0.5, },
+	})
+
+	InShowAsLines= self:AddInput("ShowAsLines","show_AsLines",{
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		LINKS_Name = "Show As Lines",
+		INP_DoNotifyChanged = true,
+		INP_Default  =   0.0,
+	})
+
+	InOutline= self:AddInput("Render As Outline","render_outline",{
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		LINKS_Name = "Render As Outline",
+		INP_DoNotifyChanged = true,
+		INP_Default  =   0.0,
+	})
+
+	InOnBlack = self:AddInput("Draw on Transparent Background", "OnBlack", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "CheckboxControl",
+		INP_Default         = 0,
+	})
+
+
+	self:AddInput("[-VORONOI_DIAGRAM Ver.1.0.0 - 06 FEB 2017-]", "Ver_100", {
+		INPID_InputControl = "LabelControl",
+		INP_External = false,
+		INP_Passive  = true,
+		})
+
+--=============================================================================---
+	InImage = self:AddInput("Input", "Input", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+	})
+
+	OutImage = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+	})
+end
+
+---TABLE_LENGHT---------------------------------------------
+function tablelength(T)
+  local count = 0
+  for _ in pairs(T) do count = count + 1 end
+  return count
+end
+
+-- function convertY ----------------------------------------
+function convertY(y, ref_img)
+	return y * (ref_img.Height * ref_img.YScale) / (ref_img.Width * ref_img.XScale)
+end
+
+-------------------------------------------------------------
+
+-- function createPoly Shapes-------------------------------
+function createPoly(sides, r, angle,dup, img)
+	local mat = Matrix4()
+	mat:Identity()
+	mat:Move(0, convertY(0,img), 0)
+
+	local sin = math.sin
+	local cos = math.cos
+
+	local sh = Shape()
+	local x = cos(angle) * r
+	local y = sin(angle) * r
+
+	sh:MoveTo(x,y)
+	for i = 1, sides - 1 do
+		x = cos(i/sides * math.pi * 2 + angle) * r
+		y = sin(i/sides * math.pi * 2 + angle) * r
+		sh:LineTo(x,y)
+	end
+	sh:Close()
+
+	return sh
+end
+
+--------------------------------------------------------------------
+function NotifyChanged(inp, param, time)
+	-- randomize button
+	if inp == InRandomize and param.Value > 0.5 then
+		InRandomSeed:SetSource(Number(math.random() * 32767), time)
+	end
+end
+
+----------------------------------------------------
+function hypot( x, y )
+	return math.sqrt( x*x + y*y )
+end
+
+----------------------------------------------------
+function Process(req) 
+	local img = InImage:GetValue(req)
+	
+	local out = img:CopyOf()
+	
+	local pmun=   InCellNumber:GetValue(req).Value
+
+	local size      = InSize:GetValue(req).Value / 2.0
+	local sides     = InSides:GetValue(req).Value
+
+	local angle     = InAngle:GetValue(req).Value * (math.pi*2) / 360.0
+
+	local thickness = InThickness:GetValue(req).Value
+	local linetype = math.floor(InLineType:GetValue(req).Value + 0.5) + 1
+
+	local center    = InCenter:GetValue(req)
+
+	local cx = center.X
+	local cy = center.Y * (out.Height * out.YScale) / (out.Width * out.XScale)
+
+	local ic = ImageChannel(out, 8)
+	local fs = FillStyle()
+	local cs = ChannelStyle()
+	ic:SetStyleFill(fs)
+
+	--------------------------LINE LOOK-------------------------
+	local outlinetypes = {"OLT_Solid", "OLT_Dash", "OLT_Dot", "OLT_DashDot", "OLT_DashDotDot",}
+
+	------------------------------------------------------------
+	local v_ic  = { } 
+	local v_fs  = { } 
+	local v_cs  = { } 
+
+	for i=1, pmun do
+		 v_ic[i] = ImageChannel(out, 8)
+		 v_fs[i] = FillStyle()
+		 v_cs[i] = ChannelStyle()
+		 v_ic[i]:SetStyleFill(v_fs[i])
+
+	end
+
+	------------------------------------------------------------
+	local imgW= InImg_Width:GetValue(req).Value
+	local imgH= InImg_Height:GetValue(req).Value
+
+	local randseed   = InRandomSeed:GetValue(req).Value
+	math.randomseed(randseed)
+
+	local onblack    = (InOnBlack:GetValue(req).Value > 0.5)
+
+	------------------DRAW ON TRANSPARENT-------------------------------------
+	if onblack then
+		out:Fill(Pixel({R = 0, G = 0, B = 0, A = 0}))
+	end
+
+
+	-------------------------VORONOI_DIAGRAM----------------------------------
+	local nx = { }
+	local ny = { }
+	local nr = { }
+	local ng = { }
+	local nb = { }
+
+	for a = 1, pmun do
+		table.insert( nx, math.random( 0, imgW ) )
+		table.insert( ny, math.random( 0, imgH ) )
+		table.insert( nr, math.random( 0, 1 ) )
+		table.insert( ng, math.random( 0, 1 ) )
+		table.insert( nb, math.random( 0, 1 ) )
+	end
+	
+	local canvasPoint_A = { }
+	local canvasPoint_B = { }
+	
+----------------------------------------MAIN FUNCTION
+function generateVoronoi( width, height, num_cells )
+	local canvas = Shape()
+
+	local imgx = imgW 
+	local imgy = imgH
+
+	num_cells=pmun
+ 
+	local  vmatz = Matrix4()
+	for y = 1, imgy do
+		for x = 1, imgx do
+			dmin = hypot( imgx-1, imgy-1 )
+			j = -1
+			for i = 1, num_cells do
+				d = hypot( nx[i]-x, ny[i]-y )
+				if d < dmin then
+						dmin = d
+					j = i
+				end
+			end
+
+			vmatz:Identity()
+			vmatz:Move(x/100,y/100,0)
+
+			canvasPoint_B[j] = Shape()
+			canvasPoint_B[j]:MoveTo(x/100,y/100)
+			canvasPoint_B[j]:LineTo( nx[j]/100, ny[j]/100 )
+			canvasPoint_B[j] = canvasPoint_B[j]:OutlineOfShape(thickness, outlinetypes[linetype], "OJT_Round", (req:IsQuick() and 8 or 16))
+
+			canvasPoint_A[j] = createPoly(sides, size, angle,1, img)
+			canvasPoint_A[j] = canvasPoint_A[j]:TransformOfShape(vmatz)
+		
+			--------------------------------RENDER STYLES
+			if sides > 2 then
+				if InOutline:GetValue(req).Value > 0.5 then
+					canvasPoint_A[j] = canvasPoint_A[j]:OutlineOfShape(thickness, outlinetypes[linetype], "OJT_Round", (req:IsQuick() and 8 or 16))
+				end
+			else
+				canvasPoint_A[j] = canvasPoint_A[j]:OutlineOfShape(thickness, outlinetypes[linetype], "OJT_Round", (req:IsQuick() and 8 or 16))
+			end
+
+			--------------------------------COLOR
+			v_cs[j].Color = Pixel({R = nr[j], G =ng[j], B = nb[j], A = 1})
+			
+			--------------------------------Main Transformation
+			local Main_mat=Matrix4()
+			Main_mat:Identity()
+	
+			Main_mat:Move(-(imgW/100)/2, -(imgH/100)/2,0)
+			Main_mat:RotZ( InMain_Rotation:GetValue(req).Value)
+			Main_mat:Scale( InMain_Scale:GetValue(req).Value,  InMain_Scale:GetValue(req).Value, 1)
+			Main_mat:Move(cx, cy,0)
+		
+			--------------------------------ADD to IMAGE
+			if InShowAsLines:GetValue(req).Value > 0.5 then
+				ic:ShapeFill(canvasPoint_B[j]:TransformOfShape(Main_mat))
+				ic:PutToImage("CM_Merge", v_cs[j])
+			else
+				ic:ShapeFill(canvasPoint_A[j]:TransformOfShape(Main_mat))
+				ic:PutToImage("CM_Merge", v_cs[j])
+			end
+		end
+	end
+end
+
+	----------------------------------------MAIN FUNCTION
+	generateVoronoi( imgW, imgH, pmun)
+
+	------------------------------------------------------
+	OutImage:Set(req, out)
+end

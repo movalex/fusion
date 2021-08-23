@@ -1,0 +1,504 @@
+--[[--
+----------------------------------------------------------------------
+Code bades of Jed Smith's tone-mapping algorithms:
+https://community.acescentral.com/t/rgb-saturation-gamut-mapping-approach-and-a-comp-vfx-perspective/2715/34
+ 
+Copyright (c) 2020, Jacob Danell
+All rights reserved.
+ 
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met: 
+ 
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer. 
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution. 
+ 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+----------------------------------------------------------------------
+ 
+version 1.1, 2020-05-15:
+* Init relese
+--]]--
+
+FuRegisterClass("HueKeyer", CT_Tool, {
+    REGS_Name = "Hue Keyer",
+    REGS_Category = "Color",
+    REGS_OpIconString = "HK",
+    REGS_OpDescription = "Key the Hue",
+    REGS_Company = "Ember Light",
+    REG_Fuse_NoEdit = false,
+    REG_Fuse_NoReload = false,
+    REG_SupportsDoD = false,
+})
+
+function Create()
+
+	InColorSpace = self:AddInput("Color Space", "ColorSpace", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "MultiButtonControl",
+		INP_Default = 0,
+		INP_Integer = true,
+		MBTNC_StretchToFit = true,
+		{ MBTNC_AddButton = "HSL", },
+		{ MBTNC_AddButton = "HSV", },
+	})
+
+    InHueRed = self:AddInput("Hue Red", "HueRed", {
+        LINKS_Name = "Hue",
+        INP_Default = 1,
+        INPID_InputControl = "ColorControl",
+        CLRC_ColorSpace = 0,
+        LINKID_DataType = "Number",
+        IC_ControlID = 0,
+        IC_ControlGroup = 2,
+    })
+
+    InHueGreen = self:AddInput("Hue Green", "HueGreen", {
+        LINKS_Name = "Hue Green",
+        INP_Default = 0,
+        INPID_InputControl = "ColorControl",
+        CLRC_ColorSpace = 0,
+        LINKID_DataType = "Number",
+        IC_ControlID = 1,
+        IC_ControlGroup = 2,
+    })
+
+    InHueBlue = self:AddInput("Hue Blue", "HueBlue", {
+        LINKS_Name = "Hue Blue",
+        INP_Default = 0,
+        INPID_InputControl = "ColorControl",
+        CLRC_ColorSpace = 0,
+        LINKID_DataType = "Number",
+        IC_ControlID = 2,
+        IC_ControlGroup = 2,
+    })
+
+
+	self:BeginControlNest("Hue", "Hue", true, {})
+
+    InHueRangeLow = self:AddInput("Hue Range", "HueRangeLow", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "LevelsOutputControl",
+        INP_Default = 0.45,
+        INP_MinAllowed = 0,
+        INP_MaxScale = 2,
+        INP_Integer = false,
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+		INP_MinAllowed = -1000000,
+		INP_MaxAllowed = 1000000,
+		IC_ControlGroup = 15,
+		IC_ControlID = 0,
+    })
+
+    InHueRangeHigh = self:AddInput("Hue Range High", "HueRangeHigh", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "LevelsOutputControl",
+        INP_Default = 0.55,
+        INP_MinAllowed = 0,
+        INP_MaxScale = 2,
+        INP_Integer = false,
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+		INP_MinAllowed = -1000000,
+		INP_MaxAllowed = 1000000,
+		IC_ControlGroup = 15,
+		IC_ControlID = 1,
+    })
+
+    InHueLowSoft = self:AddInput("Low Soft", "HueLowSoft", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default = 0.00001,
+        INP_MinAllowed = 0.00001,
+        INP_MaxScale = 0.1,
+    })
+
+    InHueHighSoft = self:AddInput("High Soft", "HueHighSoft", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default = 0.00001,
+        INP_MinAllowed = 0.00001,
+        INP_MaxScale = 0.1,
+    })
+
+    self:EndControlNest()
+
+    self:BeginControlNest("Saturation", "Saturation", true, {})
+
+    InSaturationLow = self:AddInput("Saturation", "SaturationLow", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "LevelsOutputControl",
+        INP_Default = 0,
+        INP_MinAllowed = 0,
+        INP_MaxScale = 2,
+        INP_Integer = false,
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+		INP_MinAllowed = -1000000,
+		INP_MaxAllowed = 1000000,
+		IC_ControlGroup = 13,
+		IC_ControlID = 0,
+    })
+
+    InSaturationHigh = self:AddInput("SaturationHigh", "SaturationHigh", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "LevelsOutputControl",
+        INP_Default = 1,
+        INP_MinAllowed = 0,
+        INP_MaxScale = 2,
+        INP_Integer = false,
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+		INP_MinAllowed = -1000000,
+		INP_MaxAllowed = 1000000,
+		IC_ControlGroup = 13,
+		IC_ControlID = 1,
+    })
+
+    InSatLowSoft = self:AddInput("Low Soft", "SatLowSoft", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default = 0.00001,
+        INP_MinAllowed = 0.00001,
+        INP_MaxScale = 0.1,
+    })
+
+    InSatHighSoft = self:AddInput("High Soft", "SatHighSoft", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default = 0.00001,
+        INP_MinAllowed = 0.00001,
+        INP_MaxScale = 0.1,
+    })
+
+    self:EndControlNest()
+
+    self:BeginControlNest("Luminance", "Luminance", true, {})
+
+    InLuminanceLow = self:AddInput("Luminance", "LuminanceLow", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "LevelsOutputControl",
+        INP_Default = 0,
+        INP_MinAllowed = 0,
+        INP_MaxScale = 2,
+        INP_Integer = false,
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+		INP_MinAllowed = -1000000,
+		INP_MaxAllowed = 1000000,
+		IC_ControlGroup = 14,
+		IC_ControlID = 0,
+    })
+
+    InLuminanceHigh = self:AddInput("LuminanceHigh", "LuminanceHigh", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "LevelsOutputControl",
+        INP_Default = 1,
+        INP_MinAllowed = 0,
+        INP_MaxScale = 2,
+        INP_Integer = false,
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+		INP_MinAllowed = -1000000,
+		INP_MaxAllowed = 1000000,
+		IC_ControlGroup = 14,
+		IC_ControlID = 1,
+    })
+
+    InLumLowSoft = self:AddInput("Low Soft", "LumLowSoft", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default = 0.00001,
+        INP_MinAllowed = 0.00001,
+        INP_MaxScale = 0.1,
+    })
+
+    InLumHighSoft = self:AddInput("High Soft", "LumHighSoft", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default = 0.00001,
+        INP_MinAllowed = 0.00001,
+        INP_MaxScale = 0.1,
+    })
+
+    self:EndControlNest()
+
+    InImage = self:AddInput("Input", "Input", {
+        LINKID_DataType = "Image",
+        LINK_Main = 1,
+    })
+
+    OutImage = self:AddOutput("Output", "Output", {
+       LINKID_DataType = "Image",
+       LINK_Main = 1,
+    })
+end
+
+function rgbToHsv( r, g, b ) -- No need to conver to HSL instead of HSV as we're only using this function to get the hue value
+  local cmax = math.max(r, g, b)
+  local cmin = math.min(r, g, b)
+  local delta = cmax - cmin
+  local h = 0
+  if delta == 0 then
+    h = 0
+  elseif cmax == r then
+    h = 60 * ( (g-b)/delta % 6 )
+  elseif cmax == g then
+    h = 60 * ( (b-r)/delta + 2)
+  elseif cmax == b then
+    h = 60 * ( (r - g) /delta + 4)
+  end
+  local s = (cmax==0) and 0 or (delta / cmax)
+  local v = cmax
+  return {h,s,v}
+end
+
+function Process(req)
+   
+    local src = InImage:GetValue(req)
+    --local dst = Image({IMG_Like = src})
+    local dst = Image{ IMG_Like = src, IMG_DeferAlloc = true }
+
+    if not req:IsPreCalc() then
+
+    	local hueDiff = (-(rgbToHsv(InHueRed:GetValue(req).Value, InHueGreen:GetValue(req).Value, InHueBlue:GetValue(req).Value)[1]/360)+0.5)%1
+
+        ---====  PIXEL PROCESS ===---
+       
+        --This calls on our kernel to process the image we created.
+        local node = DVIPComputeNode(req, "SolidKernel", SolidKernel, "SolidParams", SolidParams)
+     
+        local params = node:GetParamBlock(SolidParams)
+        --This gets the values of our sliders from the control panel.
+        params.width = src.OriginalWidth
+        params.height = src.OriginalHeight
+        params.srcCompOrder = src:IsMask() and 1 or 15
+
+        params.hue = hueDiff
+        params.colorSpace = InColorSpace:GetValue(req).Value - 1
+        params.hueLow = InHueRangeLow:GetValue(req).Value
+        params.hueHigh = InHueRangeHigh:GetValue(req).Value
+        params.hueLowSoft = InHueLowSoft:GetValue(req).Value
+        params.hueHighSoft = InHueHighSoft:GetValue(req).Value
+        params.satLow = InSaturationLow:GetValue(req).Value
+        params.satHigh = InSaturationHigh:GetValue(req).Value
+        params.satLowSoft = InSatLowSoft:GetValue(req).Value
+        params.satHighSoft = InSatHighSoft:GetValue(req).Value
+        params.lumLow = InLuminanceLow:GetValue(req).Value
+        params.lumHigh = InLuminanceHigh:GetValue(req).Value
+        params.lumLowSoft = InLumLowSoft:GetValue(req).Value
+        params.lumHighSoft = InLumHighSoft:GetValue(req).Value
+     
+        node:SetParamBlock(params)
+     
+        node:AddInput("src", src)
+        node:AddOutput("dst", dst)
+     
+        local ok = node:RunSession(req)
+		if not ok then
+			dst = nil
+			dump(node:GetErrorLog())
+		end	
+
+    end
+ 
+    OutImage:Set(req, dst)
+end
+
+--These are the parameters that we need access to in our kernel.
+SolidParams = [[
+    int width;
+    int height;
+    int srcCompOrder;
+
+    bool colorSpace;
+    float hue;
+    float hueLow;
+    float hueHigh;
+    float hueLowSoft;
+    float hueHighSoft;
+    float satLow;
+    float satHigh;
+    float satLowSoft;
+    float satHighSoft;
+    float lumLow;
+    float lumHigh;
+    float lumLowSoft;
+    float lumHighSoft;
+]]
+ 
+--This is the GPU kernel, all of the image algorithms happen here.
+SolidKernel = [[
+
+	__DEVICE__ float3 rgbToHsv( float r, float g, float b )
+	{
+		float3 hsv; // h, s, v = hue, saturation, value 
+		float max = _fmaxf(r, _fmaxf(g, b)); // maximum of r, g, b 
+		float min = _fminf(r, _fminf(g, b)); // minimum of r, g, b 
+		float d = max - min; // diff of cmax and cmin. 
+		hsv.x = 0.0;
+		hsv.y = max == 0.0 ? 0.0 : d / max;
+		hsv.z = max;
+
+		if (d == 0.0) {
+			hsv.x = 0.0; // achromatic
+		}
+		else
+		{
+			// if cmax equal r then compute h 
+			if (max == r)
+			{
+				hsv.x = (g - b) / d + (g < b ? 6.0 : 0.0);
+			}
+			// if cmax equal g then compute h 
+			else if (max == g)
+			{
+				hsv.x = (b - r) / d + 2.0;
+			}
+			// if cmax equal b then compute h 
+			else // cmax == b
+			{
+				hsv.x = (r - g) / d + 4.0;
+			}
+
+			hsv.x /= 6.0;
+		}
+
+		return hsv;
+	}
+
+	__DEVICE__ float3 rgbToHsl( float r, float g, float b )
+	{
+		float3 hsl; // h, s, l = hue, saturation, value 
+		float max = _fmaxf(r, _fmaxf(g, b)); // maximum of r, g, b 
+		float min = _fminf(r, _fminf(g, b)); // minimum of r, g, b 
+
+		float d = max - min; // diff of cmax and cmin. 
+
+		hsl.z = (max + min) / 2.0;
+
+		if (d == 0.0) {
+			hsl.x = hsl.y = 0.0; // achromatic
+		}
+		else
+		{
+
+			hsl.y = hsl.z > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+			// if cmax equal r then compute h 
+			if (max == r)
+			{
+				hsl.x = (g - b) / d + (g < b ? 6.0 : 0.0);
+			}
+			// if cmax equal g then compute h 
+			else if (max == g)
+			{
+				hsl.x = (b - r) / d + 2.0;
+			}
+			// if cmax equal b then compute h 
+			else // cmax == b
+			{
+				hsl.x = (r - g) / d + 4.0;
+			}
+
+			hsl.x /= 6.0;
+		}
+
+		return hsl;
+	}
+
+    __KERNEL__ void SolidKernel(__CONSTANTREF__ SolidParams *params, __TEXTURE2D__ src, __TEXTURE2D_WRITE__ dst)
+    {
+        DEFINE_KERNEL_ITERATORS_XY(x, y);
+        float4 Color = _tex2DVecN(src, x, y, params->srcCompOrder);
+        
+        float alpha = 1 * Color.w;
+
+        float r = Color.x / Color.w;
+        float g = Color.y / Color.w;
+        float b = Color.z / Color.w;
+
+        float3 hslImg;
+
+        // Convert to HSV or HSL
+        if (params->colorSpace) // default to HSL
+        {
+    		hslImg = rgbToHsl(r, g, b);
+        }
+        else
+    	{
+    		hslImg = rgbToHsv(r, g, b);
+    	}
+
+        // Shift the hue
+        hslImg.x = fabs(fmodf(hslImg.x + params->hue, 1.0f));
+
+
+        if (hslImg.x < params->hueHigh + params->hueHighSoft && hslImg.x > params->hueLow - params->hueLowSoft)
+    	{
+    		if (hslImg.x < params->hueLow)
+			{
+				alpha = alpha * smoothstep(params->hueLow - params->hueLowSoft, params->hueLow, hslImg.x);
+			}
+			else if (hslImg.x > params->hueHigh)
+			{
+				alpha = alpha * 1 - smoothstep(params->hueHigh, params->hueHigh + params->hueHighSoft, hslImg.x);
+			}
+    	}
+    	else
+    	{
+    		alpha = 0;
+    	}
+
+    	if (hslImg.y < params->satHigh + params->satHighSoft && hslImg.y > params->satLow - params->satLowSoft)
+    	{
+    		if (hslImg.y < params->satLow)
+			{
+				alpha = alpha * smoothstep(params->satLow - params->satLowSoft, params->satLow, hslImg.y);
+			}
+			else if (hslImg.y > params->satHigh)
+			{
+				alpha = alpha * 1- smoothstep(params->satHigh, params->satHigh + params->satHighSoft, hslImg.y);
+			}
+    	}
+    	else
+    	{
+    		alpha = 0;
+    	}
+
+    	if (hslImg.z < params->lumHigh + params->lumHighSoft && hslImg.z > params->lumLow - params->lumLowSoft)
+    	{
+    		if (hslImg.z < params->lumLow)
+			{
+				alpha = alpha * smoothstep(params->lumLow - params->lumLowSoft, params->lumLow, hslImg.z);
+			}
+			else if (hslImg.z > params->lumHigh)
+			{
+				alpha = alpha * 1- smoothstep(params->lumHigh, params->lumHigh + params->lumHighSoft, hslImg.z);
+			}
+    	}
+    	else
+    	{
+    		alpha = 0;
+    	}
+
+    	Color.x = r * alpha;
+		Color.y = g * alpha;
+		Color.z = b * alpha;
+		Color.w = alpha;
+
+        _tex2DVec4Write(dst, x, y, Color);
+    }
+]]
