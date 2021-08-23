@@ -18,6 +18,14 @@ function showUI()
     local windowPosY = 800
     local buttonSize = {45, 25}
 
+    mainWin = ui:FindWindow("FrameRanger")
+    if mainWin then
+        mainWin:Raise()
+        mainWin:ActivateWindow()
+        return
+    end
+
+
     win = disp:AddWindow({
         ID = "FrameRanger",
         TargetID = "FrameRanger",
