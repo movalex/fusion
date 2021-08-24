@@ -1,7 +1,7 @@
 --stx_kissConnect
 --v1.2
 
-function get_tool()
+function GetTool()
     active = comp.ActiveTool
     if not active then
         selected_node = comp:GetToolList(true)[1]
@@ -14,7 +14,7 @@ function get_tool()
     return active
 end
 
-function main(tool)
+function KissConnect(tool)
     cmp = fu:GetCurrentComp()
     allNodes = cmp:GetToolList(false)
     flow = cmp.CurrentFrame.FlowView
@@ -23,15 +23,16 @@ function main(tool)
     distances = {}
         
 
-    for i, n in pairs(allNodes) do
-        tempX, tempY = flow:GetPos(n)
+    for i, node in pairs(allNodes) do
+        tempX, tempY = flow:GetPos(node)
         if tempX and tempY then
             local tempDist = math.sqrt((selX-tempX)*(selX-tempX)+(selY-tempY)*(selY-tempY))
-            table.insert(distances,{n, tempDist})
+            table.insert(distances,{node, tempDist})
         end
     end
 
     table.sort(distances, function(b, a) return a[2] > b[2] end)
+    -- dump(distances)
 
     -- for k,v in ipairs(distances) do
     --     print(v[1].Name, ' == ', v[2])
@@ -43,9 +44,12 @@ function main(tool)
     tool:ConnectInput("SceneInput", distances[2][1])
     tool:ConnectInput("SceneInput1", distances[2][1])
     tool:ConnectInput("ProjectiveImage", distances[2][1])
+    if tool.ID == "Background" or tool:GetAttrs().TOOLI_Number_o_Inputs == 0 then
+        tool:ConnectInput("EffectMask", distances[2][1])
+    end
 end
 
-tool = get_tool()
+tool = GetTool()
 if tool then
-   main(tool)
+    KissConnect(tool)
 end
