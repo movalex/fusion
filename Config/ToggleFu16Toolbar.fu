@@ -19,7 +19,7 @@
 
   Hotkeys
   {
-    Target = "FlowView",
+    Target = "FuFrame",
     SHIFT_CONTROL_T = "ToggleToolBar",
   },
 }

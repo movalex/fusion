@@ -135,7 +135,7 @@
     {
       Target = "FuFrame",
       ALT_F = "ToggleOffsetHandles",
-      SHIFT_F = "SetLoaderBoundaries",
-      SHIFT_CONTROL_F = "AddInOut",
+      SHIFT_CONTROL_F = "SetLoaderBoundaries",
+      SHIFT_F = "AddInOut",
     },
 }

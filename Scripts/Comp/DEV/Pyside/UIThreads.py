@@ -85,6 +85,7 @@ class MainWindow(QMainWindow):
         self.counter = 0
 
         layout = QVBoxLayout()
+        
 
         self.l = QLabel("Start")
         b = QPushButton("DANGER!")
@@ -97,10 +98,10 @@ class MainWindow(QMainWindow):
         w.setLayout(layout)
 
         self.setCentralWidget(w)
-
         self.show()
 
         self.threadpool = QThreadPool()
+        self.threadpool.setMaxThreadCount(12)
         print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
 
         self.timer = QTimer()
@@ -112,9 +113,10 @@ class MainWindow(QMainWindow):
         print("%d%% done" % n)
 
     def execute_this_fn(self, progress_callback):
-        for n in range(0, 5):
+        fract = 10
+        for n in range(0, fract+1):
             time.sleep(1)
-            progress_callback.emit(n * 100 / 4)
+            progress_callback.emit(n * 100 / fract)
 
         return "Done."
 
