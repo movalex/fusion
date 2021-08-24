@@ -16,10 +16,14 @@ end
 function getViewer(currentView)
     leftViewer = {"Left", "LeftView"}
     rightViewer = {"Right", "RightView"}
+    print(currentView:GetID())
     if has_value(leftViewer, currentView.ID) then
         return 1
     elseif has_value(rightViewer, currentView.ID) then
         return 2
+    elseif currentView:GetID() == "MultiView" then
+        print("found")
+        return tonumber(currentView.ID:match("%d$"))
     else
         print('select viewer, then switch context')
         return nil
@@ -30,6 +34,7 @@ function switchContext(toolName)
     contextTool = comp:FindTool(toolName)
     local currentView = comp.CurrentFrame.CurrentView
     viewNumber = getViewer(currentView)
+    print(viewNumber)
     prevTool = comp:GetData("ContextTool.previousTool") or toolName
     if viewNumber and currentView.CurrentViewer then
         viewOutput = currentView:GetPreview():GetConnectedOutput()
