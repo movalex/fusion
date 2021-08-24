@@ -31,74 +31,95 @@
     {
         ID = "Show_Timeline",
         Category = 'Flow',
-        Targets = 
+        Targets =
         {
-            Composition = 
+            Composition =
             {
-              Execute = 
-              [[
+                Execute =
+                [[
                 print('show Timeline view')
-                target:DoAction("Fusion_View_Show", {view = "Spline", show = false}) 
-                target:DoAction("Fusion_View_Show", {view = "Nodes", show = false}) 
-                target:DoAction("Fusion_View_Show", {view = "Keyframes", show = true}) 
-              ]]
+                if not target:IsViewShowing('Keyframes') then
+                    target:DoAction("Fusion_View_Show", {view = "Spline", show = false})
+                    target:DoAction("Fusion_View_Show", {view = "Nodes", show = false})
+                    target:DoAction("Fusion_View_Show", {view = "Keyframes", show = true})
+                else
+                    target:DoAction("Fusion_View_Show", {view = "Keyframes", show = false})
+                    target:DoAction("Fusion_View_Show", {view = "Spline", show = false})
+                    target:DoAction("Fusion_View_Show", {view = "Nodes", show = true})
+                end
+                ]]
             },
         },
     },
-
+    
     Action
     {
         ID = "Show_Spline",
         Category = 'Flow',
-        Targets = 
+        Targets =
         {
-            Composition = 
+            Composition =
             {
-              Execute = 
+                Execute =
                 [[
                 print('show Spline view')
-                target:DoAction("Fusion_View_Show", {view = "Keyframes", show = false}) 
-                target:DoAction("Fusion_View_Show", {view = "Nodes", show = false}) 
-                target:DoAction("Fusion_View_Show", {view = "Spline", show = true}) 
+                if not target:IsViewShowing('Spline') then
+                    target:DoAction("Fusion_View_Show", {view = "Keyframes", show = false})
+                    target:DoAction("Fusion_View_Show", {view = "Nodes", show = false})
+                    target:DoAction("Fusion_View_Show", {view = "Spline", show = true})
+                else
+                    target:DoAction("Fusion_View_Show", {view = "Keyframes", show = false})
+                    target:DoAction("Fusion_View_Show", {view = "Spline", show = false})
+                    target:DoAction("Fusion_View_Show", {view = "Nodes", show = true})  
+                end
                 ]],
             }
         }
     },
-
+    
     Action
     {
         ID = "Show_Nodes",
         Category = 'Flow',
-        Targets = 
+        Targets =
         {
-            Composition = 
+            Composition =
             {
-              Execute = 
+                Execute =
                 [[
                 print('show Nodes view')
-                target:DoAction("Fusion_View_Show", {view = "Keyframes", show = false}) 
-                target:DoAction("Fusion_View_Show", {view = "Spline", show = false}) 
-                target:DoAction("Fusion_View_Show", {view = "Nodes", show = true}) 
+                target:DoAction("Fusion_View_Show", {view = "Keyframes", show = false})
+                target:DoAction("Fusion_View_Show", {view = "Spline", show = false})
+                target:DoAction("Fusion_View_Show", {view = "Nodes", show = true})
                 ]],
             }
         }
     },
-
+    
     Action
     {
         ID = "Toggle_Console",
         Category = 'Flow',
-        Targets = 
+        Targets =
         {
-            Composition = 
+            Composition =
             {
-              Execute = 
+                Execute =
                 [[
                 target:DoAction("Console_Show", {})
                 ]],
             }
         }
     },
+     
+    Hotkeys
+    {
+        Target = "FuFrame",
+        F5 = "Toggle_Console",
+        F7 = "Show_Spline",
+        F8 = "Show_Timeline",
+        F9 = "Show_Nodes",
+    },  
 
     Hotkeys
     {
@@ -127,15 +148,6 @@
         OEM_PERIOD = "AddTool{ id = 'PipeRouter' }",
         LEFT  = "Time_Step_Back",
         RIGHT = "Time_Step_Forward",
-    },
-
-    Hotkeys 
-    {
-        Target = "FuFrame",
-        F3 = "Toggle_Console",
-        F7 = "Show_Timeline",
-        F8 = "Show_Spline",
-        F9 = "Show_Nodes", 
     },
 
     Hotkeys
