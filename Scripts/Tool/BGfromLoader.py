@@ -11,9 +11,9 @@ flow = comp.CurrentFrame.FlowView
 
 def create_bg_from_loader(tool):
     attrs = tool.GetAttrs()
-    width = attrs["TOOLIT_Clip_Width"][1]
-    height = attrs["TOOLIT_Clip_Height"][1]
-    filename = attrs["TOOLST_Clip_Name"][1]
+    width = attrs["TOOLI_ImageWidth"]
+    height = attrs["TOOLI_ImageHeight"]
+    print(width)
     posx, posy = flow.GetPosTable(tool).values()
     aspect_list = []
     image_depth = None
@@ -63,7 +63,7 @@ def create_bg_from_loader(tool):
 if __name__ == "__main__":
     if not tool:
         tool = comp.ActiveTool
-    if tool.ID == "Loader":
+    if tool.ID in ["Loader", "MediaIn"]:
         create_bg_from_loader(tool)
     else:
         print("this tool script works with Loaders only")
