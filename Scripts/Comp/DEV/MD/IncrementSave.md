@@ -16,6 +16,15 @@ However Python3 version of the script has some advantages:
 * it works if the comp path has some non-ascii characters.
 * increment save folder will look the same on Mac and PC - without the '.comp' part
 
+_Automatic saves:_
+You can toggle this script based on Cron jobs or MS Scheduler. NB: Fusion Studio is required for external scripting.
+Use this snippet as a staring point for your Increment save automation:
+```python
+    import BlackmagicFusion as bmd
+    fusion = bmd.scriptapp('Fusion', 'localhost')
+    comp = fusion.GetCurrentComp()
+    comp.RunScript("Scripts:Comp/IncrementSave.py")
+```
 _Copyright:_ Alexey Bogomolov (mail@abogomolov.com), 2020
 
 _License:_ [MIT](https://mit-license.org/)
