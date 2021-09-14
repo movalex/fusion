@@ -7,23 +7,18 @@ function has_value (tab, val)
     return false
 end
 
--- function set(...)
---    local ret = {}
---    for _,k in ipairs({...}) do ret[k] = true end
---    return ret
--- end
 
 function getViewer(currentView)
     leftViewer = {"Left", "LeftView"}
     rightViewer = {"Right", "RightView"}
-    print(currentView:GetID())
+    -- print(currentView:GetID())
     if has_value(leftViewer, currentView.ID) then
         return 1
     elseif has_value(rightViewer, currentView.ID) then
         return 2
-    elseif currentView:GetID() == "MultiView" then
-        print("found")
-        return tonumber(currentView.ID:match("%d$"))
+    elseif currentView.ID == "Image View" then
+        print("found floating frame")
+        return 3
     else
         print('select viewer, then switch context')
         return nil
@@ -34,7 +29,7 @@ function switchContext(toolName)
     contextTool = comp:FindTool(toolName)
     local currentView = comp.CurrentFrame.CurrentView
     viewNumber = getViewer(currentView)
-    print(viewNumber)
+    -- print("view number: ", viewNumber)
     prevTool = comp:GetData("ContextTool.previousTool") or toolName
     if viewNumber and currentView.CurrentViewer then
         viewOutput = currentView:GetPreview():GetConnectedOutput()
@@ -57,6 +52,12 @@ function switchContext(toolName)
         comp.CurrentFrame:ViewOn(contextTool, viewNumber)
         comp:SetData("ContextTool.previousTool", contextTool.Name)
     end
+end
+
+
+if not CONTEXT then
+    print('Use <ALT> + 1...9 to switch contexts')
+    CONTEXT = 1
 end
 
 local toolName = comp:GetData("ContextTool.contexts."..CONTEXT)
