@@ -5,9 +5,10 @@
 #
 # Version history:
 # 09/17/2021
-#     v1.0 -- Initial commit
-#     v1.1 -- bug fixing, add frames number concatenation
-#     v1.2 -- use file range instead of comp range
+#   v1.0 -- Initial commit
+#   v1.1 -- bug fixing, add frames number concatenation
+#   v1.2 -- use file range instead of comp range
+#   v1.3 -- work correctly with multiple sequences in the same folder
 
 
 import re
@@ -15,7 +16,7 @@ import mimetypes
 from pathlib import Path
 
 comp = fu.GetCurrentComp()
-VERSION = 1.2
+VERSION = 1.3
 
 
 def is_movie_format(file_name):
