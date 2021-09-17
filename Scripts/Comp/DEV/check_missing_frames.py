@@ -19,6 +19,8 @@ GLOBAL_START = comp.GetAttrs()["COMPN_GlobalStart"]
 GLOBAL_END = comp.GetAttrs()["COMPN_GlobalEnd"]
 RENDER_END = comp.GetAttrs()["COMPN_RenderEnd"]
 
+# Uncomment the lines below to use render range scan instead of global range:
+
 # if RENDER_END < GLOBAL_END:
 #     GLOBAL_END = RENDER_END
 
