@@ -1,18 +1,26 @@
 # Author: Alexey Bogomolov
 # email: mail@abogomolov.com
 # donate: https://www.paypal.com/paypalme/aabogomolov/
-# version: 1.0
+# MIT License -- https://opensource.org/licenses/MIT
 #
 # Version history:
-# v.01 -- 17/09/2021 -- Initial commit
-import os
+# 09/17/2021
+#     v1.0 -- Initial commit
+#     v1.1 -- bug fixing, add frames number concatenation
+
+
 import re
 import mimetypes
 from pathlib import Path
-from pprint import pprint as pp
-
 
 comp = fu.GetCurrentComp()
+VERSION = 1.1
+GLOBAL_START = comp.GetAttrs()["COMPN_GlobalStart"]
+GLOBAL_END = comp.GetAttrs()["COMPN_GlobalEnd"]
+RENDER_END = comp.GetAttrs()["COMPN_RenderEnd"]
+
+# if RENDER_END < GLOBAL_END:
+#     GLOBAL_END = RENDER_END
 
 
 def is_movie_format(file_name):
@@ -55,11 +63,38 @@ def get_frame_nums(seq, pattern):
     return frame_nums
 
 
+def get_line_numbers_concat(line_nums):
+    seq = []
+    final = []
+    last = 0
+
+    for index, val in enumerate(line_nums):
+        if last + 1 == val or index == 0:
+            seq.append(val)
+            last = val
+        else:
+            if len(seq) > 1:
+                final.append(str(seq[0]) + '..' + str(seq[len(seq) - 1]))
+            else:
+                final.append(str(seq[0]))
+            seq = []
+            seq.append(val)
+            last = val
+
+        if index == len(line_nums) - 1:
+            if len(seq) > 1:
+                final.append(str(seq[0]) + '..' + str(seq[len(seq) - 1]))
+            else:
+                final.append(str(seq[0]))
+    final_str = ', '.join(final)
+    return final_str
+
+
 def scan_all_loaders():
     for tool in comp.GetToolList(False, "Loader").values():
         file_path = comp.MapPath(tool.Clip[fu.TIME_UNDEFINED])
         if is_movie_format(file_path):
-            print(f"{file_path} is not a sequence format")
+            # print(f"{file_path} is not a sequence format")
             continue
         clip_attrs = tool.GetAttrs()
         clip_length = clip_attrs["TOOLIT_Clip_Length"][1]
@@ -74,17 +109,18 @@ def scan_all_loaders():
         parent_dir = path.parent
         seq = list(parent_dir.glob(f"*{ext}"))
         seq_pattern = re.compile(r"(\d{3,})" + ext + "$", re.IGNORECASE)
-        print(f"pattern: {seq_pattern.findall(file_path)}")
         sequence_length = len(seq)
-        print(sequence_length)
         if sequence_length < clip_length:
-            print("File length mismatch found! Checking missing frames.")
+            print(f"{path}: File length mismatch found!\nMissing frames:")
             frames_found = get_frame_nums(seq, seq_pattern)
-            padding = len(seq_pattern.search(file_path).group(1))
-            missing_frames = [str(i).zfill(padding) for i in range(clip_length) if i not in frames_found]
-            print(", ".join(missing_frames))
+            # padding = len(seq_pattern.search(file_path).group(1))
+            missing_frames = [i for i in range(int(GLOBAL_START), int(GLOBAL_END)) if i not in frames_found]
+            print("-" * 18)
+            print(get_line_numbers_concat(missing_frames))
+            print("-" * 18)
 
 
 if __name__ == "__main__":
-    print("Check missing frames script. Version 1.0 by Alexey Bogomolov")
+    print(f"Check Missing Frames script. Version {VERSION}\nCopyright 2021 Alexey Bogomolov. MIT License")
     scan_all_loaders()
+    print("Done!")
