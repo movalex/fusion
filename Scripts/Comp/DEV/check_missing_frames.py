@@ -7,20 +7,20 @@
 # 09/17/2021
 #     v1.0 -- Initial commit
 #     v1.1 -- bug fixing, add frames number concatenation
+#     v1.2 -- use file range instead of comp range
 
 
 import re
 import mimetypes
 from pathlib import Path
+from pprint import pprint
 
 comp = fu.GetCurrentComp()
-VERSION = 1.1
-GLOBAL_START = comp.GetAttrs()["COMPN_GlobalStart"]
-GLOBAL_END = comp.GetAttrs()["COMPN_GlobalEnd"]
-RENDER_END = comp.GetAttrs()["COMPN_RenderEnd"]
+VERSION = 1.2
 
-# Uncomment the lines below to use render range scan instead of global range:
-
+# GLOBAL_START = comp.GetAttrs()["COMPN_GlobalStart"]
+# GLOBAL_END = comp.GetAttrs()["COMPN_GlobalEnd"]
+# RENDER_END = comp.GetAttrs()["COMPN_RenderEnd"]
 # if RENDER_END < GLOBAL_END:
 #     GLOBAL_END = RENDER_END
 
@@ -99,7 +99,9 @@ def scan_all_loaders():
             # print(f"{file_path} is not a sequence format")
             continue
         clip_attrs = tool.GetAttrs()
-        clip_length = clip_attrs["TOOLIT_Clip_Length"][1]
+        start_frame = int(clip_attrs["TOOLIT_Clip_StartFrame"][1])
+        # pprint(clip_attrs)
+        clip_length = int(clip_attrs["TOOLIT_Clip_Length"][1])
         if clip_length < 2:
             if tool.Loop[fu.TIME_UNDEFINED]:
                 print(f"{file_path} is a single frame Loader. Skipping")
@@ -115,8 +117,8 @@ def scan_all_loaders():
         if sequence_length < clip_length:
             print(f"{path}: File length mismatch found!\nMissing frames:")
             frames_found = get_frame_nums(seq, seq_pattern)
-            # padding = len(seq_pattern.search(file_path).group(1))
-            missing_frames = [i for i in range(int(GLOBAL_START), int(GLOBAL_END)) if i not in frames_found]
+            # missing_frames = [i for i in range(int(GLOBAL_START), int(GLOBAL_END)) if i not in frames_found]
+            missing_frames = [i for i in range(start_frame, start_frame + clip_length) if i not in frames_found]
             print("-" * 18)
             print(get_line_numbers_concat(missing_frames))
             print("-" * 18)
