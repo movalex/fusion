@@ -103,7 +103,8 @@ def scan_all_loaders():
         path = Path(file_path)
         ext = path.suffix
         parent_dir = path.parent
-        seq = list(parent_dir.glob(f"*{ext}"))
+        stem = re.sub("\d+$", "", path.stem)
+        seq = list(parent_dir.glob(f"*{stem}*{ext}"))
         seq_pattern = re.compile(r"(\d{3,})" + ext + "$", re.IGNORECASE)
         sequence_length = len(seq)
         if sequence_length < clip_length:
