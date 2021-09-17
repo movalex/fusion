@@ -47,18 +47,12 @@ def is_movie_format(file_name):
         return True
 
 
-def get_frame_nums(sequence, extension, pattern):
+def get_frame_nums(seq, pattern):
     frame_nums = []
-    for clip in sorted(sequence):
-
-        print(1)
+    for clip in sorted(seq):
         frame_num = pattern.search(str(clip))
         frame_nums.append(int(frame_num.group(1)))
     return frame_nums
-
-
-def print_missing_frames(frame_list, padding):
-    pass
 
 
 def scan_all_loaders():
@@ -67,7 +61,6 @@ def scan_all_loaders():
         if is_movie_format(file_path):
             print(f"{file_path} is not a sequence format")
             continue
-        pp(tool.GetAttrs())
         clip_attrs = tool.GetAttrs()
         clip_length = clip_attrs["TOOLIT_Clip_Length"][1]
         if clip_length < 2:
@@ -79,16 +72,17 @@ def scan_all_loaders():
         path = Path(file_path)
         ext = path.suffix
         parent_dir = path.parent
-        seq = parent_dir.glob(f"*{ext}")
+        seq = list(parent_dir.glob(f"*{ext}"))
         seq_pattern = re.compile(r"(\d{3,})" + ext + "$", re.IGNORECASE)
         print(f"pattern: {seq_pattern.findall(file_path)}")
-        sequence_length = len(list(seq))
+        sequence_length = len(seq)
         print(sequence_length)
         if sequence_length < clip_length:
             print("File length mismatch found! Checking missing frames.")
-            frames_found = get_frame_nums(seq, ext, seq_pattern)
-            missing_frames = [i for i in range(clip_length) if i not in frames_found]
-            print(missing_frames)
+            frames_found = get_frame_nums(seq, seq_pattern)
+            padding = len(seq_pattern.search(file_path).group(1))
+            missing_frames = [str(i).zfill(padding) for i in range(clip_length) if i not in frames_found]
+            print(", ".join(missing_frames))
 
 
 if __name__ == "__main__":
