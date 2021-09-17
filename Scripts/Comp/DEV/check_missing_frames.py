@@ -119,5 +119,8 @@ def scan_all_loaders():
 
 if __name__ == "__main__":
     print(f"Check Missing Frames script. Version {VERSION}\nCopyright 2021 Alexey Bogomolov. MIT License")
-    scan_all_loaders()
+    try:
+        scan_all_loaders()
+    except AttributeError:
+        print("no loaders found")
     print("Done!")
