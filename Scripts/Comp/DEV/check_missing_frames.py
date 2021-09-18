@@ -47,7 +47,7 @@ def is_movie_format(file_name):
         ".vid",
         ".xvid",
     )
-    if Path(file_name).suffix in exts:
+    if Path(file_name).suffix.lower() in exts:
         return True
 
 
