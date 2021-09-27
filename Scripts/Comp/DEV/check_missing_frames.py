@@ -89,12 +89,17 @@ def get_line_numbers_concat(line_nums):
 def scan_all_loaders():
     for tool in comp.GetToolList(False, "Loader").values():
         file_path = comp.MapPath(tool.Clip[fu.TIME_UNDEFINED])
-        if is_movie_format(file_path):
-            # print(f"{file_path} is not a sequence format")
+        # print(file_path)
+        if not file_path or is_movie_format(file_path):
+            # print(f"File path is not found in {tool.Name} or {tool.Name} is not a sequence format")
             continue
         clip_attrs = tool.GetAttrs()
-        start_frame = int(clip_attrs["TOOLIT_Clip_StartFrame"][1])
-        clip_length = int(clip_attrs["TOOLIT_Clip_Length"][1])
+        try:
+            start_frame = int(clip_attrs["TOOLIT_Clip_StartFrame"][1])
+            clip_length = int(clip_attrs["TOOLIT_Clip_Length"][1])
+        except KeyError:
+            print(f"skipping Loader [{tool.Name}] with missing clip attributes")
+            continue
         if clip_length < 2:
             if tool.Loop[fu.TIME_UNDEFINED]:
                 print(f"{file_path} is a single frame Loader. Skipping")
