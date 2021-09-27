@@ -11,12 +11,13 @@ end
 function getViewer(currentView)
     leftViewer = {"Left", "LeftView"}
     rightViewer = {"Right", "RightView"}
+    -- print(currentView.ID)
     -- print(currentView:GetID())
     if has_value(leftViewer, currentView.ID) then
         return 1
     elseif has_value(rightViewer, currentView.ID) then
         return 2
-    elseif currentView.ID == "Image View" then
+    elseif currentView.ID == "Image View" or currentView.ID == "MultiView" then
         print("found floating frame")
         return 3
     else
