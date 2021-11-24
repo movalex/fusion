@@ -3,7 +3,7 @@ LIMIT = 15
 
 
 def rename_text(txt):
-    txt = re.sub("(^\d*)",r"_\1", txt)
+    txt = re.sub("(^\d+)",r"_\1", txt)
     txt = re.sub("\n|\s|\W", r"_", txt)
     text = txt[:LIMIT]
     # print(txt)
