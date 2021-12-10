@@ -116,7 +116,7 @@ RELEASE NOTES
 	- Initial prototype.
 --]]--
 
-VERSION = [[v2.4 "Ultra" (2021-11-09)]]
+VERSION = [[v3.0 "Ultra" (2021-12-10)]]
 AUTHOR = [[S.Neve / House of Secrets]]
 CONTRIBUTORS = {"Tim Little", "Andrew Hazelden", "Cedric Duriau", "Bryan Ray", "Alexey Bogomolov"
 }
@@ -132,7 +132,7 @@ comp = fu:GetCurrentComp()
 
 local ui = fu.UIManager
 local disp = bmd.UIDispatcher(ui)
-local width, height = 250,600
+local width, height = 600,300
 
 function showUI()
 	win = disp:AddWindow({
@@ -141,84 +141,93 @@ function showUI()
         WindowTitle = "Split EXR Ultra " .. VERSION,
         Geometry = {500, 500, width, height},
         ui:VGroup {
-            ui:VGroup{
+            ui:Label{
                 Weight = 0,
+                Text = 'This script will split a multi-channel EXR image out into multiple Loader nodes.'
+                },
             ui:HGroup{
-                ui:HGap(0.25,0),
+                Weight = 0,
                 ui:Label{
+                    Weight = 0.3,
+                    Text = "Place nodes: ",
+                    },
+                ui:ComboBox {
+                    Weight = 0.7,
+                    ID = 'LayoutComboBox',
+                    },
+                },
+            ui:HGroup{
+                Weight = 0,
+                ui:Label{
+                    Weight = 0.3,
+                    Text = "Grid Placement: ",
+                },
+                ui:Slider{
                     Weight = 0.6,
-                    ID = 'Label',
-                    Text = 'Frame Handles:',
-                    Alignment = {AlignLeft = true, AlignVCenter = true}
+                    ID = 'GridSlider',
+                    },
+                ui:LineEdit{
+                    Weight = 0.1,
+                    ID='GridLineEdit',
+                    },
                 },
-                ui:SpinBox {
-                    Weight = 0.4,
-                    ID = 'offset', Value = frameOffset,
-                    Alignment = {AlignRight = true},
-                    Maximum = comp:GetAttrs().COMPN_GlobalEnd / 2,
-                    Events = {ValueChanged = true, EditingFinished = true},
-                },
-            },
-            ui:HGroup {
-                ui:Button{
-                    -- MaximumSize = buttonSize,
-                    MinimumSize = buttonSize,
-                    ID = 'minus', Text = '> <',
-                },
-                ui:Button{
-                    -- MaximumSize = buttonSize,
-                    MinimumSize = buttonSize,
-                    ID = 'plus', Text = '< >',
-                },
-                ui:Button{
-                    -- MaximumSize = buttonSize,
-                    MinimumSize = buttonSize,
-                    ID = 'left', Text = '< <',
-                },
-                ui:Button{
-                    -- MaximumSize = buttonSize,
-                    MinimumSize = buttonSize,
-                    ID = 'right', Text = '> >',
-                },
-            },
-            ui:HGroup {
-                ui:Button{
-                    ID = 'setRange', Text = 'Set from Loader',
-                },
-                ui:Button{
-                    ID = 'reset', Text = 'Reset range',
-                },
-            },
-        },
-            ui:HGroup {
-                ui:Tree{
-                    Alignment = {AlignHCenter = true, AlignBottom = true},
-                    ID = 'Tree',
-                    SortingEnabled = true,
-                    Events = { ItemClicked = true, ItemDoubleClicked = true, CurrentItemChanged = true, ItemActivated = true }
-                },
-            },
-            ui:HGroup {
+            ui:HGroup{
                 Weight = 0,
                 ui:Button{
-                    ID = 'SaveButton', Text = 'Save Range',
-                },
+                    ID = 'OkButton', Text = 'Ok',
+                    },
                 ui:Button{
-                    ID = 'DeleteButton', Text = 'Delete Range',
+                    ID = 'CancelButton', Text = 'Cancel',
+                    },
                 },
-            },
-            ui:HGroup {
-                Weight = 0,
-                ui:Button{
-                    ID = 'RefreshButton', Text = 'Refresh In/Out List',
+            ui:VGroup{
+                ui:CheckBox{
+                    ID = "splitAllSelectedNodes",
+                    Text = "Split All Selected Nodes",
+                    },
+                ui:CheckBox{
+                    ID = "skipAlpha",
+                    Text = "Skip Importing Alpha Channels",
+                    },
+                ui:CheckBox{
+                    ID = "tiles",
+                    Text = "Show Source Tiles",
+                    },
+                ui:CheckBox{
+                    ID = "mergeall",
+                    Text = "Merge Loaders",
+                    },
+                ui:CheckBox{
+                    ID = "useChannelName",
+                    Text = "Multipart Uses Channel Name",
+                    },
+                ui:CheckBox{
+                    ID = "verbose",
+                    Text = "Verbose Logging",
+                    },
                 },
-
-            }
         },
     })
 
     function win.On.SplitEXR.Close(ev)
         disp:ExitLoop()
+    end
+    itm = win:GetItems()
+
+    itm.LayoutComboBox:AddItem('Vertically')
+    itm.LayoutComboBox:AddItem('Horizontally')
+
+    itm.GridSlider.Value = 0
+    itm.GridSlider.Minimum = 0
+    itm.GridSlider.Maximum = 25
+
+
+    itm.GridLineEdit.Text = tostring(itm.GridSlider:GetSliderPosition())
+
+--     itm.GridLineEdit:SetAlignment("AlignCenter")
+    function win.On.GridSlider.ValueChanged(ev)
+        itm.GridLineEdit.Text = tostring(ev.Value)
+        print('Slider Value: ' .. tostring(ev.Value))
     end
 
     win:Show()
@@ -238,9 +247,6 @@ else
 end
 
 
-
-itm = win:GetItems()
-dump(itm)
 
 
 
@@ -323,13 +329,13 @@ function buildDialog()
 		{"Description", "Text", Lines = 3, Wrap = false, Default = "This script will split a multi-pass\nEXR image out into multiple\nLoader nodes.", ReadOnly = true, Width = 1.0},
 		{"cdir", Name = "Placement", "Dropdown", Default = (cdir or 0), Options = placementsList, Width = 1.0},
 		{"grid", Name = "Grid Placement", "Slider", Integer = true, Default = (grid or 0), Min = 0, Max = 25, Width = 1.0},
-		{"splitAllSelectedNodes", Name = "Split All Selected Nodes", "Checkbox", Default = (splitAllSelectedNodes or 1), Width = 1.0},
-		{"skipAlpha", Name = "Skip Importing Alpha Channels", "Checkbox", Default = (skipAlpha or 0), Width = 1.0},
-		{"tiles", Name = "Show Source Tiles ", "Checkbox", Default = tiles, Width = 1.0},
-        {"mergeall", Name = "Merge Loaders", "Checkbox", Default = (mergeall or 0), Width = 1.0},
-		{"useChannelName", Name = "Multipart Uses Channel Name", "Checkbox", Default = (useChannelName or 0), Width = 1.0},
-		{"verbose", Name = "Verbose Logging", "Checkbox", Default = (verbose or 0), Width = 1.0},
-		-- {"cxyz", Name = "Map X,Y,Z channels to RGB channels", "Checkbox", Default = (cxyz or 1), Width = 1.0},
+		{"splitAllSelectedNodes", Name = "Split All Selected Nodes", "CheckBox", Default = (splitAllSelectedNodes or 1), Width = 1.0},
+		{"skipAlpha", Name = "Skip Importing Alpha Channels", "CheckBox", Default = (skipAlpha or 0), Width = 1.0},
+		{"tiles", Name = "Show Source Tiles ", "CheckBox", Default = tiles, Width = 1.0},
+        {"mergeall", Name = "Merge Loaders", "CheckBox", Default = (mergeall or 0), Width = 1.0},
+		{"useChannelName", Name = "Multipart Uses Channel Name", "CheckBox", Default = (useChannelName or 0), Width = 1.0},
+		{"verbose", Name = "Verbose Logging", "CheckBox", Default = (verbose or 0), Width = 1.0},
+		-- {"cxyz", Name = "Map X,Y,Z channels to RGB channels", "CheckBox", Default = (cxyz or 1), Width = 1.0},
 	}
     platform = (FuPLATFORM_WINDOWS and "Windows") or (FuPLATFORM_MAC and "Mac") or (FuPLATFORM_LINUX and "Linux")
     if platform == 'Windows' then
