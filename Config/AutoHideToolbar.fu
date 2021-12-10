@@ -1,0 +1,134 @@
+
+--[[--
+==============================================================================
+AutoHideToolbar.fu - v1.0 2021-08-26 
+==============================================================================
+Created by : Andrew Hazelden [andrew@andrewhazelden.com]
+
+==============================================================================
+Overview
+==============================================================================
+The "AutoHideToolbar.fu" config file automatically hides the Fusion 16/17+ toolbar as soon as a new comp is created, or a comp is opened.
+
+This is handy for Resolve/Fusion v16-17+ users who don't want to have to turn off the Toolbar each time.
+
+==============================================================================
+Installation
+==============================================================================
+Copy the AutoHideToolbar.fu file to the Fusion user prefs "Config:/AutoHideToolbar.fu" PathMap based folder location.
+
+Restart Fusion for the example to be activated.
+
+==============================================================================
+--]]--
+
+{
+	Event {
+		-- Add a new event that intercepts the Action
+		-- Comp_New needs to use the "Fusion" target since a "Composition" target would not yet exist for the document.
+		Action = "Comp_New",
+		Targets = {
+			Fusion = {
+				Execute = [[
+-- Run the Action as the first step
+rets = self:Default(ctx, args)
+
+-- Get the pointer for the current foreground comp
+cmp = fusion.CurrentComp
+
+-- Hide the Fusion toolbar "ActionStrip" view
+cmp:DoAction("Fusion_View_Show", {view = "ActionStrip", show = false})
+
+-- Write out a status message to the Console
+cmp:Print('[Auto Hide Toolbar] Active\n')
+]]
+			},
+		},
+	},
+	Event {
+		-- Add a new event that intercepts the Action
+		-- Comp_Open needs to use the "Fusion" target since a "Composition" target would not yet exist for the document.
+		Action = "Comp_Open",
+		Targets = {
+			Fusion = {
+				Execute = [[
+-- Run the Action as the first step
+rets = self:Default(ctx, args)
+
+-- Get the pointer for the current foreground comp
+cmp = fusion.CurrentComp
+
+-- Hide the Fusion toolbar "ActionStrip" view
+cmp:DoAction("Fusion_View_Show", {view = "ActionStrip", show = false})
+
+-- Write out a status message to the Console
+cmp:Print('[Auto Hide Toolbar] Active\n')
+]]
+			},
+		},
+	},
+	Event {
+		-- Add a new event that intercepts the Action
+		-- Comp_Opened needs to use the "Fusion" target since a "Composition" target would not yet exist for the document.
+		Action = "Comp_Opened",
+		Targets = {
+			Fusion = {
+				Execute = [[
+-- Run the Action as the first step
+rets = self:Default(ctx, args)
+
+-- Get the pointer for the current foreground comp
+cmp = fusion.CurrentComp
+
+-- Hide the Fusion toolbar "ActionStrip" view
+cmp:DoAction("Fusion_View_Show", {view = "ActionStrip", show = false})
+
+-- Write out a status message to the Console
+cmp:Print('[Auto Hide Toolbar] Active\n')
+]]
+			},
+		},
+	},
+	Event {
+		-- Add a new event that intercepts the Action
+		-- Comp_Recent_Open needs to use the "Fusion" target since a "Composition" target would not yet exist for the document.
+		Action = "Comp_Recent_Open",
+		Targets = {
+			Fusion = {
+				Execute = [[
+-- Run the Action as the first step
+rets = self:Default(ctx, args)
+
+-- Get the pointer for the current foreground comp
+cmp = fusion.CurrentComp
+
+-- Hide the Fusion toolbar "ActionStrip" view
+cmp:DoAction("Fusion_View_Show", {view = "ActionStrip", show = false})
+
+-- Write out a status message to the Console
+cmp:Print('[Auto Hide Toolbar] Active\n')
+]]
+			},
+		},
+	},
+	Event {
+		-- Add a new event that intercepts the Action
+		-- Comp_Save needs to use the "Composition" target to track the currently open .comp document.
+		Action = "Comp_Save",
+		Targets = {
+			Composition = {
+				Execute = [[
+-- Run the Action as the first step
+rets = self:Default(ctx, args)
+
+-- Get the pointer for the current foreground comp
+cmp = fusion.CurrentComp
+
+-- Hide the Fusion toolbar "ActionStrip" view
+cmp:DoAction("Fusion_View_Show", {view = "ActionStrip", show = false})
+]]
+			},
+		},
+	},
+
+}
