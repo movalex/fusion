@@ -1,0 +1,47 @@
+
+--[[--
+==============================================================================
+LoaderAddedAction.fu - v1.0 2021-09-22 
+==============================================================================
+Created by : Alexey Bogomolov[mail@abogomolov.com]
+
+==============================================================================
+Overview
+==============================================================================
+
+==============================================================================
+Installation
+==============================================================================
+Copy the LoaderAddedAction.fu file to the Fusion user prefs folder (use "Config:/LoaderAddedAction.fu" command in console to get that folder location.
+
+Restart Fusion.
+
+==============================================================================
+--]]--
+
+{
+	Event {
+		-- Add a new event that intercepts the Action
+		-- AddTool needs to use the "Composition" target.
+		Action = "AddTool",
+		Targets = {
+			Composition = {
+				Execute = [[
+-- Run the Action as the first step
+rets = self:Default(ctx, args)
+
+-- Get the pointer for the current foreground comp
+cmp = fusion.CurrentComp
+
+t = cmp.ActiveTool()
+
+-- Write out a status message to the Console
+if t.ID == "Loader" then
+    local depth = t.Depth[1]
+    cmp:Print('New Loader added!\nDefault image depth value:'.. depth)
+end
+]]
+			},
+		},
+	},
+}
