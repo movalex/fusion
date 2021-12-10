@@ -1,29 +1,28 @@
 ------------------------------------
--- V2.4
--- cleaned up and updated for Fusion9/16 by Alex Bogomolov (mail@abogomolov.com)
--- now the script works with mapped paths
+-- V2.4 updated by Alexey Bogomolov <mail@abogomolov.com>
+-- + cleaned up and updated for Fusion 9/17 and Resolve 
+-- + add support for mapped paths
+-- + catch if no path found in a Loader
 
 -- V2.3 Update Log:
 -- + Updated syntax to work in Fusion 8
-
 
 -- written by Tim Little for Fusion 6.4 (timhlittle@gmail.com)
 
 
 --// Scan Selected Tool //--
 function scanSelectedTool()
-	tool = composition:GetToolList(true,"Loader")
+	tool = comp:GetToolList(true, "Loader")
 
 	if tool[1] == nil then
 		--// Pop-up Window to Let User Know Error //--
-		ret = composition:AskUser("Must Select a Loader",{})
-		print ("Must Select a Loader")
+		ret = comp:AskUser("Select a Loader",{})
+		print ("Select a Loader")
 		return nil
 	else
 		tool = tool[1]
 		toolName = tool:GetAttrs().TOOLS_Name
 		myLoader = tool -- give the tool a variable name that makes sense in the script
-		dump(myLoader)
 		loaderClip = myLoader.Clip[comp.CurrentTime]
 		if (loaderClip ~= "" and loaderClip ~= nil) then
 			return comp:MapPath(loaderClip)
@@ -36,7 +35,7 @@ end --End of Function
 function updateLoaders(oldLoaderClip, newFileName, onlySelectedLoaders)
 	comp:Lock()
 	newClipFileParse = bmd.parseFilename(comp:MapPath(newFileName))
-	for i, tool in ipairs(composition:GetToolList(onlySelectedLoaders, "Loader")) do -- iterate through all tools in the comp
+	for i, tool in ipairs(comp:GetToolList(onlySelectedLoaders, "Loader")) do -- iterate through all tools in the comp
 		toolName = tool:GetAttrs().TOOLS_Name
 		myLoader = tool -- give the tool a variable name that makes sense in the script
 		loaderClip = comp:MapPath(myLoader.Clip[comp.CurrentTime])
@@ -72,9 +71,9 @@ if oldLoaderClip then
 	--=============================================================================================--
 	--// Pop-up Window //--
 
-		ret = composition:AskUser("Update Loaders v2.2",
+		ret = comp:AskUser("Update Loaders v2.4",
 				{
-				{"Instructions:","Text", Default = "\n- Choose new file for the selected loader\n- The script will update other loaders that share the same file\n- Can update multi-pass sequences that were loaded using the mEXR script", ReadOnly=true, Lines=6,Width=2.5},
+				{"Instructions:","Text", Default = "\n- Choose new file for the selected loader\n- The script will update other loaders that share the same file\n- Can update multi-pass sequences that were loaded using the mEXR script", ReadOnly=true, Lines=6},
 				{"Selected Loader:","Text",Lines =1, ReadOnly = true, Default = toolName },
 				{"Current File:","Text", Lines =1, ReadOnly=true, Default = oldFileParse.FullName},
 				{"Only Selected Loaders","Checkbox", Default = 0},
@@ -112,10 +111,12 @@ if oldLoaderClip then
 			updateLoaders(oldLoaderClip, filePathBrowse, onlySelectedLoaders)
 
 			--// Pop-up Window to Let User Know Script is Complete //--
-			ret = composition:AskUser("Script Complete!",{})
+			ret = comp:AskUser("Script Complete!",{})
 		else
-			ret = composition:AskUser("ERROR: New File Path Not Valid",{})
+			ret = comp:AskUser("ERROR: New File Path is not Valid",{})
 		end
+    else
+        print("no Clip found in the Loader")
 end -- end of If loader clip is not nil
 print "============== SCRIPT END =============="
 collectgarbage()
