@@ -213,7 +213,6 @@ function showUI()
     mergeCheck = true
 	if PLATFORM == 'Windows' then
         mergeCheck = false
-        print('Merge All Loaders is disabled as it currectly works on Mac only')
     end
     VERBOSE = getPreferenceData("hos_SplitEXR.verbose", 0, false)
 	splitAllSelectedNodes = getPreferenceData("hos_SplitEXR.splitAllSelectedNodes", 1, VERBOSE)
@@ -247,7 +246,7 @@ function showUI()
                 },
                 ui:ComboBox {
                     Weight = 0.7,
-                    ID = 'LayoutComboBox',
+                    ID = 'layoutComboBox',
                 },
             },
             ui:HGroup{
@@ -277,7 +276,7 @@ function showUI()
                         Text = "Split All Selected Nodes",
                     },
                     ui:CheckBox{
-                        ID = "useChannelName",
+                        ID = "mpUseChannelName",
                         Text = "Multipart Uses Channel Name",
                     },
                 },
@@ -294,23 +293,26 @@ function showUI()
                 },
                 ui:HGroup{
                     ui:CheckBox{
-                        ID = "ShowTiles",
+                        ID = "showTiles",
                         Text = "Show Source Tiles",
                     },
                     ui:CheckBox{
-                        ID = "MergeAll",
+                        ID = "mergeAll",
                         Text = "Merge Loaders",
-                        Enabled = mergeCheck,
+                        Visible = mergeCheck,
                     },
                 },
             },
             ui:HGroup{
                 Weight = 0,
                 ui:Button{
-                    ID = 'OkButton', Text = 'Ok',
+                    ID = 'applyButton', Text = 'Run',
                 },
                 ui:Button{
-                    ID = 'CancelButton', Text = 'Cancel',
+                    ID = 'okButton', Text = 'Run and Close',
+                },
+                ui:Button{
+                    ID = 'cancelButton', Text = 'Cancel',
                 },
             },
         },
@@ -319,18 +321,18 @@ function showUI()
     function win.On.SplitEXR.Close(ev)
         disp:ExitLoop()
     end
-    function win.On.CancelButton.Clicked(ev)
+    function win.On.cancelButton.Clicked(ev)
         disp:ExitLoop()
     end
-    function win.On.MergeAll.Clicked(ev)
-        if not mergeCheck then
-        end
+    function win.On.applyButton.Clicked(ev)
+    end
+    function win.On.mergeAll.Clicked(ev)
     end
 
     itm = win:GetItems()
 
-    itm.LayoutComboBox:AddItem('Vertically')
-    itm.LayoutComboBox:AddItem('Horizontally')
+    itm.layoutComboBox:AddItem('Vertically')
+    itm.layoutComboBox:AddItem('Horizontally')
 
     itm.GridSlider.Value = 0
     itm.GridSlider.Minimum = 0
@@ -777,17 +779,19 @@ function main()
         win = showUI()
     end
 
+    itm = win:GetItems()
 
 
 	-- -- Read the Placement, Grid Placement, and Source Tiles settings from the UI
-	-- verbose = dialogResult.verbose
-	-- splitAllSelectedNodes = dialogResult.splitAllSelectedNodes
-	-- cdir = dialogResult.cdir
-	-- skipAlpha = dialogResult.skipAlpha
-	-- tiles = dialogResult.tiles
-	-- grid = dialogResult.grid
-    -- mergeall = dialogResult.mergeall
-	-- useChannelName = dialogResult.useChannelName
+    local splitDirection = itm.layoutComboBox:GetCurrentIndex()
+    local grid = itm.GridSlider.Value
+    local verbose = itm.verbose.Checked
+    local splitAllSelectedNodes = itm.splitAllSelectedNodes.Checked
+    local mpState = itm.mpUseChannelName.Checked
+    local skipAlpha = itm.skipAlpha.Checked
+    local tiles = itm.showTiles.Checked
+    local mergeall = itm.mergeAll.Checked
+    local useChannelName = itm.useChannelName.Checked
 
 	-- -- Save the updated preferences
 	-- setPreferenceData("SplitEXR.verbose", verbose, verbose)
@@ -798,30 +802,32 @@ function main()
 	-- setPreferenceData("SplitEXR.grid", grid, verbose)
 	-- setPreferenceData("SplitEXR.mergeall", mergeall, verbose)
 	-- setPreferenceData("SplitEXR.useChannelName", useChannelName, verbose)
-	-- -- setPreferenceData("hos_SplitEXR.cxyz", cxyz, verbose)
 
 
-	-- if splitAllSelectedNodes == 0 then
-	--     -- Process only the first actively selected node
-	--     local tool = comp.ActiveTool
-	--     if tool then
-	--         getLoader(verbose, dialogResult, tool)
-	--     else
-	--         logError("The \"Active Tool\" selection is empty. Please select a node before running this script again.\n\nNote: If you want to process multiple selected nodes at the same time please enable the \"Split All Selected Nodes\" option in the dialog.\n")
-	--         return
-	--     end
-	-- else
-	--     local toolList = comp:GetToolList(true, "Loader")
+    if splitAllSelectedNodes == 0 then
+        local tool = comp.ActiveTool
+        if not tool then
+            logError("The \"Active Tool\" selection is empty. Please select a node before running this script again.\n\nNote: If you want to process multiple selected nodes at the same time please enable the \"Split All Selected Nodes\" option in the dialog.\n")
+            return
+        end
+        if tool.ID == "MediaIn" then
+            print('Davinci Resolve MediaIn nodes are not supported by SplitEXR yet. Try Loader instead')
+            return
+        end
+        -- Process only the first actively selected node
+        getLoader(verbose, dialogResult, tool)
+    else
+        local toolList = comp:GetToolList(true, "Loader")
 
-	--     if table.getn(toolList) == 0 then
-	--         logError("The \"tool\" selection is empty. Please select a node before running this script again.")
-	--         return
-	--     end
-	--     -- Iterate through each of the selected loader nodes
-	--     for i, tool in pairs(toolList) do 
-	--         getLoader(verbose, dialogResult, tool)
-	--     end
-	-- end
+        if table.getn(toolList) == 0 then
+            logError("The \"tool\" selection is empty. Please select a node before running this script again.")
+            return
+        end
+        -- Iterate through each of the selected loader nodes
+        for i, tool in pairs(toolList) do 
+            getLoader(verbose, dialogResult, tool)
+        end
+    end
 end
 
 -------------------------------------------------------------------------------
