@@ -127,6 +127,124 @@ CHANNELS_TO_SKIP = {r = true, red = true,
                 a = true, alpha = true,
                 somethingthatwontmatchhopefully = true}
 
+comp = fu:GetCurrentComp()
+
+
+local ui = fu.UIManager
+local disp = bmd.UIDispatcher(ui)
+local width, height = 250,600
+
+function showUI()
+	win = disp:AddWindow({
+        ID = "SplitEXR",
+        TargetID = "SplitEXR",
+        WindowTitle = "Split EXR Ultra " .. VERSION,
+        Geometry = {500, 500, width, height},
+        ui:VGroup {
+            ui:VGroup{
+                Weight = 0,
+            ui:HGroup{
+                ui:HGap(0.25,0),
+                ui:Label{
+                    Weight = 0.6,
+                    ID = 'Label',
+                    Text = 'Frame Handles:',
+                    Alignment = {AlignLeft = true, AlignVCenter = true}
+                },
+                ui:SpinBox {
+                    Weight = 0.4,
+                    ID = 'offset', Value = frameOffset,
+                    Alignment = {AlignRight = true},
+                    Maximum = comp:GetAttrs().COMPN_GlobalEnd / 2,
+                    Events = {ValueChanged = true, EditingFinished = true},
+                },
+            },
+            ui:HGroup {
+                ui:Button{
+                    -- MaximumSize = buttonSize,
+                    MinimumSize = buttonSize,
+                    ID = 'minus', Text = '> <',
+                },
+                ui:Button{
+                    -- MaximumSize = buttonSize,
+                    MinimumSize = buttonSize,
+                    ID = 'plus', Text = '< >',
+                },
+                ui:Button{
+                    -- MaximumSize = buttonSize,
+                    MinimumSize = buttonSize,
+                    ID = 'left', Text = '< <',
+                },
+                ui:Button{
+                    -- MaximumSize = buttonSize,
+                    MinimumSize = buttonSize,
+                    ID = 'right', Text = '> >',
+                },
+            },
+            ui:HGroup {
+                ui:Button{
+                    ID = 'setRange', Text = 'Set from Loader',
+                },
+                ui:Button{
+                    ID = 'reset', Text = 'Reset range',
+                },
+            },
+        },
+            ui:HGroup {
+                ui:Tree{
+                    Alignment = {AlignHCenter = true, AlignBottom = true},
+                    ID = 'Tree',
+                    SortingEnabled = true,
+                    Events = { ItemClicked = true, ItemDoubleClicked = true, CurrentItemChanged = true, ItemActivated = true }
+                },
+            },
+            ui:HGroup {
+                Weight = 0,
+                ui:Button{
+                    ID = 'SaveButton', Text = 'Save Range',
+                },
+                ui:Button{
+                    ID = 'DeleteButton', Text = 'Delete Range',
+                },
+            },
+            ui:HGroup {
+                Weight = 0,
+                ui:Button{
+                    ID = 'RefreshButton', Text = 'Refresh In/Out List',
+                },
+
+            }
+        },
+    })
+
+    function win.On.SplitEXR.Close(ev)
+        disp:ExitLoop()
+    end
+
+    win:Show()
+    disp:RunLoop()
+    win:Hide()
+    return win
+end
+
+
+win = ui:FindWindow("SplitEXR")
+
+if win then
+    win:Raise()
+    win:ActivateWindow()
+else
+    win = showUI()
+end
+
+
+
+itm = win:GetItems()
+dump(itm)
+
+
+
+
 -------------------------------------------------------------------------------
 -- Set a fusion specific preference value
 -- Example: setPreferenceData("hos_SplitEXR.cdir", 1, true)
@@ -647,12 +765,12 @@ end
 local t_start = os.time()
 
 -- Run main
-main()
+--main()
 
 -- Print estimated time of execution in seconds
 print(string.format("[Processing Time] %.3f s", os.difftime(os.time(), t_start)))
-while comp:IsLocked() do
-    print('unlocking comp')
-    comp:Unlock()
-end
+-- while comp:IsLocked() do
+--     print('unlocking comp')
+--     comp:Unlock()
+-- end
 print("[Done]")
