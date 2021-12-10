@@ -84,10 +84,10 @@ local os_separator = package.config:sub(1,1)
 
 local COMPNAME, COMPFILENAME, PATTERN, PARSECOMP, NEWCOMPNAME, NEWCOMPPATH, NEWCOMPEXT, NEWCOMP
 
-COMPNAME = composition:GetAttrs().COMPS_Name
+COMPNAME = comp:GetAttrs().COMPS_Name
 -- print(COMPNAME)
 
-COMPFILENAME = composition:GetAttrs().COMPS_FileName
+COMPFILENAME = comp:GetAttrs().COMPS_FileName
 -- print(COMPFILENAME)
 
 if COMPFILENAME == "" then
