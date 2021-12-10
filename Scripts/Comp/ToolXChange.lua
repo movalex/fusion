@@ -365,7 +365,7 @@ function createJson()
             num = { tostring(#jsonList + 1) },
             users = { user:lower() },
             usersToolName = { itm.LineEditUI.Text },
-            usersToolComment = { itm.userToolComment.PlainText },
+            usersToolComment = { trim(itm.userToolComment.PlainText) },
             toolRaw = { nodes },
             toolDate = { os.date('%m-%d-%Y|%H:%M:%S') },
             toolPathBaseName = { REPOSITORY_FOLDER },
@@ -501,6 +501,11 @@ function ConvertSeconds(secondsArg)
     local elapsedTable = {days=daysDiff, hours=hoursDiff, mins=minsDiff}    
     
     return elapsedTable 
+end
+
+
+function trim(s)
+   return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
 
 ---------------------------------------------------------------------------------------------------------
