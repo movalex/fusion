@@ -126,148 +126,46 @@ CHANNELS_TO_SKIP = {r = true, red = true,
                 b = true, blue = true,
                 a = true, alpha = true,
                 somethingthatwontmatchhopefully = true}
+VERBOSE = false
+PLATFORM = (FuPLATFORM_WINDOWS and "Windows") or (FuPLATFORM_MAC and "Mac") or (FuPLATFORM_LINUX and "Linux")
 
 comp = fu:GetCurrentComp()
 
 
 local ui = fu.UIManager
 local disp = bmd.UIDispatcher(ui)
-local width, height = 600,300
+local width, height = 530,200
 
-function showUI()
-	win = disp:AddWindow({
-        ID = "SplitEXR",
-        TargetID = "SplitEXR",
-        WindowTitle = "Split EXR Ultra " .. VERSION,
-        Geometry = {500, 500, width, height},
-        ui:VGroup {
-            ui:Label{
-                Weight = 0,
-                Text = 'This script will split a multi-channel EXR image out into multiple Loader nodes.'
-                },
-            ui:HGroup{
-                Weight = 0,
-                ui:Label{
-                    Weight = 0.3,
-                    Text = "Place nodes: ",
-                    },
-                ui:ComboBox {
-                    Weight = 0.7,
-                    ID = 'LayoutComboBox',
-                    },
-                },
-            ui:HGroup{
-                Weight = 0,
-                ui:Label{
-                    Weight = 0.3,
-                    Text = "Grid Placement: ",
-                },
-                ui:Slider{
-                    Weight = 0.6,
-                    ID = 'GridSlider',
-                    },
-                ui:LineEdit{
-                    Weight = 0.1,
-                    ID='GridLineEdit',
-                    },
-                },
-            ui:HGroup{
-                Weight = 0,
-                ui:Button{
-                    ID = 'OkButton', Text = 'Ok',
-                    },
-                ui:Button{
-                    ID = 'CancelButton', Text = 'Cancel',
-                    },
-                },
-            ui:VGroup{
-                ui:CheckBox{
-                    ID = "splitAllSelectedNodes",
-                    Text = "Split All Selected Nodes",
-                    },
-                ui:CheckBox{
-                    ID = "skipAlpha",
-                    Text = "Skip Importing Alpha Channels",
-                    },
-                ui:CheckBox{
-                    ID = "tiles",
-                    Text = "Show Source Tiles",
-                    },
-                ui:CheckBox{
-                    ID = "mergeall",
-                    Text = "Merge Loaders",
-                    },
-                ui:CheckBox{
-                    ID = "useChannelName",
-                    Text = "Multipart Uses Channel Name",
-                    },
-                ui:CheckBox{
-                    ID = "verbose",
-                    Text = "Verbose Logging",
-                    },
-                },
-        },
-    })
+------------------------------------------------------------------------
+-- logging
+------------------------------------------------------------------------
 
-    function win.On.SplitEXR.Close(ev)
-        disp:ExitLoop()
-    end
-    itm = win:GetItems()
-
-    itm.LayoutComboBox:AddItem('Vertically')
-    itm.LayoutComboBox:AddItem('Horizontally')
-
-    itm.GridSlider.Value = 0
-    itm.GridSlider.Minimum = 0
-    itm.GridSlider.Maximum = 25
-
-
-    itm.GridLineEdit.Text = tostring(itm.GridSlider:GetSliderPosition())
-
---     itm.GridLineEdit:SetAlignment("AlignCenter")
-    function win.On.GridSlider.ValueChanged(ev)
-        itm.GridLineEdit.Text = tostring(ev.Value)
-        print('Slider Value: ' .. tostring(ev.Value))
-    end
-
-    win:Show()
-    disp:RunLoop()
-    win:Hide()
-    return win
+function _log(mode, message)
+	return string.format("[%s] %s", mode, message)
 end
 
-
-win = ui:FindWindow("SplitEXR")
-
-if win then
-    win:Raise()
-    win:ActivateWindow()
-else
-    win = showUI()
+function logError(message)
+	print(_log("ERROR", message))
 end
 
-
-
-
-
-
--------------------------------------------------------------------------------
--- Set a fusion specific preference value
--- Example: setPreferenceData("hos_SplitEXR.cdir", 1, true)
-function setPreferenceData(pref, value, debugPrint)
-	-- Choose if you are saving the preference to the comp or to all of fusion
-	-- comp:SetData(pref, value)
-	fusion:SetData(pref, value)
-
-	-- List the preference value
-	if (debugPrint == true) or (debugPrint == 1) then
-		if value == nil then
-			print("[Setting " .. tostring(pref) .. " Preference Data] " .. "nil")
-		else
-			print("[Setting " .. tostring(pref) .. " Preference Data] " .. tostring(value))
-		end
+function logDebug(message, state)
+	if state == 1 or state == true then
+		-- Only print the logDebug output when the debugging "state" is enabled
+		print(_log("DEBUG", message))
 	end
 end
+
+function logDump(variable, state)
+	if state == 1 or state == true then
+		-- Only print the logDump output when the debugging "state" is enabled
+		dump(variable)
+	end
+end
+
+function logWarning(message)
+	print(_log("WARNING", message))
+end
+
 
 -------------------------------------------------------------------------------
 -- Read a fusion specific preference value. If nothing exists set and return a default value
@@ -305,6 +203,190 @@ function getPreferenceData(pref, defaultValue, debugPrint)
 
 	return newPreference
 end
+
+
+------------------------------------------------------------------------
+-- Main UI
+------------------------------------------------------------------------
+function showUI()
+	-- Read the updated preferences
+    mergeCheck = true
+	if PLATFORM == 'Windows' then
+        mergeCheck = false
+        print('Merge All Loaders is disabled as it currectly works on Mac only')
+    end
+    VERBOSE = getPreferenceData("hos_SplitEXR.verbose", 0, false)
+	splitAllSelectedNodes = getPreferenceData("hos_SplitEXR.splitAllSelectedNodes", 1, VERBOSE)
+	cdir = getPreferenceData("hos_SplitEXR.cdir", 0, VERBOSE)
+	skipAlpha = getPreferenceData("hos_SplitEXR.skipAlpha", 0, VERBOSE)
+	forceTilesPref = fu:GetPrefs("Comp.FlowView.ForceSource")
+	forceTile = 0
+	if forceTilesPref then
+		forceTile = 1	
+	end
+	tiles = getPreferenceData("hos_SplitEXR.tiles", forceTile, VERBOSE)
+	grid = getPreferenceData("hos_SplitEXR.grid", 0, VERBOSE)
+    mergeall = getPreferenceData('hos_SplitEXR.mergeall', 0, VERBOSE)
+	useChannelName = getPreferenceData('hos_SplitEXR.useChannelName', 0, VERBOSE)
+
+	win = disp:AddWindow({
+        ID = "SplitEXR",
+        TargetID = "SplitEXR",
+        WindowTitle = "[Split EXR] " .. VERSION,
+        Geometry = {500, 500, width, height},
+        ui:VGroup {
+            ui:Label{
+                Weight = 0,
+                Text = 'This script will split a multi-channel or multi-part EXR image out into Loaders'
+            },
+            ui:HGroup{
+                Weight = 0,
+                ui:Label{
+                    Weight = 0.3,
+                    Text = "Place nodes: ",
+                },
+                ui:ComboBox {
+                    Weight = 0.7,
+                    ID = 'LayoutComboBox',
+                },
+            },
+            ui:HGroup{
+                Weight = 0,
+                ui:Label{
+                    Weight = 0.3,
+                    Text = "Grid Placement: ",
+                },
+                ui:Slider{
+                    Weight = 0.6,
+                    ID = 'GridSlider',
+                    Events = {SliderMoved = true, ValueChanged = true, SliderPressed = true}
+                },
+                ui:LineEdit{
+                    Weight = 0.1,
+                    ID='GridLineEdit',
+                    Alignment = {AlignHCenter = true},
+                    Events = {ReturnPressed = true }
+                },
+            },
+
+            ui:VGroup{
+                Weight = 0,
+                ui:HGroup{
+                    ui:CheckBox{
+                        ID = "splitAllSelectedNodes",
+                        Text = "Split All Selected Nodes",
+                    },
+                    ui:CheckBox{
+                        ID = "useChannelName",
+                        Text = "Multipart Uses Channel Name",
+                    },
+                },
+                ui:HGroup{
+                    ui:CheckBox{
+                        ID = "skipAlpha",
+                        Text = "Skip Importing Alpha Channels",
+                    },
+                    ui:CheckBox{
+                        ID = "verbose",
+                        Text = "Verbose Logging",
+                        Checked = true,
+                    },
+                },
+                ui:HGroup{
+                    ui:CheckBox{
+                        ID = "ShowTiles",
+                        Text = "Show Source Tiles",
+                    },
+                    ui:CheckBox{
+                        ID = "MergeAll",
+                        Text = "Merge Loaders",
+                        Enabled = mergeCheck,
+                    },
+                },
+            },
+            ui:HGroup{
+                Weight = 0,
+                ui:Button{
+                    ID = 'OkButton', Text = 'Ok',
+                },
+                ui:Button{
+                    ID = 'CancelButton', Text = 'Cancel',
+                },
+            },
+        },
+    })
+
+    function win.On.SplitEXR.Close(ev)
+        disp:ExitLoop()
+    end
+    function win.On.CancelButton.Clicked(ev)
+        disp:ExitLoop()
+    end
+    function win.On.MergeAll.Clicked(ev)
+        if not mergeCheck then
+        end
+    end
+
+    itm = win:GetItems()
+
+    itm.LayoutComboBox:AddItem('Vertically')
+    itm.LayoutComboBox:AddItem('Horizontally')
+
+    itm.GridSlider.Value = 0
+    itm.GridSlider.Minimum = 0
+    itm.GridSlider.Maximum = 25
+
+
+
+    itm.GridLineEdit.Text = tostring(itm.GridSlider:GetSliderPosition())
+
+    function win.On.GridLineEdit.ReturnPressed(ev)
+        itm.GridSlider.Value = tonumber(itm.GridLineEdit.Text)
+    end
+
+    function win.On.GridSlider.ValueChanged(ev)
+        itm.GridLineEdit.Text = tostring(ev.Value)
+        logDebug('Slider Value: ' .. tostring(ev.Value), VERBOSE)
+    end
+
+    function win.On.GridSlider.SliderMoved(ev)
+        itm.GridLineEdit.Text = tostring(ev.Value)
+        logDebug('Slider Value: ' .. tostring(ev.Value), VERBOSE)
+    end
+
+    function win.On.GridSlider.SliderPressed(ev)
+        if ev.modifiers.AltModifier == true then
+            itm.GridLineEdit.Text = "0"
+            itm.GridSlider.Value = 0
+        end
+    end
+
+    win:Show()
+    disp:RunLoop()
+    win:Hide()
+
+    return win
+end
+
+
+-------------------------------------------------------------------------------
+-- Set a fusion specific preference value
+-- Example: setPreferenceData("hos_SplitEXR.cdir", 1, true)
+function setPreferenceData(pref, value, debugPrint)
+	-- Choose if you are saving the preference to the comp or to all of fusion
+	-- comp:SetData(pref, value)
+	fusion:SetData(pref, value)
+
+	-- List the preference value
+	if (debugPrint == true) or (debugPrint == 1) then
+		if value == nil then
+			print("[Setting " .. tostring(pref) .. " Preference Data] " .. "nil")
+		else
+			print("[Setting " .. tostring(pref) .. " Preference Data] " .. tostring(value))
+		end
+	end
+end
+
 
 function buildDialog()
 	-- Read the updated preferences
@@ -344,34 +426,7 @@ function buildDialog()
 	return dialog
 end
 
-------------------------------------------------------------------------
--- Logging
-------------------------------------------------------------------------
-function _log(mode, message)
-	return string.format("[%s] %s", mode, message)
-end
 
-function logError(message)
-	print(_log("ERROR", message))
-end
-
-function logDebug(message, state)
-	if state == 1 or state == true then
-		-- Only print the logDebug output when the debugging "state" is enabled
-		print(_log("DEBUG", message))
-	end
-end
-
-function logDump(variable, state)
-	if state == 1 or state == true then
-		-- Only print the logDump output when the debugging "state" is enabled
-		dump(variable)
-	end
-end
-
-function logWarning(message)
-	print(_log("WARNING", message))
-end
 
 ------------------------------------------------------------------------
 -- Loader
@@ -434,15 +489,15 @@ function ProcessMultichannel(tool)
     local loaderChannels = GetLoaderChannels(tool)
 
     -- Debug print the channel list
-    logDebug("[EXR Check 3] [Sorted Channel List]", verbose)
-    logDump(loaderChannels, verbose)
+    logDebug("[EXR Check 3] [Sorted Channel List]", VERBOSE)
+    logDump(loaderChannels, VERBOSE)
 
     -- Get list of unique channel prefixes to know how many loaders to create
     local channelData = GetChannelData(loaderChannels)
 
     -- Debug print the loader node list
-    logDebug("[EXR Check 4] [Loader Node List]", verbose)
-    logDump(channelData, verbose)
+    logDebug("[EXR Check 4] [Loader Node List]", VERBOSE)
+    logDump(channelData, VERBOSE)
 
     loaders_list = {}
 	
@@ -452,7 +507,7 @@ function ProcessMultichannel(tool)
     -- Update the loader node channel settings
     for prefix, channels in pairs(channelData) do
         -- Debug print the loader list
-        logDebug("[EXR Check 5] Loader List " .. prefix, verbose)
+        logDebug("[EXR Check 5] Loader List " .. prefix, VERBOSE)
         if mergeall == 1.0 then
            LDR = comp:AddTool("Loader", -32768, -32768)
 		   comp:SetActiveTool(LDR)
@@ -481,19 +536,19 @@ function ProcessMultichannel(tool)
                 -- Red channel found
             
                 LDR.Clip1.OpenEXRFormat.RedName = channelName
-                logDebug("[EXR Check 6] [Red Channel Assignment] " .. channelName, verbose)
+                logDebug("[EXR Check 6] [Red Channel Assignment] " .. channelName, VERBOSE)
 
             elseif (_channelLower == "g") or (_channelLower == "green") then
                 -- Green channel found
 
                 LDR.Clip1.OpenEXRFormat.GreenName = channelName
-                logDebug("[EXR Check 6] [Green Channel Assignment] " .. channelName, verbose)
+                logDebug("[EXR Check 6] [Green Channel Assignment] " .. channelName, VERBOSE)
             
             elseif (_channelLower == "b") or (_channelLower == "blue") then
                 -- Blue channel found
                 
                 LDR.Clip1.OpenEXRFormat.BlueName = channelName
-                logDebug("[EXR Check 6] [Blue Channel Assignment] " .. channelName, verbose)
+                logDebug("[EXR Check 6] [Blue Channel Assignment] " .. channelName, VERBOSE)
             
             elseif (_channelLower == "a") or (_channelLower == "alpha") then
                 -- Alpha channel found
@@ -501,32 +556,32 @@ function ProcessMultichannel(tool)
                     -- Load the regular alpha channel
             
                     LDR.Clip1.OpenEXRFormat.AlphaName = channelName
-                    logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. channelName, verbose)
+                    logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. channelName, VERBOSE)
                 
                 else
                     -- The Skip Importing Alpha Channels checkbox was enabled in the AskUser dialog
                 
                     LDR.Clip1.OpenEXRFormat.AlphaName = CHANNEL_NO_MATCH
-                    logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. CHANNEL_NO_MATCH, verbose)
+                    logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. CHANNEL_NO_MATCH, VERBOSE)
                 
                 end
             elseif (_channelLower == "x") then
                 -- X channel found
                 
                 LDR.Clip1.OpenEXRFormat.RedName = channelName
-                logDebug("[EXR Check 6] [X Channel Assignment] " .. channelName, verbose)
+                logDebug("[EXR Check 6] [X Channel Assignment] " .. channelName, VERBOSE)
            
             elseif (_channelLower == "y") then
                 -- Y channel found
                
                 LDR.Clip1.OpenEXRFormat.GreenName = channelName
-                logDebug("[EXR Check 6] [Y Channel Assignment] " .. channelName, verbose)
+                logDebug("[EXR Check 6] [Y Channel Assignment] " .. channelName, VERBOSE)
            
             elseif (_channelLower == "z") then
                 -- Z channel found
                
                 LDR.Clip1.OpenEXRFormat.BlueName = channelName
-                logDebug("[EXR Check 6] [Z Channel Assignment] " .. channelName, verbose)
+                logDebug("[EXR Check 6] [Z Channel Assignment] " .. channelName, VERBOSE)
            
             else
                 ------------------------------------------------------------------------
@@ -553,30 +608,30 @@ function ProcessMultichannel(tool)
                 lastItem = myTableOfPhrases[tableLength]
 
                 -- Debug print the C4D channel assignment
-                logDebug("[EXR Check 7] [C4D Channel Phrase] " .. tostring(lastItem), verbose)
+                logDebug("[EXR Check 7] [C4D Channel Phrase] " .. tostring(lastItem), VERBOSE)
 
                 if (lastItem == "red") then
                     -- C4D red channel found
                     LDR.Clip1.OpenEXRFormat.RedName = channelName
-                    logDebug("[EXR Check 6] [Red Channel Assignment] " .. channelName, verbose)
+                    logDebug("[EXR Check 6] [Red Channel Assignment] " .. channelName, VERBOSE)
                 elseif (lastItem == "green") then
                     -- C4D green channel found
                     LDR.Clip1.OpenEXRFormat.GreenName = channelName
-                    logDebug("[EXR Check 6] [Green Channel Assignment] " .. channelName, verbose)
+                    logDebug("[EXR Check 6] [Green Channel Assignment] " .. channelName, VERBOSE)
                 elseif (lastItem == "blue") then
                     -- C4D blue channel found
                     LDR.Clip1.OpenEXRFormat.BlueName = channelName
-                    logDebug("[EXR Check 6] [Blue Channel Assignment] " .. channelName, verbose)
+                    logDebug("[EXR Check 6] [Blue Channel Assignment] " .. channelName, VERBOSE)
                 elseif (lastItem == "alpha") then
                     -- C4D alpha channel found
                     if (skipAlpha == 0) then
                         -- Load the regular alpha channel
                         LDR.Clip1.OpenEXRFormat.AlphaName = channelName
-                        logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. channelName, verbose)
+                        logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. channelName, VERBOSE)
                     else
                         -- the Skip Importing Alpha Channels checkbox was enabled in the AskUser dialog
                         LDR.Clip1.OpenEXRFormat.AlphaName = CHANNEL_NO_MATCH
-                        logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. CHANNEL_NO_MATCH, verbose)
+                        logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. CHANNEL_NO_MATCH, VERBOSE)
                     end
                 end
             end
@@ -675,7 +730,11 @@ function move_loaders(org_x_pos, org_y_pos, loaders)
     -- Work out the node spacing offsets in the flow area
     local y_pos_add = 0
     if tiles == 1 then
-        y_pos_add = 3
+        if fu.VERSION < 16 then
+            y_pos_add = 3
+        else
+            y_pos_add = 2
+        end
     else
         y_pos_add = 1
     end
@@ -703,65 +762,66 @@ function main()
 	end
     comp = fusion:GetCurrentComp()
 
+	print("\n")
 	print(string.format("[Split EXR] %s", VERSION))
 	print(string.format("[Created By] %s", AUTHOR))
 	print(string.format("[With Contributions From] %s", table.concat(CONTRIBUTORS, ", ")))
 	print("\n")
 
-	-- Show an AskUser dialog to find out your preferred node placement settings
-	-- The AskUser default settings will be pulled from the Fusion preferences.
-	local dialog = buildDialog()
-	local dialogResult = comp:AskUser("hos_SplitEXR_Ultra", dialog)
+    win = ui:FindWindow("SplitEXR")
 
-	-- Exit the script if the cancel button was pressed in the AskUser dialog
-	if dialogResult == nil then
-		logWarning("You pressed cancel in the \"hos_SplitEXR_Ultra\" dialog.")
-		return
-	end
-
-	-- Read the Placement, Grid Placement, and Source Tiles settings from the AskUser dialog
-	verbose = dialogResult.verbose
-	splitAllSelectedNodes = dialogResult.splitAllSelectedNodes
-	cdir = dialogResult.cdir
-	skipAlpha = dialogResult.skipAlpha
-	tiles = dialogResult.tiles
-	grid = dialogResult.grid
-    mergeall = dialogResult.mergeall
-	useChannelName = dialogResult.useChannelName
-
-	-- Save the updated preferences
-	setPreferenceData("hos_SplitEXR.verbose", verbose, verbose)
-	setPreferenceData("hos_SplitEXR.splitAllSelectedNodes", splitAllSelectedNodes, verbose)
-	setPreferenceData("hos_SplitEXR.cdir", cdir, verbose)
-	setPreferenceData("hos_SplitEXR.skipAlpha", skipAlpha, verbose)
-	setPreferenceData("hos_SplitEXR.tiles", tiles, verbose)
-	setPreferenceData("hos_SplitEXR.grid", grid, verbose)
-	setPreferenceData("hos_SplitEXR.mergeall", mergeall, verbose)
-	setPreferenceData("hos_SplitEXR.useChannelName", useChannelName, verbose)
-	-- setPreferenceData("hos_SplitEXR.cxyz", cxyz, verbose)
+    if win then
+        win:Raise()
+        win:ActivateWindow()
+    else
+        win = showUI()
+    end
 
 
-	if splitAllSelectedNodes == 0 then
-		-- Process only the first actively selected node
-		local tool = comp.ActiveTool
-		if tool then
-			getLoader(verbose, dialogResult, tool)
-		else
-			logError("The \"Active Tool\" selection is empty. Please select a node before running this script again.\n\nNote: If you want to process multiple selected nodes at the same time please enable the \"Split All Selected Nodes\" option in the dialog.\n")
-			return
-		end
-	else
-		local toolList = comp:GetToolList(true, "Loader")
 
-		if table.getn(toolList) == 0 then
-			logError("The \"tool\" selection is empty. Please select a node before running this script again.")
-			return
-		end
-		-- Iterate through each of the selected loader nodes
-		for i, tool in pairs(toolList) do 
-			getLoader(verbose, dialogResult, tool)
-		end
-	end
+	-- -- Read the Placement, Grid Placement, and Source Tiles settings from the UI
+	-- verbose = dialogResult.verbose
+	-- splitAllSelectedNodes = dialogResult.splitAllSelectedNodes
+	-- cdir = dialogResult.cdir
+	-- skipAlpha = dialogResult.skipAlpha
+	-- tiles = dialogResult.tiles
+	-- grid = dialogResult.grid
+    -- mergeall = dialogResult.mergeall
+	-- useChannelName = dialogResult.useChannelName
+
+	-- -- Save the updated preferences
+	-- setPreferenceData("SplitEXR.verbose", verbose, verbose)
+	-- setPreferenceData("SplitEXR.splitAllSelectedNodes", splitAllSelectedNodes, verbose)
+	-- setPreferenceData("SplitEXR.cdir", cdir, verbose)
+	-- setPreferenceData("SplitEXR.skipAlpha", skipAlpha, verbose)
+	-- setPreferenceData("SplitEXR.tiles", tiles, verbose)
+	-- setPreferenceData("SplitEXR.grid", grid, verbose)
+	-- setPreferenceData("SplitEXR.mergeall", mergeall, verbose)
+	-- setPreferenceData("SplitEXR.useChannelName", useChannelName, verbose)
+	-- -- setPreferenceData("hos_SplitEXR.cxyz", cxyz, verbose)
+
+
+	-- if splitAllSelectedNodes == 0 then
+	--     -- Process only the first actively selected node
+	--     local tool = comp.ActiveTool
+	--     if tool then
+	--         getLoader(verbose, dialogResult, tool)
+	--     else
+	--         logError("The \"Active Tool\" selection is empty. Please select a node before running this script again.\n\nNote: If you want to process multiple selected nodes at the same time please enable the \"Split All Selected Nodes\" option in the dialog.\n")
+	--         return
+	--     end
+	-- else
+	--     local toolList = comp:GetToolList(true, "Loader")
+
+	--     if table.getn(toolList) == 0 then
+	--         logError("The \"tool\" selection is empty. Please select a node before running this script again.")
+	--         return
+	--     end
+	--     -- Iterate through each of the selected loader nodes
+	--     for i, tool in pairs(toolList) do 
+	--         getLoader(verbose, dialogResult, tool)
+	--     end
+	-- end
 end
 
 -------------------------------------------------------------------------------
@@ -771,12 +831,9 @@ end
 local t_start = os.time()
 
 -- Run main
---main()
+main()
 
 -- Print estimated time of execution in seconds
-print(string.format("[Processing Time] %.3f s", os.difftime(os.time(), t_start)))
--- while comp:IsLocked() do
---     print('unlocking comp')
---     comp:Unlock()
--- end
+print(string.format("[Time run] %.2f s", os.difftime(os.time(), t_start)))
+
 print("[Done]")
