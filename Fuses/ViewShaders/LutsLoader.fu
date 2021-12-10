@@ -1,0 +1,26 @@
+{
+	Event {
+		Action = "Comp_New",
+		Targets = {
+			Fusion = {
+				Execute = [[
+					rets = self:Default(ctx, args)
+					comp = fusion.CurrentComp
+                    temp_tool = comp:AddTool('Background')
+                    for vName, viewer in pairs(comp:GetPreviewList()) do
+                        if vName ~= 'File Sequence' then
+                            print("Loading " .. viewer.Name)
+                            viewer:DisplayImage(temp_tool.Output:GetValue())
+                            -- print(viewer.View.CurrentViewer)
+                            viewer.View.CurrentViewer:EnableLUT(true)
+                            viewer.View.CurrentViewer:LoadLUTFile(comp:MapPath('LUTs:sRGB_vl.viewlut'))
+                            viewer:ViewOn(temp_tool)
+                            viewer:ViewOn()
+                        end
+                    end
+                    temp_tool:Delete()
+                    ]]
+			},
+		},
+	}
+}
