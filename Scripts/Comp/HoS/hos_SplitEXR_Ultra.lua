@@ -37,7 +37,7 @@ RELEASE NOTES
 * v2.3 Ultra 2020-3-09 by Alexey Bogomolov <mail@abogomolov.com>
     - add multipart EXR support
     - add Undo splitting
-    - add merge loaders option (Mac only)
+    - add merge loaders option 
     - fix freezing UI in Fusion 17+ on macOS if the AskUser text field has Wrap = true option
 
 * v2.2 Ultra 2019-10-01 by bfloch
@@ -172,8 +172,8 @@ end
 function getPreferenceData(pref, defaultValue, debugPrint)
 	-- Choose if you are saving the preference to the comp or to all of fusion
 	-- local newPreference = comp:GetData(pref)
-	local newPreference = fusion:GetData(pref)
-
+	local newPreference = fu:GetData(pref)
+    
 	if newPreference then
 		-- List the existing preference value
 		if (debugPrint == true) or (debugPrint == 1) then
@@ -188,8 +188,8 @@ function getPreferenceData(pref, defaultValue, debugPrint)
 		newPreference = defaultValue
 
 		-- Choose if you are saving the preference to the comp or to all of fusion
-        comp:SetData(pref, defaultValue)
-		-- fusion:SetData(pref, defaultValue)
+        -- comp:SetData(pref, defaultValue)
+		fu:SetData(pref, defaultValue)
 
 		if (debugPrint == true) or (debugPrint == 1) then
 			if newPreference == nil then
@@ -212,7 +212,7 @@ end
 function setPreferenceData(pref, value, debugPrint)
 	-- Choose if you are saving the preference to the comp or to all of fusion
 	-- comp:SetData(pref, value)
-	fusion:SetData(pref, value)
+	fu:SetData(pref, value)
 
 	-- List the preference value
 	if (debugPrint == true) or (debugPrint == 1) then
@@ -304,11 +304,13 @@ function ProcessMultichannel(tool)
     for prefix, channels in pairs(channelData) do
         -- Debug print the loader list
         logDebug("[EXR Check 5] Loader List " .. prefix, VERBOSE)
-        if mergeall then
-           LDR = comp:AddTool("Loader", -32768, -32768)
-           LDR.Clip = GetLoaderClip(tool)
+        if mergeAll then
+            print("Merging Loaders...")
+            LDR = comp:AddTool("Loader", -32768, -32768)
+            comp:AddTool("Merge", -32768, -32768)
+            LDR.Clip = GetLoaderClip(tool)
         else
-           LDR = comp.Loader({Clip = GetLoaderClip(tool)})
+            LDR = comp.Loader({Clip = GetLoaderClip(tool)})
         end
 
         -- Force an initial (invalid) EXR channel name value into the OpenEXRFormat setting
@@ -451,9 +453,9 @@ function ProcessMultipart(tool)
 
 	for i, exr_part in pairs(partsTable) do
 		tool.Clip1.OpenEXRFormat.Part = exr_part
-		-- if you set useChannelName, the loaders will be named by the first channel found, not by the part name
-		-- since sometimes the channel name is different from the part name.
-		if useChannelName == 1.0 then
+		-- if you set mpUseChannelName, the loaders will be named by the first channel name, not by the part name,
+		-- since sometimes the channel name is more meaningful.
+		if mpUseChannelName then
 			channelName = tool.Clip1.OpenEXRFormat.RedName:GetAttrs().INPIDT_ComboControl_ID[2]
 			if not CHANNELS_TO_SKIP[channelName:lower()] then
 				channelName = string.match(channelName, '(.+)%..+$') or Z
@@ -463,9 +465,11 @@ function ProcessMultipart(tool)
 		end
 		print('splitting channel: ', channelName)
 		if channelName then
-		   if mergeall == 1.0 then
-			   loader = comp:AddTool("Loader", -32768, -32768)
-			   loader.Clip = GetLoaderClip(tool)
+            if mergeAll then
+                print("Merging Loaders...")
+                loader = comp:AddTool("Loader", -32768, -32768)
+                -- comp:AddTool("Merge", -32768, -32768)
+                loader.Clip = GetLoaderClip(tool)
 		   else
 			   loader = comp.Loader({Clip = GetLoaderClip(tool)})
 		   end
@@ -527,7 +531,7 @@ function MoveLoaders(org_x_pos, org_y_pos, loaders)
     count = 1
     -- Work out the node spacing offsets in the flow area
     local y_pos_add = 0
-    if tiles == "true" then
+    if tiles then
         if fu.Version < 16 then
             y_pos_add = 3
         else
@@ -553,11 +557,10 @@ end
 -- Main UI
 ------------------------------------------------------------------------
 function showUI()
+    -- Keep track of exec time
+    local t_start = os.time()
     -- Read the updated preferences
     mergeCheck = true
-    if PLATFORM == 'Windows' then
-        mergeCheck = false
-    end
     VERBOSE = getPreferenceData("SplitEXR.verbose", 0, false)
     splitAllSelectedNodes = getPreferenceData("SplitEXR.splitAllSelectedNodes", 1, VERBOSE)
     splitDirection = getPreferenceData("SplitEXR.splitDirection", 0, VERBOSE)
@@ -569,8 +572,8 @@ function showUI()
     end
     tiles = getPreferenceData("SplitEXR.tiles", forceTile, VERBOSE)
     grid = getPreferenceData("SplitEXR.grid", 0, VERBOSE)
-    mergeall = getPreferenceData('SplitEXR.mergeall', 0, VERBOSE)
-    useChannelName = getPreferenceData('SplitEXR.useChannelName', 0, VERBOSE)
+    mergeAll = getPreferenceData('SplitEXR.mergeAll', 0, VERBOSE)
+    mpUseChannelName = getPreferenceData('SplitEXR.mpUseChannelName', 0, VERBOSE)
 
     win = disp:AddWindow({
         ID = "SplitEXR",
@@ -642,8 +645,8 @@ function showUI()
                 ui:HGroup{
                     ui:CheckBox{
                         ID = "showTiles",
-                        Text = "Show Source Tiles",
-                        Checked = showTiles or false,
+                        Text = "Source Tiles Enabled",
+                        Checked = tiles or false,
                     },
                     ui:CheckBox{
                         ID = "mergeAll",
@@ -677,9 +680,6 @@ function showUI()
 
     itm = win:GetItems()
 
-
-
-
     itm.layoutComboBox:AddItem('Vertically')
     itm.layoutComboBox:AddItem('Horizontally')
     local layoutIndex = splitDirection or 0
@@ -688,41 +688,46 @@ function showUI()
     itm.GridSlider.Value = grid or 0
     itm.GridSlider.Minimum = 0
     itm.GridSlider.Maximum = 25
+    -- set step by clicking on the slider
+    itm.GridSlider:SetPageStep(3)
 
     itm.GridLineEdit.Text = tostring(itm.GridSlider:GetSliderPosition())
-
-    function win.On.layoutComboBox.CurrentIndexChanged(ev)
-        setPreferenceData("SplitEXR.splitDirection", itm.layoutComboBox:GetCurrentIndex(), VERBOSE)
-    end
+    itm.GridLineEdit:SetDragEnabled(true)
 
     -- Read the Placement, Grid Placement, and Source Tiles settings from the UI
-    local splitDirection = itm.layoutComboBox:GetCurrentIndex()
-    local grid = itm.GridSlider.Value
-    local verbose = itm.verboseCheckBox.Checked
-    local splitAllSelectedNodes = itm.splitAllSelectedNodes.Checked
-    local mpUseChannelName = itm.mpUseChannelName.Checked
-    local skipAlpha = itm.skipAlpha.Checked
-    local tiles = itm.showTiles.Checked
-    local mergeAll = itm.mergeAll.Checked
-    local mpUseChannelName = itm.mpUseChannelName.Checked
+    splitDirection = itm.layoutComboBox:GetCurrentIndex()
+    grid = itm.GridSlider.Value
+    VERBOSE = itm.verboseCheckBox.Checked
+    splitAllSelectedNodes = itm.splitAllSelectedNodes.Checked
+    skipAlpha = itm.skipAlpha.Checked
+    tiles = itm.showTiles.Checked
+    mergeAll = itm.mergeAll.Checked
+    mpUseChannelName = itm.mpUseChannelName.Checked
+    
 
     function win.On.splitAllSelectedNodes.Clicked(ev)
-        setPreferenceData("SplitEXR.splitAllSelectedNodes", itm.splitAllSelectedNodes.Checked, VERBOSE)
+        splitAllSelectedNodes = itm.splitAllSelectedNodes.Checked
+        setPreferenceData("SplitEXR.splitAllSelectedNodes", splitAllSelectedNodes, VERBOSE)
     end
     function win.On.skipAlpha.Clicked(ev)
-        setPreferenceData("SplitEXR.skipAlpha", itm.skipAlpha.Checked, VERBOSE)
+        skipAlpha = itm.skipAlpha.Checked
+        setPreferenceData("SplitEXR.skipAlpha", skipAlpha, VERBOSE)
     end
     function win.On.mpUseChannelName.Clicked(ev)
-        setPreferenceData("SplitEXR.mpUseChannelName", itm.mpUseChannelName.Checked, VERBOSE)
+        mpUseChannelName = itm.mpUseChannelName.Checked
+        setPreferenceData("SplitEXR.mpUseChannelName", mpUseChannelName, VERBOSE)
     end
-    function win.On.tiles.Clicked(ev)
-        setPreferenceData("SplitEXR.tiles", itm.tiles.Checked, VERBOSE)
+    function win.On.showTiles.Clicked(ev)
+        tiles = itm.showTiles.Checked
+        setPreferenceData("SplitEXR.tiles", tiles, VERBOSE)
     end
     function win.On.verboseCheckBox.Clicked(ev)
+        VERBOSE = itm.verboseCheckBox.Checked
         setPreferenceData("SplitEXR.verbose", itm.verboseCheckBox.Checked, VERBOSE)
     end
     function win.On.mergeAll.Clicked(ev)
-        setPreferenceData("SplitEXR.mergeAll", itm.mergeAll.Checked, VERBOSE)
+        mergeAll = itm.mergeAll.Checked
+        setPreferenceData("SplitEXR.mergeAll", mergeAll, VERBOSE)
     end
     -- Reset slider with ALT pressed
     function win.On.GridSlider.SliderPressed(ev)
@@ -731,12 +736,22 @@ function showUI()
             itm.GridSlider.Value = 0
         end
     end
-
+    function win.On.layoutComboBox.CurrentIndexChanged(ev)
+        splitDirection = itm.layoutComboBox:GetCurrentIndex()
+        setPreferenceData("SplitEXR.splitDirection", splitDirection, VERBOSE)
+    end
     function win.On.GridLineEdit.ReturnPressed(ev)
-        itm.GridSlider.Value = tonumber(itm.GridLineEdit.Text)
+        num = tonumber(itm.GridLineEdit.Text)
+        print(num)
+        if num == nil then
+            dump("not a number!")
+            return
+        end
+        itm.GridSlider.Value = tonumber(num)
     end
 
     function win.On.GridSlider.ValueChanged(ev)
+        grid = itm.GridSlider.Value
         itm.GridLineEdit.Text = tostring(ev.Value)
         logDebug('Slider Value: ' .. tostring(ev.Value), VERBOSE)
         setPreferenceData("SplitEXR.grid", itm.GridSlider.Value, VERBOSE)
@@ -788,7 +803,11 @@ function showUI()
     win:Show()
     disp:RunLoop()
     win:Hide()
+    
+    -- Print estimated time of execution in seconds
+    print(string.format("[Time run] %.2f s", os.difftime(os.time(), t_start)))
 
+    print("[Done]")
 end
 
 
@@ -805,7 +824,6 @@ function main()
 	end
     comp = fusion:GetCurrentComp()
 
-	print("\n")
 	print(string.format("[Split EXR] %s", VERSION))
 	print(string.format("[Created By] %s", AUTHOR))
 	print(string.format("[With Contributions From] %s", table.concat(CONTRIBUTORS, ", ")))
@@ -824,13 +842,7 @@ end
 -------------------------------------------------------------------------------
 -- Main
 -------------------------------------------------------------------------------
--- Keep track of exec time
-local t_start = os.time()
+
 
 -- Run main
 main()
-
--- Print estimated time of execution in seconds
-print(string.format("[Time run] %.2f s", os.difftime(os.time(), t_start)))
-
-print("[Done]")
