@@ -307,7 +307,6 @@ function ProcessMultichannel(tool)
         if mergeAll then
             print("Merging Loaders...")
             LDR = comp:AddTool("Loader", -32768, -32768)
-            comp:AddTool("Merge", -32768, -32768)
             LDR.Clip = GetLoaderClip(tool)
         else
             LDR = comp.Loader({Clip = GetLoaderClip(tool)})
@@ -466,9 +465,8 @@ function ProcessMultipart(tool)
 		print('splitting channel: ', channelName)
 		if channelName then
             if mergeAll then
-                print("Merging Loaders...")
+                logDebug("Merging Loaders...", VERBOSE)
                 loader = comp:AddTool("Loader", -32768, -32768)
-                -- comp:AddTool("Merge", -32768, -32768)
                 loader.Clip = GetLoaderClip(tool)
 		   else
 			   loader = comp.Loader({Clip = GetLoaderClip(tool)})
