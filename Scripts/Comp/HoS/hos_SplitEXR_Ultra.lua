@@ -753,8 +753,10 @@ function showUI()
         mergeAll = itm.mergeAll.Checked
         setPreferenceData("SplitEXR.mergeAll", mergeAll, VERBOSE)
         if mergeAll then
-            itm.GridSlider.Value = 0
-            itm.GridLineEdit.Text = "0"
+            grid = 0
+            itm.GridSlider.Value = grid
+            itm.GridLineEdit.Text = tostring(grid)
+            setPreferenceData("SplitEXR.grid", grid, VERBOSE)
         end
     end
     -- Reset slider with ALT pressed
@@ -781,7 +783,9 @@ function showUI()
     function win.On.GridSlider.ValueChanged(ev)
         grid = itm.GridSlider.Value
         if grid > 0 then
-           itm.mergeAll.Checked = false
+            mergeAll = false
+            itm.mergeAll.Checked = mergeAll
+            setPreferenceData("SplitEXR.mergeAll", mergeAll, VERBOSE)
         end
         itm.GridLineEdit.Text = tostring(ev.Value)
         logDebug('Slider Value: ' .. tostring(ev.Value), VERBOSE)
