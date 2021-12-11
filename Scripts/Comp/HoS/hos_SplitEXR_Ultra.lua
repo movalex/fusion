@@ -281,6 +281,14 @@ function GetLoaderClip(tool)
     return loader_clip
 end
 
+function GetTilesOffset()
+    if fu.Version < 16 then
+        return 3
+    else
+        return 2
+    end
+end
+
 function ProcessMultichannel(tool)
     local loaderChannels = GetLoaderChannels(tool)
 
@@ -296,6 +304,7 @@ function ProcessMultichannel(tool)
     -- logDump(channelData, VERBOSE)
 
     loaders_list = {}
+    mergesList = {}
 	
 	comp:Lock()
 	comp:StartUndo('SplitEXR MultiChannel')
@@ -304,12 +313,14 @@ function ProcessMultichannel(tool)
     for prefix, channels in pairs(channelData) do
         -- Debug print the loader list
         logDebug("[EXR Check 5] Loader List " .. prefix, VERBOSE)
+        LDR = comp.Loader({Clip = GetLoaderClip(tool)})
+        flow = comp.CurrentFrame.FlowView
+        local x_pos, y_pos = flow:GetPos(LDR)
         if mergeAll then
-            print("Merging Loaders...")
-            LDR = comp:AddTool("Loader", -32768, -32768)
-            LDR.Clip = GetLoaderClip(tool)
-        else
-            LDR = comp.Loader({Clip = GetLoaderClip(tool)})
+            logDebug("Merging Loaders...", VERBOSE)
+            MRG = comp:AddTool("Merge", -32768, -32768)
+            MRG:ConnectInput("Foreground", LDR)
+            table.insert(mergesList, MRG)
         end
 
         -- Force an initial (invalid) EXR channel name value into the OpenEXRFormat setting
@@ -438,9 +449,14 @@ function ProcessMultichannel(tool)
     print('total loaders created: ' .. tostring(#loaders_list))
 
 	MoveLoaders(org_x_pos, org_y_pos, loaders_list)
-			
+    if mergeAll then
+        MoveLoaders(org_x_pos + (1 - splitDirection),
+                    org_y_pos + splitDirection * GetTilesOffset(), mergesList)
+    end
+
 	comp:Unlock()
-	comp:EndUndo()	
+	comp:EndUndo()
+    comp:SetActiveTool(tool)
 end
 
 function ProcessMultipart(tool)
@@ -448,8 +464,8 @@ function ProcessMultipart(tool)
 	comp:StartUndo('SplitEXR MultiPart')
 	print('splitting multipart file')
 	local loaders_list = {}
+    local mergesList = {}
 	partsTable = tool.Clip1.OpenEXRFormat.Part:GetAttrs().INPIDT_ComboControl_ID
-
 	for i, exr_part in pairs(partsTable) do
 		tool.Clip1.OpenEXRFormat.Part = exr_part
 		-- if you set mpUseChannelName, the loaders will be named by the first channel name, not by the part name,
@@ -462,27 +478,38 @@ function ProcessMultipart(tool)
 		else
 			channelName = exr_part
 		end
-		print('splitting channel: ', channelName)
-		if channelName then
+		logDebug('splitting channel: '.. channelName, VERBOSE)
+
+        if channelName then
+            local LDR = comp.Loader({Clip = GetLoaderClip(tool)})
             if mergeAll then
+                local x_pos, y_pos = flow:GetPos(LDR)
                 logDebug("Merging Loaders...", VERBOSE)
-                loader = comp:AddTool("Loader", -32768, -32768)
-                loader.Clip = GetLoaderClip(tool)
-		   else
-			   loader = comp.Loader({Clip = GetLoaderClip(tool)})
-		   end
-		   loader:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = channelName})
-		   loader.Clip1.OpenEXRFormat.Part = exr_part
-		   loaders_list[i] = loader
+                MRG = comp:AddTool("Merge", -32768, -32768)
+                MRG:ConnectInput("Foreground", LDR)
+                table.insert(mergesList, MRG)
+            end
+
+            LDR:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = channelName})
+            LDR.Clip1.OpenEXRFormat.Part = exr_part
+            loaders_list[i] = LDR
 		end
 	end
-	comp:Unlock()
 	if #loaders_list > 0 then
 		print('total loaders created: ' .. tostring(#loaders_list))
 		MoveLoaders(org_x_pos, org_y_pos, loaders_list)
+        tilesOffset = 1
+        if tiles then
+            tilesOffset = 2
+        end
+        if mergeAll then
+            MoveLoaders(org_x_pos + (1 - splitDirection),
+                        org_y_pos + splitDirection * GetTilesOffset(), mergesList)
+        end
 	end
+    comp:Unlock()
 	comp:EndUndo()
-	return
+    comp:SetActiveTool(tool)
 end
 
 function getLoader(verbose, tool)
@@ -497,7 +524,8 @@ function getLoader(verbose, tool)
 		logError("Selected tool is not a Loader")
 		return
 	end
-	-- If the Skip Importing Alpha Channels checkbox was enabled then set the alpha channel to "None" on the orignal Loader node
+	-- If the Skip Importing Alpha Channels checkbox was enabled
+    -- then set the alpha channel to "None" on the orignal Loader node
     local skipAlpha = fu:GetData("SplitEXR.skipAlpha")
 
     if skipAlpha then
@@ -516,7 +544,8 @@ function getLoader(verbose, tool)
 	logDebug("[EXR Check 2] [Loader Node Atttributes]", verbose)
 	-- logDump(attrs, verbose)
 	-- Filter out None,R,G,B and A as these are already used by the original Loader
-	-- If the Skip Importing Alpha Channels checkbox was enabled in the AskUser dialog then keep the alpha channel separate as an extra loader item
+	-- If the Skip Importing Alpha Channels checkbox was enabled in the user dialog,
+    -- then keep the alpha channel separate as an extra loader item
     if tool.Clip1.OpenEXRFormat.Part then
 		ProcessMultipart(tool)
 	else
@@ -528,15 +557,9 @@ function MoveLoaders(org_x_pos, org_y_pos, loaders)
     -- Used to add to the placement offset for the tool in the flow
     count = 1
     -- Work out the node spacing offsets in the flow area
-    local y_pos_add = 0
+    local y_pos_add = 1
     if tiles then
-        if fu.Version < 16 then
-            y_pos_add = 3
-        else
-            y_pos_add = 2
-        end
-    else
-        y_pos_add = 1
+        y_pos_add = GetTilesOffset()
     end
     for i, ldr in pairs(loaders) do
         flow:SetPos(ldr, org_x_pos + (count * splitDirection), org_y_pos + (y_pos_add * count * (1 - splitDirection)))
@@ -566,7 +589,7 @@ function showUI()
     forceTilesPref = fu:GetPrefs("Comp.FlowView.ForceSource")
     forceTile = 0
     if forceTilesPref then
-        forceTile = 1	
+        forceTile = 1
     end
     tiles = getPreferenceData("SplitEXR.tiles", forceTile, VERBOSE)
     grid = getPreferenceData("SplitEXR.grid", 0, VERBOSE)
@@ -684,6 +707,9 @@ function showUI()
     itm.layoutComboBox:SetCurrentIndex(layoutIndex)
 
     itm.GridSlider.Value = grid or 0
+    if itm.mergeAll.Checked then
+        itm.GridSlider.Value = 0
+    end
     itm.GridSlider.Minimum = 0
     itm.GridSlider.Maximum = 25
     -- set step by clicking on the slider
@@ -701,7 +727,7 @@ function showUI()
     tiles = itm.showTiles.Checked
     mergeAll = itm.mergeAll.Checked
     mpUseChannelName = itm.mpUseChannelName.Checked
-    
+
 
     function win.On.splitAllSelectedNodes.Clicked(ev)
         splitAllSelectedNodes = itm.splitAllSelectedNodes.Checked
@@ -726,6 +752,10 @@ function showUI()
     function win.On.mergeAll.Clicked(ev)
         mergeAll = itm.mergeAll.Checked
         setPreferenceData("SplitEXR.mergeAll", mergeAll, VERBOSE)
+        if mergeAll then
+            itm.GridSlider.Value = 0
+            itm.GridLineEdit.Text = "0"
+        end
     end
     -- Reset slider with ALT pressed
     function win.On.GridSlider.SliderPressed(ev)
@@ -750,6 +780,9 @@ function showUI()
 
     function win.On.GridSlider.ValueChanged(ev)
         grid = itm.GridSlider.Value
+        if grid > 0 then
+           itm.mergeAll.Checked = false
+        end
         itm.GridLineEdit.Text = tostring(ev.Value)
         logDebug('Slider Value: ' .. tostring(ev.Value), VERBOSE)
         setPreferenceData("SplitEXR.grid", itm.GridSlider.Value, VERBOSE)
@@ -781,7 +814,7 @@ function showUI()
                 return
             end
             -- Iterate through each of the selected loader nodes
-            for i, tool in pairs(toolList) do 
+            for i, tool in pairs(toolList) do
                 getLoader(verbose, tool)
             end
         end
@@ -801,7 +834,7 @@ function showUI()
     win:Show()
     disp:RunLoop()
     win:Hide()
-    
+
     -- Print estimated time of execution in seconds
     print(string.format("[Time run] %.2f s", os.difftime(os.time(), t_start)))
 
