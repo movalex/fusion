@@ -1,5 +1,5 @@
 --[[--
-Split EXR Ultra v2.4
+Split EXR Ultra v3.0
 by S.Neve / House of Secrets
 
 -------------------------------------------------------------------------------
@@ -27,6 +27,13 @@ The hos_SplitEXR script will then generate a series of Loader nodes in your comp
 -------------------------------------------------------------------------------
 RELEASE NOTES
 -------------------------------------------------------------------------------
+* v 3.0 2021-12-12 by Alexey Bogomolov <mail@abogomolov.com>
+    - Use Fusion UI Manager instead of AskUser dialogue.
+    - Run the script without closing the UI!
+    - Merge loaders now work with any OS. Merge node is created explicitly.
+        NB: Merge loaders will work correctly if the Grid Placement is set to 0
+    - Some code cleanup
+
 * v2.4 Ultra 2021-09.11 by Alexey Bogomolov <mail@abogomolov.com>
 	- add option to rename Loaders by channel name for multipart EXRs 
 		(when "Multipart uses channel Name" is enabled,
@@ -165,7 +172,6 @@ function logWarning(message)
 	print(_log("WARNING", message))
 end
 
-
 -------------------------------------------------------------------------------
 -- Read a fusion specific preference value. If nothing exists set and return a default value
 -- Example: splitDirection = getPreferenceData("hos_SplitEXR.splitDirection", 1, true)
@@ -204,8 +210,6 @@ function getPreferenceData(pref, defaultValue, debugPrint)
 end
 
 
-
-
 -------------------------------------------------------------------------------
 -- Set a fusion specific preference value
 -- Example: setPreferenceData("hos_SplitEXR.splitDirection", 1, true)
@@ -224,9 +228,6 @@ function setPreferenceData(pref, value, debugPrint)
 	end
 end
 
------------------------------------------------------------------------
--- Loader
-------------------------------------------------------------------------
 function GetLoaderChannels(tool)
 	-- Get all loader channel and filter out the ones to skip
 	sourceChannels = tool.Clip1.OpenEXRFormat.RedName:GetAttrs().INPIDT_ComboControl_ID
