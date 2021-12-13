@@ -285,9 +285,19 @@ end
 function GetTilesOffset()
     if fu.Version < 16 then
         return 3
-    else
-        return 2
     end
+    return 2
+end
+
+function MatchExt(file, fileType)
+	-- Get the file extension
+	local ext = string.match(tostring(file), '^.+(%..+)$')
+
+	-- Compare the results
+	if ext:lower() == tostring(fileType) then
+		return true
+    end
+    return false
 end
 
 function ProcessMultichannel(tool)
@@ -586,6 +596,7 @@ function showUI()
     VERBOSE = getPreferenceData("SplitEXR.verbose", 0, false)
     splitAllSelectedNodes = getPreferenceData("SplitEXR.splitAllSelectedNodes", 1, VERBOSE)
     splitDirection = getPreferenceData("SplitEXR.splitDirection", 0, VERBOSE)
+    chooseCreate = getPreferenceData("SplitEXR.chooseCreate", 0, VERBOSE)
     skipAlpha = getPreferenceData("SplitEXR.skipAlpha", 0, VERBOSE)
     forceTilesPref = fu:GetPrefs("Comp.FlowView.ForceSource")
     forceTile = 0
@@ -620,6 +631,17 @@ function showUI()
                 },
             },
             ui:HGroup{
+                Weight = 0,
+                ui:Label{
+                    Weight = 0.3,
+                    Text = "Create: ",
+                },
+                ui:ComboBox {
+                    Weight = 0.7,
+                    ID = 'createComboBox',
+                    Value = tonumber(chooseCreate)
+                },
+            },            ui:HGroup{
                 Weight = 0,
                 ui:Label{
                     Weight = 0.3,
@@ -704,8 +726,11 @@ function showUI()
 
     itm.layoutComboBox:AddItem('Vertically')
     itm.layoutComboBox:AddItem('Horizontally')
-    local layoutIndex = splitDirection or 0
     itm.layoutComboBox:SetCurrentIndex(layoutIndex)
+
+    itm.createComboBox.AddItem('Loaders')
+    itm.createComboBox.AddItem('ReadEXR Fuses')
+    itm.createComboBox:SetCurrentIndex(chooseCreate)
 
     itm.GridSlider.Value = grid or 0
     if itm.mergeAll.Checked then
