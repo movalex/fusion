@@ -140,7 +140,7 @@ comp = fu:GetCurrentComp()
 
 local ui = fu.UIManager
 local disp = bmd.UIDispatcher(ui)
-local width, height = 530,200
+local width, height = 530,230
 
 ------------------------------------------------------------------------
 -- logging
@@ -596,7 +596,7 @@ function showUI()
     VERBOSE = getPreferenceData("SplitEXR.verbose", 0, false)
     splitAllSelectedNodes = getPreferenceData("SplitEXR.splitAllSelectedNodes", 1, VERBOSE)
     splitDirection = getPreferenceData("SplitEXR.splitDirection", 0, VERBOSE)
-    chooseCreate = getPreferenceData("SplitEXR.chooseCreate", 0, VERBOSE)
+    createComboBox = getPreferenceData("SplitEXR.createComboBox", 0, VERBOSE)
     skipAlpha = getPreferenceData("SplitEXR.skipAlpha", 0, VERBOSE)
     forceTilesPref = fu:GetPrefs("Comp.FlowView.ForceSource")
     forceTile = 0
@@ -639,7 +639,7 @@ function showUI()
                 ui:ComboBox {
                     Weight = 0.7,
                     ID = 'createComboBox',
-                    Value = tonumber(chooseCreate)
+                    Value = tonumber(createComboBox)
                 },
             },            ui:HGroup{
                 Weight = 0,
@@ -728,9 +728,9 @@ function showUI()
     itm.layoutComboBox:AddItem('Horizontally')
     itm.layoutComboBox:SetCurrentIndex(layoutIndex)
 
-    itm.createComboBox.AddItem('Loaders')
-    itm.createComboBox.AddItem('ReadEXR Fuses')
-    itm.createComboBox:SetCurrentIndex(chooseCreate)
+    itm.createComboBox:AddItem('Loaders')
+    itm.createComboBox:AddItem('ReadEXR Fuses')
+    itm.createComboBox:SetCurrentIndex(createComboBox)
 
     itm.GridSlider.Value = grid or 0
     if itm.mergeAll.Checked then
@@ -785,17 +785,25 @@ function showUI()
             setPreferenceData("SplitEXR.grid", grid, VERBOSE)
         end
     end
-    -- Reset slider with ALT pressed
+
     function win.On.GridSlider.SliderPressed(ev)
+        -- Reset slider with ALT pressed
         if ev.modifiers.AltModifier == true then
             itm.GridLineEdit.Text = "0"
             itm.GridSlider.Value = 0
         end
     end
+
+    function win.On.createComboBox.CurrentIndexChanged(ev)
+        createComboBox = itm.createComboBox:GetCurrentIndex()
+        setPreferenceData("SplitEXR.createComboBox", createComboBox, VERBOSE)
+    end
+
     function win.On.layoutComboBox.CurrentIndexChanged(ev)
         splitDirection = itm.layoutComboBox:GetCurrentIndex()
         setPreferenceData("SplitEXR.splitDirection", splitDirection, VERBOSE)
     end
+
     function win.On.GridLineEdit.ReturnPressed(ev)
         num = tonumber(itm.GridLineEdit.Text)
         print(num)
