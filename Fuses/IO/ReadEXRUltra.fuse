@@ -230,11 +230,24 @@ function Create()
 		ICD_Width = 0.35,
 		ICS_Name = 'Browse',
 		BTNCS_Execute = [[
-if not tool then
-	tool = comp.ActiveTool
-end
-
-tool.Filename = fu:RequestFile()
+        --begin=lua--
+    if not tool then
+        tool = comp.ActiveTool
+    end
+    if comp:GetAttrs("COMPS_FileName") == "" then
+        print("Save the comp!")
+        comp:SaveAs()
+        return
+    end
+    compPath = comp:GetAttrs("COMPS_FileName")
+    parse = bmd.parseFilename(compPath)
+    tool.Filename = fu:RequestFile(parse.Path, "", 
+                    {FReqB_SeqGather = true,
+                    -- FReqS_SortField = "Size",
+                    -- FReqB_SortAscending = false,
+                     FReqS_Filter = "Open EXR Files (*.exr)|*.exr",
+                     FReqS_Title = "Choose EXR file. Press enter to filter by extension"})
+--end=lua--
 ]],
 		ICS_ControlPage = 'File',
 		})
@@ -535,7 +548,41 @@ function NotifyChanged(inp, param, time)
 		end
 	end
 end	
-   
+
+------------------------------------------------------------------------
+-- logging
+------------------------------------------------------------------------
+
+function _log(mode, message)
+	return string.format("[%s] %s", mode, message)
+end
+
+function logError(message)
+	print(_log("ERROR", message))
+end
+
+function logDebug(message, state)
+	if state == 1 or state == true then
+		-- Only print the logDebug output when the debugging "state" is enabled
+		print(_log("DEBUG", message))
+	end
+end
+
+function logDump(variable, state)
+	if state == 1 or state == true then
+		-- Only print the logDump output when the debugging "state" is enabled
+		dump(variable)
+	end
+end
+
+function logWarning(message)
+	print(_log("WARNING", message))
+end   
+
+------------------------------------------------------------------------
+-- Process
+------------------------------------------------------------------------
+
 function Process(req)
 
 	-- Get default frame attributes from UI
@@ -606,7 +653,7 @@ function Process(req)
 		processFilename = self.Comp:MapPath(processFilename)	--https://www.steakunderwater.com/VFXPedia/96.0.243.189/index2676.html?title=Eyeon:Script/Reference/Applications/Fusion/Classes/Composition/MapPath
 	end	
 	
---	print(processFilename)
+    print("process filename: ".. processFilename)
 	
 	-- Process the tokens in the filename field
 	--local filename = ParseTokens(srcFilename, 'Filename', version, uuid, shell1, shell2, shell3, shell4, currentFrame)
@@ -624,12 +671,10 @@ function Process(req)
 	local img
 	local err = {}
  
---	print (filename)
-   
 	if bmd.fileexists(filename) then
+        print("Found exr file: ".. filename)
 		-- Create a pointer to the EXRIO library
-		local exr = EXRIO()
-	   
+		local exr = EXRIO() 
 		-- Create a context for EXRIO operations. Since we already
 		-- have a dynamic filename, we set the second argument to
 		-- -1. The argument can be set to the current frame number
@@ -753,10 +798,11 @@ end
 
 -- Process the tokens in the filename field
 -- Example: local filename = ParseTokens('Comp:/${COMP}_${NODE}.0000.exr', 'Filename', '', '', '', '', self.Comp.CurrentTime)
+
 function ParseTokens(file, useCase, version, uuid, shell1, shell2, shell3, shell4, currentFrame)
 	-- Disable console logging output unless debug testing
-	local verbose = false
 	-- local verbose = true
+    local verbose = true
 	
 	-- List the parse arguments
 	if verbose == 1 or verbose == true then
@@ -772,6 +818,7 @@ function ParseTokens(file, useCase, version, uuid, shell1, shell2, shell3, shell
 	
 	-- The filename string to parse
 	local filename = file
+    print("[ParseTokens] filename: " .. self.Comp:MapPath(filename))
 	
 	-- Add the platform specific folder slash character
 	local osSeparator = package.config:sub(1,1)
@@ -796,6 +843,8 @@ function ParseTokens(file, useCase, version, uuid, shell1, shell2, shell3, shell
 	-- req.Time is the same as comp.CurrentTime
 	-- local currentFrame = self.Comp.CurrentTime
 	local startFrame = self.Comp.GlobalStart
+
+    print("Start Frame: ".. startFrame)
 	local endFrame = self.Comp.GlobalEnd
 	local duration = self.Comp.GlobalEnd - self.Comp.GlobalStart
 	
@@ -1023,6 +1072,10 @@ end
 ------------------------------------------------------------------------------
 -- Example: frameNumber = tonumber(ParseFilename(filename).Number)
 function ParseFilename(filename)
+    if filename == "" then
+        print("No filename found!")
+        return ""
+    end
 	local seq = {}
     seq.FullPath = self.Comp:MapPath(filename)
 	string.gsub(seq.FullPath, '^(.+[/\\])(.+)', function(path, name) seq.Path = path seq.FullName = name end)
