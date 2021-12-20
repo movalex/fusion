@@ -240,7 +240,7 @@ function Create()
         return
     end
     compPath = comp:GetAttrs("COMPS_FileName")
-    parse = bmd.parseFilename(compPath)
+    parse = ParseFilename(compPath)
     tool.Filename = fu:RequestFile(parse.Path, "", 
                     {FReqB_SeqGather = true,
                     -- FReqS_SortField = "Size",
