@@ -240,8 +240,8 @@ function Create()
         return
     end
     compPath = comp:GetAttrs("COMPS_FileName")
-    parse = ParseFilename(compPath)
-    tool.Filename = fu:RequestFile(parse.Path, "", 
+    string.gsub(compPath, '^(.+[/\\])(.+)', function(path, name) parentFolder = path end)
+    tool.Filename = fu:RequestFile(parentFolder, "", 
                     {FReqB_SeqGather = true,
                     -- FReqS_SortField = "Size",
                     -- FReqB_SortAscending = false,
