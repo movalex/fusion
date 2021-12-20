@@ -1,0 +1,1102 @@
+--[[--
+ReadEXRUltra.fuse v0.20 - 2021-12-05
+By We Suck Less (C) 2021
+
+
+Version History
+----------------
+Version 0.1 by Pieter Van Houte
+- Initial Release on WSL
+
+
+2021-11-15 Version 0.11 by Andrew Hazelden
+- Added a REGS_IconID tag for a nodes view tile icon + Select Tool window icon
+- Removed the magic wand icons from each of the control pages by adding a CTID_DIB_ID tag to the self:AddControlPage() function. This will pull icon resources from the Fusion.fuskin file instead.
+- Added SpicyAcorn TextCreate node based connection support for linking to the Filename field via adding a "LINK_Main = 1," entry to the Filename field, and inserting a REGID_InputDataType = 'Text', entry to the FuRegisterClass function.
+- Moved the Edit and Reload buttons to the Settings control page.
+
+
+2021-12-05 Version 0.2 by  Andrew Hazelden
+- Added "Ultra" Label to Fuse name to avoid namespace clashes
+- Added a ReadEXRUltra atom package for inclusion in the AtomsTestLab repo:
+https://gitlab.com/AndrewHazelden/AtomTestLab/-/tree/master/Atoms
+- Prepared a DragDrop .fu file for automatically adding EXR images to the Nodes area when dragged in from a macOS/Win/Linux Desktop folder browsing view.
+
+
+
+Borrowing and building on code from:
+-------------------------------------
+
+MT_EXRLoad.fuse
+By Bryan Ray
+https://www.steakunderwater.com/wesuckless/viewtopic.php?f=6&t=4176
+
+and
+
+LifeSaver
+By Andrew Hazelden <andrew@andrewhazelden.com>
+https://www.steakunderwater.com/wesuckless/viewtopic.php?f=6&t=2357
+
+
+and 
+
+Cryptomatte by Cedric and Kristof
+https://www.steakunderwater.com/wesuckless/viewtopic.php?f=6&t=1027
+
+and
+
+VFXPedia
+https://www.steakunderwater.com/VFXPedia/96.0.243.189/index4875.html?title=Main_Page
+
+and others - will complete this section and make it nice
+
+
+
+Open Source License
+-------------------
+TBD by Pieter Van Houte
+
+
+Disclaimer
+----------
+
+This is not even alpha code. You are free to use it, but at your own peril. Come join the dev effort on We Suck Less!
+
+Tokens
+-------
+
+ReadEXRUltra supports the use of the following pre-defined token values in the Filename field.
+
+If any other value is written inside the ${} token format it will be looked up as if it was an environment variable.
+
+${VERSION} - The ReadEXRUltra node 'Version' field
+${UUID} - The ReadEXRUltra node 'UUID' field (f9fa311b-904c-ReadEXRUltra-892f-0d772887db88)
+${COMP} - The current Fusion comp name (Composition1)
+${COMPWIDTH} - The current comp default width (1920)
+${COMPHEIGHT} - The current comp default height (1080)
+${NODE} - The ReadEXRUltra node name (ReadEXRUltra)
+${FPS} - The current frame rate (24)
+${FRAME} - The current unpadded frame number (1001)
+${STARTFRAME} - The global start frame (1001)
+${ENDFRAME} - The global end frame (1144)
+${DURATION} - The global time duration (144)
+${DATE} - The date in YYYY-MM-DD format (2018-06-16)
+${TIME} - The time in HH.MM.SS format (14.59.05)
+${HOME} - The Home folder name (/Users/andrew)
+${USER} - The current user account name (andrew)
+${HOSTNAME} - The computer's host name (Pine.local)
+${SEP} - The file separator slash (/ or \)
+${PLATFORM} - The OS Platform (Mac/Windows/Linux)
+${FUHOST} - Is Fusion or Resolve the host package (Fusion/Resolve)
+${FUVERSION} - The version of Fusion is running (9.02/15)
+${SHELL1}-${SHELL4} - The Shell tokens textfield content is run in the Terminal/Command Prompt (echo Hello_World)
+
+### Supported Frame Padding Indicators ###
+
+${FRAME} - The current unpadded frame number (1001).
+
+0000 - The number you type in at the end of the filename before the file extension can be used as a frame padding indicator.
+The number of digits you add define how much padding is added.
+You can also type a number other then '0000' like '1001'
+This value will be used along side the 'Sequence Offset' value on the node when you have the [x] Saver Relative Numbering checkbox enabled.
+
+%04d - The c-code style printf integer number formating symbol can be used to define the frame padding token.
+
+#### - The number sign/hash/octothorp # character can be used to define the frame padding (0000).
+
+### Filename Examples ###
+
+Filename Token Example 1:
+Comp:/${COMP}/${COMP}_${NODE}_${VERSION}.0000.exr
+
+This would result in a rendered EXR image filename like:
+/Volumes/VFX/MultiChannel/MultiChannel_ReadEXRUltra1_v001.0000.exr
+
+
+Filename Token Example 2:
+Comp:/${COMP}/${COMP}_${NODE}.%06d.exr
+
+This would result in a rendered EXR image filename like:
+/Volumes/VFX/MultiChannel/MultiChannel_ReadEXRUltra1.000000.exr
+
+
+Filename Token Example 3:
+${HOME}/Desktop/${COMP}/${COMP}_${NODE}_Frames_[${STARTFRAME}-${ENDFRAME}]_Res_${COMPWIDTH}x${COMPHEIGHT}@${FPS}fps.0000.exr
+
+This would result in a rendered EXR image filename like:
+/Volumes/VFX/MultiChannel/MultiChannel_ReadEXRUltra1_Frames[1001-1004]_1920x800@24.0000.exr
+--]]--
+ 
+FuRegisterClass('ReadEXRUltra', CT_Tool, {
+	REGS_Name = 'ReadEXRUltra',
+	REGS_Category = 'I/O',
+	REGS_OpIconString = 'rEXR',
+	REGS_OpDescription = 'A scriptable EXR Loader',
+	REGS_Company = 'Pieter Van Houte',
+	REGS_URL = 'http://www.steakunderwater.com',
+	REGS_HelpTopic = 'https://www.steakunderwater.com/wesuckless/viewtopic.php?f=6&t=4176#p39701',
+	
+	-- Node view tile icon + Select Tool window icon
+	REGS_IconID = "Icons.Tools.Icons.Loader",
+
+	REG_SupportsDoD = true,
+	
+	-- Should the current time setting be cached?
+	REG_TimeVariant = true,
+	REG_Unpredictable = true,
+	
+	REG_OpNoMask = true,
+	REG_NoBlendCtrls = true,
+	REG_NoObjMatCtrls = true,
+	REG_NoMotionBlurCtrls = true,
+	REG_NoPreCalcProcess = true,
+	
+	REG_Version = 020,
+
+	-- Should the Edit and Reload buttons be hidden?
+	REG_Fuse_NoEdit = true,
+	REG_Fuse_NoReload = true,
+
+	-- Support SpicyAcorn TextCreate node based linkage to the ReadEXRUltra filename field
+	REGID_InputDataType = 'Text',
+	})
+
+version = "ReadEXRUltra by We Suck Less - v0.20 Dec 2021"
+
+
+-- Edit/Reload ButtonControl code based upon work by Kristof Indeherberge
+edit_fuse = [[
+tool.ScriptEdit[fu.TIME_UNDEFINED] = 1
+tool.ScriptEdit[fu.TIME_UNDEFINED] = 0
+]]
+
+reload_fuse = [[
+tool.ScriptReload[fu.TIME_UNDEFINED] = 1
+tool.ScriptReload[fu.TIME_UNDEFINED] = 0
+]]
+
+
+function AddParts(p)
+	for part = 1, table.getn(p) do
+		InPart:SetAttrs({ CCS_AddString = p[part], })
+	end
+	InPart:SetAttrs({ IC_Visible = true, })
+	self:UpdateControls()
+end
+
+function AddChannels(c)
+	local defaultVal = 0
+	local numChan = table.getn(c)
+	local currenttime = self.Comp.CurrentTime
+	for exrCh = numChan, 1, -1 do -- EXR stores channels in reverse order yay
+		InRed:SetAttrs({ CCS_AddString = c[exrCh].Name, })
+		InGreen:SetAttrs({ CCS_AddString = c[exrCh].Name, })
+		InBlue:SetAttrs({ CCS_AddString = c[exrCh].Name, })
+		InAlpha:SetAttrs({ CCS_AddString = c[exrCh].Name, })
+	end
+end
+
+function Create()
+	self:RemoveControlPage("Controls")
+
+	self:AddControlPage('File', {CTID_DIB_ID  = 'Icons.Tools.Tabs.Controls'})
+
+	InFilename = self:AddInput('Filename', 'Filename', {
+		LINKID_DataType = 'Text',
+		INPID_InputControl = 'TextEditControl',
+		ICD_Width = 1,
+		TEC_Lines = 1,
+		INP_DelayDefault = true,
+		LINK_ForceSave = true,
+		-- Allow SpicyAcorn TextCreate node based connections to feed the Filename field
+		LINK_Main = 1,
+		})
+	InReadSequence = self:AddInput('Read Sequence', 'ReadSequence', {
+		LINKID_DataType = 'Number',
+		INPID_InputControl = 'CheckboxControl',
+		INP_DoNotifyChanged = true,
+		INP_External = false,
+		INP_Integer = true,
+		INP_Default = 1.0,
+		ICD_Width = 0.65,
+		LINK_ForceSave = true,
+		ICS_ControlPage = 'File',
+		})
+	InBrowse = self:AddInput('Update', 'UpdateUUID', {
+		LINKID_DataType = 'Number',
+		INPID_InputControl = 'ButtonControl',
+		INP_DoNotifyChanged = true,
+		INP_External = false,
+		ICD_Width = 0.35,
+		ICS_Name = 'Browse',
+		BTNCS_Execute = [[
+        --begin=lua--
+    if not tool then
+        tool = comp.ActiveTool
+    end
+    if comp:GetAttrs("COMPS_FileName") == "" then
+        print("Save the comp!")
+        comp:SaveAs()
+        return
+    end
+    compPath = comp:GetAttrs("COMPS_FileName")
+    string.gsub(compPath, '^(.+[/\\])(.+)', function(path, name) parentFolder = path end)
+    tool.Filename = fu:RequestFile(parentFolder, "", 
+                    {FReqB_SeqGather = true,
+                    -- FReqS_SortField = "Size",
+                    -- FReqB_SortAscending = false,
+                     FReqS_Filter = "Open EXR Files (*.exr)|*.exr",
+                     FReqS_Title = "Choose EXR file. Press enter to filter by extension"})
+--end=lua--
+]],
+		ICS_ControlPage = 'File',
+		})
+	InAllowRelativePathMaps = self:AddInput('Allow Relative Path Maps', 'AllowRelativePathMaps', {
+		LINKID_DataType = 'Number',
+		INPID_InputControl = 'CheckboxControl',
+		INP_DoNotifyChanged = true,
+		INP_External = false,
+		INP_Integer = true,
+		INP_Default = 1.0,
+		ICD_Width = 1.0,
+		LINK_ForceSave = true,
+		ICS_ControlPage = 'File',
+		})
+	InOffset = self:AddInput(("Offset"), "Offset", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_MaxScale = 50.0,
+		INP_Default = 0,
+		INP_Integer = true,
+		})	
+	InLabel = self:AddInput(version, "version", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "LabelControl",
+		INP_External = false,
+		INP_Passive = true,
+		})
+	
+	-- self:AddControlPage('Channels')
+	self:AddControlPage('Channels', {CTID_DIB_ID  = 'Icons.Tools.Tabs.Channels'})
+	
+	InPart = self:AddInput('Part', 'Part', {
+		INPID_InputControl = 'ComboControl',
+		INP_DoNotifyChanged = true,
+		INP_External = false,
+		INP_Default = 0,
+		INP_Integer = true,
+		IC_Visible = false,
+		ICD_Width = 1,
+		CC_LabelPosition = 'Horizontal',
+		LINK_ForceSave = true,
+		ICS_ControlPage = 'Channels',
+		})
+	-- Channels nested control
+	InChannelsNest = self:AddInput('Channels', 'ChannelsNest', {
+		LINKID_AddBeforeID = 'AddOutput',
+		INPID_InputControl = 'LabelControl',
+		LINKS_Name = 'EXR Channels',
+		INP_DoNotifyChanged = true,
+		INP_External = false,
+		LBLC_DropDownButton = true,
+		LBLC_NumInputs = 44,
+		INP_Default = 0,
+		IC_Visible = true,
+		})	
+	InRedEnable = self:AddInput('Red', 'RedEnable', {
+		LINKID_AddBeforeID = 'AddOutput',
+		LINKID_DataType = 'Number',
+		INPID_InputControl = 'CheckboxControl',
+		INP_DoNotifyChanged = true,
+		INP_External = false,
+		INP_Integer = true,
+		INP_Default = 1,
+		ICD_Width = 0.1,
+		IC_Visible = true,
+		LINK_ForceSave = true,
+		})
+	InRed = self:AddInput('Red', 'RedName', {
+		LINKID_AddBeforeID = 'AddOutput',
+		LINKID_DataType = 'Number',
+		INPID_InputControl = 'ComboControl',
+		ICD_Width = 0.9,
+		INP_External = false,
+		IC_Visible = true,
+		INP_Passive = true,
+		})
+	InGreenEnable = self:AddInput('Green', 'GreenEnable', {
+		LINKID_AddBeforeID = 'AddOutput',
+		LINKID_DataType = 'Number',
+		INPID_InputControl = 'CheckboxControl',
+		INP_DoNotifyChanged = true,
+		INP_External = false,
+		INP_Integer = true,
+		INP_Default = 1,
+		ICD_Width = 0.1,
+		IC_Visible = true,
+		LINK_ForceSave = true,
+		})
+	InGreen = self:AddInput('Green', 'GreenName', {
+		LINKID_AddBeforeID = 'AddOutput',
+		LINKID_DataType = 'Number',
+		INPID_InputControl = 'ComboControl',
+		ICD_Width = 0.9,
+		INP_External = false,
+		IC_Visible = true,
+		INP_Passive = true,
+		})
+	InBlueEnable = self:AddInput('Blue', 'BlueEnable', {
+		LINKID_AddBeforeID = 'AddOutput',
+		LINKID_DataType = 'Number',
+		INPID_InputControl = 'CheckboxControl',
+		INP_DoNotifyChanged = true,
+		INP_External = false,
+		INP_Integer = true,
+		INP_Default = 1,
+		ICD_Width = 0.1,
+		IC_Visible = true,
+		LINK_ForceSave = true,
+		})
+	InBlue = self:AddInput('Blue', 'BlueName', {
+		LINKID_AddBeforeID = 'AddOutput',
+		LINKID_DataType = 'Number',
+		INPID_InputControl = 'ComboControl',
+		ICD_Width = 0.9,
+		INP_External = false,
+		IC_Visible = true,
+		INP_Passive = true,
+		})
+	InAlphaEnable = self:AddInput('Alpha', 'AlphaEnable', {
+		LINKID_AddBeforeID = 'AddOutput',
+		LINKID_DataType = 'Number',
+		INPID_InputControl = 'CheckboxControl',
+		INP_DoNotifyChanged = true,
+		INP_External = false,
+		INP_Integer = true,
+		INP_Default = 1,
+		ICD_Width = 0.1,
+		IC_Visible = true,
+		LINK_ForceSave = true,
+		})
+	InAlpha = self:AddInput('Alpha', 'AlphaName', {
+		LINKID_AddBeforeID = 'AddOutput',
+		LINKID_DataType = 'Number',
+		INPID_InputControl = 'ComboControl',
+		ICD_Width = 0.9,
+		INP_External = false,
+		IC_Visible = true,
+		INP_Passive = true,
+		})
+	
+	-- self:AddControlPage('Image')
+	self:AddControlPage('Image', {CTID_DIB_ID  = 'Icons.Tools.Tabs.Image'})
+	
+	InImageNest = self:AddInput('Image', 'ImageNest', {
+		LINKID_AddBeforeID = 'AddOutput',
+		INPID_InputControl = 'LabelControl',
+		LINKS_Name = 'Image',
+		INP_DoNotifyChanged = true,
+		INP_External = false,
+		LBLC_DropDownButton = true,
+		LBLC_NumInputs = 5,
+		INP_Default = 0,
+		IC_Visible = true,
+		})
+	InWidth = self:AddInput("Width", "Width", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = 1,
+		INP_MaxScale = 4096,
+		INP_Default = 1920,
+		INP_Integer = true,
+		})
+	InHeight = self:AddInput("Height", "Height", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = 2,
+		INP_MaxScale = 4096,
+		INP_Default = 1080,
+		INP_Integer = true,
+		})
+	InPixelAspect = self:AddInput("Pixel Aspect", "PixelAspect", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INP_DefaultX = 1.0,
+		INP_DefaultY = 1.0,
+		})
+	InUseFrameFormatSettings = self:AddInput("Use Frame Format Settings", "UseFrameFormatSettings", {
+		LINKID_DataType = 'Number',
+		INPID_InputControl = 'ButtonControl',
+		INP_External = false,
+		ICS_Name = 'Set From Comp Preferences',
+		INP_DoNotifyChanged = true,
+		})
+	InSetFromCurrentImage = self:AddInput('Set From Current Image', 'SetFromCurrentImage', {
+		LINKID_DataType = 'Number',
+		INPID_InputControl = 'ButtonControl',
+		INP_External = false,
+		ICS_Name = 'Set From Current Image',
+		BTNCS_Execute = [[
+if not tool then
+	tool = comp.ActiveTool
+end
+
+local attrs = tool:GetAttrs()
+tool.Width = attrs.TOOLI_ImageWidth
+tool.Height = attrs.TOOLI_ImageHeight
+tool.PixelAspect = {attrs.TOOLN_ImageAspectX, attrs.TOOLN_ImageAspectY}
+]],
+		})
+	InBackgroundNest = self:AddInput('Background', 'BackgroundNest', {
+		LINKID_AddBeforeID = 'AddOutput',
+		INPID_InputControl = 'LabelControl',
+		LINKS_Name = 'Background',
+		INP_DoNotifyChanged = true,
+		INP_External = false,
+		LBLC_DropDownButton = true,
+		LBLC_NumInputs = 4,
+		INP_Default = 0,
+		IC_Visible = true,
+		})
+	InBGRed = self:AddInput("Red", "BGRed", {
+		ICS_Name            = "Color",
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 0.0,
+		INP_MaxScale        = 1.0,
+		ICD_Center          = 1.0,
+		CLRC_ShowWheel      = true,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 0,
+		})
+	InBGGreen = self:AddInput("Green", "BGGreen", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 0.0,
+		INP_DoNotifyChanged = true,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 1,
+		})
+	InBGBlue = self:AddInput("Blue", "BGBlue", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 0.0,
+		INP_DoNotifyChanged = true,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 2,
+		})
+	InBGAlpha = self:AddInput("Alpha", "BGAlpha", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ColorControl",
+		INP_Default         = 0.0,
+		INP_DoNotifyChanged = true,
+		IC_ControlGroup     = 1,
+		IC_ControlID        = 3,
+		})	
+
+	-- Common page
+	self:BeginControlNest("Edit Code", "EditNest", true, {ICS_ControlPage = "Common"})
+
+		-- Edit fuse
+		ButtonEditFuse = self:AddInput("Edit Fuse", "Edit", {
+			INPID_InputControl = "ButtonControl",
+			ICS_ControlPage = "Common",
+			INP_External = false,
+			IC_Visible = true,
+			BTNCS_Execute = edit_fuse,
+			ICD_Width = 0.5,
+		})
+
+		-- Reload fuse
+		ButtonReloadFuse = self:AddInput("Reload Fuse", "Reload",{
+			INPID_InputControl = "ButtonControl",
+			ICS_ControlPage = "Common",
+			INP_External = false,
+			IC_Visible = true,
+			BTNCS_Execute = reload_fuse,
+			ICD_Width = 0.5,
+		})
+
+	self:EndControlNest()
+
+	OutImage = self:AddOutput('Output', 'Output', {
+		LINKID_DataType = 'Image',
+		LINK_Main = 1,
+		})
+
+end
+
+function NotifyChanged(inp, param, time)
+	
+end
+
+function OnAddToFlow()	-- https://www.steakunderwater.com/VFXPedia/96.0.243.189/indexc4d9.html?title=Eyeon_Talk:Script/Reference/Applications/Fuse/Fuse_Reference_Manual
+	-- select File when adding node to comp
+--	local filename = Fusion():RequestFile() -- this crashes Fusion, need to figure out how to do this...
+--	InFilename:SetAttrs({ INP_Default = filename })
+end
+
+function NotifyChanged(inp, param, time)
+	if inp == InUseFrameFormatSettings then
+		if param.Value == 1.0 then
+			local currenttime = self.Comp.CurrentTime
+			-- Get default frame attributes from Comp Preferences
+			local attrs = self.Comp:GetPrefs("Comp.FrameFormat")
+			InWidth:SetSource(Number(attrs.Width), currenttime)
+			InHeight:SetSource(Number(attrs.Height), currenttime)
+			InPixelAspect:SetSource(Point(attrs.AspectX, attrs.AspectY), currenttime)	-- https://www.steakunderwater.com/VFXPedia/96.0.243.189/index26f4.html?title=Eyeon:Script/Reference/Applications/Fuse/Classes/Input/SetSource
+		end
+	end
+end	
+
+------------------------------------------------------------------------
+-- logging
+------------------------------------------------------------------------
+
+function _log(mode, message)
+	return string.format("[%s] %s", mode, message)
+end
+
+function logError(message)
+	print(_log("ERROR", message))
+end
+
+function logDebug(message, state)
+	if state == 1 or state == true then
+		-- Only print the logDebug output when the debugging "state" is enabled
+		print(_log("DEBUG", message))
+	end
+end
+
+function logDump(variable, state)
+	if state == 1 or state == true then
+		-- Only print the logDump output when the debugging "state" is enabled
+		dump(variable)
+	end
+end
+
+function logWarning(message)
+	print(_log("WARNING", message))
+end   
+
+------------------------------------------------------------------------
+-- Process
+------------------------------------------------------------------------
+
+function Process(req)
+
+	-- Get default frame attributes from UI
+	
+	local iwidth = InWidth:GetValue(req).Value
+	local iheight = InHeight:GetValue(req).Value
+	local iaspectX = InPixelAspect:GetValue(req).X
+	local iaspectY = InPixelAspect:GetValue(req).Y
+--[[
+	local bgusefu = InUseFrameFormatSettings:GetValue(req).Value
+	if bgusefu == 1 then
+		-- Get default frame attributes from Comp Preferences
+		local attrs = self.Comp:GetPrefs("Comp.FrameFormat")
+		InWidth:SetSource(Number(attrs.Width), req.Time)
+		InHeight:SetSource(Number(attrs.Height), req.Time)
+		InPixelAspect:SetSource(Point(attrs.AspectX, attrs.AspectY), req.Time)
+	end
+--]]
+	local bgred = InBGRed:GetValue(req).Value
+	local bggreen = InBGGreen:GetValue(req).Value
+	local bgblue = InBGBlue:GetValue(req).Value
+	local bgalpha = InBGAlpha:GetValue(req).Value
+ 
+--	local fuChannels = { [CHAN_RED] = "CHAN_RED" , [CHAN_GREEN] = "CHAN_GREEN" , [CHAN_BLUE] = "CHAN_BLUE" , [CHAN_ALPHA] = "CHAN_ALPHA" , [CHAN_Z] = "CHAN_Z" , [CHAN_COVERAGE] = "CHAN_COVERAGE" , [CHAN_OBJECT] = "CHAN_OBJECT" , [CHAN_MATERIAL] = "CHAN_MATERIAL" , [CHAN_U] = "CHAN_U" , [CHAN_V] = "CHAN_V" , [CHAN_NORMALX] = "CHAN_NORMALX" , [CHAN_NORMALY] = "CHAN_NORMALY" , [CHAN_NORMALZ] = "CHAN_NORMALZ" , [CHAN_VECTORX] = "CHAN_VECTORX" , [CHAN_VECTORY] = "CHAN_VECTORY" , [CHAN_BACKVECTORX] = "CHAN_BACKVECTORX" , [CHAN_BACKVECTORY] = "CHAN_BACKVECTORY" , [CHAN_POSITIONX] = "CHAN_POSITIONX" , [CHAN_POSITIONY] = "CHAN_POSITIONY" , [CHAN_POSITIONZ] = "CHAN_POSITIONZ" , [CHAN_DISPARITYX] = "CHAN_DISPARITYX" , [CHAN_DISPARITYY] = "CHAN_DISPARITYY" }
+ 
+	local fuChannels = { [CHAN_RED] = "R" , [CHAN_GREEN] = "G" , [CHAN_BLUE] = "B" , [CHAN_ALPHA] = "A" }
+	local exrChannels = {}
+	-- dump(fuChannels)
+	-- Get inputs
+	-- Get the filename for the sequence output, also parse it into its constituent parts
+	local srcFilename = InFilename:GetValue(req).Value
+	local processFilename = srcFilename
+	
+--	print(srcFilename)
+	
+	local pf = ParseFilename(srcFilename)
+	
+	local offset = InOffset:GetValue(req).Value
+	
+	-- Current Frame Number
+	local currentFrame = req.Time - offset
+	
+	local pathmaps = InAllowRelativePathMaps:GetValue(req).Value
+	local seq = InReadSequence:GetValue(req).Value
+	
+	
+	
+	if seq == 1 then
+		if pf.Padding then
+		processFilename = pf.Path..pf.CleanName.."%"..pf.Padding.."d"..pf.Extension
+		InFilename:SetSource(Text(processFilename), req.Time)
+		end
+	elseif seq == 0 then
+		if not pf.Padding then
+			local token = '%%(%d*)[dD]'
+			while(string.match(processFilename, token))	do
+				local framePadNumber = string.match(processFilename, token)
+				local result = string.format('%0' .. tonumber(framePadNumber) .. 'd', currentFrame)
+				processFilename = string.gsub(processFilename, token, result)
+				InFilename:SetSource(Text(processFilename), req.Time)
+			end
+		end
+	end
+
+	
+	
+	if pathmaps == 1 then
+		processFilename = self.Comp:MapPath(processFilename)	--https://www.steakunderwater.com/VFXPedia/96.0.243.189/index2676.html?title=Eyeon:Script/Reference/Applications/Fusion/Classes/Composition/MapPath
+	end	
+	
+    print("process filename: ".. processFilename)
+	
+	-- Process the tokens in the filename field
+	--local filename = ParseTokens(srcFilename, 'Filename', version, uuid, shell1, shell2, shell3, shell4, currentFrame)
+	local filename = ParseTokens(processFilename, 'Filename', "", "", "", "", "", "", currentFrame)
+	-- Initialise tables for parts and channels
+	local parts = {}
+	local channels = {}
+	
+	local partnum = InPart:GetValue(req).Value + 1
+	local inred = InRed:GetValue(req).Value
+	local ingreen = InGreen:GetValue(req).Value
+	local inblue = InBlue:GetValue(req).Value
+	local inalpha = InAlpha:GetValue(req).Value
+	
+	local img
+	local err = {}
+ 
+	if bmd.fileexists(filename) then
+        print("Found exr file: ".. filename)
+		-- Create a pointer to the EXRIO library
+		local exr = EXRIO() 
+		-- Create a context for EXRIO operations. Since we already
+		-- have a dynamic filename, we set the second argument to
+		-- -1. The argument can be set to the current frame number
+		-- using req.Time if the filename handling used above
+		-- is not performed.
+		exr:ReadOpen(filename, -1)
+			   
+		if exr:ReadHeader() then
+			-- Get a list of Parts
+			parts = exr:GetPartNames()
+			channels = exr:GetChannels(partnum)
+			local channum = table.getn(channels)
+--			dump(channels)
+			for i = 1, math.min(channum, 4) do
+				exrChannels[i-1] = channels[math.min(channum, 4)-i+1].Name
+			end
+--			print("exrChannels:")
+--			dump(exrChannels)
+			
+--			for channel = table.getn(channels), 1, -1 do
+--				print(channels[channel].Name)
+--			end
+			-- if there are multiple parts, add them to the UI
+			-- same with the corresponding channels
+			if not req:IsPreCalc() then -- to avoid running this twice, need to understand better and clean all this up
+				if exr.NumParts > 1 then
+					AddParts(parts)
+				end
+				AddChannels(channels)
+			end
+--			print (parts[partnum])
+			
+
+			
+			-- Get image geometry
+			local dispw = exr:DisplayWindow(partnum)
+			local dataw = exr:DataWindow(partnum)
+			local ox, oy = dispw.left, dispw.bottom
+			local w, h = dispw.right - dispw.left, dispw.top - dispw.bottom
+		   
+			local imgw = ImgRectI(dataw)
+			imgw:Offset(-ox, -oy)
+		   
+			local imgattrs = {
+				IMG_Width = w,
+				IMG_Height = h,
+				IMG_Depth = IMDP_128bitFloat,
+				IMG_DataWindow = imgw,
+				IMG_NoData = req:IsPreCalc(),
+				IMG_YScale = 1.0/exr:PixelAspectRatio(partnum),
+			}
+		   
+			img = Image(imgattrs)
+			
+			local chanred = channum - inred
+			local changreen = channum - ingreen
+			local chanblue = channum - inblue
+			local chanalpha = channum - inalpha
+		   
+			if not req:IsPreCalc() then
+				-- Read part   
+				exr:Part(partnum)
+				-- k results in numbers starting from zero rather than the index values from the table
+				-- works for the first 4 channels (RGBA) but higher ones crash Fusion - figure this out
+				for k, v in pairs(exrChannels) do
+--					print (v.." - "..k)
+					exr:Channel(v, ANY_TYPE, 1, k, 0.0) -- this is just all kinds of weird to me right now... ?
+				end
+				
+				exr:ReadPart(partnum, { img })
+			end
+		else -- File exists, but Header not read
+			print("image failure")
+		   
+			-- Set default frame attributes from UI
+			local attrs = self.Comp:GetPrefs("Comp.FrameFormat")
+			local imgattrs = {
+				IMG_Width = iwidth,
+				IMG_Height = iheight,
+				IMG_Depth = IMDP_128bitFloat,
+				IMG_DataWindow = imgw,
+				IMG_NoData = req:IsPreCalc(),
+				IMG_YScale = iaspectX/iaspectY,
+			}
+		   
+			local p = Pixel({R=bgred, G=bggreen, B=bgblue, A=bgalpha})
+			img = Image(imgattrs)
+			img:Fill(p)
+		end
+	   
+		exr:Close()
+		err = exr:GetLastError()
+	else -- File not found.
+		print("File Not Found")
+ 
+		-- Set default frame attributes from UI
+		local attrs = self.Comp:GetPrefs("Comp.FrameFormat")
+--		dump(attrs)
+		local imgattrs = {
+			IMG_Width = iwidth,
+			IMG_Height = iheight,
+			IMG_Depth = IMDP_128bitFloat,
+			IMG_DataWindow = imgw,
+			IMG_NoData = req:IsPreCalc(),
+			IMG_YScale = iaspectX/iaspectY,
+		}
+	   
+		img = Image(imgattrs)
+		local p = Pixel({R=bgred, G=bggreen, B=bgblue, A=bgalpha})
+		img:Fill(p)
+	end
+	   
+   
+	if #err > 0 then
+		print(bmd.writestring(err))
+	end
+   
+	OutImage:Set(req, img)
+   
+end
+
+-- Process the tokens in the filename field
+-- Example: local filename = ParseTokens('Comp:/${COMP}_${NODE}.0000.exr', 'Filename', '', '', '', '', self.Comp.CurrentTime)
+
+function ParseTokens(file, useCase, version, uuid, shell1, shell2, shell3, shell4, currentFrame)
+	-- Disable console logging output unless debug testing
+	-- local verbose = true
+    local verbose = true
+	
+	-- List the parse arguments
+	if verbose == 1 or verbose == true then
+		print('\t\t[Parse ' .. tostring(useCase) .. ' Tokens]')
+		print('\t\t\t[File] "' .. tostring(file) .. '"')
+		print('\t\t\t[Version] "' .. tostring(version) .. '"')
+		print('\t\t\t[UUID] "' .. tostring(uuid) .. '"')
+		print('\t\t\t[SHELL1] "' .. tostring(shell1) .. '"')
+		print('\t\t\t[SHELL2] "' .. tostring(shell2) .. '"')
+		print('\t\t\t[SHELL3] "' .. tostring(shell3) .. '"')
+		print('\t\t\t[SHELL4] "' .. tostring(shell4) .. '"')
+	end
+	
+	-- The filename string to parse
+	local filename = file
+    print("[ParseTokens] filename: " .. self.Comp:MapPath(filename))
+	
+	-- Add the platform specific folder slash character
+	local osSeparator = package.config:sub(1,1)
+	
+	-- Find out the current Fusion host platform (Windows/Mac/Linux)
+	local platform = ''
+	if string.find(self.Comp:MapPath('Fusion:/'), 'Program Files', 1) then
+		platform = 'Windows'
+	elseif string.find(self.Comp:MapPath('Fusion:/'), 'PROGRA~1', 1) then
+		platform = 'Windows'
+	elseif string.find(self.Comp:MapPath('Fusion:/'), 'Applications', 1) then
+		platform = 'Mac'
+	else
+		platform = 'Linux'
+	end
+	
+	-- Probe the Fusion preferences for token settings
+	local frameRate = self.Comp:GetPrefs('Comp.FrameFormat.Rate')
+	local compWidth = self.Comp:GetPrefs('Comp.FrameFormat.Width')
+	local compHeight = self.Comp:GetPrefs('Comp.FrameFormat.Height')
+	
+	-- req.Time is the same as comp.CurrentTime
+	-- local currentFrame = self.Comp.CurrentTime
+	local startFrame = self.Comp.GlobalStart
+
+    print("Start Frame: ".. startFrame)
+	local endFrame = self.Comp.GlobalEnd
+	local duration = self.Comp.GlobalEnd - self.Comp.GlobalStart
+	
+	-- Date (YYYY-MM-DD) and time (HH.MM.SS)
+	local date = os.date('%Y-%m-%d')
+	local time = os.date('%H.%M.%S')
+	
+	-- Fusion version number
+	local fuVersion = bmd._VERSION
+	
+	-- Check if Resolve or Fusion is running
+	local fuHost = ''
+	local fuHostPath = self.Comp:MapPath('Fusion:/')
+	if string.lower(fuHostPath):match('resolve') then
+		fuHost = 'Resolve'
+	else
+		fuHost = 'Fusion'
+	end
+	
+	-- Home Folder
+	local home = ''
+	if platform == 'Windows' then
+		home = os.getenv('USERPROFILE')
+	else
+		-- Mac and Linux
+		home = os.getenv('HOME')
+	end
+	
+	-- Machine Hostname
+	local hostname = ''
+	if platform == 'Windows' then
+		hostname = os.getenv('COMPUTERNAME')
+	else
+		-- Mac and Linux
+		-- hostname = System('hostname', true, 'hostname')
+		hostname = System('hostname', false, 'hostname')
+	end
+	
+	-- Catch a nil hostname value and turn it into an empty '' string
+	if hostname == nil then
+		hostname = ''
+	end
+	
+	-- User Account Name
+	local user = ''
+	if platform == 'Windows' then
+		user = os.getenv('USERNAME')
+	else
+		-- Mac and Linux
+		user = os.getenv('USER')
+	end
+	
+	-- The ReadEXRUltra node name
+	local nodeName = self.Name
+	
+	-- Get the comp name like "Composition1"
+	local compName = tostring(self.Comp.Name)
+	-- Remove spaces from the file name and replace them with underscores
+	compName = string.gsub(compName, '%s+', '_')
+	-- Remove the ".comp" file extension if it is present
+	compName = string.gsub(compName, '%.comp', '')
+	-- If Resolve 15 is being used and the comp has no name then add a fallback placeholder
+	if compName == 'nil' then
+		compName = 'Composition1'
+	end
+	
+	-- Match the tokens
+	if filename and filename ~= '' then
+		-- # - Read the number sign/hash/octothorp # character for the frame padding
+		filename = string.gsub(filename, '#', '0')
+		
+		-- ${VERSION} - Read the ReadEXRUltra node version field
+		local versionString = tostring(version)
+		if versionString ~= '' and versionString ~= nil then
+			versionString = 'v' .. versionString
+		end
+		filename = string.gsub(filename, '${VERSION}', versionString)
+		
+		-- ${COMP} - Read the current Fusion comp name
+		filename = string.gsub(filename, '${COMP}', compName)
+		
+		-- ${UUID} - Read the current UUID
+		filename = string.gsub(filename, '${UUID}', uuid)
+		
+		-- ${NODE} - Read the current ReadEXRUltra node name
+		filename = string.gsub(filename, '${NODE}', nodeName)
+		
+		-- ${FPS} - Read the current frame rate
+		filename = string.gsub(filename, '${FPS}', frameRate)
+		
+		-- ${COMPWIDTH} - Read the current comp width
+		filename = string.gsub(filename, '${COMPWIDTH}', compWidth)
+		
+		-- ${COMPHEIGHT} - Read the current comp height
+		filename = string.gsub(filename, '${COMPHEIGHT}', compHeight)
+		
+		-- ${FRAME} - Read the current unpadded frame number
+		filename = string.gsub(filename, '${FRAME}', currentFrame)
+		
+		-- ${STARTFRAME} - Read the global start frame
+		filename = string.gsub(filename, '${STARTFRAME}', startFrame)
+		
+		-- ${ENDFRAME} - Read the global end frame
+		filename = string.gsub(filename, '${ENDFRAME}', endFrame)
+		
+		-- ${DURATION} - Read the global time duration
+		filename = string.gsub(filename, '${DURATION}', duration)
+		
+		-- ${FUVERSION} - Read the Fusion version number
+		filename = string.gsub(filename, '${FUVERSION}', fuVersion)
+		
+		-- ${FUHOST} - Read the Fusion/Resolve hostname
+		filename = string.gsub(filename, '${FUHOST}', fuHost)
+		
+		-- ${PLATFORM} - Read the current OS platform - Mac/Windows/Linux
+		filename = string.gsub(filename, '${PLATFORM}', platform)
+		
+		-- ${SEP} - Read the file separator slash
+		filename = string.gsub(filename, '${SEP}', osSeparator)
+		
+		-- ${HOME} - Read the home folder name
+		filename = string.gsub(filename, '${HOME}', home)
+		
+		-- ${DATE} - Read the current date in YYYY-MM-DD format (2018-06-16)
+		filename = string.gsub(filename, '${DATE}', date)
+		
+		-- ${TIME} - Read the current date in HH.MM.SS format (14.59.05)
+		filename = string.gsub(filename, '${TIME}', time)
+		
+		-- ${USER} - Read the current user account name
+		filename = string.gsub(filename, '${USER}', user)
+		
+		-- ${HOSTNAME} - Read the computer's hostname
+		filename = string.gsub(filename, '${HOSTNAME}', hostname)
+		
+		-- ${SHELL1}-${SHELL4} - Read the command prompt shell field
+		if shell1 then
+			filename = string.gsub(filename, '${SHELL1}', shell1)
+		end
+	
+		if shell2 then
+			filename = string.gsub(filename, '${SHELL2}', shell2)
+		end
+	
+		if shell3 then
+			filename = string.gsub(filename, '${SHELL3}', shell3)
+		end
+	
+		if shell4 then
+			filename = string.gsub(filename, '${SHELL4}', shell4)
+		end
+		
+		-- %04d - Read the frame padding token
+		token = '%%(%d*)[dD]'
+		while(string.match(filename, token))
+		do
+			-- Search for each of the %04d token items
+			local framePadNumber = string.match(filename, token)
+			-- Run the extracted token into the Lua environment variable lookup function
+			-- local result = string.format('%0' .. tonumber(framePadNumber) .. 'd', 0)
+			local result = string.format('%0' .. tonumber(framePadNumber) .. 'd', currentFrame)
+			if result then
+				-- The frame padding token was found
+				filename = string.gsub(filename, token, result)
+				if verbose == 1 or verbose == true then
+					print('[Frame Padding Token] for frame ' .. currentFrame .. ' .. the "' .. tostring(framePadNumber) .. '" is "' .. tostring(result) .. '"')
+				end
+			else
+				-- The environment variable wasn't found and the string is a nil
+				filename = string.gsub(filename, token, '')
+				if verbose == 1 or verbose == true then
+					print('[Frame Padding Token] A valid token was not found.')
+				end
+			end
+		end
+		
+		-- Otherwise read environment variables from the token
+		token = '%${([_%-%w]*)}'
+		while(string.match(filename, token))
+		do
+			-- Search for each of the ${} token items
+			local envVar = string.match(filename, token)
+			-- Run the extracted token into the Lua environment variable lookup function
+			local result = os.getenv(envVar)
+			if result then
+				-- The environment variable was found
+				filename = string.gsub(filename, '${' .. envVar .. '}', result)
+				if verbose == 1 or verbose == true then
+					print('[Env Var Token] "' .. tostring(envVar) .. '" is "' .. tostring(result) .. '"')
+				end
+			else
+				-- The environment variable wasn't found and the string is a nil
+				filename = string.gsub(filename, '${' .. envVar .. '}', '')
+				if verbose == 1 or verbose == true then
+					print('[Env Var Token] "' .. tostring(envVar) .. '" was not found.')
+				end
+			end
+		end
+	end
+	
+	-- List the result of the string parsing
+	if verbose == 1 or verbose == true then
+		print('\t\t\t[Parse Result] "' .. tostring(filename) .. '"\n')
+	end
+	
+	return filename
+end
+
+------------------------------------------------------------------------------
+-- ParseFilename() is from bmd.scriptlib
+--
+-- This is a great function for ripping a filepath into little bits
+-- returns a table with the following
+--
+-- FullPath : The raw, original path sent to the function
+-- Path : The path, without filename
+-- FullName : The name of the clip w\ extension
+-- Name : The name without extension
+-- CleanName: The name of the clip, without extension or sequence
+-- SNum : The original sequence string, or '' if no sequence
+-- Number : The sequence as a numeric value, or nil if no sequence
+-- Extension: The raw extension of the clip
+-- Padding : Amount of padding in the sequence, or nil if no sequence
+-- UNC : A true or false value indicating whether the path is a UNC path or not
+------------------------------------------------------------------------------
+-- Example: frameNumber = tonumber(ParseFilename(filename).Number)
+function ParseFilename(filename)
+    if filename == "" then
+        print("No filename found!")
+        return ""
+    end
+	local seq = {}
+    seq.FullPath = self.Comp:MapPath(filename)
+	string.gsub(seq.FullPath, '^(.+[/\\])(.+)', function(path, name) seq.Path = path seq.FullName = name end)
+	string.gsub(seq.FullName, '^(.+)(%..+)$', function(name, ext) seq.Name = name seq.Extension = ext end)
+   
+	if not seq.Name then -- no extension?
+		seq.Name = seq.FullName
+	end
+   
+	string.gsub(seq.Name, '^(.-)(%d+)$', function(name, SNum) seq.CleanName = name seq.SNum = SNum end)
+   
+	if seq.SNum then
+		seq.Number = tonumber(seq.SNum)
+		seq.Padding = string.len(seq.SNum)
+	else
+		seq.SNum = ''
+		seq.CleanName = seq.Name
+	end
+   
+	if seq.Extension == nil then seq.Extension = '' end
+	seq.UNC = (string.sub(seq.Path, 1, 2) == [[\\]])
+   
+	return seq
+end
