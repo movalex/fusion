@@ -237,16 +237,13 @@ function Create()
     if comp:GetAttrs("COMPS_FileName") == "" then
         print("Save the comp!")
         comp:SaveAs()
-        return
     end
     compPath = comp:GetAttrs("COMPS_FileName")
     string.gsub(compPath, '^(.+[/\\])(.+)', function(path, name) parentFolder = path end)
     tool.Filename = fu:RequestFile(parentFolder, "", 
                     {FReqB_SeqGather = true,
-                    -- FReqS_SortField = "Size",
-                    -- FReqB_SortAscending = false,
                      FReqS_Filter = "Open EXR Files (*.exr)|*.exr",
-                     FReqS_Title = "Choose EXR file. Press enter to filter by extension"})
+                     FReqS_Title = "Choose .exr file"})
 --end=lua--
 ]],
 		ICS_ControlPage = 'File',
@@ -616,7 +613,7 @@ function Process(req)
 	local srcFilename = InFilename:GetValue(req).Value
 	local processFilename = srcFilename
 	
---	print(srcFilename)
+    print("[Source File Name] " ..srcFilename)
 	
 	local pf = ParseFilename(srcFilename)
 	
@@ -626,25 +623,25 @@ function Process(req)
 	local currentFrame = req.Time - offset
 	
 	local pathmaps = InAllowRelativePathMaps:GetValue(req).Value
-	local seq = InReadSequence:GetValue(req).Value
+	local readSequence = InReadSequence:GetValue(req).Value
 	
 	
 	
-	if seq == 1 then
+	if readSequence == 1 then
 		if pf.Padding then
 		processFilename = pf.Path..pf.CleanName.."%"..pf.Padding.."d"..pf.Extension
 		InFilename:SetSource(Text(processFilename), req.Time)
 		end
-	elseif seq == 0 then
-		if not pf.Padding then
-			local token = '%%(%d*)[dD]'
-			while(string.match(processFilename, token))	do
-				local framePadNumber = string.match(processFilename, token)
-				local result = string.format('%0' .. tonumber(framePadNumber) .. 'd', currentFrame)
-				processFilename = string.gsub(processFilename, token, result)
-				InFilename:SetSource(Text(processFilename), req.Time)
-			end
-		end
+	elseif readSequence == 0 then
+        if not pf.Padding then
+            local token = '%%(%d*)[dD]'
+            while(string.match(processFilename, token))	do
+                local framePadNumber = string.match(processFilename, token)
+                local result = string.format('%0' .. tonumber(framePadNumber) .. 'd', currentFrame)
+                processFilename = string.gsub(processFilename, token, result)
+                InFilename:SetSource(Text(processFilename), req.Time)
+            end
+        end
 	end
 
 	
@@ -802,7 +799,7 @@ end
 function ParseTokens(file, useCase, version, uuid, shell1, shell2, shell3, shell4, currentFrame)
 	-- Disable console logging output unless debug testing
 	-- local verbose = true
-    local verbose = true
+    local verbose = false
 	
 	-- List the parse arguments
 	if verbose == 1 or verbose == true then
@@ -1072,11 +1069,15 @@ end
 ------------------------------------------------------------------------------
 -- Example: frameNumber = tonumber(ParseFilename(filename).Number)
 function ParseFilename(filename)
+    local seq = {}
     if filename == "" then
         print("No filename found!")
-        return ""
+        return seq
     end
-	local seq = {}
+    if not bmd.fileexists(filename) then
+        print("Wrong file name or file does not exist")
+        return seq
+    end
     seq.FullPath = self.Comp:MapPath(filename)
 	string.gsub(seq.FullPath, '^(.+[/\\])(.+)', function(path, name) seq.Path = path seq.FullName = name end)
 	string.gsub(seq.FullName, '^(.+)(%..+)$', function(name, ext) seq.Name = name seq.Extension = ext end)
