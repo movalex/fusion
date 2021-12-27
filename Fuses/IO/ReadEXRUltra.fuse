@@ -877,7 +877,9 @@ function ParseTokens(file, useCase, version, uuid, shell1, shell2, shell3, shell
 	else
 		-- Mac and Linux
 		-- hostname = System('hostname', true, 'hostname')
-		hostname = System('hostname', false, 'hostname')
+		-- hostname = System('hostname', false, 'hostname')
+        -- TODO:
+        -- query defaults read /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName
 	end
 	
 	-- Catch a nil hostname value and turn it into an empty '' string
@@ -1076,7 +1078,7 @@ function ParseFilename(filename)
     end
     if not bmd.fileexists(filename) then
         print("Wrong file name or file does not exist")
-        return seq
+        -- return seq
     end
     seq.FullPath = self.Comp:MapPath(filename)
 	string.gsub(seq.FullPath, '^(.+[/\\])(.+)', function(path, name) seq.Path = path seq.FullName = name end)
