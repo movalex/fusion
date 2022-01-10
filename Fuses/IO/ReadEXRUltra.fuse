@@ -32,6 +32,7 @@ https://gitlab.com/AndrewHazelden/AtomTestLab/-/tree/master/Atoms
 - add System() function from LifeSaver to fix macOS and Linux compatibility
 - add logging functions
 - add Calculate offset button for the cases the comp Global start is different from the sequence first frame number
+- save last opened folder to Fusion data (see fu:GetData("ReadEXR.lastFolder")
 
 Borrowing and building on code from:
 -------------------------------------
@@ -306,7 +307,7 @@ function Create()
         frameList = {}
         for i = 1, num do
             fileName = dir[i].Name
-            sNum = string.match(fileName, '(%d+).*$')
+            sNum = string.match(fileName, '(%d+)%..+$')
             table.insert(frameList, tonumber(sNum))
         end
         table.sort(frameList)
@@ -671,7 +672,7 @@ function Process(req)
 	local srcFilename = InFilename:GetValue(req).Value
 	local processFilename = srcFilename
 	
-    logDebug("[Source File Name] "..srcFilename ,VERBOSE)
+    logDebug("[Source File Name] "..srcFilename, VERBOSE)
 	
 	
 	local offset = InOffset:GetValue(req).Value
@@ -709,7 +710,7 @@ function Process(req)
 		processFilename = self.Comp:MapPath(processFilename)	--https://www.steakunderwater.com/VFXPedia/96.0.243.189/index2676.html?title=Eyeon:Script/Reference/Applications/Fusion/Classes/Composition/MapPath
 	end	
 	
-    logDebug("process filename: " .. processFilename, VERBOSE )
+    logDebug("process filename: " .. processFilename, VERBOSE)
 	
 	-- Process the tokens in the filename field
 	--local filename = ParseTokens(srcFilename, 'Filename', version, uuid, shell1, shell2, shell3, shell4, currentFrame)
@@ -825,7 +826,7 @@ function Process(req)
 		exr:Close()
 		err = exr:GetLastError()
 	else -- File not found.
-		logDebug("File Not Found", VERBOSE)
+		logDebug("File Not Found. Setting fallback image", VERBOSE)
  
 		-- Set default frame attributes from UI
 		local attrs = self.Comp:GetPrefs("Comp.FrameFormat")
