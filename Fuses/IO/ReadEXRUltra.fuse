@@ -1,6 +1,6 @@
 --[[--
-ReadEXRUltra.fuse v0.20 - 2021-12-05
-By We Suck Less (C) 2021
+ReadEXRUltra.fuse v0.31 - 2022-01-09
+By We Suck Less (C) 2022
 
 
 Version History
@@ -22,7 +22,16 @@ Version 0.1 by Pieter Van Houte
 https://gitlab.com/AndrewHazelden/AtomTestLab/-/tree/master/Atoms
 - Prepared a DragDrop .fu file for automatically adding EXR images to the Nodes area when dragged in from a macOS/Win/Linux Desktop folder browsing view.
 
+2021-12-24 Version 0.3 by Alexey Bogomolov
+- Added file type filtering
+- Added error handling, and error logging
+- Improved image sequence filename handling
+- Improved PathMap support
 
+2022-01-08 Version 0.31 by Alexey Bogomolov
+- add System() function from LifeSaver to fix macOS and Linux compatibility
+- add logging functions
+- add Calculate offset button for the cases the comp Global start is different from the sequence first frame number
 
 Borrowing and building on code from:
 -------------------------------------
@@ -151,7 +160,7 @@ FuRegisterClass('ReadEXRUltra', CT_Tool, {
 	REG_NoMotionBlurCtrls = true,
 	REG_NoPreCalcProcess = true,
 	
-	REG_Version = 020,
+	REG_Version = 031,
 
 	-- Should the Edit and Reload buttons be hidden?
 	REG_Fuse_NoEdit = true,
@@ -161,7 +170,7 @@ FuRegisterClass('ReadEXRUltra', CT_Tool, {
 	REGID_InputDataType = 'Text',
 	})
 
-version = "ReadEXRUltra by We Suck Less - v0.20 Dec 2021"
+version = "ReadEXRUltra by We Suck Less - v0.31 Jan 2022"
 
 
 -- Edit/Reload ButtonControl code based upon work by Kristof Indeherberge
@@ -222,7 +231,7 @@ function Create()
 		LINK_ForceSave = true,
 		ICS_ControlPage = 'File',
 		})
-	InBrowse = self:AddInput('Update', 'UpdateUUID', {
+	InBrowse = self:AddInput('Browse', 'BrowseFile', {
 		LINKID_DataType = 'Number',
 		INPID_InputControl = 'ButtonControl',
 		INP_DoNotifyChanged = true,
@@ -231,20 +240,24 @@ function Create()
 		ICS_Name = 'Browse',
 		BTNCS_Execute = [[
         --begin=lua--
-    if not tool then
-        tool = comp.ActiveTool
-    end
-    if comp:GetAttrs("COMPS_FileName") == "" then
-        print("Save the comp!")
-        comp:SaveAs()
-    end
-    compPath = comp:GetAttrs("COMPS_FileName")
-    string.gsub(compPath, '^(.+[/\\])(.+)', function(path, name) parentFolder = path end)
-    tool.Filename = fu:RequestFile(parentFolder, "", 
-                    {FReqB_SeqGather = true,
-                     FReqS_Filter = "Open EXR Files (*.exr)|*.exr",
-                     FReqS_Title = "Choose .exr file"})
---end=lua--
+        if not tool then
+            tool = comp.ActiveTool
+        end
+        if comp:GetAttrs("COMPS_FileName") == "" then
+            print("Save the comp!")
+            comp:SaveAs()
+        end
+        lastFolder = fu:GetData("ReadEXR.lastFolder")
+        if not lastFolder then
+            compPath = comp:GetAttrs("COMPS_FileName")
+            string.gsub(compPath, '^(.+[/\\])(.+)', function(path, name) lastFolder = path end)
+        end
+        tool.Filename = fu:RequestFile(lastFolder, "", 
+                        {FReqB_SeqGather = true,
+                         FReqS_Filter = "OpenEXR Files (*.exr)|*.exr",
+                         FReqS_Title = "Choose .exr file"})
+        fu:SetData("ReadEXR.lastFolder", ParseFilename(tool.FileName).Parent)
+        --end=lua--
 ]],
 		ICS_ControlPage = 'File',
 		})
@@ -266,6 +279,46 @@ function Create()
 		INP_Default = 0,
 		INP_Integer = true,
 		})	
+    -- calculate offset based on sorted file list
+	InUpdateMinusVersion = self:AddInput('Set Offset', 'SetOffset', {
+		LINKID_DataType = 'Number',
+		INPID_InputControl = 'ButtonControl',
+		INP_DoNotifyChanged = true,
+		INP_External = false,
+		ICD_Width = 1.0,
+		ICS_Name = 'Calculate Offset',
+		BTNCS_Execute = [[
+        --begin=lua--
+    if not tool then
+        tool = comp.ActiveTool
+    end
+	local srcFilename = tool:GetInput("Filename", fu.TIME_UNDEFINED)
+	local offset = tool:GetInput("Offset", fu.TIME_UNDEFINED)
+	local readSequence = tool:GetInput("ReadSequence", fu.TIME_UNDEFINED)
+	
+	if readSequence == 1 then
+        -- the pf will not be parsed if the readsequence is enabled, this needs fix
+        parentFolder = readdir(srcFilename).Parent
+        dir = readdir(parentFolder.."*.exr")
+        num = #dir
+        frameList = {}
+        for i = 1, num do
+            fileName = dir[i].Name
+            sNum = string.match(fileName, '(%d+).*$')
+            table.insert(frameList, tonumber(sNum))
+        end
+        table.sort(frameList)
+        dump(frameList)
+        offset = frameList[1] - comp:GetAttrs().COMPN_GlobalStart 
+
+        -- Push the updated version back into the textfield
+        tool:SetInput('Offset', -offset, fu.TIME_UNDEFINED)
+    end
+    --end=lua--
+]],
+		IC_Visible = true,
+		ICS_ControlPage = 'File',
+	})
 	InLabel = self:AddInput(version, "version", {
 		LINKID_DataType = "Text",
 		INPID_InputControl = "LabelControl",
@@ -527,6 +580,39 @@ function NotifyChanged(inp, param, time)
 	
 end
 
+local VERBOSE = true
+
+-----------------------------------------------------------------------
+-- logging
+------------------------------------------------------------------------
+
+function _log(mode, message)
+    return string.format("[%s] %s", mode, message)
+end
+
+function logError(message)
+    print(_log("ERROR", message))
+end
+
+function logDebug(message, state)
+    if state == 1 or state == true then
+        -- Only print the logDebug output when the debugging "state" is enabled
+        print(_log("DEBUG", message))
+    end
+end
+
+function logDump(variable, state)
+    if state == 1 or state == true then
+        -- Only print the logDump output when the debugging "state" is enabled
+        dump(variable)
+    end
+end
+
+function logWarning(message)
+    print(_log("WARNING", message))
+end   
+
+
 function OnAddToFlow()	-- https://www.steakunderwater.com/VFXPedia/96.0.243.189/indexc4d9.html?title=Eyeon_Talk:Script/Reference/Applications/Fuse/Fuse_Reference_Manual
 	-- select File when adding node to comp
 --	local filename = Fusion():RequestFile() -- this crashes Fusion, need to figure out how to do this...
@@ -545,36 +631,6 @@ function NotifyChanged(inp, param, time)
 		end
 	end
 end	
-
-------------------------------------------------------------------------
--- logging
-------------------------------------------------------------------------
-
-function _log(mode, message)
-	return string.format("[%s] %s", mode, message)
-end
-
-function logError(message)
-	print(_log("ERROR", message))
-end
-
-function logDebug(message, state)
-	if state == 1 or state == true then
-		-- Only print the logDebug output when the debugging "state" is enabled
-		print(_log("DEBUG", message))
-	end
-end
-
-function logDump(variable, state)
-	if state == 1 or state == true then
-		-- Only print the logDump output when the debugging "state" is enabled
-		dump(variable)
-	end
-end
-
-function logWarning(message)
-	print(_log("WARNING", message))
-end   
 
 ------------------------------------------------------------------------
 -- Process
@@ -613,28 +669,31 @@ function Process(req)
 	local srcFilename = InFilename:GetValue(req).Value
 	local processFilename = srcFilename
 	
-    print("[Source File Name] " ..srcFilename)
+    logDebug("[Source File Name] "..srcFilename ,VERBOSE)
 	
-	local pf = ParseFilename(srcFilename)
 	
 	local offset = InOffset:GetValue(req).Value
+
 	
 	-- Current Frame Number
 	local currentFrame = req.Time - offset
 	
 	local pathmaps = InAllowRelativePathMaps:GetValue(req).Value
 	local readSequence = InReadSequence:GetValue(req).Value
-	
-	
+
+    local pf = ParseFilename(srcFilename)
+    logDebug("[Parsed File dump]", VERBOSE)
+    logDump(pf, VERBOSE)
 	
 	if readSequence == 1 then
-		if pf.Padding then
-		processFilename = pf.Path..pf.CleanName.."%"..pf.Padding.."d"..pf.Extension
-		InFilename:SetSource(Text(processFilename), req.Time)
-		end
+        -- the pf will not be parsed if the readsequence is enabled, this needs fix
+        if pf.Padding then
+            processFilename = pf.Path..pf.CleanName.."%"..pf.Padding.."d"..pf.Extension
+            InFilename:SetSource(Text(processFilename), req.Time)
+        end
 	elseif readSequence == 0 then
         if not pf.Padding then
-            local token = '%%(%d*)[dD]'
+            local token = '(%%(%d*)[dD]'
             while(string.match(processFilename, token))	do
                 local framePadNumber = string.match(processFilename, token)
                 local result = string.format('%0' .. tonumber(framePadNumber) .. 'd', currentFrame)
@@ -643,18 +702,17 @@ function Process(req)
             end
         end
 	end
-
-	
 	
 	if pathmaps == 1 then
 		processFilename = self.Comp:MapPath(processFilename)	--https://www.steakunderwater.com/VFXPedia/96.0.243.189/index2676.html?title=Eyeon:Script/Reference/Applications/Fusion/Classes/Composition/MapPath
 	end	
 	
-    print("process filename: ".. processFilename)
+    logDebug("process filename: " .. processFilename, VERBOSE )
 	
 	-- Process the tokens in the filename field
 	--local filename = ParseTokens(srcFilename, 'Filename', version, uuid, shell1, shell2, shell3, shell4, currentFrame)
 	local filename = ParseTokens(processFilename, 'Filename', "", "", "", "", "", "", currentFrame)
+
 	-- Initialise tables for parts and channels
 	local parts = {}
 	local channels = {}
@@ -669,7 +727,7 @@ function Process(req)
 	local err = {}
  
 	if bmd.fileexists(filename) then
-        print("Found exr file: ".. filename)
+        logDebug("Found exr file: ".. filename, VERBOSE)
 		-- Create a pointer to the EXRIO library
 		local exr = EXRIO() 
 		-- Create a context for EXRIO operations. Since we already
@@ -688,11 +746,11 @@ function Process(req)
 			for i = 1, math.min(channum, 4) do
 				exrChannels[i-1] = channels[math.min(channum, 4)-i+1].Name
 			end
---			print("exrChannels:")
---			dump(exrChannels)
+            logDebug("EXR Channels:\n", VERBOSE)
+            logDump(exrChannels, VERBOSE)
 			
 --			for channel = table.getn(channels), 1, -1 do
---				print(channels[channel].Name)
+--				logDebug(channels[channel].Name, VERBOSE)
 --			end
 			-- if there are multiple parts, add them to the UI
 			-- same with the corresponding channels
@@ -744,7 +802,7 @@ function Process(req)
 				exr:ReadPart(partnum, { img })
 			end
 		else -- File exists, but Header not read
-			print("image failure")
+			logDebug("image failure", VERBOSE)
 		   
 			-- Set default frame attributes from UI
 			local attrs = self.Comp:GetPrefs("Comp.FrameFormat")
@@ -765,7 +823,7 @@ function Process(req)
 		exr:Close()
 		err = exr:GetLastError()
 	else -- File not found.
-		print("File Not Found")
+		logDebug("File Not Found", VERBOSE)
  
 		-- Set default frame attributes from UI
 		local attrs = self.Comp:GetPrefs("Comp.FrameFormat")
@@ -793,29 +851,76 @@ function Process(req)
    
 end
 
+
+-- Run a system command and get the result back from the terminal session
+-- Example: print(System('/usr/bin/env', true, 'SHELL1')
+function System(commandString, verbose, useCase)
+	-- Make sure the string is not nil
+	if commandString and commandString ~= '' and commandString ~= 'nil' then
+		-- Run the shell string in the command prompt with popen
+		local handler = io.popen(commandString)
+		local response = handler:read('*a')
+		
+		-- Trim off newline, and tab characters from the terminal result
+		if response and response ~= '' then
+			-- response = response:sub(1,-2)
+			response = response:gsub('\n','')
+			response = response:gsub('\t','')
+		end
+		
+		-- Show the shell output
+		if VERBOSE then
+			-- An actual result was returned by io.popen
+			print('\n')
+			logDebug('\t\t[' .. useCase .. ' Launch Command] "' .. tostring(commandString) .. '"', VERBOSE)
+			
+			-- Check the response from popen
+			if response and response ~= '' then
+				-- Trim off the final character from the terminal result
+				-- response = response:sub(1,-2)
+				response = response:gsub('\n','')
+				
+				logDebug('\t\t[Result] "' .. tostring(response) .. '"', VERBOSE)
+			else
+				-- A nil result returned by io.popen
+				logDebug('\t\t[Result] "' .. tostring(response) .. '"', VERBOSE)
+				
+				-- Turn the nil into an empty '' string
+				response = ''
+			end
+		end
+		
+		return response
+	end
+	
+	-- There was no commandString
+	-- if verbose and (verbose == 1 or verbose == true) then
+	-- 	print('\t\t[Launch Command] "' .. tostring(commandString) .. '"')
+	-- end
+	return ''
+end
+
+
 -- Process the tokens in the filename field
 -- Example: local filename = ParseTokens('Comp:/${COMP}_${NODE}.0000.exr', 'Filename', '', '', '', '', self.Comp.CurrentTime)
 
 function ParseTokens(file, useCase, version, uuid, shell1, shell2, shell3, shell4, currentFrame)
 	-- Disable console logging output unless debug testing
-	-- local verbose = true
-    local verbose = false
+	-- local VERBOSE = true
 	
 	-- List the parse arguments
-	if verbose == 1 or verbose == true then
-		print('\t\t[Parse ' .. tostring(useCase) .. ' Tokens]')
-		print('\t\t\t[File] "' .. tostring(file) .. '"')
-		print('\t\t\t[Version] "' .. tostring(version) .. '"')
-		print('\t\t\t[UUID] "' .. tostring(uuid) .. '"')
-		print('\t\t\t[SHELL1] "' .. tostring(shell1) .. '"')
-		print('\t\t\t[SHELL2] "' .. tostring(shell2) .. '"')
-		print('\t\t\t[SHELL3] "' .. tostring(shell3) .. '"')
-		print('\t\t\t[SHELL4] "' .. tostring(shell4) .. '"')
-	end
+    logDebug('\t\t[Parse ' .. tostring(useCase) .. ' Tokens]', VERBOSE)
+    logDebug('\t\t\t[File] "' .. tostring(file) .. '"', VERBOSE)
+    logDebug('\t\t\t[Version] "' .. tostring(version) .. '"', VERBOSE)
+    logDebug('\t\t\t[UUID] "' .. tostring(uuid) .. '"', VERBOSE)
+    logDebug('\t\t\t[SHELL1] "' .. tostring(shell1) .. '"', VERBOSE)
+    logDebug('\t\t\t[SHELL2] "' .. tostring(shell2) .. '"', VERBOSE)
+    logDebug('\t\t\t[SHELL3] "' .. tostring(shell3) .. '"', VERBOSE)
+    logDebug('\t\t\t[SHELL4] "' .. tostring(shell4) .. '"', VERBOSE)
 	
 	-- The filename string to parse
 	local filename = file
-    print("[ParseTokens] filename: " .. self.Comp:MapPath(filename))
+    logDebug("[ParseTokens] filename: ".. self.Comp:MapPath(filename), VERBOSE)
 	
 	-- Add the platform specific folder slash character
 	local osSeparator = package.config:sub(1,1)
@@ -841,9 +946,9 @@ function ParseTokens(file, useCase, version, uuid, shell1, shell2, shell3, shell
 	-- local currentFrame = self.Comp.CurrentTime
 	local startFrame = self.Comp.GlobalStart
 
-    print("Start Frame: ".. startFrame)
+    logDebug("Start Frame: ".. startFrame, VERBOSE)
 	local endFrame = self.Comp.GlobalEnd
-	local duration = self.Comp.GlobalEnd - self.Comp.GlobalStart
+	local duration = self.Comp.GlobalEnd - startFrame
 	
 	-- Date (YYYY-MM-DD) and time (HH.MM.SS)
 	local date = os.date('%Y-%m-%d')
@@ -876,10 +981,7 @@ function ParseTokens(file, useCase, version, uuid, shell1, shell2, shell3, shell
 		hostname = os.getenv('COMPUTERNAME')
 	else
 		-- Mac and Linux
-		-- hostname = System('hostname', true, 'hostname')
-		-- hostname = System('hostname', false, 'hostname')
-        -- TODO:
-        -- query defaults read /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName
+        hostname = System('hostname', VERBOSE, 'hostname')
 	end
 	
 	-- Catch a nil hostname value and turn it into an empty '' string
@@ -1008,15 +1110,11 @@ function ParseTokens(file, useCase, version, uuid, shell1, shell2, shell3, shell
 			if result then
 				-- The frame padding token was found
 				filename = string.gsub(filename, token, result)
-				if verbose == 1 or verbose == true then
-					print('[Frame Padding Token] for frame ' .. currentFrame .. ' .. the "' .. tostring(framePadNumber) .. '" is "' .. tostring(result) .. '"')
-				end
+					logDebug('[Frame Padding Token] for frame ' .. currentFrame .. ' .. with padding "' .. tostring(framePadNumber) .. '" is "' .. tostring(result) .. '"', VERBOSE)
 			else
 				-- The environment variable wasn't found and the string is a nil
 				filename = string.gsub(filename, token, '')
-				if verbose == 1 or verbose == true then
-					print('[Frame Padding Token] A valid token was not found.')
-				end
+                logDebug('[Frame Padding Token] A valid token was not found.', VERBOSE)
 			end
 		end
 		
@@ -1031,23 +1129,17 @@ function ParseTokens(file, useCase, version, uuid, shell1, shell2, shell3, shell
 			if result then
 				-- The environment variable was found
 				filename = string.gsub(filename, '${' .. envVar .. '}', result)
-				if verbose == 1 or verbose == true then
-					print('[Env Var Token] "' .. tostring(envVar) .. '" is "' .. tostring(result) .. '"')
-				end
+                logDebug('[Env Var Token] "' .. tostring(envVar) .. '" is "' .. tostring(result) .. '"', VERBOSE)
 			else
 				-- The environment variable wasn't found and the string is a nil
 				filename = string.gsub(filename, '${' .. envVar .. '}', '')
-				if verbose == 1 or verbose == true then
-					print('[Env Var Token] "' .. tostring(envVar) .. '" was not found.')
-				end
+                logDebug('[Env Var Token] "' .. tostring(envVar) .. '" was not found.', VERBOSE)
 			end
 		end
 	end
 	
 	-- List the result of the string parsing
-	if verbose == 1 or verbose == true then
-		print('\t\t\t[Parse Result] "' .. tostring(filename) .. '"\n')
-	end
+    logDebug('\t\t\t[Parse Result] "' .. tostring(filename) .. '"\n' ,VERBOSE)
 	
 	return filename
 end
@@ -1070,15 +1162,16 @@ end
 -- UNC : A true or false value indicating whether the path is a UNC path or not
 ------------------------------------------------------------------------------
 -- Example: frameNumber = tonumber(ParseFilename(filename).Number)
+
 function ParseFilename(filename)
     local seq = {}
     if filename == "" then
-        print("No filename found!")
+        logDebug("No filename found!", VERBOSE)
         return seq
     end
     if not bmd.fileexists(filename) then
-        print("Wrong file name or file does not exist")
-        -- return seq
+        logDebug("Wrong file name or file does not exist", VERBOSE)
+        return seq
     end
     seq.FullPath = self.Comp:MapPath(filename)
 	string.gsub(seq.FullPath, '^(.+[/\\])(.+)', function(path, name) seq.Path = path seq.FullName = name end)
