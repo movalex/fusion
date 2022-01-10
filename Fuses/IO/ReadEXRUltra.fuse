@@ -256,7 +256,9 @@ function Create()
                         {FReqB_SeqGather = true,
                          FReqS_Filter = "OpenEXR Files (*.exr)|*.exr",
                          FReqS_Title = "Choose .exr file"})
-        fu:SetData("ReadEXR.lastFolder", ParseFilename(tool.FileName).Parent)
+        local filePath = tool:GetInput("Filename", fu.TIME_UNDEFINED)
+        string.gsub(filePath, '^(.+[/\\])(.+)', function(path, name) lastFolder = path end)
+        fu:SetData("ReadEXR.lastFolder", lastFolder)
         --end=lua--
 ]],
 		ICS_ControlPage = 'File',
