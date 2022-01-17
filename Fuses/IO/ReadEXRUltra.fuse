@@ -259,6 +259,7 @@ function Create()
 		ICD_Width = 0.35,
 		ICS_Name = 'Browse',
 		BTNCS_Execute = [[
+--begin=lua--
 if not tool then
 	tool = comp.ActiveTool
 end
@@ -283,6 +284,7 @@ local filePath = tool:GetInput('Filename', fu.TIME_UNDEFINED)
 string.gsub(filePath, '^(.+[/\\])(.+)', function(path, name) lastFolder = path end)
 
 fu:SetData('ReadEXR.lastFolder', lastFolder)
+--end=lua--
 ]],
 		ICS_ControlPage = 'File',
 		})
@@ -313,6 +315,7 @@ fu:SetData('ReadEXR.lastFolder', lastFolder)
 		ICD_Width = 1.0,
 		ICS_Name = 'Calculate Offset',
 		BTNCS_Execute = [[
+--begin=lua--
 if not tool then
 	tool = comp.ActiveTool
 end
@@ -343,6 +346,7 @@ if readSequence == 1 then
 	-- Push the updated version back into the textfield
 	tool:SetInput('Offset', -offset, fu.TIME_UNDEFINED)
 end
+--end=lua--
 ]],
 		IC_Visible = true,
 		ICS_ControlPage = 'File',
