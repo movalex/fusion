@@ -88,7 +88,11 @@ def build_command(job_details):
     ffmpeg_apply_gamma_correction = ""
 
     if not is_movie_format(file_path.name):
-        padding = re.search("\d+$", file_path.stem).group()
+        try:
+            padding = re.search("\d+$", file_path.stem).group()
+        except AttributeError:
+            print("no sequence number found, render script stopped")
+            sys.exit()
         print(f"sequence padding: {len(padding)}")
         file_path = os.path.join(file_path.parent, 
             re.sub("(.*[_.])\d+$", r"\1%0{}d".format(len(padding)), file_path.stem) + file_path.suffix
