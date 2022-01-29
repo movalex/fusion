@@ -19,6 +19,7 @@ import mimetypes
 import os
 import platform
 import re
+import shlex
 import socket
 import subprocess
 import sys
@@ -135,7 +136,7 @@ def main():
     ffmpeg_command, log_file = build_command(job_details)
     print(f"[FFMPEG command]\n{ffmpeg_command}")
     with open(log_file, "wb") as f:
-        subprocess.Popen(ffmpeg_command, stderr=f)
+        subprocess.run(shlex.split(ffmpeg_command), stderr=f)
 
 if __name__ == "__main__":
     main()
