@@ -4,8 +4,11 @@
     This is a Davinci Resolve script to save all timeline clips as jpg files.
     Author: Alexey Bogomolov
     Email: mail@abogomolov.com
-    Donate: https://paypal.me/aabogomolov
+    License: MIT
+    Copyright: 2022
 """
+
+STILL_FRAME_REF = 2
 
 
 def request_dir():
@@ -44,8 +47,8 @@ def request_dir():
         disp.ExitLoop()
 
     def request_folder(ev):
-        folder = fu.RequestDir()
-        itm["FolderLine"].Text = folder
+        target_folder = fu.RequestDir()
+        itm["FolderLine"].Text = target_folder
 
     itm["FolderLine"].SetPlaceholderText("Select folder")
     win.On.FolderButton.Clicked = request_folder
@@ -54,12 +57,12 @@ def request_dir():
     win.Show()
     disp.RunLoop()
     win.Hide()
-    target = itm["FolderLine"].Text
-    fu.SetData("ResolveSaveStills.Folder", target)
-    return target
+    result = itm["FolderLine"].Text
+    fu.SetData("ResolveSaveStills.Folder", result)
+    return result
 
 
-def grab_stills(source_frame=2):
+def grab_stills():
     """create stills from all clips in a timeline
     save the files to requested folder
     """
@@ -71,16 +74,23 @@ def grab_stills(source_frame=2):
     timeline = project.GetCurrentTimeline()
     timeline_name = timeline.GetName()
     gallery = project.GetGallery()
-    stills = timeline.GrabAllStills(source_frame)
+    stills = timeline.GrabAllStills(STILL_FRAME_REF)
     album = gallery.GetCurrentStillAlbum()
 
-    if len(stills) > 0:
-        folder = request_dir()
+    if len(stills) == 0:
+        print("no stills saved")
+        return
+    folder = request_dir()
+    if folder:
         print(f"saving stills to {folder}")
-        album.ExportStills(stills, folder, timeline_name, "jpg")
-
+    else:
+        print("Stills folder not set. Defaulting to desktop location")
+        target_folder = fu.MapPath(os.path.expanduser("~/Desktop"))
+        print(f"saving stills to {target_folder}")
+    album.ExportStills(stills, folder, timeline_name, "jpg")
     album = gallery.GetCurrentStillAlbum()
     album.DeleteStills(stills)
+    resolve.OpenPage("edit")
 
 
-grab_stills(2)
+grab_stills()
