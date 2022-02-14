@@ -28,9 +28,12 @@ def grab_still():
     still = timeline.GrabStill(STILL_FRAME_REF)
     album = gallery.GetCurrentStillAlbum()
     target_folder = fu.GetData("ResolveSaveStills.Folder")
-    if not target_folder:
+
+    if not target_folder or target_folder == " ":
         target_folder = fu.MapPath(os.path.expanduser("~/Desktop"))
-        print(f"saving stills to {target_folder}")
+        print(f"Stills folder not set. Defaulting to {target_folder} location")
+        print(f"You can set stills location with set_stills_location script (obviously)")
+    
     album.ExportStills([still], target_folder, timeline_name, "jpg")
     # album.DeleteStills(still)
     resolve.OpenPage("edit")

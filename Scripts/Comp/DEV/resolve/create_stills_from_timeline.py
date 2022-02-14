@@ -21,12 +21,12 @@ def request_dir():
         {
             "ID": "RequestFolder",
             "TargetID": "RequestFolder",
-            "WindowTitle": "Request folder",
+            "WindowTitle": "The stills will be saved to",
             "Geometry": [800, 600, 630, 50],
         },
         ui.HGroup(
             [
-                ui.Label({"Weight": 0.1, "ID": "FolderLabel", "Text": "Folder:"}),
+                ui.Label({"Weight": 0.1, "ID": "FolderLabel", "Text": "folder:"}),
                 ui.LineEdit(
                     {
                         "Weight": 0.8,

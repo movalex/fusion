@@ -20,12 +20,12 @@ def request_dir():
         {
             "ID": "RequestFolder",
             "TargetID": "RequestFolder",
-            "WindowTitle": "Request folder",
+            "WindowTitle": "The stills will be saved to",
             "Geometry": [800, 600, 630, 50],
         },
         ui.HGroup(
             [
-                ui.Label({"Weight": 0.1, "ID": "FolderLabel", "Text": "Folder:"}),
+                ui.Label({"Weight": 0.1, "ID": "FolderLabel", "Text": "folder:"}),
                 ui.LineEdit(
                     {
                         "Weight": 0.8,
@@ -63,7 +63,7 @@ def request_dir():
 
 if __name__ == "__main__":
     target_folder = request_dir()
-    if target_folder:
-        print(f"Stills export directory is set to {target_folder}")
-    else:
+    if not target_folder or target_folder == " ":
         print("Stills folder not set. Defaulting to Desktop location")
+    else:
+        print(f"Stills export directory is set to {target_folder}")
