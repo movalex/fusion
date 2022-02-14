@@ -20,36 +20,24 @@ def request_file_name(init_dir):
         return md_file
 
 
+def translate(pattern="{}", g=1):
+    def inline(match):
+        s = match.group(g)
+        return pattern.format(s)
+    return inline
+
+
 def markdown_to_bbcode(s):
     codes = []
 
-    # def gather_code(m):
-    #     codes.append(m.group(3))
-    #     return "[code={}]".format(len(codes))
-
-    # def replace_code(m):
-    #     return "{}".format(codes[int(m.group(1)) - 1])
-
-    def translate(pattern="{}", g=1):
-        def inline(match):
-            s = match.group(g)
-            return pattern.format(s)
-        return inline
-
-    # s = re.sub(r"(`{3})(\s*)(.*?)\2\1", gather_code, s)
     s = re.sub(r"(?m)\[(.*?)\]\((https?:\/\/\S+)\)", "[url=\\2]\\1[/url]", s)
-    # bold ** and __
     s = re.sub(r"(?m)([*_]{2})(\w+?)\1", "[b]\\2[/b]", s)
-    # emphasize _
     s = re.sub(r"(?m)(?:^| )[^@#\s_`]?_([^_]+)_", "[i]\\1[/i]", s)
-    # emphasize *
     s = re.sub(r"(?m)\B([*])\b(\S.+?)\1", "[i]\\2[/i]", s)
     s = re.sub(r"(?m)\B@(.*?)(['\s.,:!?\"])", "[mention]\\1[/mention]\\2", s)
     s = re.sub(r"(?m) {4}(.*)$", "~[code]\\1[/code]", s)
     s = re.sub(r"(?m)^!\[\]\((.*?)\)$", "~[img]\\1[/img]", s)
-    # header1 with underscore
     s = re.sub(r"(?m)^(\S.*)\n=+\s*$", translate("~[size=200][b]{}[/b][/size]"), s)
-    # header2 with underscore
     s = re.sub(r"(?m)(`)(.*?)(`)", "[c]\\2[/c]", s)
     s = re.sub(r"(?m)^(\S.*)\n-+\s*$", translate("~[size=100][b]{}[/b][/size]"), s)
     s = re.sub(r"(?m)^#\s+(.*?)\s*#*$", translate("~[size=200][b]{}[/b][/size]"), s)
@@ -64,7 +52,6 @@ def markdown_to_bbcode(s):
     s = re.sub(r"(?m)\[code(=.*?)?]\[/code]", "", s)
     s = re.sub(r"(?m)\[/quote]\n\[quote]", "\n", s)
     s = re.sub(r"(?m)\[/list]\n\[list(=1)?]\n", "", s)
-    # s = re.sub(r"(?m)\[code=(\d+)]", replace_code, s)
 
     return s
 
@@ -96,14 +83,14 @@ def main(file):
     with open(file, "r") as fp:
         text = fp.read()
 
-    file_without_extension = os.path.splitext(file)[0]
+    file_name = os.path.splitext(file)[0]
 
     bbcode_text = markdown_to_bbcode(text)
-    write_file(file_without_extension, bbcode_text, "_bbcode.txt")
+    write_file(file_name, bbcode_text, "_bbcode.txt")
 
     atom_text = markdown_to_html(text)
     if atom_text:
-        write_file(file_without_extension, atom_text, "_atom.html")
+        write_file(file_name, atom_text, "_atom.html")
 
     print("Done!")
 
