@@ -1,0 +1,350 @@
+FuRegisterClass("Cells", CT_SourceTool, {
+	REGS_Category = "Generator",
+    REGS_OpIconString = "Cel",	
+    REGS_OpDescription = "This fuse creates ae-style cell fractal noise pattern",
+--This creates the "Image"tab 	
+	REG_Source_GlobalCtrls = true,
+	REG_Source_SizeCtrls = true,
+	REG_Source_AspectCtrls = true,
+	REG_Source_DepthCtrls = true,
+	REG_Fuse_NoReload    = false,	
+	REG_Fuse_NoEdit = false,	
+	REG_NoObjMatCtrls = true,		
+    REG_Source_GlobalCtrls = true,
+    REG_Source_SizeCtrls = true,
+    REG_Source_AspectCtrls = true,
+    REG_Source_DepthCtrls = true,
+    REG_SupportsDoD = true,
+	REG_Fuse_TilePic = FractalNoise_Icon,
+	REGS_IconID = "Icons.Tools.Icons.FastNoise",
+	REG_TimeVariant = true,
+	REGS_VersionString = "Built: Apr 07 2022",
+	REG_Version = 100,
+	})
+
+--These are the parameters that we need access to in our kernel.
+CellsParams = [[
+//begin=glsl//
+	float center[2];
+	int imgSize[2];
+    float rot;
+    float aspect;  		
+	float scale;     
+	float w_detail;
+	float offset;
+	float speed;
+	float a_gamma;
+	float a_contrast;
+	float a_offset;
+	float a_gain;
+	float iGlobalTime;
+    int compOrder;
+//end=glsl//
+]]
+
+CellsKernel = [[
+
+//begin=glsl//
+
+#define PI 3.14159265359f
+#define tau 6.2831853f
+#define r_iter 6.f
+#define F3   0.3333333f
+#define G3   0.1666667f
+#define time   iGlobalTime *.04f * speed + offset
+__DEVICE__ float fract1(float A){return A - _floor(A);}
+__DEVICE__ float2 fract2(float2 A){return to_float2(A.x - _floor(A.x), A.y - _floor(A.y));}
+
+__DEVICE__ float2 random2(float2 p) {
+    p = to_float2(dot(p, to_float2(129.1, 311.7)), dot(p, to_float2(269.5,183.3)));
+    return fract2(to_float2(_sinf(p.x)*43758.5453123f,_sinf(p.y)*43758.5453123f));
+}
+__DEVICE__ float4 worley(float2 x, float w, float iGlobalTime, float speed, float offset)
+{ 
+    float2 n = _floor(x); // x scale tile
+    float2 f = fract2(x); // fract scale
+    float m_dist = 100.f;
+    float2 m_point;
+    float4 color = to_float4(1.0f, 0.0f, 0.0f, 1.0f);
+    float4 m = to_float4(0.0f, 0.0f, 0.0f, 0.0f);  //float3 mm;
+    for(int j=-1; j<=1; j++) {
+        for(int i=-1; i<=1; i++) {
+            float2 neighbor = to_float2(i,j);
+            float2 point = random2(n + neighbor);
+            point = .5f+ 0.5f * to_float2(_sinf(time + 6.2831f * point.x), _sinf(time + 6.2831f * point.y));
+            float2 diff = neighbor + point - f;
+            float dist = length(diff);
+            if (dist < m_dist) {
+                m_dist = dist;
+                m_point = point;
+            }
+        }
+    }
+    color += dot(m_point, to_float2(.3, .8));
+
+    //show dots
+    //color += 1.f - step(.05, m_dist);
+
+    // show isolines 
+    //color -= abs(sin(40.0*m_dist))*0.054;
+
+    //Add distance field to closest point center 
+    // color.y = m_dist; 
+
+    // Draw grid
+    // color.x += step(10.98, f.x) + step(10.98, f.y);
+
+    //color.x += step(.08, f.x) + step(.08, f.y);
+
+    m = to_float4(color.x, color.y, color.z, 1.0); 
+    return m;
+}
+
+__DEVICE__ float gam(float front, float val)
+{
+   float igam = 1.0f / _clampf(val, 1e-5f, 100.0f);
+   return _powf(_fmaxf(front, 0.0f), igam);
+}
+__DEVICE__ float gain(float front, float val)
+{
+   return front * val * 0.01f;
+}
+__DEVICE__ float off(float front, float val)
+{
+   return front + val;
+}
+__DEVICE__ float con(float front, float val)
+{
+   return (front - 0.5f) * val * 0.01f + 0.5f;
+}
+__KERNEL__ void CellsKernel(__CONSTANTREF__ CellsParams *params, __TEXTURE2D_WRITE__ dst)
+{
+DEFINE_KERNEL_ITERATORS_XY(x, y);
+    float2 fragCoord = to_float2(x,y) + to_float2_s(0.5f); 
+    int2 size = to_int2(params->imgSize[0] , params->imgSize[1]);
+    float2 iResolution = to_float2(size.x,size.y);
+    float2 center = to_float2_v(params->center) ;		
+    
+    float2 pos = center;
+    float2 uv = ((fragCoord / iResolution) - pos);
+    float4 col = to_float4_s(0.0f);
+    uv.x *= iResolution.x/iResolution.y;
+    float rad_rot = (params->rot+180.0f) * PI / 180.0f;
+    uv = to_float2(uv.x*_cosf(-rad_rot)+ uv.y* -_sinf(-rad_rot), uv.x*_sinf(-rad_rot)+uv.y* _cosf(-rad_rot));
+    uv.x *= params->aspect;
+    uv *= params->scale * 10.f;
+
+    uv *= params->scale;
+
+    float4 c = worley(uv, params->w_detail, params->iGlobalTime, params->speed, params->offset);
+    
+    col = to_float4( c.y,c.z,c.w, col.w); 
+    col.x = gam(col.x, params->a_gamma);
+    col.x = gain(col.x, params->a_gain);
+    col.x = off(col.x, params->a_offset);
+    col.x = con(col.x, params->a_contrast);
+    col = to_float4_s(col.x);
+    _tex2DVec4Write(dst, x, y, col);
+
+}
+//end=glsl//
+]]
+--This is the control panel, all of the controls that we want to appear in our fuse should be created here.
+function Create()
+
+    -- Worley Noise Uniforms --	
+        InWSmoothness = self:AddInput("Smoothness", "WSmoothness", {
+            LINKID_DataType = "Number",
+            INPID_InputControl = "SliderControl",
+            INP_Default = 0.5,
+            INP_MinAllowed = 0.0,
+            INP_MaxAllowed = 1.0,
+            ICD_Center     = 0.5,		
+            })   
+	self:BeginControlNest("Color", "BColor", false, {})	
+	InAGamma = self:AddInput("Gamma", "Gamma", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "SliderControl",
+		INP_Default         = 1.0,
+		ICD_Center          = 1.0,	
+		INP_MaxScale        = 2.0,		
+--		INP_Visible         = false,
+		})
+	InAGain = self:AddInput("Gain", "Gain", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "SliderControl",
+		INP_Default         = 1.0,
+		INP_MaxScale        = 2.0,
+		})	
+	InAContrast = self:AddInput("Contrast", "Contrast", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "SliderControl",
+		INP_MaxScale        = 2.0,
+		INP_MinScale        = -2.0,
+		INP_Default         = 1.0,
+		ICD_Center          = 1.0,		
+		--INP_Integer         = true,
+		}) 		
+	InAOffset = self:AddInput("Lift", "Lift", {    --fixed name
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "SliderControl",
+		INP_Default         = 0.0,
+		INP_MinScale        = -1.0,		
+		INP_MaxScale        = 1.0,		
+		--INP_MaxAllowed        = 1000.0,		
+		--INP_Integer         = true,
+		})
+	self:EndControlNest()
+	self:BeginControlNest("Transform", "Transform", false, {})	
+	InCenter = self:AddInput("Center", "Center", {
+		LINKID_DataType = "Point",
+		INPID_InputControl = "OffsetControl",
+		INPID_PreviewControl = "CrosshairControl",
+		INP_DefaultX = 0.5,
+		INP_DefaultY = 0.5,		
+		})
+
+	InRotation = self:AddInput("Rotation", "Rotation", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "ScrewControl",
+		INPID_PreviewControl = "AngleControl",
+		ACP_Center = InCenter,		
+		INP_MinScale        = -360.0,
+		INP_MaxScale        = 360.0,
+		INP_Default         = 0.0,
+		})
+	InScale = self:AddInput("Scale", "Scale", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "SliderControl",
+		INPID_PreviewControl = "RectangleControl",				
+		INP_MaxScale        = 50.0,
+		INP_Default         = 1.0,
+		ICD_Center          = 1.0,
+		RCD_LockAspect     = 1,
+		RC_DoLockAspect    = true,		
+		INP_DoNotifyChanged= true,		
+		})
+	InAspect = self:AddInput("Aspect", "Aspect", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "SliderControl",
+		INP_Default         = 1.0,
+		ICD_Center          = 1.0,	
+		INP_MaxScale        = 2.0,
+		INP_DoNotifyChanged= true,		
+		})	
+	InScale:SetAttrs({RCP_Center = InCenter,  RCP_Angle = InRotation})
+	self:EndControlNest()	
+	self:BeginControlNest("Animation", "Animation", false, {})	
+	InSpeed = self:AddInput("Speed", "Speed", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "SliderControl",
+		INP_Default         = 1.0,	
+		ICD_Center          = 1.0,	
+		INP_MaxScale        = 2.0,			
+		})		
+    InTimeMultiplier = self:AddInput("Time Multiplier", "TimeMultiplier", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default = 0.04,
+		IC_Visible           = false,	
+        })		
+	InOffset = self:AddInput("Offset", "TimeOffset", {
+		LINKID_DataType     = "Number",
+		INPID_InputControl  = "SliderControl",
+		INP_Default         = 0.0,
+		ICD_Center          = 0.0,	
+		INP_MinScale        = -1.0,			
+		INP_MaxScale        = 1.0,			
+		})
+	self:EndControlNest()
+
+	    OutImage = self:AddOutput("Output", "Output", {
+		   LINKID_DataType = "Image",
+		   LINK_Main = 1,
+		})
+end
+
+function Process(req)
+	local fuversion = tonumber(bmd._VERSION:sub(1,2))
+	local center = InCenter:GetValue(req)
+	local rotate = InRotation:GetValue(req).Value
+	local aspect = InAspect:GetValue(req).Value
+	local scale = InScale:GetValue(req).Value
+	local offset = InOffset:GetValue(req).Value
+    local w_detail = InWSmoothness:GetValue(req).Value
+	local speed = InSpeed:GetValue(req).Value
+	local a_gamma = InAGamma:GetValue(req).Value
+	local a_contrast = InAContrast:GetValue(req).Value/0.01
+	local a_offset = InAOffset:GetValue(req).Value
+	local a_gain = InAGain:GetValue(req).Value/0.01
+    local _time = req.Time;
+    local realwidth = Width;
+    local realheight = Height;
+    Width = Width / Scale
+    Height = Height / Scale
+    Scale = 1
+
+--This creates an image for us to work on.
+    local imgattrs = {
+        IMG_Document = self.Comp,
+        IMG_Width = Width,
+        IMG_Height = Height,
+        IMG_XScale = XAspect,
+        IMG_YScale = YAspect,
+        IMAT_OriginalWidth = realwidth,
+        IMAT_OriginalHeight = realheight,
+        IMG_Quality = not req:IsQuick(),
+        IMG_MotionBlurQuality = not req:IsNoMotionBlur(),
+        }    
+    if not req:IsStampOnly() then
+        imgattrs.IMG_ProxyScale = 1
+    end    
+    if SourceDepth ~= 0 then
+        imgattrs.IMG_Depth = SourceDepth
+    end
+
+	local realwidth = Width;
+	local realheight = Height;
+	
+	local img_aspect = Width / Height
+	
+	if not req:IsStampOnly() then
+		imgattrs.IMG_ProxyScale = 1
+	end
+	
+	if SourceDepth ~= 0 then
+		imgattrs.IMG_Depth = SourceDepth
+	end
+	
+	local img = Image(imgattrs)
+	local dst = Image {IMG_Like = img, IMG_DeferAlloc = true}	
+	
+--This calls on our kernel to process the image we created.
+	local node = DVIPComputeNode(req, "CellsKernel", CellsKernel, "CellsParams", CellsParams)
+
+	local params = node:GetParamBlock(CellsParams)
+--This gets the values of our sliders from the control panel.
+    params.center = {center.X,center.Y}
+    params.imgSize = {img.DataWindow:Width(), img.DataWindow:Height()}
+    params.rot = rotate
+    params.aspect = aspect  		
+    params.scale=scale     
+    params.offset=offset
+    params.speed=speed
+    params.w_detail=w_detail
+    params.a_gamma=a_gamma
+    params.a_contrast=a_contrast
+    params.a_offset=a_offset
+    params.a_gain=a_gain
+    params.iGlobalTime = _time
+    params.compOrder = img:IsMask() and 1 or 15
+    node:SetParamBlock(params)
+    node:AddOutput("dst", dst)
+    local ok = node:RunSession(req)
+    if not ok then dst = nil end
+    dump(node:GetErrorLog())
+    node:SetParamStructCopy(nil, 0)
+    dst:DownloadGPUMem(req)
+    collectgarbage()
+	OutImage:Set(req, dst)
+end
