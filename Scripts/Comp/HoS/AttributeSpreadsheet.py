@@ -99,7 +99,7 @@ import subprocess
 import sys
 from pprint import pprint as pp
 
-__VERSION__ = 2.6
+__VERSION__ = 2.61
 __license__ = "MIT"
 __copyright__ = "2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>,\
 2019-2020 additions by Alexey Bogomolov <mail@abogomolov.com>"
@@ -107,13 +107,15 @@ __copyright__ = "2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>,\
 PKG = "PySide2"
 PKG_VERSION = "5.15.2"
 REMOTE = False
-# do not auto-load tools on startup if more than 8 tools selected to speedup UI loading
+
+# do not auto-load tools on startup if more than set number of tools is selected
 TOOLS_AUTOLOAD = 10
 
 print("_____________________\nAttribute Spreadsheet version 0.{}".format(__VERSION__))
 
 
-def get_comp():
+
+def get_fusion_comp():
     try:
         import BlackmagicFusion as bmd
     except Exception as e:
@@ -130,21 +132,21 @@ def get_comp():
     return fu.GetCurrentComp()
 
 
+class CompNotFoundError(Exception):
+    """Generic error"""
+    pass
+
+def check_py_version():
+    return sys.version_info[:2] >= (3, 6)
+
 try:
     comp = fu.GetCurrentComp()
 except Exception as e:
     print("Starting in standalone mode...")
     REMOTE = True
     TOOLS_AUTOLOAD = 3
-    comp = get_comp()
-    if not comp:
-        raise ModuleNotFoundError("Comp not found")
-finally:
-    current_comp_name = comp.GetAttrs()["COMPS_Name"]
+    py_version = check_py_version()
 
-
-def check_py_version():
-    py_version = sys.version_info[:2] >= (3, 6)
     if not py_version:
         msg = "Python 3.6 is required!\nPlease set correct interpreter\nin Fusion settings"
         sys.stderr.write("Python 3.6 is required!\n")
@@ -157,13 +159,15 @@ def check_py_version():
         if dlg:
             fu.ShowPrefs("PrefsScript")
         sys.exit()
-
-
-check_py_version()
+    comp = get_fusion_comp()
+    if not comp:
+        raise CompNotFoundError("Comp not found")
+    else:
+        current_comp_name = comp.GetAttrs()["COMPS_Name"]
 
 
 def print(*args, **kwargs):
-    """override print() function"""
+    """override print function"""
 
     __builtins__.print("[AS] : ", *args, **kwargs)
 
@@ -784,7 +788,7 @@ class TableModel(QAbstractTableModel):
         try:
             comp = fu.GetCurrentComp()
         except NameError:
-            comp = get_comp()
+            comp = get_fusion_comp()
         global current_comp_name
         comp_name = comp.GetAttrs()["COMPS_Name"]
         if comp_name and comp_name != current_comp_name:
