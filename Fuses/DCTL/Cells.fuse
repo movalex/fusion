@@ -216,7 +216,7 @@ else if (params->cell_type == 1)
         col.x = gain(col.x, params->a_gain);
         col.x = off(col.x, params->a_offset);
         col.x = con(col.x, params->a_contrast);
-        float4 color = to_float4(col.x, col.y, col.z, 1.0f);
+        float4 color = to_float4(col.x, col.x, col.x, 1.0f);
         //float4 color = to_float4_s(col.x);
         _tex2DVec4Write(dst, x, y, color);
     }
