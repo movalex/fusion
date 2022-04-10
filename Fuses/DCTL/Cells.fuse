@@ -32,6 +32,7 @@ CellsParams = [[
 	float scale;     
 	float w_detail;
 	float offset;
+	float cell_type;
 	float speed;
 	float a_gamma;
 	float a_contrast;
@@ -47,11 +48,9 @@ CellsKernel = [[
 //begin=glsl//
 
 #define PI 3.14159265359f
-#define tau 6.2831853f
-#define r_iter 6.f
-#define F3   0.3333333f
-#define G3   0.1666667f
-#define time   iGlobalTime *.04f * speed + offset
+#define time iGlobalTime *.04f * speed + offset
+#define ANIMATE
+
 __DEVICE__ float fract1(float A){return A - _floor(A);}
 __DEVICE__ float2 fract2(float2 A){return to_float2(A.x - _floor(A.x), A.y - _floor(A.y));}
 
@@ -59,11 +58,57 @@ __DEVICE__ float2 random2(float2 p) {
     p = to_float2(dot(p, to_float2(129.1, 311.7)), dot(p, to_float2(269.5,183.3)));
     return fract2(to_float2(_sinf(p.x)*43758.5453123f,_sinf(p.y)*43758.5453123f));
 }
+__DEVICE__ float3 voronoi(float2 x, float w, float iGlobalTime, float speed, float offset)
+{
+    // see https://www.iquilezles.org/www/articles/voronoilines/voronoilines.htm
+    // also https://www.shadertoy.com/view/ldl3W8
+
+    float2 n = _floor(x);
+    float2 f = fract2(x);
+    // regular voronoi
+    float2 mg, mr, o;
+    float md = 8.0f;
+    for(int j=-1; j<=1; j++) 
+    for(int i=-1; i<=1; i++)
+    {
+        float2 g = to_float2(i, j);
+        o = random2(n + g);
+		#ifdef ANIMATE
+        o = 0.5f + 0.5f*_sinf(time + 6.2831*o);
+        #endif
+        float2 r = g + o - f;
+        float d = dot(r, r);
+        if (d < md) {
+            md = d;
+            mr = r;
+            mg = g;
+        }
+    }
+ //second pass: distance to borders
+
+    md = 8.0f;
+    for (int i=-2; i<=2; i++)
+    for (int j=-2; j<=2; j++)
+    {
+        float2 g = mg + to_float2(i, j);
+        float2 o = random2(n + g);
+        #ifdef ANIMATE
+        o = 0.5f + 0.5f*_sinf(time + 6.2831*o);
+        #endif
+
+        float2 r = g + o - f;
+        if (dot(mr-r, mr-r) > 0.00001)
+        {
+            md = min(md, dot(0.5f*(mr+r), normalize(r - mr)));
+        }
+    }
+    return to_float3(md, mr.x, mr.y);
+}
 __DEVICE__ float4 worley(float2 x, float w, float iGlobalTime, float speed, float offset)
 { 
     float2 n = _floor(x); // x scale tile
     float2 f = fract2(x); // fract scale
-    float m_dist = 100.f;
+    float m_dist = 10.f;
     float2 m_point;
     float4 color = to_float4(1.0f, 0.0f, 0.0f, 1.0f);
     float4 m = to_float4(0.0f, 0.0f, 0.0f, 0.0f);  //float3 mm;
@@ -90,11 +135,6 @@ __DEVICE__ float4 worley(float2 x, float w, float iGlobalTime, float speed, floa
 
     //Add distance field to closest point center 
     // color.y = m_dist; 
-
-    // Draw grid
-    // color.x += step(10.98, f.x) + step(10.98, f.y);
-
-    //color.x += step(.08, f.x) + step(.08, f.y);
 
     m = to_float4(color.x, color.y, color.z, 1.0); 
     return m;
@@ -124,27 +164,52 @@ DEFINE_KERNEL_ITERATORS_XY(x, y);
     int2 size = to_int2(params->imgSize[0] , params->imgSize[1]);
     float2 iResolution = to_float2(size.x,size.y);
     float2 center = to_float2_v(params->center) ;		
-    
     float2 pos = center;
     float2 uv = ((fragCoord / iResolution) - pos);
-    float4 col = to_float4_s(0.0f);
+    float4 color;
+
     uv.x *= iResolution.x/iResolution.y;
     float rad_rot = (params->rot+180.0f) * PI / 180.0f;
     uv = to_float2(uv.x*_cosf(-rad_rot)+ uv.y* -_sinf(-rad_rot), uv.x*_sinf(-rad_rot)+uv.y* _cosf(-rad_rot));
     uv.x *= params->aspect;
-    uv *= params->scale * 10.f;
+    uv *= params->scale * .1f;
 
     uv *= params->scale;
+    if (params->cell_type == 0)
+    {
+        float4 col = to_float4_s(0.0f);
+        float4 c = worley(uv, params->w_detail, params->iGlobalTime, params->speed, params->offset);
+        col = to_float4( c.y,c.z,c.w, col.w); 
+        col.x = gam(col.x, params->a_gamma);
+        col.x = gain(col.x, params->a_gain);
+        col.x = off(col.x, params->a_offset);
+        col.x = con(col.x, params->a_contrast);
+        col = to_float4_s(col.x);
+        _tex2DVec4Write(dst, x, y, col);
+    }
+else if (params->cell_type == 1)
+    {
+        float3 col = to_float3_s(0.0f);
+        float3 c = voronoi(uv, params->w_detail, params->iGlobalTime, params->speed, params->offset);
 
-    float4 c = worley(uv, params->w_detail, params->iGlobalTime, params->speed, params->offset);
-    
-    col = to_float4( c.y,c.z,c.w, col.w); 
-    col.x = gam(col.x, params->a_gamma);
-    col.x = gain(col.x, params->a_gain);
-    col.x = off(col.x, params->a_offset);
-    col.x = con(col.x, params->a_contrast);
-    col = to_float4_s(col.x);
-    _tex2DVec4Write(dst, x, y, col);
+        // isolines
+        col = c.x*(0.5 + 0.5*sin(120.0*c.x))*to_float3_s(1.0f);  
+        // float3 col = dot(c.x, to_float2(.1f, 1.0f));
+        // borders	
+        col = mix(to_float3(1.0f,0.6f,0.0f), col, smoothstep( 0.006f, 0.01f, c.x ));
+        // feature points
+        float dd = length( c.yz );
+        col = mix(to_float3(1.0,0.6,0.1), col, smoothstep( 0.0, 0.05, dd) );
+        col += to_float3(1.0,0.6,0.1)*(1.0-smoothstep( 0.0, 0.01, dd));
+        color = to_float4(col.x, col.y, col.z, 1.0f);    
+        col.x = gam(col.x, params->a_gamma);
+        col.x = gain(col.x, params->a_gain);
+        col.x = off(col.x, params->a_offset);
+        col.x = con(col.x, params->a_contrast);
+        float4 color = to_float4(col.x, col.y, col.z, 1.0f);
+        _tex2DVec4Write(dst, x, y, color);
+    }
+
 
 }
 //end=glsl//
@@ -162,6 +227,15 @@ function Create()
             ICD_Center     = 0.5,		
             })   
 	self:BeginControlNest("Color", "BColor", false, {})	
+    InCellType = self:AddInput("Cell Type", "cell_type", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ComboControl",
+		INP_Default = 0,
+		INP_Integer = true,
+		INP_DoNotifyChanged  = true,
+		{ CCS_AddString = "Worley", },
+		{ CCS_AddString = "Voronoi", },
+		})		
 	InAGamma = self:AddInput("Gamma", "Gamma", {
 		LINKID_DataType     = "Number",
 		INPID_InputControl  = "SliderControl",
@@ -277,6 +351,7 @@ function Process(req)
 	local a_contrast = InAContrast:GetValue(req).Value/0.01
 	local a_offset = InAOffset:GetValue(req).Value
 	local a_gain = InAGain:GetValue(req).Value/0.01
+    local cell_type = InCellType:GetValue(req).Value
     local _time = req.Time;
     local realwidth = Width;
     local realheight = Height;
@@ -332,6 +407,7 @@ function Process(req)
     params.offset=offset
     params.speed=speed
     params.w_detail=w_detail
+    params.cell_type=cell_type
     params.a_gamma=a_gamma
     params.a_contrast=a_contrast
     params.a_offset=a_offset
