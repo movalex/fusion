@@ -58,25 +58,27 @@ __DEVICE__ float2 random2(float2 p) {
     p = to_float2(dot(p, to_float2(129.1, 311.7)), dot(p, to_float2(269.5,183.3)));
     return fract2(to_float2(_sinf(p.x)*43758.5453123f,_sinf(p.y)*43758.5453123f));
 }
-__DEVICE__ float3 voronoi(float2 x, float w, float iGlobalTime, float speed, float offset)
+__DEVICE__ float3 voronoi(float2 _x, float w, float iGlobalTime, float speed, float offset)
 {
     // see https://www.iquilezles.org/www/articles/voronoilines/voronoilines.htm
     // also https://www.shadertoy.com/view/ldl3W8
 
-    float2 n = _floor(x);
-    float2 f = fract2(x);
+    float2 n = _floor(_x);
+    float2 f = fract2(_x);
     // regular voronoi
-    float2 mg, mr, o;
+    float2 mg, mr;
     float2 m_point;
     float md = 6.0f;
     for(int j=-1; j<=1; j++) 
     for(int i=-1; i<=1; i++)
     {
         float2 g = to_float2(i, j);
-        o = random2(n + g);
-        #ifdef ANIMATE
-        o = 0.5f + 0.5f*_sinf(time + 6.2831*o);
-        #endif
+        float2 o = random2(n + g);
+    #ifdef ANIMATE
+        // o = 0.5f + 0.5f * _sinf(time + 6.2831f * o);
+        o.x = 0.5f + 0.5f * _sinf(time + 6.2831f * o.x);
+        o.y = 0.5f + 0.5f * _sinf(time + 6.2831f * o.y);
+    #endif
         float2 r = g + o - f;
         float d = dot(r, r);
         if (d < md) {
@@ -94,9 +96,11 @@ __DEVICE__ float3 voronoi(float2 x, float w, float iGlobalTime, float speed, flo
     {
         float2 g = mg + to_float2(i, j);
         float2 o = random2(n + g);
-        #ifdef ANIMATE
-        o = 0.5f + 0.5f*_sinf(time + 6.2831*o);
-        #endif
+    #ifdef ANIMATE
+        // o = 0.5f + 0.5f * _sinf(time + 6.2831f * o);
+        o.x = 0.5f + 0.5f * _sinf(time + 6.2831f * o.x);
+        o.y = 0.5f + 0.5f * _sinf(time + 6.2831f * o.y);
+    #endif
 
         float2 r = g + o - f;
         if (dot(mr-r, mr-r) > 0.00001)
@@ -106,6 +110,7 @@ __DEVICE__ float3 voronoi(float2 x, float w, float iGlobalTime, float speed, flo
     }
     return to_float3(md, m_point.x, m_point.y);
 }
+
 __DEVICE__ float4 worley(float2 x, float w, float iGlobalTime, float speed, float offset)
 { 
     float2 n = _floor(x); // x scale tile
@@ -176,7 +181,6 @@ DEFINE_KERNEL_ITERATORS_XY(x, y);
     uv.x *= params->aspect;
     uv *= params->scale * 10.0f;
 
-   // uv *= params->scale;
     if (params->cell_type == 0)
     {
         float4 col = to_float4_s(0.0f);
@@ -198,13 +202,13 @@ else if (params->cell_type == 1)
         // col = c.x*(0.5 + 0.5*sin(120.0*c.x))*to_float3_s(1.0f);
 
         // gradient
-         col += dot(c.zy, to_float2(0.3f,0.8f));
+        col += dot(to_float2(c.z, c.y), to_float2(0.3f,0.8f));
 
         // gradient fill by borders  
         // float3 col = dot(c.x, to_float2(.1f, 1.0f));
         
         // add borders  
-        col = mix(to_float3(1.0f,1.0f,1.0f), col, smoothstep( 0.006f, 0.02f, c.x ));
+        col = _mix(to_float3(1.0f,1.0f,1.0f), col, smoothstep( 0.006f, 0.02f, c.x ));
         
         // feature points
         //float dd = length( c.yz );
@@ -216,7 +220,7 @@ else if (params->cell_type == 1)
         col.x = gain(col.x, params->a_gain);
         col.x = off(col.x, params->a_offset);
         col.x = con(col.x, params->a_contrast);
-        float4 color = to_float4(col.x, col.x, col.x, 1.0f);
+        color = to_float4(col.x, col.x, col.x, 1.0f);
         //float4 color = to_float4_s(col.x);
         _tex2DVec4Write(dst, x, y, color);
     }
