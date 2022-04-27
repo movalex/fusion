@@ -16,6 +16,7 @@ FuRegisterClass("TurbulentNoise", CT_SourceTool, {
     REG_Fuse_NoEdit = true,
     REG_Fuse_NoReload = true,
 })
+--//begin=glsl//
 TurbulentNoiseParams = [[
     float center[2];
     int lock;
@@ -530,6 +531,7 @@ __KERNEL__ void TurbulentNoiseKernel(__CONSTANTREF__ TurbulentNoiseParams *param
 
     _tex2DVec4Write(dst, x, y, fragColor);
     }
+    //end=glsl//
 ]]
 
 --This is the control panel, all of the controls that we want to appear in our fuse should be created here.
