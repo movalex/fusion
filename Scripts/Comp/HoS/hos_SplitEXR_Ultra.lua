@@ -1,5 +1,5 @@
 --[[--
-Split EXR Ultra v3.0
+Split EXR Ultra v3.1
 by S.Neve / House of Secrets
 
 -------------------------------------------------------------------------------
@@ -27,6 +27,9 @@ The hos_SplitEXR script will then generate a series of Loader nodes in your comp
 -------------------------------------------------------------------------------
 RELEASE NOTES
 -------------------------------------------------------------------------------
+* v 3.1 2022-04-14 by Alexey Bogomolov <mail@abogomolov.com>
+    - fix incorrect skip alpha settings
+
 * v 3.0 2021-12-12 by Alexey Bogomolov <mail@abogomolov.com>
     - Use Fusion UI Manager instead of AskUser dialogue.
     - Run the script without closing the UI!
@@ -180,7 +183,7 @@ function getPreferenceData(pref, defaultValue, debugPrint)
     -- local newPreference = comp:GetData(pref)
     local newPreference = fu:GetData(pref)
     
-    if newPreference then
+    if newPreference ~= nil then
         -- List the existing preference value
         if (debugPrint == true) or (debugPrint == 1) then
             if newPreference == nil then
@@ -368,7 +371,7 @@ function ProcessMultichannel(tool)
                     logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. channelName, VERBOSE)
                 
                 else
-                    -- The Skip Importing Alpha Channels checkbox was enabled in the AskUser dialog
+                    -- The Skip Importing Alpha Channels checkbox was enabled in the User dialog
                 
                     LDR.Clip1.OpenEXRFormat.AlphaName = CHANNEL_NO_MATCH
                     logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. CHANNEL_NO_MATCH, VERBOSE)
@@ -433,7 +436,7 @@ function ProcessMultichannel(tool)
                     logDebug("[EXR Check 6] [Blue Channel Assignment] " .. channelName, VERBOSE)
                 elseif (lastItem == "alpha") then
                     -- C4D alpha channel found
-                    if (skipAlpha == 0) then
+                    if not skipAlpha then
                         -- Load the regular alpha channel
                         LDR.Clip1.OpenEXRFormat.AlphaName = channelName
                         logDebug("[EXR Check 6] [Alpha Channel Assignment] " .. channelName, VERBOSE)
@@ -586,7 +589,7 @@ function showUI()
     VERBOSE = getPreferenceData("SplitEXR.verbose", 0, false)
     splitAllSelectedNodes = getPreferenceData("SplitEXR.splitAllSelectedNodes", 1, VERBOSE)
     splitDirection = getPreferenceData("SplitEXR.splitDirection", 0, VERBOSE)
-    skipAlpha = getPreferenceData("SplitEXR.skipAlpha", 0, VERBOSE)
+    skipAlpha = getPreferenceData("SplitEXR.skipAlpha", false, VERBOSE)
     forceTilesPref = fu:GetPrefs("Comp.FlowView.ForceSource")
     forceTile = 0
     if forceTilesPref then
@@ -692,6 +695,8 @@ function showUI()
             },
         },
     })
+    
+
 
     function win.On.SplitEXR.Close(ev)
         disp:ExitLoop()
