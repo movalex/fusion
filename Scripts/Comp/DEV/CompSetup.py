@@ -37,12 +37,6 @@ AUTHOR = "ab"
 COMP_VERSION = 1
 
 
-def verify_comp_template(comp):
-    if not comp.GetData("IS_TEMPLATE"):
-        return False
-    return True
-
-
 def get_loader():
     """get selected loader"""
     try:
@@ -58,7 +52,7 @@ def parse_loader_path(loader):
     try:
         _, episode, shot = parse_name.split("_")
     except ValueError:
-        return 
+        return
     folder = loader_path.parents[3]
     return folder, episode, shot
 
@@ -78,41 +72,7 @@ def create_comp_folder(folder, episode, shot):
     return new_folder
 
 
-def save_comp(folder, episode, shot) -> int:
-    """build comp name and path and save the comp"""
-
-    new_folder = create_comp_folder(folder, episode, shot)
-
-    version = COMP_VERSION
-    new_comp = new_folder / f"{episode}_{shot}_{AUTHOR}_v{version:02d}.comp"
-    while new_comp.exists():
-        version += 1
-        new_comp = new_folder / f"{episode}_{shot}_{AUTHOR}_v{version:02d}.comp"
-
-    comp.Save(str(new_comp))
-    # comp.SetData("IS_TEMPLATE")
-
-    return version
-
-
-def main():
-    if not verify_comp_template(comp):
-        print(
-            "current comp is not set as template\nnot processed further for safety"
-            " reasons\nto set comp as  template, run `comp.SetData('IS_TEMPLATE',"
-            " True)` in Fusion Py3 console"
-        )
-        return
-
-    loader = get_loader()
-    if not loader:
-        return
-    folder, episode, shot = parse_loader_path(loader)
-    if not episode:
-        print("comp not parsed")
-        return
-
-    version = save_comp(folder, episode, shot)
+def update_savers(version, episode, shot):
 
     savers = comp.GetToolList(False, "Saver").values()
     if not savers:
@@ -126,10 +86,39 @@ def main():
             path = saver.Clip[1]
             parent = Path(path).parent
             ext = Path(path).suffix
-            new_path = Path(rf"{parent}/{episode}_{shot}_{version:02d}{ext}")
+            new_path = Path(rf"{parent}/{episode}_{shot}_v{version:02d}{ext}")
             print(f"new saver path: {new_path}")
             saver.Clip[1] = str(new_path)
         comp.EndUndo()
+
+
+def save_comp(folder, episode, shot) -> int:
+    """build comp name and path and save the comp"""
+
+    new_folder = create_comp_folder(folder, episode, shot)
+
+    comp_version = COMP_VERSION
+    new_comp = new_folder / f"{episode}_{shot}_{AUTHOR}_v{comp_version:02d}.comp"
+    while new_comp.exists():
+        comp_version += 1
+        new_comp = new_folder / f"{episode}_{shot}_{AUTHOR}_v{comp_version:02d}.comp"
+
+    comp.Save(str(new_comp))
+
+    update_savers(comp_version, episode, shot)
+
+
+def main():
+
+    loader = get_loader()
+    if not loader:
+        return
+    folder, episode, shot = parse_loader_path(loader)
+    if not episode:
+        print("comp not parsed")
+        return
+
+    save_comp(folder, episode, shot)
 
 
 if __name__ == "__main__":
