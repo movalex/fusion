@@ -44,6 +44,7 @@ def verify_comp_template(comp):
 
 
 def get_loader():
+    """get selected loader"""
     try:
         loader = comp.GetToolList(True, "Loader")[1]
         return loader
@@ -54,13 +55,16 @@ def get_loader():
 def parse_loader_path(loader):
     loader_path = Path(comp.MapPath(loader.Clip[1]))
     parse_name = loader_path.parts[-2]
-    _, episode, shot = parse_name.split("_")
+    try:
+        _, episode, shot = parse_name.split("_")
+    except ValueError:
+        return 
     folder = loader_path.parents[3]
     return folder, episode, shot
 
 
 def create_comp_folder(folder, episode, shot):
-    """create comp folder from currently selected loader"""
+    """build comp folder from the parsed loader data"""
 
     print(f"parent folder: {folder}\nepisode: {episode}\nshot: {shot}\n")
 
@@ -75,7 +79,7 @@ def create_comp_folder(folder, episode, shot):
 
 
 def save_comp(folder, episode, shot) -> int:
-    """parse comp name from the current loader and save comp file to COMP_FOLDER"""
+    """build comp name and path and save the comp"""
 
     new_folder = create_comp_folder(folder, episode, shot)
 
@@ -86,7 +90,7 @@ def save_comp(folder, episode, shot) -> int:
         new_comp = new_folder / f"{episode}_{shot}_{AUTHOR}_v{version:02d}.comp"
 
     comp.Save(str(new_comp))
-    comp.SetData("IS_TEMPLATE")
+    # comp.SetData("IS_TEMPLATE")
 
     return version
 
@@ -103,13 +107,9 @@ def main():
     loader = get_loader()
     if not loader:
         return
-    try:
-        folder, episode, shot = parse_loader_path(loader)
-        if not episode:
-            print("comp not parsed")
-            return
-    except Exception as e:
-        print(f"exception returned: {e}")
+    folder, episode, shot = parse_loader_path(loader)
+    if not episode:
+        print("comp not parsed")
         return
 
     version = save_comp(folder, episode, shot)
