@@ -3,7 +3,7 @@
 """
     Set new comp from template
     New comp will ve created in COMP_FOLDER location,
-    with episode_shot_author_version.comp format (106_0055_zf_v01.comp).
+    with episode_shot_author_version.comp format (106_0055_ab_v01.comp).
     
     License:
     Copyright © 2022 Alexey Bogomolov (mail@abogomolov.com)
@@ -29,6 +29,7 @@
 
 """
 
+import re
 from pathlib import Path
 
 comp = fu.GetCurrentComp()
@@ -50,7 +51,8 @@ def parse_loader_path(loader):
     loader_path = Path(comp.MapPath(loader.Clip[1]))
     parse_name = loader_path.parts[-2]
     try:
-        _, episode, shot = parse_name.split("_")
+        episode, shot = re.search("(\d{3})_(\d{4})", parse_name).groups()
+        # _, episode, shot = parse_name.split("_")
     except ValueError:
         return
     folder = loader_path.parents[3]
@@ -78,18 +80,16 @@ def update_savers(version, episode, shot):
     if not savers:
         print("No savers found in comp")
         return
-    comp_name = comp.GetAttrs()["COMPS_Name"]
 
-    if comp_name:
-        comp.StartUndo("Set Shot Nums")
-        for saver in savers:
-            path = saver.Clip[1]
-            parent = Path(path).parent
-            ext = Path(path).suffix
-            new_path = Path(rf"{parent}/{episode}_{shot}_v{version:02d}{ext}")
-            print(f"new saver path: {new_path}")
-            saver.Clip[1] = str(new_path)
-        comp.EndUndo()
+    comp.StartUndo("Set Shot Nums")
+    for saver in savers:
+        path = saver.Clip[1]
+        parent = Path(path).parent
+        ext = Path(path).suffix
+        new_path = Path(rf"{parent}/{episode}_{shot}_v{version:02d}{ext}")
+        print(f"new saver path: {new_path}")
+        saver.Clip[1] = str(new_path)
+    comp.EndUndo()
 
 
 def save_comp(folder, episode, shot) -> int:
@@ -108,11 +108,45 @@ def save_comp(folder, episode, shot) -> int:
     update_savers(comp_version, episode, shot)
 
 
+def set_range(loader) -> None:
+    """set GlobalIn and GlobalOut according to Loader clip length"""
+
+    comp.StartUndo("Set Range based on Loader")
+    loader_attrs = loader.GetAttrs()
+
+    clip_in = loader.GlobalIn[1]
+    trim_start = loader_attrs["TOOLIT_Clip_TrimIn"][1]
+
+    clip_out = loader.GlobalOut[1]
+    trim_end = loader_attrs["TOOLIT_Clip_TrimOut"][1]
+    if trim_start == clip_in:
+        comp.SetAttrs({"COMPN_GlobalStart": clip_in})
+        comp.SetAttrs({"COMPN_RenderStart": clip_in})
+    else:
+        comp.SetAttrs({"COMPN_GlobalStart": clip_in})
+        comp.SetAttrs({"COMPN_RenderStart": trim_start})
+        clip_in = trim_start
+
+    if trim_end == clip_out:
+        comp.SetAttrs({"COMPN_GlobalEnd": clip_out})
+        comp.SetAttrs({"COMPN_RenderEnd": clip_out})
+    else:
+        comp.SetAttrs({"COMPN_GlobalStart": clip_in})
+        comp.SetAttrs({"COMPN_RenderStart": trim_end})
+        clip_out = trim_end
+
+    comp.EndUndo()
+    print(f"Comp length is adjusted to [ {clip_in} - {clip_out} ]")
+
+
 def main():
 
     loader = get_loader()
     if not loader:
         return
+
+    set_range(loader)
+
     folder, episode, shot = parse_loader_path(loader)
     if not episode:
         print("comp not parsed")
