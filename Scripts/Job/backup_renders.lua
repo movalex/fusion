@@ -1,4 +1,4 @@
-[[
+--[[
 Backup Savers Render Job script.
 The script creates backup of rendered files in the given directory, retaining the folder structure. Missing folders will be created.
 Should be placed to Scripts:Job folder.
