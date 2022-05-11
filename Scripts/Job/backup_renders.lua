@@ -38,6 +38,12 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
+-------------------------
+-- parse filename scriptlib function
+-- folowing filepath format should be parsed correctly:
+-- 101_064_040..exr
+-------------------------
+
 function parseFilename(filename)
     print('parsing filename...')
     local seq = {}
@@ -81,6 +87,10 @@ function parseFilename(filename)
     return seq
 end
 
+-------------------------
+-- check if movie format scriptlib function
+-------------------------
+
 function isMovieFormat(extension)
 	if extension ~= nil then
 		if		( extension == ".avi" ) or ( extension == ".vdr" ) or ( extension == "wav" ) or
@@ -98,7 +108,16 @@ function isMovieFormat(extension)
 	return false
 end
 
+-------------------------
+-- backup location
+-- should be set with fusion data and UI manager later
+-------------------------
+
 backupFolder = [[D:\RENDER\BACKUP\Renders]]
+
+-------------------------
+-- main function
+-------------------------
 
 function doBackup(saverList)
     sep = package.path:match( "(%p)%?%." )
