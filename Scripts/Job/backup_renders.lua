@@ -10,12 +10,7 @@ Description:
 1. click Pause Render before adding the comp to the queue
 2. add the comp to the queue, right click the render job and click Script — Render End — copy_files
 3. resume the render
-4. all files listed in the active savers will be backed up to the folders specified in backupFolder variable
-
-TODO: 
-- add Choose Backup Folder user interface
-- autoload the script to the new render jobs
-
+4. all files listed in the active savers will be backed up to the Backup Folder
 
 Copyright © 2022 Alexey Bogomolov
 
@@ -38,14 +33,15 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
--------------------------
+------------------------------
 -- parse filename scriptlib function
 -- folowing filepath format should be parsed correctly:
 -- 101_064_040..exr
--------------------------
+------------------------------
+
+print("Backup renders script started")
 
 function parseFilename(filename)
-    print('parsing filename...')
     local seq = {}
     seq.FullPath = filename
 
@@ -87,9 +83,9 @@ function parseFilename(filename)
     return seq
 end
 
--------------------------
+------------------------------
 -- check if movie format scriptlib function
--------------------------
+------------------------------
 
 function isMovieFormat(extension)
 	if extension ~= nil then
@@ -108,26 +104,129 @@ function isMovieFormat(extension)
 	return false
 end
 
--------------------------
+
+------------------------------
 -- backup location
--- should be set with fusion data and UI manager later
--------------------------
+-- should be set with fusion data and UI manager 
+------------------------------
 
-backupFolder = [[D:\RENDER\BACKUP\Renders]]
+local defaultBackupFolder = [[D:\RENDER\BACKUP\Renders]]
+local target = fu:GetData("BackupRenders.Folder") or defaultBackupFolder 
 
--------------------------
--- main function
--------------------------
+------------------------------
+-- folder request UI
+------------------------------
+function requestFolder()
+
+    local ui = fu.UIManager
+    local disp = bmd.UIDispatcher(ui)
+    local width,height = 800,70
+
+    win = disp:AddWindow({
+        ID = 'MyWin',
+        WindowTitle = 'BACKUP RENDERS?',
+        Geometry = {600, 300, width, height},
+        Spacing = 10,
+        Margin = 10,
+        
+        ui:VGroup{
+            ID = 'root',
+            Weight = 1,
+
+            -- Open Folder
+            ui:HGroup{
+                ui:Label{
+                    Weight = 0.1,
+                    ID = 'FolderLabel',
+                    Text = 'Backup folder:',
+                },
+                ui:LineEdit{
+                    Weight = 0.8,
+                    ID='FolderLine', 
+                    Text = target or " ",
+                    Events = {ReturnPressed = true},
+                    Alignment = {AlignCenter = true, AlignVCenter = true},
+                },
+                ui:Button{
+                    ID = 'FolderButton', 
+                    Text = 'Browse folder...',
+                    Weight = 0.2,
+                },
+                ui:Button{
+                    ID = 'OkButton', 
+                    Text = 'Ok',
+                    Weight = 0.1,
+                },
+                ui:Button{
+                    ID = 'AbortButton', 
+                    Text = 'Skip Backup',
+                    Weight = 0.1,
+                },
+            },
+
+        },
+    })
+
+    itm = win:GetItems()
+    
+    function skipBackup()
+        print("Backup task aborted")
+        disp:ExitLoop()
+        result = nil
+    end
+    
+    -- The window was closed
+    function win.On.MyWin.Close(ev)
+        skipBackup()
+    end
+    -- Abort button clicked
+    function win.On.AbortButton.Clicked(ev)
+        skipBackup()
+    end
+    
+    -- OK button clicked
+    function win.On.OkButton.Clicked(ev)
+        result = itm["FolderLine"].Text
+        fu:SetData("BackupRenders.Folder", result)
+        disp:ExitLoop()
+    end    -- The Open Folder button was clicked
+
+    function win.On.FolderButton.Clicked(ev)
+        selectedPath = fu:RequestDir(target)
+        if selectedPath then
+            print('[Backup location set to] :: ', tostring(selectedPath))
+            itm.FolderLine.Text = selectedPath
+        end
+    end
+
+    win:Show()
+    disp:RunLoop()
+    win:Hide()
+
+    return result
+end
+
+------------------------------
+-- doBackup function
+------------------------------
 
 function doBackup(saverList)
-    sep = package.path:match( "(%p)%?%." )
+    targetFolder = requestFolder()
+
+    if targetFolder == nil then
+        return
+    end
+    
+    local pathSeparator = package.path:match( "(%p)%?%." )
+    local rootFolder = "Renders" -- this is a root folder all savers should use
+
     for i, saver in ipairs(savers) do
         if not saver:GetAttrs().TOOLB_PassThrough then
             parse = parseFilename(saver.Clip[1])
             fullPath = comp:MapPath(parse.FullPath)
             parent = comp:MapPath(parse.Path)
-            target = string.gsub(parent, "(.*)Renders(.*)", backupFolder.."%2")
-            print("[TARGET FOLDER: ]"..target)
+            target = string.gsub(parent, "(.*)"..rootFolder.."(.*)", targetFolder.."%2")
+            print("[TARGET FOLDER] :: "..target)
             if not bmd.direxists(target) then
                 os.execute("mkdir " .. target)
             end
@@ -136,23 +235,24 @@ function doBackup(saverList)
                 sequencePattern = parse.Path .. parse.CleanName .. "*" .. parse.Extension
                 sequencePattern = comp:MapPath(sequencePattern)
                 sequencePath = parse.Path .. parse.CleanName .. parse.SNum .. parse.Extension
-                print('sequence found: ' .. sequencePattern)
+                print('[sequence found] :: ' .. sequencePattern)
                 dir = bmd.readdir(sequencePattern)
-                print("found ".. #dir .. " files")
+                print("copying ".. #dir .. " files")
                 
                 for i=1, #dir do
                     if not dir[i].IsDir then
-                        print(dir.Parent .. sep .. dir[i].Name)
+                        print("[copying file] :: " .. dir.Parent .. dir[i].Name)
                         bmd.copyfile(dir.Parent..dir[i].Name, target..dir[i].Name)
                     end
                 end
             else
                 -- Example: filename.mp4
-                print("movie file found: " .. comp:MapPath(fullPath))
+                print("[copying file] :: " .. comp:MapPath(fullPath))
                 bmd.copyfile(comp:MapPath(fullPath), target..parse.FullName)
             end
         end
     end
+    print("Done!")
 end
 
 
