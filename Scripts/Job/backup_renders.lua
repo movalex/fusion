@@ -3,7 +3,7 @@ Backup Savers Render Job script.
 The script creates backup of rendered files in the given directory, retaining the folder structure. Missing folders will be created.
 Should be placed to Scripts:Job folder.
 
-Version: 1.0
+Version: 1.1
 
 Description:
 0. add the script to Scripts:Job folder (such as %AppData%\Roaming\Blackmagic Design\Fusion\Scripts\Job)
@@ -41,7 +41,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 print("Backup renders script started")
 
-function parseFilename(filename)
+function ParseFilename(filename)
     local seq = {}
     seq.FullPath = filename
 
@@ -87,7 +87,7 @@ end
 -- check if movie format scriptlib function
 ------------------------------
 
-function isMovieFormat(extension)
+function IsMovieFormat(extension)
 	if extension ~= nil then
 		if		( extension == ".avi" ) or ( extension == ".vdr" ) or ( extension == "wav" ) or
 				( extension == ".dvs" ) or
@@ -110,17 +110,17 @@ end
 -- should be set with fusion data and UI manager 
 ------------------------------
 
-local defaultBackupFolder = [[D:\RENDER\BACKUP\Renders]]
-local target = fu:GetData("BackupRenders.Folder") or defaultBackupFolder 
+local DEFAULT_BACKUP_FOLDER = [[D:\RENDER\BACKUP\Renders]]
+local target = fu:GetData("BackupRenders.Folder") or DEFAULT_BACKUP_FOLDER 
 
 ------------------------------
 -- folder request UI
 ------------------------------
-function requestFolder()
+function RequestFolder()
 
     local ui = fu.UIManager
     local disp = bmd.UIDispatcher(ui)
-    local width,height = 800,70
+    local width, height = 800,70
 
     win = disp:AddWindow({
         ID = 'MyWin',
@@ -206,13 +206,23 @@ function requestFolder()
     return result
 end
 
+function GetMkdirOption()
+    platform = (FuPLATFORM_WINDOWS and "Windows") or (FuPLATFORM_MAC and "Mac") or (FuPLATFORM_LINUX and "Linux")
+    mkdir_option = ''
+    if platform == 'Mac' or platform == 'Linux' then
+        mkdir_option = '-p '
+    end
+    return mkdir_option 
+end
+
 ------------------------------
--- doBackup function
+-- main function
 ------------------------------
 
-function doBackup(saverList)
-    targetFolder = requestFolder()
+function DoBackup(saverList)
 
+    targetFolder = RequestFolder()
+    mkdir_option = GetMkdirOption()
     if targetFolder == nil then
         return
     end
@@ -222,21 +232,21 @@ function doBackup(saverList)
 
     for i, saver in ipairs(savers) do
         if not saver:GetAttrs().TOOLB_PassThrough then
-            parse = parseFilename(saver.Clip[1])
-            fullPath = comp:MapPath(parse.FullPath)
+            parse = ParseFilename(saver.Clip[1])
+            full_path = comp:MapPath(parse.FullPath)
             parent = comp:MapPath(parse.Path)
             target = string.gsub(parent, "(.*)"..rootFolder.."(.*)", targetFolder.."%2")
             print("[TARGET FOLDER] :: "..target)
             if not bmd.direxists(target) then
-                os.execute("mkdir " .. target)
+                os.execute("mkdir " .. mkdir_option .. target)
             end
-            if not isMovieFormat(parse.Extension) then
+            if not IsMovieFormat(parse.Extension) then
                 -- Example: filename..exr
-                sequencePattern = parse.Path .. parse.CleanName .. "*" .. parse.Extension
-                sequencePattern = comp:MapPath(sequencePattern)
-                sequencePath = parse.Path .. parse.CleanName .. parse.SNum .. parse.Extension
-                print('[sequence found] :: ' .. sequencePattern)
-                dir = bmd.readdir(sequencePattern)
+                sequence_pattern = parse.Path .. parse.CleanName .. "*" .. parse.Extension
+                sequence_pattern = comp:MapPath(sequence_pattern)
+                sequence_path = parse.Path .. parse.CleanName .. parse.SNum .. parse.Extension
+                print('[sequence found] :: ' .. sequence_pattern)
+                dir = bmd.readdir(sequence_pattern)
                 print("copying ".. #dir .. " files")
                 
                 for i=1, #dir do
@@ -247,8 +257,8 @@ function doBackup(saverList)
                 end
             else
                 -- Example: filename.mp4
-                print("[copying file] :: " .. comp:MapPath(fullPath))
-                bmd.copyfile(comp:MapPath(fullPath), target..parse.FullName)
+                print("[copying file] :: " .. comp:MapPath(full_path))
+                bmd.copyfile(comp:MapPath(full_path), target..parse.FullName)
             end
         end
     end
@@ -258,4 +268,4 @@ end
 
 comp = fu:GetCurrentComp()
 savers = comp:GetToolList(false, "Saver")
-doBackup(savers)
+DoBackup(savers)
