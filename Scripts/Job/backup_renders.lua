@@ -8,7 +8,7 @@ Version: 1.1
 Description:
 0. add the script to Scripts:Job folder (such as %AppData%\Roaming\Blackmagic Design\Fusion\Scripts\Job)
 1. click Pause Render before adding the comp to the queue
-2. add the comp to the queue, right click the render job and click Script — Render End — copy_files
+2. add the comp to the queue, right click the render job and click Script — Render End — backup_renders
 3. resume the render
 4. all files listed in the active savers will be backed up to the Backup Folder
 
