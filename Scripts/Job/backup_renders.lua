@@ -111,6 +111,7 @@ end
 ------------------------------
 
 local DEFAULT_BACKUP_FOLDER = [[D:\RENDER\BACKUP\Renders]]
+local ROOT_FOLDER = "Renders" -- this is a root folder all savers should use
 local target = fu:GetData("BackupRenders.Folder") or DEFAULT_BACKUP_FOLDER 
 
 ------------------------------
@@ -221,21 +222,20 @@ end
 
 function DoBackup(saverList)
 
-    targetFolder = RequestFolder()
+    target_folder = RequestFolder()
     mkdir_option = GetMkdirOption()
-    if targetFolder == nil then
+    if target_folder == nil then
         return
     end
     
-    local pathSeparator = package.path:match( "(%p)%?%." )
-    local rootFolder = "Renders" -- this is a root folder all savers should use
+    local path_separator = package.path:match( "(%p)%?%." )
 
     for i, saver in ipairs(savers) do
         if not saver:GetAttrs().TOOLB_PassThrough then
             parse = ParseFilename(saver.Clip[1])
             full_path = comp:MapPath(parse.FullPath)
             parent = comp:MapPath(parse.Path)
-            target = string.gsub(parent, "(.*)"..rootFolder.."(.*)", targetFolder.."%2")
+            target = string.gsub(parent, "(.*)"..ROOT_FOLDER.."(.*)", target_folder.."%2")
             print("[TARGET FOLDER] :: "..target)
             if not bmd.direxists(target) then
                 os.execute("mkdir " .. mkdir_option .. target)
