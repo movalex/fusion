@@ -88,20 +88,23 @@ end
 ------------------------------
 
 function IsMovieFormat(extension)
-	if extension ~= nil then
-		if		( extension == ".avi" ) or ( extension == ".vdr" ) or ( extension == "wav" ) or
-				( extension == ".dvs" ) or
-				( extension == ".fb"  ) or
-				( extension == ".omf" ) or ( extension == ".omfi" ) or
-				( extension == ".stm" ) or
-				( extension == ".tar" ) or
-				( extension == ".vpv" ) or
-				( extension == ".mp4" ) or
-				( extension == ".mov" ) then
-			return true
-		end
-	end
-	return false
+    if extension ~= nil then
+        if  (extension == ".avi") or
+            (extension == ".vdr") or
+            (extension == ".wav") or
+            (extension == ".dvs") or
+            (extension == ".fb" ) or
+            (extension == ".omf") or
+            (extension == ".omfi") or
+            (extension == ".stm") or
+            (extension == ".tar") or
+            (extension == ".vpv") or
+            (extension == ".mp4") or
+            (extension == ".mov") then
+            return true
+        end
+    end
+    return false
 end
 
 
