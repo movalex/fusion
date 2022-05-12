@@ -100,6 +100,7 @@ function IsMovieFormat(extension)
             (extension == ".tar") or
             (extension == ".vpv") or
             (extension == ".mp4") or
+            (extension == ".mxf") or 
             (extension == ".mov") then
             return true
         end
