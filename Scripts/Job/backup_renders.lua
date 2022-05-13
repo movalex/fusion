@@ -1,16 +1,22 @@
 --[[
 Backup Savers Render Job script.
-The script creates backup of rendered files in the given directory, retaining the folder structure. Missing folders will be created.
-Should be placed to Scripts:Job folder.
+The script creates backup of rendered files in the given directory, retaining the folder structure.
+Missing folders will be created.
+Should be placed to Scripts:Job or Scripts:Comp folder.
 
-Version: 1.2
+Version: 1.3
 
 Description:
-0. add the script to Scripts:Job folder (such as %AppData%\Roaming\Blackmagic Design\Fusion\Scripts\Job)
-1. click Pause Render before adding the comp to the queue
-2. add the comp to the queue, right click the render job and click Script — Render End — backup_renders
-3. resume the render
-4. all files listed in the active savers will be backed up to the Backup Folder
+- add the script to Scripts:Job folder (such as %AppData%\Roaming\Blackmagic Design\Fusion\Scripts\Job)
+- add the comp to the queue, right click the render job and click Script — Render End — backup_renders
+- all files listed in the active savers will be backed up to the Backup Folder
+- you can run the script as a regular Comp script too
+Root folder is the folder common to all savers. Say if you have
+    D:\SYNC\Fusion\Renders\Final\101_064_030\101_064_030..exr
+    D:\SYNC\Fusion\Renders\Prores422\101_064_030.mov
+    D:\MP4\Renders\Wip\101_064_050-wip-v01.mp4
+then common root folder for them all would be `Renders`.
+In order for the scipt to work correctly, fill the Root folder manually or use Guess Root button.
 
 Copyright © 2022 Alexey Bogomolov
 
@@ -35,7 +41,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ------------------------------
 -- parse filename scriptlib function
--- folowing filepath format should be parsed correctly:
+-- folowing sequence file name format should be parsed correctly:
 -- 101_064_040..exr
 ------------------------------
 
@@ -120,12 +126,14 @@ local target = fu:GetData("BackupRenders.Folder") or DEFAULT_BACKUP_FOLDER
 ------------------------------
 -- folder request UI
 ------------------------------
-function RequestFolder()
-
+function RequestFolder(saver)
+    
     local ui = fu.UIManager
     local disp = bmd.UIDispatcher(ui)
-    local width, height = 500,100
-
+    local width, height = 600,100
+    local clip_name = comp:MapPath(saver.Clip[1])
+    local root_path = ParseFilename(ParseFilename(clip_name).Path).Path
+    local parsed_root_folder = string.gsub(root_path, ".*\\(.*)\\$", "%1")
     win = disp:AddWindow({
         ID = 'MyWin',
         WindowTitle = 'BACKUP RENDERS?',
@@ -141,12 +149,12 @@ function RequestFolder()
             ui:VGroup{
                 ui:HGroup{
                     ui:Label{
-                        Weight = 0.1,
+                        Weight = 0.2,
                         ID = 'FolderLabel',
                         Text = 'Backup folder:',
                     },
                     ui:LineEdit{
-                        Weight = 0.8,
+                        Weight = 0.7,
                         ID='FolderLine', 
                         Text = target or " ",
                         Events = {ReturnPressed = true},
@@ -155,21 +163,26 @@ function RequestFolder()
                     ui:Button{
                         ID = 'FolderButton', 
                         Text = 'Browse folder...',
-                        Weight = 0.2,
+                        Weight = 0.3,
                     },
                 },
                 ui:HGroup{
                     ui:Label{
-                        Weight = 0.1,
+                        Weight = 0.2,
                         ID = 'RootLabel',
                         Text = 'Root folder:',
                     },
                     ui:LineEdit{
-                        Weight = 0.8,
+                        Weight = 0.7,
                         ID='RootLine', 
                         Text = root_folder,
                         Events = {ReturnPressed = true},
                         Alignment = {AlignCenter = true, AlignVCenter = true},
+                    },
+                    ui:Button{
+                        ID = 'GuessButton', 
+                        Text = 'Guess Root',
+                        Weight = 0.3,
                     },
                 },
                 ui:HGroup{
@@ -191,6 +204,7 @@ function RequestFolder()
     })
 
     itm = win:GetItems()
+    itm.FolderLine:SetClearButtonEnabled(true)    
     itm.RootLine:SetClearButtonEnabled(true)    
     function skipBackup()
         print("Backup task aborted")
@@ -214,8 +228,11 @@ function RequestFolder()
         fu:SetData("BackupRenders.Folder", backup_folder)
         fu:SetData("BackupRenders.Root", root_folder)
         disp:ExitLoop()
-    end    -- The Open Folder button was clicked
-
+    end    
+    function win.On.GuessButton.Clicked(ev)
+        itm["RootLine"].Text = parsed_root_folder
+    end    
+    -- The Open Folder button was clicked
     function win.On.FolderButton.Clicked(ev)
         selectedPath = fu:RequestDir(target)
         if selectedPath then
@@ -252,13 +269,29 @@ function GetMkdirOption()
     return mkdir_option 
 end
 
+
+function GetSavers()
+    savers = {}
+    saver_list = comp:GetToolList(false, "Saver")
+    if #saver_list == 0 then
+        print("No savers found in a comp")
+        return nil
+    end
+    for i, saver in ipairs(saver_list) do
+        if not saver:GetAttrs().TOOLB_PassThrough then
+            table.insert(savers, saver)
+        end
+    end
+    return savers
+end
+
 ------------------------------
 -- main function
 ------------------------------
 
-function DoBackup(saverList)
-
-    backup_folder, root_folder = RequestFolder()
+function DoBackup(saver_list)
+    
+    backup_folder, root_folder = RequestFolder(saver_list[1])
     mkdir_option = GetMkdirOption()
     if backup_folder == nil then
         return
@@ -266,7 +299,7 @@ function DoBackup(saverList)
     
     local path_separator = package.path:match( "(%p)%?%." )
 
-    for i, saver in ipairs(savers) do
+    for i, saver in ipairs(saver_list) do
         if not saver:GetAttrs().TOOLB_PassThrough then
             clip_name = comp:MapPath(saver.Clip[1])
             parse = ParseFilename(clip_name)
@@ -307,5 +340,7 @@ end
 
 
 comp = fu:GetCurrentComp()
-savers = comp:GetToolList(false, "Saver")
-DoBackup(savers)
+savers = GetSavers()
+if savers then
+    DoBackup(savers)
+end
