@@ -133,7 +133,7 @@ function RequestFolder(saver)
     local width, height = 600,100
     local clip_name = comp:MapPath(saver.Clip[1])
     local root_path = ParseFilename(ParseFilename(clip_name).Path).Path
-    local parsed_root_folder = string.gsub(root_path, ".*\\(.*)\\$", "%1")
+    local parsed_root_folder = string.gsub(root_path, ".*[\\,/](.*)[\\,/]$", "%1")
     win = disp:AddWindow({
         ID = 'MyWin',
         WindowTitle = 'BACKUP RENDERS?',
