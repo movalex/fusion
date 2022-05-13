@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 """
-    This is a Davinci Resolve ffmpeg render script that is triggered by render job in the deliver page.
+    This is a Davinci Resolve render script uses ImageMagick to convert EXR's to JPG sequence.
+    The script is triggered by render job in the deliver page.
     It needs to be placed in the following OS specific directory:
     Mac OS X:   ~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Deliver
     Windows:    %APPDATA%\Blackmagic Design\DaVinci Resolve\Fusion\Scripts\Deliver\
@@ -24,6 +25,8 @@ import sys
 from pathlib import Path
 
 DEBUG = False
+# APP_PATH = "C:\Program Files\ImageMagick-7.1.0-Q16-HDRI\magick.exe"
+APP_PATH = "magick" # do not forget to add magick.exe to the $Path variable
 
 
 def getJobDetailsBasedOnId(project, jobId):
@@ -76,10 +79,9 @@ def build_command(job_details):
     frame_rate = job_details["FrameRate"]
     mark_in = job_details["MarkIn"]
 
-    # app_path = "C:\Program Files\ImageMagick-7.1.0-Q16-HDRI\magick.exe"
-    app_path = "magick"
 
-    print(f"[App Used] {Path(app_path).name}")
+
+    print(f"[App Used] {Path(APP_PATH).name}")
     padding = ""
 
     if not is_movie_format(file_path.name):
@@ -97,7 +99,7 @@ def build_command(job_details):
         output_filename = file_path.parent / "JPG" / Path(serialize.stem + ".jpg")
 
         command = (
-            f"{app_path} {command_input_path} -alpha off -colorspace sRGB -scene"
+            f"{APP_PATH} {command_input_path} -alpha off -colorspace sRGB -scene"
             f" {scene} {output_filename}"
         )
         return command, log_filename
