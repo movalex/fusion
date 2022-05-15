@@ -119,20 +119,18 @@ def set_range(loader) -> None:
 
     clip_out = loader.GlobalOut[1]
     trim_end = loader_attrs["TOOLIT_Clip_TrimOut"][1]
+
+    comp.SetAttrs({"COMPN_GlobalStart": clip_in})
     if trim_start == clip_in:
-        comp.SetAttrs({"COMPN_GlobalStart": clip_in})
         comp.SetAttrs({"COMPN_RenderStart": clip_in})
     else:
-        comp.SetAttrs({"COMPN_GlobalStart": clip_in})
         comp.SetAttrs({"COMPN_RenderStart": trim_start})
         clip_in = trim_start
-
+    comp.SetAttrs({"COMPN_GlobalEnd": clip_out})
     if trim_end == clip_out:
-        comp.SetAttrs({"COMPN_GlobalEnd": clip_out})
         comp.SetAttrs({"COMPN_RenderEnd": clip_out})
     else:
-        comp.SetAttrs({"COMPN_GlobalStart": clip_in})
-        comp.SetAttrs({"COMPN_RenderStart": trim_end})
+        comp.SetAttrs({"COMPN_RenderEnd": trim_end})
         clip_out = trim_end
 
     comp.EndUndo()
