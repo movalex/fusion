@@ -5,17 +5,37 @@ import time
 
 """
     This is a Davinci Resolve script to save single still in stills folder
-    Author: Alexey Bogomolov
     Email: mail@abogomolov.com
-    License: MIT
-    Copyright: 2022
+    Copyright © 2022 Alexey Bogomolov
+    
+    Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+    
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+    
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+    OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+    
 """
 STILL_FRAME_REF = 2
 
 
 def grab_still():
-    """create stills from all clips in a timeline
-    save the files to requested folder
+    """
+    create still from current position on the timeline
+    save the files to the predefined folder
+    location is not defined by set_stills_location script, still is saved to Desktop 
+    delete the still from the gallery afterwards
     """
     if not fu.GetResolve():
         print("This is a script for Davinci Resolve")
@@ -35,7 +55,7 @@ def grab_still():
         print(f"You can set stills location with set_stills_location script (obviously)")
     
     album.ExportStills([still], target_folder, timeline_name, "jpg")
-    # album.DeleteStills(still)
+    album.DeleteStills(still)
     resolve.OpenPage("edit")
     print(f"Saved still to {target_folder}")
 
