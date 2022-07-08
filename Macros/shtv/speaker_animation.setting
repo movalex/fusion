@@ -1,0 +1,117 @@
+{
+	Tools = ordered() {
+		speaker = GroupOperator {
+			CtrlWZoom = false,
+			CustomData = {
+				Path = {
+					Map = {
+						["Setting:"] = "EditTemplates:\\Generators\\"
+					}
+				},
+			},
+			Inputs = ordered() {
+				Input1 = InstanceInput {
+					SourceOp = "Transform1",
+					Source = "Center",
+				},
+				Input2 = InstanceInput {
+					SourceOp = "Transform1",
+					Source = "Size",
+					Default = 0.177,
+				},
+				Input3 = InstanceInput {
+					SourceOp = "Merge1",
+					Source = "Blend",
+					Default = 1,
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Merge1",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Pos = { 237.913, 49.5 },
+				Flags = {
+					AllowPan = false,
+					ConnectedSnap = true,
+					AutoSnap = true,
+					RemoveRouters = true
+				},
+				Size = { 376.695, 305.073, -42.6409, 24.2424 },
+				Direction = "Horizontal",
+				PipeStyle = "Direct",
+				Scale = 1,
+				Offset = { 0, 0 }
+			},
+			Tools = ordered() {
+				Loader1 = Loader {
+					Clips = {
+						Clip {
+							ID = "Clip1",
+							Filename = "D:\\RENDER\\SHANSON\\SKAZKA5_radio\\speaker_animated\\speaker_animated_0000.png",
+							FormatID = "PNGFormat",
+							Length = 42,
+							LengthSetManually = true,
+							TrimIn = 0,
+							TrimOut = 41,
+							ExtendFirst = 0,
+							ExtendLast = 0,
+							Loop = 0,
+							AspectMode = 0,
+							Depth = 0,
+							TimeCode = 0,
+							GlobalStart = 0,
+							GlobalEnd = 41
+						}
+					},
+					Inputs = {
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						["Clip1.PNGFormat.PostMultiply"] = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 109.04, 75.4244 } },
+				},
+				Transform1 = Transform {
+					CtrlWShown = false,
+					Inputs = {
+						Center = Input { Value = { -0.639838129496403, 0.830221645367412 }, },
+						Size = Input { Value = 0.177, },
+						Input = Input {
+							SourceOp = "Loader1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 109.04, 153.258 } },
+				},
+				Merge1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Background1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Transform1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 214.634, 153.258 } },
+				},
+				Background1 = Background {
+					Inputs = {
+						GlobalOut = Input { Value = 357, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftAlpha = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 214.634, 75.2618 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "speaker"
+}
