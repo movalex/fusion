@@ -20,7 +20,7 @@ if not mainWindow or mainWindow.Width == -1 then
 end
 
 minWidth, minHeight = 300, 200
-originX, originY = mainWindow.Left + (mainWindow.Width/2) - (minWidth/2), mainWindow.Top + (mainWindow.Height/2) - (minHeight/2)
+originX, originY = mainWindow.Left + (mainWindow.Width/4) - minWidth, mainWindow.Top + (mainWindow.Height/4) - minHeight
 
 
 
@@ -89,6 +89,7 @@ end
 
 -- Now we can use our flag to differentiate button presses
 function win.On.Button.Clicked(ev)
+    dump(ev)
 	if shiftdown then
 		print("Shift+Button")
 	else
