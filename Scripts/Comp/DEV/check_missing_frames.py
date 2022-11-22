@@ -87,7 +87,14 @@ def get_line_numbers_concat(line_nums):
 
 
 def scan_all_loaders():
-    for tool in comp.GetToolList(False, "Loader").values():
+    failed = 0
+    loaders = comp.GetToolList(False, "Loader")
+    total = len(loaders)
+    if total == 0:
+        print("no loaders found in the comp")
+        return
+
+    for tool in loaders.values():
         file_path = comp.MapPath(tool.Clip[fu.TIME_UNDEFINED])
         # print(file_path)
         if not file_path or is_movie_format(file_path):
@@ -120,6 +127,10 @@ def scan_all_loaders():
             print("-" * 18)
             print(get_line_numbers_concat(missing_frames))
             print("-" * 18)
+            failed += 1
+
+    print(f"found {failed} loaders with mismatched frames")
+
 
 
 if __name__ == "__main__":
