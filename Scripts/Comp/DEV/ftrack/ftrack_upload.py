@@ -42,22 +42,21 @@ def run_pip_install(package, print_to_console=True):
 
 def install_ftrack_api():
     print("Installing ftrack libraries")
-    # PKG = ["ftrack-python-api", "ftrack-action-handler"]
-    PKG = ["ftrack-python-api", "tqdm"]
-    # for package in PKG:
-    #     rc = run_pip_install(package)
-
-    rc = run_pip_install(" ".join(PKG))
-    if not rc:
-        print("Now try to launch the script again!")
-        sys.exit()
-    else:
-        print(
-            f"{PKG} installation has failed for some reason"
-            "\nCheck if internet connection is available."
-            "\nPlease report this issue: mail@abogomolov.com"
-        )
-        sys.exit()
+    PKG = ["ftrack-python-api", "ftrack-action-handler", "tqdm"]
+    # PKG = ["ftrack-python-api", "tqdm"]
+    # rc = run_pip_install(" ".join(PKG))
+    for package in PKG:
+        rc = run_pip_install(package)
+        if not rc:
+            print("Now try to launch the script again!")
+            sys.exit()
+        else:
+            print(
+                f"{package} installation has failed for some reason"
+                "\nCheck if internet connection is available."
+                "\nPlease report this issue: mail@abogomolov.com"
+            )
+            sys.exit()
 
 
 try:
@@ -82,8 +81,9 @@ def get_shot(composition):
 def publish_ftrack_version(filepath):
     # filepath = 'R:\\PROJECTS\\ZEKE\\2210_Consumed\\WIP\\CON_1630_v02.mov'
     file_name = Path(filepath).stem
+    print(f"found file : {file_name}")
     asset_name = "_".join(file_name.split("_")[:2])
-    print(f"publishing {file_name} to ftrack")
+    print(f"publishing {asset_name} to ftrack")
 
     shot_number = get_shot(comp)
     if not shot_number:
@@ -114,7 +114,7 @@ def publish_ftrack_version(filepath):
         asset = session.query(f"Asset where name is {asset_name}").first()
         if not asset:
             asset = session.create(
-                "Asset", {"name": file_name, "type": asset_type, "parent": asset_parent}
+                "Asset", {"name": asset_name, "type": asset_type, "parent": asset_parent}
             )
         asset_version = session.create("AssetVersion", {"asset": asset, "task": task})
 
@@ -125,10 +125,10 @@ def publish_ftrack_version(filepath):
 
         # for component in job["job_components"]:
         #     print(server_location.get_url(component))
-        message = "Uploaded with API"
-        note = asset_version.create_note(message, author=user)
+        # message = "Uploaded with API"
+        # note = asset_version.create_note(message, author=user)
         session.commit()
-    print("Done!")
+    print("Ftrack publishing -- Done!")
 
 
 def main():
