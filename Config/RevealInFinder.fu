@@ -11,7 +11,7 @@
 			{
 				Execute = [[
                 comp = obj:Comp()
-                comp:RunScript('Scripts:Comp/reveal_in_finder.py')
+                comp:RunScript('Scripts:Comp/DEV/reveal_in_finder.py')
                 ]],
 			},
 		},
