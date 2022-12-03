@@ -69,7 +69,7 @@
 					Clips = {
 						Clip {
 							ID = "Clip1",
-							Filename = "D:\\OneDrive\\SHANSON\\LOGO\\4x\\TVolna_01.png",
+							Filename = "D:\\OneDrive - LLC SHANSON TV\\PROJECTS\\LOGO\\4x\\TVolna_01.png",
 							FormatID = "PNGFormat",
 							StartFrame = 1,
 							Length = 2,
@@ -101,7 +101,7 @@
 					Clips = {
 						Clip {
 							ID = "Clip1",
-							Filename = "D:\\OneDrive\\SHANSON\\LOGO\\4x\\shtv_logo.png",
+							Filename = "D:\\OneDrive - LLC SHANSON TV\\PROJECTS\\LOGO\\4x\\shtv_logo.png",
 							FormatID = "PNGFormat",
 							StartFrame = -1,
 							LengthSetManually = true,
@@ -132,7 +132,7 @@
 					Clips = {
 						Clip {
 							ID = "Clip1",
-							Filename = "D:\\OneDrive\\SHANSON\\PRYAMAYA_RECH\\models\\UV\\Cube.png",
+							Filename = "D:\\OneDrive - LLC SHANSON TV\\PROJECTS\\PRYAMAYA_RECH\\models\\UV\\Cube.png",
 							FormatID = "PNGFormat",
 							StartFrame = -1,
 							LengthSetManually = true,
@@ -191,7 +191,7 @@
 					Clips = {
 						Clip {
 							ID = "Clip1",
-							Filename = "D:\\OneDrive\\SHANSON\\LOGO\\4x\\shtv_logo.png",
+							Filename = "D:\\OneDrive - LLC SHANSON TV\\PROJECTS\\LOGO\\4x\\shtv_logo.png",
 							FormatID = "PNGFormat",
 							StartFrame = -1,
 							LengthSetManually = true,
@@ -761,7 +761,7 @@
 						["Transform3DOp.Scale.X"] = Input { Value = 10, },
 						["Transform3DOp.Scale.Y"] = Input { Value = 10, },
 						["Transform3DOp.Scale.Z"] = Input { Value = 10, },
-						ImportFile = Input { Value = "\\\\Meijin\\raid\\OneDrive\\SHANSON\\PRYAMAYA_RECH\\models\\chamfer_cube.fbx", },
+						ImportFile = Input { Value = "D:\\OneDrive - LLC SHANSON TV\\PROJECTS\\PRYAMAYA_RECH\\models\\chamfer_cube.fbx", },
 						ObjName = Input { Value = "Cube", },
 						TakeName = Input { Value = "No Animation", },
 						TransformToWorld = Input { Value = 0, },
