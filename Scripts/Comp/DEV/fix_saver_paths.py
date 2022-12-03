@@ -63,7 +63,9 @@ def main():
             path = saver.Clip[1]
             parent = Path(path).parent
             ext = Path(path).suffix
-            new_path = Path(rf"{parent}/{episode}_{shot}_{version}{ext}").resolve()
+            if ext in ['.exr', '.dpx']:
+                ext = f".{ext}"
+            new_path = Path(rf"{parent}/{episode}_{shot}_{version}{ext}")
             print(f"new saver path: {new_path}")
             saver.Clip[1] = str(new_path)
         comp.EndUndo()
