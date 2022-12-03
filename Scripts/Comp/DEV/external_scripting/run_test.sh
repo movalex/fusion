@@ -1,5 +1,5 @@
 #!/bin/bash
 
-date >> $HOME/date.log
+date >> /var/log/date_test.log
 
 exit 1
