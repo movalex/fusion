@@ -4,6 +4,8 @@ import subprocess
 import re
 from pathlib import Path
 
+DRY_RUN = True
+
 
 def get_python_executable() -> str:
     lib_path = Path(os.__file__).parent.parent
@@ -42,22 +44,22 @@ def run_pip_install(package, print_to_console=True):
 
 def install_ftrack_api():
     print("Installing ftrack libraries")
-    PKG = ["ftrack-python-api", "ftrack-action-handler", "tqdm"]
+    PKG = ["ftrack-python-api"]
     # PKG = ["ftrack-python-api", "tqdm"]
     # rc = run_pip_install(" ".join(PKG))
     for package in PKG:
         rc = run_pip_install(package)
         if not rc:
-            print("Now try to launch the script again!")
-            sys.exit()
+            print(f"Package {package} installed\n")
         else:
             print(
                 f"{package} installation has failed for some reason"
                 "\nCheck if internet connection is available."
                 "\nPlease report this issue: mail@abogomolov.com"
             )
-            sys.exit()
-
+    print("Now relaunch the script, please")
+    sys.exit()
+    
 
 try:
     import ftrack_api
@@ -108,26 +110,30 @@ def publish_ftrack_version(filepath):
         if child["name"] == "compositing":
             task = child
             break
-    if task:
-        asset_type = session.query('AssetType where name is "Upload"').one()
-        asset_parent = task["parent"]
-        asset = session.query(f"Asset where name is {asset_name}").first()
-        if not asset:
-            asset = session.create(
-                "Asset", {"name": asset_name, "type": asset_type, "parent": asset_parent}
-            )
-        asset_version = session.create("AssetVersion", {"asset": asset, "task": task})
+    if not task:
+        print("no Compositing ftrack task found")
+        return
+    if DRY_RUN:
+        return
+    asset_type = session.query('AssetType where name is "Upload"').one()
+    asset_parent = task["parent"]
+    asset = session.query(f"Asset where name is {asset_name}").first()
+    if not asset:
+        asset = session.create(
+            "Asset", {"name": asset_name, "type": asset_type, "parent": asset_parent}
+        )
+    asset_version = session.create("AssetVersion", {"asset": asset, "task": task})
 
-        asset_version.create_component(filepath, location=server_location)
+    asset_version.create_component(filepath, location=server_location)
 
-        # pbar = tqdm(desc="Upload progress")
-        job = asset_version.encode_media(filepath)
+    # pbar = tqdm(desc="Upload progress")
+    job = asset_version.encode_media(filepath)
 
-        # for component in job["job_components"]:
-        #     print(server_location.get_url(component))
-        # message = "Uploaded with API"
-        # note = asset_version.create_note(message, author=user)
-        session.commit()
+    for component in job["job_components"]:
+        print(server_location.get_url(component))
+    # message = "Uploaded with API"
+    # note = asset_version.create_note(message, author=user)
+    # session.commit()
     print("Ftrack publishing -- Done!")
 
 
