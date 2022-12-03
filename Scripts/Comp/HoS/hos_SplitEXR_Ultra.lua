@@ -812,6 +812,7 @@ function showUI()
             end
             if tool.ID == "MediaIn" then
                 print('Davinci Resolve MediaIn nodes are not supported by SplitEXR yet. Try Loader instead')
+                processMediaIn(tool)
                 return
             end
             -- Process only the first actively selected node
@@ -852,7 +853,45 @@ function showUI()
 end
 
 
+function processMediaIn(tool)
+    -- Scan EXR part and channel names
+    elements = {
+        'Layer',
+        'RedName',
+        'GreenName',
+        'BlueName',
+        'AlphaName',
+        'ZName',
+        'CovName',
+        'ObjIDName',
+        'MatIDName',
+        'UName',
+        'VName',
+        'XNormName',
+        'YNormName',
+        'ZNormName',
+        'XVelName',
+        'YVelName',
+        'XRevVelName',
+        'YRevVelName',
+        'XPosName',
+        'YPosName',
+        'ZPosName',
+        'XDispName',
+        'YDispName',
+    }
 
+    -- Dump the active part/channel information to the Console window
+    sel = tool or comp.ActiveTool()
+    if sel:GetAttrs().TOOLS_RegID == 'MediaIn' then
+        print('[Node] "' .. tostring(sel.Name) .. '"')
+        for i, e in ipairs(elements) do
+            print('\t[' .. tostring(e) .. '] "'.. tostring(sel:GetInput(e)) .. '"')
+        end
+    else
+        error('[Selection Error] Please select a MediaIn node before running this script!')
+    end
+end
 
 -------------------------------------------------------------------------------
 -- Main
