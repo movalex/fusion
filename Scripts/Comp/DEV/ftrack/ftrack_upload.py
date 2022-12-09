@@ -4,7 +4,8 @@ import subprocess
 import re
 from pathlib import Path
 
-DRY_RUN = True
+DRY_RUN = False
+REPLACE_LAST_VERSION = True
 
 
 def get_python_executable() -> str:
@@ -114,6 +115,7 @@ def publish_ftrack_version(filepath):
         print("no Compositing ftrack task found")
         return
     if DRY_RUN:
+        print("Dry run is actuvated!")
         return
     asset_type = session.query('AssetType where name is "Upload"').one()
     asset_parent = task["parent"]
@@ -122,15 +124,19 @@ def publish_ftrack_version(filepath):
         asset = session.create(
             "Asset", {"name": asset_name, "type": asset_type, "parent": asset_parent}
         )
+    last_asset_version = asset["latest_version"]
+    if REPLACE_LAST_VERSION and last_asset_version:
+        print("replacing the last version")
+        session.delete(last_asset_version)
+        session.commit()
     asset_version = session.create("AssetVersion", {"asset": asset, "task": task})
-
     asset_version.create_component(filepath, location=server_location)
 
     # pbar = tqdm(desc="Upload progress")
     job = asset_version.encode_media(filepath)
 
-    for component in job["job_components"]:
-        print(server_location.get_url(component))
+    # for component in job["job_components"]:
+    #     print(server_location.get_url(component))
     # message = "Uploaded with API"
     # note = asset_version.create_note(message, author=user)
     # session.commit()
