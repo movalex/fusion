@@ -115,7 +115,7 @@ def publish_ftrack_version(filepath):
         print("no Compositing ftrack task found")
         return
     if DRY_RUN:
-        print("Dry run is actuvated!")
+        print("Dry run is activated!")
         return
     asset_type = session.query('AssetType where name is "Upload"').one()
     asset_parent = task["parent"]
@@ -128,6 +128,7 @@ def publish_ftrack_version(filepath):
     if REPLACE_LAST_VERSION and last_asset_version:
         print("replacing the last version")
         session.delete(last_asset_version)
+        print("commiting changes...")
         session.commit()
     asset_version = session.create("AssetVersion", {"asset": asset, "task": task})
     asset_version.create_component(filepath, location=server_location)
