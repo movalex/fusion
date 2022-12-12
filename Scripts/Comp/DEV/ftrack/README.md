@@ -1,5 +1,9 @@
 _Usage_:
-select the saver with rendered prores version, and run the script
+Select the saver with rendered prores version, and run the script
+Set `REPLACE_LATEST_VERSION` variable to `True` to, you know, replace the latest ftrack version
+
+_TODO_:
+Create UI
 
 _Dependencies_:
 
