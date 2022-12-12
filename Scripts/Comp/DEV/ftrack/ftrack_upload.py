@@ -13,7 +13,10 @@ def get_python_executable() -> str:
     if platform.system() == "Windows":
         python_executable = lib_path / "python.exe"
     else:
-        python_executable = lib_path / "python3"
+        python_executable = lib_path.parent/ "bin" / "python3"
+    if not python_executable.exists():
+        print("No Python executable found. Please report this.")
+        return
     return str(python_executable)
 
 
@@ -28,6 +31,8 @@ def output_to_console(process):
 
 def run_pip_install(package, print_to_console=True):
     python_executable = get_python_executable()
+    if not python_executable:
+        return
     command = [
         python_executable,
         "-m",
