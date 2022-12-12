@@ -60,10 +60,11 @@ def install_ftrack_api():
             )
     print("Now relaunch the script, please")
     sys.exit()
-    
+
 
 try:
     import ftrack_api
+
     # from tqdm import tqdm
 except ModuleNotFoundError:
     install_ftrack_api()
@@ -71,7 +72,7 @@ except ModuleNotFoundError:
 comp = fu.GetCurrentComp()
 
 
-def get_shot(composition):
+def get_shot_number(composition):
     name = composition.GetAttrs()["COMPS_Name"]
     print(f"comp name : {name}")
     try:
@@ -81,6 +82,55 @@ def get_shot(composition):
     return shot
 
 
+def post_note(session, text: str):
+    user = session.query("User").first()
+    note = asset_version.create_note(text, author=user)
+
+
+def get_task(shot, task_name=None):
+    if not task_name:
+        print("no task name provided")
+        return
+    for task in shot["children"]:
+        if task_name in task["name"].lower():
+            return task
+
+
+def create_asset_version(session, shot, name: str):
+    asset_type = session.query('AssetType where name is "Upload"').one()
+    asset = session.query(f"Asset where name is {name}").first()
+    if not asset:
+        asset = session.create(
+            "Asset", {"name": name, "type": asset_type, "parent": shot}
+        )
+    latest_version = asset["latest_version"]
+    if REPLACE_LAST_VERSION and latest_version:
+        print("replacing the latest version")
+        session.delete(latest_version)
+        print("commiting changes...")
+        session.commit()
+    else:
+        print("creating new asset version")
+    task = get_task(shot, "compositing")
+    if not task:
+        print("no compostiting task found")
+        return
+    asset_version = session.create("AssetVersion", {"asset": asset, "task": task})
+    return asset_version
+
+
+def set_component_metadata(component, data: dict):
+    component["metadata"]["ftr_meta"] = json.dumps(
+        {
+            "frameIn": data["In"],
+            "frameOut": data["Out"],
+            "frameRate": data["Framerate"],
+            "height": data["Width"],
+            "width": data["height"],
+        }
+    )
+
+
 def publish_ftrack_version(filepath):
     # filepath = 'R:\\PROJECTS\\ZEKE\\2210_Consumed\\WIP\\CON_1630_v02.mov'
     file_name = Path(filepath).stem
@@ -88,7 +138,7 @@ def publish_ftrack_version(filepath):
     asset_name = "_".join(file_name.split("_")[:2])
     print(f"publishing {asset_name} to ftrack")
 
-    shot_number = get_shot(comp)
+    shot_number = get_shot_number(comp)
     if not shot_number:
         print("shot number not found")
         return
@@ -98,49 +148,39 @@ def publish_ftrack_version(filepath):
     if not session:
         print("could not connect to API, check API settings")
         return
-    user = session.query("User").first()
     print(f"connected to API session: {session.server_url} as {session.api_user}")
     print(f"found shot number: {shot_number}")
     server_location = session.query('Location where name is "ftrack.server"').one()
 
     q = session.query(f"select id from Shot where name is {shot_number}")
     shot = q.first()
-    version = session.query("AssetVersion", shot["id"]).first()
 
-    for child in shot["children"]:
-        if child["name"] == "compositing":
-            task = child
-            break
-    if not task:
-        print("no Compositing ftrack task found")
-        return
     if DRY_RUN:
         print("Dry run is activated!")
         return
-    asset_type = session.query('AssetType where name is "Upload"').one()
-    asset_parent = task["parent"]
-    asset = session.query(f"Asset where name is {asset_name}").first()
-    if not asset:
-        asset = session.create(
-            "Asset", {"name": asset_name, "type": asset_type, "parent": asset_parent}
-        )
-    last_asset_version = asset["latest_version"]
-    if REPLACE_LAST_VERSION and last_asset_version:
-        print("replacing the last version")
-        session.delete(last_asset_version)
-        print("commiting changes...")
-        session.commit()
-    asset_version = session.create("AssetVersion", {"asset": asset, "task": task})
-    asset_version.create_component(filepath, location=server_location)
 
-    # pbar = tqdm(desc="Upload progress")
+    asset_version = create_asset_version(session, shot, asset_name)
+
+    if not asset_version:
+        print(f"could not create an asset version")
+        return
+    component = asset_version.create_component(filepath, location=server_location)
+
+    #     component = asset_version.create_component(
+    #     path=filepath,
+    #     data={
+    #         'name': 'ftrackreview-mp4'
+    #     },
+    #     location=server_location
+    # )
+
     job = asset_version.encode_media(filepath)
 
+    # try to get the published url - not working
     # for component in job["job_components"]:
     #     print(server_location.get_url(component))
-    # message = "Uploaded with API"
-    # note = asset_version.create_note(message, author=user)
-    # session.commit()
+
+    session.commit()
     print("Ftrack publishing -- Done!")
 
 
@@ -157,19 +197,3 @@ def main():
 
 
 main()
-
-# component = version.create_component(
-#     path=filepath,
-#     data={
-#         'name': 'ftrackreview-mp4'
-#     },
-#     location=server_location
-# )
-
-# component['metadata']['ftr_meta'] = json.dumps({
-#     'frameIn': 1000,
-#     'frameOut': 1049,
-#     'frameRate': 23.976,
-#     'height': 2048,
-#     'width': 802
-# })
