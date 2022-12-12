@@ -1,7 +1,7 @@
 _Usage_:
 
 * Select the saver with rendered prores version, and run the script.
-* Set `REPLACE_LATEST_VERSION` variable to `True` to, you know, replace the latest ftrack version
+* Set `REPLACE_LATEST_VERSION` variable to `True` to, you know, replace the latest ftrack version during upload
 
 _TODO_:
 
