@@ -12,7 +12,7 @@ except ModuleNotFoundError:
 
 comp = fu.GetCurrentComp()
 DRY_RUN = False
-REPLACE_LAST_VERSION = True
+REPLACE_LATEST_VERSION = True
 
 
 def get_shot_number(composition):
@@ -47,7 +47,7 @@ def create_asset_version(session, shot, name: str):
             "Asset", {"name": name, "type": asset_type, "parent": shot}
         )
     latest_version = asset["latest_version"]
-    if REPLACE_LAST_VERSION and latest_version:
+    if REPLACE_LATEST_VERSION and latest_version:
         print("replacing the latest version")
         session.delete(latest_version)
         print("commiting changes...")
