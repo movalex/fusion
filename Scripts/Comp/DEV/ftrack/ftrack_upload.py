@@ -11,7 +11,7 @@ except ModuleNotFoundError:
     sys.exit()
 
 comp = fu.GetCurrentComp()
-DRY_RUN = True
+DRY_RUN = False
 REPLACE_LAST_VERSION = True
 
 
