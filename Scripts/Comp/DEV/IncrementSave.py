@@ -17,10 +17,8 @@
         - Set $INCREMENT_SAVE_PATH environment variable to have your increment saves in specific folder
     MIT License: https://mit-license.org/
     Copyright 2020 Alex Bogomolov
-    v.1.0 - 2020/06/26:
-        * initial release
+    v.1.1 - 2022/12/20
     email: mail@abogomolov.com
-    donations: https://paypal.me/aabogomolov/10usd
 """
 
 import os
@@ -54,10 +52,18 @@ def get_increment_number(path):
             comps.append(file)
     if len(comps) > 0:
         for file in comps:
-            num = re.findall(r"(\d{4}).comp$", str(file))[0]
-            if int(num) > increment_number:
-                increment_number = int(num)
-    return increment_number
+            try:
+                num = re.findall(r"(\d{4}).comp$", str(file))[0]
+                if int(num) > increment_number:
+                    increment_number = int(num)
+            except IndexError:
+                print("Found these incrementComp versions:")
+                for comp in comps:
+                    print(comp.name)
+                return
+            except Exception:
+                raise
+    return increment_number + 1
 
 
 def increment_comp():
@@ -70,7 +76,12 @@ def increment_comp():
     if not save_path.exists():
         save_path.mkdir(parents=True)
     number = get_increment_number(save_path)
-    number += 1
+    if not number:
+        print(
+            "Existing incrementSave folder found. \nHowever the script could not get the latest increment number"
+            "\nPlease check if all incrementSave files for the current comp are named correctly, and there's no cloud sync renaming issues"
+        )
+        return
     destination_file = save_path / comp_name.with_suffix(f".{number:04}.comp")
     print(f"saved comp version: {destination_file.name}")
     try:
