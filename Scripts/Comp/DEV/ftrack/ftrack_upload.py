@@ -1,5 +1,6 @@
 import os
 import re
+import json
 from pathlib import Path
 from install_package import install_ftrack_packages
 
@@ -12,7 +13,87 @@ except ModuleNotFoundError:
 
 comp = fu.GetCurrentComp()
 DRY_RUN = False
-REPLACE_LATEST_VERSION = True
+
+
+def show_ui(shot_name: str):
+    ui = fu.UIManager
+    disp = bmd.UIDispatcher(ui)
+    win = disp.AddWindow(
+        {
+            "ID": "FtrackUpload",
+            "TargetID": "FtrackUpload",
+            "WindowTitle": "Upload the Saver file to Ftrack",
+            "Geometry": [800, 600, 430, 130],
+        },
+        [
+            ui.VGroup(
+                [
+                    ui.HGroup(
+                        [
+                            ui.Label(
+                                {
+                                    "ID": "TopLabel",
+                                    "Text": f"publishing shot: {shot_name}",
+                                }
+                            ),
+                        ]
+                    ),
+                    ui.HGroup(
+                        [
+                            ui.CheckBox(
+                                {
+                                    "ID": "CheckBox",
+                                    "Text": "Replace Latest Version",
+                                }
+                            ),
+                        ]
+                    ),
+                    ui.HGroup(
+                        [
+                            ui.Label(
+                                {"Weight": 0.2, "ID": "ShotLabel", "Text": "Add Note:"}
+                            ),
+                            ui.LineEdit(
+                                {
+                                    "Weight": 0.8,
+                                    "ID": "NoteLine",
+                                    "Events": {"ReturnPressed": True},
+                                    "Alignment": {
+                                        "AlignHCenter": True,
+                                        "AlignVCenter": True,
+                                    },
+                                }
+                            ),
+                        ],
+                    ),
+                    ui.HGroup([ui.Button({"ID": "UploadButton", "Text": "Upload"})]),
+                ],
+            ),
+        ],
+    )
+    itm = win.GetItems()
+
+    itm["NoteLine"].SetClearButtonEnabled(True)
+
+    def close(ev):
+        disp.ExitLoop()
+
+    def request_folder(ev):
+        target_folder = fu.RequestDir()
+        itm["NoteLine"].Text = target_folder
+
+    itm["NoteLine"].SetPlaceholderText("Enter the Note")
+
+    win.On.UploadButton.Clicked = close
+    win.On.FtrackUpload.Close = close
+    # win.On.UploadButton.Clicked = close
+
+    win.Show()
+    disp.RunLoop()
+    win.Hide()
+    replace_status = itm["CheckBox"].Checked
+    result = itm["NoteLine"].Text
+    return replace_status, result
 
 
 def get_shot_number(composition):
@@ -39,7 +120,7 @@ def get_task(shot, task_name=None):
             return task
 
 
-def create_asset_version(session, shot, name: str):
+def create_asset_version(session, shot, name: str, replace_latest: bool):
     asset_type = session.query('AssetType where name is "Upload"').one()
     asset = session.query(f"Asset where name is {name}").first()
     if not asset:
@@ -47,7 +128,7 @@ def create_asset_version(session, shot, name: str):
             "Asset", {"name": name, "type": asset_type, "parent": shot}
         )
     latest_version = asset["latest_version"]
-    if REPLACE_LATEST_VERSION and latest_version:
+    if replace_latest and latest_version:
         print("replacing the latest version")
         session.delete(latest_version)
         print("commiting changes...")
@@ -97,31 +178,23 @@ def publish_ftrack_version(filepath):
 
     q = session.query(f"select id from Shot where name is {shot_number}")
     shot = q.first()
-
+    replace_latest, note_text = show_ui(shot_number)
+    print(replace_latest, note_text)
     if DRY_RUN:
         print("Dry run is activated!")
         return
 
-    asset_version = create_asset_version(session, shot, asset_name)
+    asset_version = create_asset_version(session, shot, asset_name, replace_latest)
 
     if not asset_version:
         print(f"could not create an asset version")
         return
     component = asset_version.create_component(filepath, location=server_location)
 
-    #     component = asset_version.create_component(
-    #     path=filepath,
-    #     data={
-    #         'name': 'ftrackreview-mp4'
-    #     },
-    #     location=server_location
-    # )
-
     job = asset_version.encode_media(filepath)
-
-    # try to get the published url - not working
-    # for component in job["job_components"]:
-    #     print(server_location.get_url(component))
+    if note_text:
+        user = session.query("User").first()
+        note = asset_version.create_note(note_text, author=user)
 
     session.commit()
     print("Ftrack publishing -- Done!")
