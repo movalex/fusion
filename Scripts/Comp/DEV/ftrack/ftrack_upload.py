@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import sys
 from pathlib import Path
 from install_package import install_ftrack_packages
 
@@ -20,8 +21,8 @@ def show_ui(shot_name: str):
     disp = bmd.UIDispatcher(ui)
     win = disp.AddWindow(
         {
-            "ID": "FtrackUpload",
-            "TargetID": "FtrackUpload",
+            "ID": "FtrackUploadWindow",
+            "TargetID": "FtrackUploadWindow",
             "WindowTitle": "Upload the Saver file to Ftrack",
             "Geometry": [800, 600, 430, 130],
         },
@@ -66,7 +67,12 @@ def show_ui(shot_name: str):
                             ),
                         ],
                     ),
-                    ui.HGroup([ui.Button({"ID": "UploadButton", "Text": "Upload"})]),
+                    ui.HGroup(
+                        [
+                            ui.Button({"ID": "UploadButton", "Text": "Upload"}),
+                            ui.Button({"ID": "CancelButton", "Text": "Cancel"}),
+                        ]
+                    ),
                 ],
             ),
         ],
@@ -75,25 +81,26 @@ def show_ui(shot_name: str):
 
     itm["NoteLine"].SetClearButtonEnabled(True)
 
-    def close(ev):
+
+    def cancel(ev):
         disp.ExitLoop()
+        return None
 
-    def request_folder(ev):
-        target_folder = fu.RequestDir()
-        itm["NoteLine"].Text = target_folder
+    def do_upload(ev):
+        replace_status = itm["CheckBox"].Checked
+        result = itm["NoteLine"].Text
+        disp.ExitLoop()
+        return replace_status, result
 
-    itm["NoteLine"].SetPlaceholderText("Enter the Note")
+    itm["NoteLine"].SetPlaceholderText("Enter the note")
 
-    win.On.UploadButton.Clicked = close
-    win.On.FtrackUpload.Close = close
-    # win.On.UploadButton.Clicked = close
+    win.On.UploadButton.Clicked = do_upload
+    win.On.CancelButton.Clicked = cancel
+    win.On.FtrackUploadWindow.Close = cancel 
 
     win.Show()
     disp.RunLoop()
     win.Hide()
-    replace_status = itm["CheckBox"].Checked
-    result = itm["NoteLine"].Text
-    return replace_status, result
 
 
 def get_shot_number(composition):
@@ -178,8 +185,13 @@ def publish_ftrack_version(filepath):
 
     q = session.query(f"select id from Shot where name is {shot_number}")
     shot = q.first()
-    replace_latest, note_text = show_ui(shot_number)
-    print(replace_latest, note_text)
+
+    try:
+        replace_latest, note_text = show_ui(shot_number)
+    except TypeError:
+        print("Upload cancelled")
+        sys.exit()
+
     if DRY_RUN:
         print("Dry run is activated!")
         return
