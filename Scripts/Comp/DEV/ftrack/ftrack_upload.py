@@ -81,27 +81,26 @@ def show_ui(shot_name: str):
 
     itm["NoteLine"].SetClearButtonEnabled(True)
 
-
     def cancel(ev):
         disp.ExitLoop()
         return None
 
     def do_upload(ev):
-        replace_status = itm["CheckBox"].Checked
-        result = itm["NoteLine"].Text
         disp.ExitLoop()
-        return replace_status, result
 
     itm["NoteLine"].SetPlaceholderText("Enter the note")
 
     win.On.UploadButton.Clicked = do_upload
     win.On.CancelButton.Clicked = cancel
-    win.On.FtrackUploadWindow.Close = cancel 
+    win.On.FtrackUploadWindow.Close = cancel
 
     win.Show()
     disp.RunLoop()
     win.Hide()
 
+    replace_status = itm["CheckBox"].Checked
+    result = itm["NoteLine"].Text
+    return replace_status, result
 
 def get_shot_number(composition):
     name = composition.GetAttrs()["COMPS_Name"]
