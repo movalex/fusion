@@ -1,11 +1,8 @@
 _Usage_:
 
 * Select the saver with rendered prores version, and run the script.
-* Set `REPLACE_LATEST_VERSION` variable to `True` to, you know, replace the latest ftrack version during upload
+* Set `Replace Latest Version` checkbox to, you know, replace the latest ftrack version for the current shot during upload
 
-_TODO_:
-
-* Create UI
 
 _Dependencies_:
 
