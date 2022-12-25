@@ -16,7 +16,7 @@ comp = fu.GetCurrentComp()
 DRY_RUN = False
 
 
-def show_ui(shot_name: str):
+def show_ui(asset_name: str, note_text: str):
     ui = fu.UIManager
     disp = bmd.UIDispatcher(ui)
     win = disp.AddWindow(
@@ -24,7 +24,7 @@ def show_ui(shot_name: str):
             "ID": "FtrackUploadWindow",
             "TargetID": "FtrackUploadWindow",
             "WindowTitle": "Upload the Saver file to Ftrack",
-            "Geometry": [800, 600, 430, 130],
+            "Geometry": [800, 600, 450, 130],
         },
         [
             ui.VGroup(
@@ -34,7 +34,7 @@ def show_ui(shot_name: str):
                             ui.Label(
                                 {
                                     "ID": "TopLabel",
-                                    "Text": f"publishing shot: {shot_name}",
+                                    "Text": f"publishing shot: {asset_name}",
                                 }
                             ),
                         ]
@@ -52,7 +52,7 @@ def show_ui(shot_name: str):
                     ui.HGroup(
                         [
                             ui.Label(
-                                {"Weight": 0.2, "ID": "ShotLabel", "Text": "Add Note:"}
+                                {"Weight": 0.1, "ID": "ShotLabel", "Text": "Add Note:"}
                             ),
                             ui.LineEdit(
                                 {
@@ -63,6 +63,7 @@ def show_ui(shot_name: str):
                                         "AlignHCenter": True,
                                         "AlignVCenter": True,
                                     },
+                                    "Text": note_text,
                                 }
                             ),
                         ],
@@ -80,6 +81,7 @@ def show_ui(shot_name: str):
     itm = win.GetItems()
 
     itm["NoteLine"].SetClearButtonEnabled(True)
+    itm["NoteLine"].SetPlaceholderText("Enter the note")
 
     def cancel(ev):
         disp.ExitLoop()
@@ -87,8 +89,6 @@ def show_ui(shot_name: str):
 
     def do_upload(ev):
         disp.ExitLoop()
-
-    itm["NoteLine"].SetPlaceholderText("Enter the note")
 
     win.On.UploadButton.Clicked = do_upload
     win.On.CancelButton.Clicked = cancel
@@ -102,19 +102,19 @@ def show_ui(shot_name: str):
     result = itm["NoteLine"].Text
     return replace_status, result
 
+
 def get_shot_number(composition):
     name = composition.GetAttrs()["COMPS_Name"]
-    print(f"comp name : {name}")
     try:
         shot = re.search("_(\d{4})_", name).group(1)
+        print(f"found shot name: {shot}")
     except ValueError:
         return
     return shot
 
 
-def post_note(session, text: str):
-    user = session.query("User").first()
-    note = asset_version.create_note(text, author=user)
+def post_note(text: str, asset_version, user) -> None:
+    asset_version.create_note(text, author=user)
 
 
 def get_task(shot, task_name=None):
@@ -125,15 +125,34 @@ def get_task(shot, task_name=None):
         if task_name in task["name"].lower():
             return task
 
+def get_last_note(asset_version):
+    notes = asset_version["notes"]
+    try:
+        note = notes[-1]
+        note_text = note["content"]
+        print(f"found latest note: {note_text}")
+        return note_text
+    except IndexError:
+        print("could not retrieve latest note")
+        return ""
 
-def create_asset_version(session, shot, name: str, replace_latest: bool):
+
+def get_asset_version(session, parent, asset_name: str):
     asset_type = session.query('AssetType where name is "Upload"').one()
-    asset = session.query(f"Asset where name is {name}").first()
+    asset = session.query(f"Asset where name is {asset_name}").first()
     if not asset:
         asset = session.create(
-            "Asset", {"name": name, "type": asset_type, "parent": shot}
+            "Asset", {"name": asset_name, "type": asset_type, "parent": parent}
         )
     latest_version = asset["latest_version"]
+    note_text = get_last_note(latest_version)
+
+    try:
+        replace_latest, note_text = show_ui(asset_name, note_text)
+    except TypeError:
+        print("UI was closed and the upload was cancelled")
+        sys.exit()
+
     if replace_latest and latest_version:
         print("replacing the latest version")
         session.delete(latest_version)
@@ -141,12 +160,14 @@ def create_asset_version(session, shot, name: str, replace_latest: bool):
         session.commit()
     else:
         print("creating new asset version")
-    task = get_task(shot, "compositing")
+
+    task = get_task(parent, "compositing")
+
     if not task:
         print("no compostiting task found")
         return
     asset_version = session.create("AssetVersion", {"asset": asset, "task": task})
-    return asset_version
+    return asset_version, note_text
 
 
 def set_component_metadata(component, data: dict):
@@ -179,33 +200,27 @@ def publish_ftrack_version(filepath):
         print("could not connect to API, check API settings")
         return
     print(f"connected to API session: {session.server_url} as {session.api_user}")
-    print(f"found shot number: {shot_number}")
     server_location = session.query('Location where name is "ftrack.server"').one()
 
     q = session.query(f"select id from Shot where name is {shot_number}")
     shot = q.first()
 
-    try:
-        replace_latest, note_text = show_ui(shot_number)
-    except TypeError:
-        print("Upload cancelled")
-        sys.exit()
-
     if DRY_RUN:
         print("Dry run is activated!")
         return
 
-    asset_version = create_asset_version(session, shot, asset_name, replace_latest)
+    asset_version, note_text = get_asset_version(session, parent=shot, asset_name=asset_name)
 
     if not asset_version:
         print(f"could not create an asset version")
         return
+
     component = asset_version.create_component(filepath, location=server_location)
 
     job = asset_version.encode_media(filepath)
     if note_text:
         user = session.query("User").first()
-        note = asset_version.create_note(note_text, author=user)
+        post_note(note_text, asset_version, user)
 
     session.commit()
     print("Ftrack publishing -- Done!")
