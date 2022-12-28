@@ -83,11 +83,16 @@ def show_ui(asset_name: str, note_text: str):
     itm["NoteLine"].SetClearButtonEnabled(True)
     itm["NoteLine"].SetPlaceholderText("Enter the note")
 
+    replace_status = None
+    note_text = None
+
     def cancel(ev):
         disp.ExitLoop()
-        return None
 
     def do_upload(ev):
+        nonlocal replace_status, note_text
+        replace_status = itm["CheckBox"].Checked
+        note_text = itm["NoteLine"].Text
         disp.ExitLoop()
 
     win.On.UploadButton.Clicked = do_upload
@@ -97,10 +102,9 @@ def show_ui(asset_name: str, note_text: str):
     win.Show()
     disp.RunLoop()
     win.Hide()
+    if not replace_status == None:
+        return replace_status, note_text
 
-    replace_status = itm["CheckBox"].Checked
-    result = itm["NoteLine"].Text
-    return replace_status, result
 
 
 def get_shot_number(composition):
@@ -145,11 +149,11 @@ def get_asset_version(session, parent, asset_name: str):
             "Asset", {"name": asset_name, "type": asset_type, "parent": parent}
         )
     latest_version = asset["latest_version"]
-    note_text = get_last_note(latest_version)
+    last_note = get_last_note(latest_version)
 
     try:
-        replace_latest, note_text = show_ui(asset_name, note_text)
-    except TypeError:
+        replace_latest, note_text = show_ui(asset_name, last_note)
+    except Exception:
         print("UI was closed and the upload was cancelled")
         sys.exit()
 
