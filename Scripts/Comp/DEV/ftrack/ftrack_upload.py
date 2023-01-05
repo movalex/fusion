@@ -24,51 +24,60 @@ def show_ui(asset_name: str, note_text: str):
             "ID": "FtrackUploadWindow",
             "TargetID": "FtrackUploadWindow",
             "WindowTitle": "Upload the Saver file to Ftrack",
-            "Geometry": [800, 600, 450, 130],
+            "Geometry": [800, 600, 450, 170],
         },
         [
             ui.VGroup(
                 [
                     ui.HGroup(
+                        {"Weight": 0},
                         [
                             ui.Label(
                                 {
                                     "ID": "TopLabel",
                                     "Text": f"publishing shot: {asset_name}",
-                                }
-                            ),
-                        ]
-                    ),
-                    ui.HGroup(
-                        [
-                            ui.CheckBox(
-                                {
-                                    "ID": "CheckBox",
-                                    "Text": "Replace Latest Version",
-                                }
-                            ),
-                        ]
-                    ),
-                    ui.HGroup(
-                        [
-                            ui.Label(
-                                {"Weight": 0.1, "ID": "ShotLabel", "Text": "Add Note:"}
-                            ),
-                            ui.LineEdit(
-                                {
-                                    "Weight": 0.8,
-                                    "ID": "NoteLine",
-                                    "Events": {"ReturnPressed": True},
                                     "Alignment": {
                                         "AlignHCenter": True,
                                         "AlignVCenter": True,
                                     },
+                                }
+                            ),
+                        ]
+                    ),
+                    ui.HGroup(
+                        [
+                            ui.TextEdit(
+                                {
+                                    "Weight": 0.9,
+                                    "ID": "NoteLine",
                                     "Text": note_text,
+                                }
+                            ),
+                            ui.Button(
+                                {
+                                    "Weight": 0.1,
+                                    "MinimumSize": [20, 20],
+                                    "ID": "ClearButton",
+                                    "Text": "Clear\nNote",
                                 }
                             ),
                         ],
                     ),
                     ui.HGroup(
+                        {"Alignment": {"AlignHRight": True}, "Weight": 0},
+                        [
+                            ui.CheckBox(
+                                {
+                                    "Weight": 0,
+                                    "ID": "CheckBox",
+                                    "Text": "Replace Latest Version",
+                                    "AlignmentFlag": "AlignRight",
+                                }
+                            ),
+                        ]
+                    ),
+                    ui.HGroup(
+                        {"Alignment": {"AlignHRight": True}, "Weight": 0},
                         [
                             ui.Button({"ID": "UploadButton", "Text": "Upload"}),
                             ui.Button({"ID": "CancelButton", "Text": "Cancel"}),
@@ -80,7 +89,7 @@ def show_ui(asset_name: str, note_text: str):
     )
     itm = win.GetItems()
 
-    itm["NoteLine"].SetClearButtonEnabled(True)
+    # itm["NoteLine"].SetClearButtonEnabled(True)
     itm["NoteLine"].SetPlaceholderText("Enter the note")
 
     replace_status = None
@@ -95,16 +104,19 @@ def show_ui(asset_name: str, note_text: str):
         note_text = itm["NoteLine"].Text
         disp.ExitLoop()
 
+    def clear_note_clicked(ev):
+        itm["NoteLine"].Text = ""
+
     win.On.UploadButton.Clicked = do_upload
     win.On.CancelButton.Clicked = cancel
     win.On.FtrackUploadWindow.Close = cancel
+    win.On.ClearButton.Clicked = clear_note_clicked
 
     win.Show()
     disp.RunLoop()
     win.Hide()
-    if not replace_status == None:
+    if replace_status:
         return replace_status, note_text
-
 
 
 def get_shot_number(composition):
@@ -128,6 +140,7 @@ def get_task(shot, task_name=None):
     for task in shot["children"]:
         if task_name in task["name"].lower():
             return task
+
 
 def get_last_note(asset_version):
     notes = asset_version["notes"]
@@ -153,7 +166,7 @@ def get_asset_version(session, parent, asset_name: str):
 
     try:
         replace_latest, note_text = show_ui(asset_name, last_note)
-    except Exception:
+    except TypeError:
         print("UI was closed and the upload was cancelled")
         sys.exit()
 
@@ -213,7 +226,9 @@ def publish_ftrack_version(filepath):
         print("Dry run is activated!")
         return
 
-    asset_version, note_text = get_asset_version(session, parent=shot, asset_name=asset_name)
+    asset_version, note_text = get_asset_version(
+        session, parent=shot, asset_name=asset_name
+    )
 
     if not asset_version:
         print(f"could not create an asset version")
