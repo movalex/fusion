@@ -1,0 +1,1132 @@
+--[[-- 
+https://emiliosapia.myportfolio.com
+Written by : Emilio Sapia, Alexey Bogomolov
+Written on : Jan, 2023
+version 2.1
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+--]]--
+
+{
+	Tools = ordered() {
+		ml_VectorWarp = MacroOperator {
+			CtrlWZoom = false,
+			CustomData = {
+				Path = {
+					Map = {
+						["Setting:"] = "Macros:/"
+					}
+				},
+			},
+			Inputs = ordered() {
+				CommentsNest = Input { Value = 0, },
+				Guide = Input { Value = "QUICK GUIDE:\n1: Go in the file tab and specify a saver location/name.\n2: click on CleanPass to render an StMap sequence\n3: Go back to the file tab and load that same sequence.\nBE SURE TO SET THE DEPTH 32Bit\n4: Define a Reference Frame and start the analysis using the dedicated buttons\n5: switch to STMap Output\nTo apply the distortion you need an STMapper node (or a Texture node).\nThe distorted image should be the same resolution as the StMap sequence", },
+				Method = InstanceInput {
+					SourceOp = "OpticalFlow1",
+					Source = "Method",
+					Page = "Vectors",
+				},
+				Method2Proxy = InstanceInput {
+					SourceOp = "OpticalFlow1",
+					Source = "Method2.Proxy",
+					Default = 2,
+				},
+				Method2Smoothness = InstanceInput {
+					SourceOp = "OpticalFlow1",
+					Source = "Method2.Smoothness",
+					Default = 40,
+				},
+				Method2Edges = InstanceInput {
+					SourceOp = "OpticalFlow1",
+					Source = "Method2.Edges",
+					Default = 5,
+				},
+				Method2MatchWeight = InstanceInput {
+					SourceOp = "OpticalFlow1",
+					Source = "Method2.MatchWeight",
+					Default = 0.75,
+				},
+				Method2MismatchPenalty = InstanceInput {
+					SourceOp = "OpticalFlow1",
+					Source = "Method2.MismatchPenalty",
+					Default = 2,
+				},
+				Method2NumWarps = InstanceInput {
+					SourceOp = "OpticalFlow1",
+					Source = "Method2.NumWarps",
+					Default = 8,
+				},
+				Method2NumIters = InstanceInput {
+					SourceOp = "OpticalFlow1",
+					Source = "Method2.NumIters",
+					Default = 28,
+				},
+				Method2Filtering = InstanceInput {
+					SourceOp = "OpticalFlow1",
+					Source = "Method2.Filtering",
+					Default = 1,
+				},
+				AdvancedNumWarps = InstanceInput {
+					SourceOp = "OpticalFlow1",
+					Source = "Advanced.NumWarps",
+					Default = 8,
+				},
+				AdvancedNumIters = InstanceInput {
+					SourceOp = "OpticalFlow1",
+					Source = "Advanced.NumIters",
+					Default = 16,
+				},
+				AdvancedSmoothness = InstanceInput {
+					SourceOp = "OpticalFlow1",
+					Source = "Advanced.Smoothness",
+					Default = 22,
+				},
+				AdvancedHalfRes = InstanceInput {
+					SourceOp = "OpticalFlow1",
+					Source = "Advanced.HalfRes",
+					Default = 0,
+				},
+				UseMatte = InstanceInput {
+					SourceOp = "Dissolve4",
+					Source = "Mix",
+					Page = "Matte",
+					Default = 0,
+				},
+				Blank0 = InstanceInput {
+					SourceOp = "ChannelBooleans1",
+					Source = "Blank1",
+				},
+				View = InstanceInput {
+					SourceOp = "_Display_",
+					Source = "Mix",
+					Default = 1,
+				},
+				Blank1 = InstanceInput {
+					SourceOp = "ChannelBooleans1",
+					Source = "Blank1",
+				},
+				FilterType = InstanceInput {
+					SourceOp = "Blur1",
+					Source = "Filter",
+				},
+				Softness = InstanceInput {
+					SourceOp = "Blur1",
+					Source = "XBlurSize",
+					Default = 0,
+				},
+				Loader = InstanceInput {
+					SourceOp = "Source",
+					Source = "Clip",
+					Name = "Load",
+					Page = "File",
+				},
+				Depth = InstanceInput {
+					SourceOp = "Source",
+					Source = "Depth",
+				},
+				Input50 = InstanceInput {
+					SourceOp = "ChannelBooleans1",
+					Source = "Blank1",
+				},
+				SaverOutput = InstanceInput {
+					SourceOp = "VW_SAVER",
+					Source = "Clip",
+					Name = "Save",
+					Width = 1,
+				},
+				Input7 = InstanceInput {
+					SourceOp = "VW_SAVER",
+					Source = "CreateDir",
+					Default = 1,
+				},
+				Input8 = InstanceInput {
+					SourceOp = "VW_SAVER",
+					Source = "CreateDirNow",
+					Width = 0.385,
+				},
+				Input9 = InstanceInput {
+					SourceOp = "VW_SAVER",
+					Source = "OutputFormat",
+				},
+				Input10 = InstanceInput {
+					SourceOp = "VW_SAVER",
+					Source = "SaveFrames",
+				},
+				GarbageMatte = InstanceInput {
+					SourceOp = "ChangeDepth1",
+					Source = "Input",
+				},
+				OFInput = InstanceInput {
+					SourceOp = "External",
+					Source = "Background",
+					Name = "VectorsInput",
+				},
+				Input = InstanceInput {
+					SourceOp = "PipeRouter1",
+					Source = "Input",
+					Name = "GarbageMatte",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "VW_SAVER",
+					Source = "Output",
+				},
+				VectorsOutput = InstanceOutput {
+					SourceOp = "External",
+					Source = "Output",
+					Name = "VectorsOutput",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Pos = { 257.617, 229.349 },
+				Flags = {
+					AllowPan = false,
+					ForceModes = false,
+					ConnectedSnap = true,
+					AutoSnap = true,
+					ShowInstance = false,
+					Thumbnails = false,
+					RemoveRouters = true
+				},
+				Size = { 840.789, 987.574, 420.395, 24.2424 },
+				Direction = "Vertical",
+				PipeStyle = "Direct",
+				Scale = 1,
+				Offset = { 0, 0 }
+			},
+			Tools = ordered() {
+				Source = Loader {
+					Clips = {
+						Clip {
+							ID = "Clip1",
+							Filename = "Comp:VectorMapper\\render001.1001.exr",
+							FormatID = "OpenEXRFormat",
+							StartFrame = 1001,
+							Length = 200,
+							LengthSetManually = true,
+							TrimIn = 0,
+							TrimOut = 500,
+							ExtendFirst = 0,
+							ExtendLast = 0,
+							Loop = 1,
+							AspectMode = 0,
+							Depth = 0,
+							TimeCode = 0,
+							GlobalStart = 1001,
+							GlobalEnd = 1500
+						}
+					},
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						["Clip1.OpenEXRFormat.RedName"] = Input { Value = FuID { "R" }, },
+						["Clip1.OpenEXRFormat.GreenName"] = Input { Value = FuID { "G" }, },
+						["Clip1.OpenEXRFormat.BlueName"] = Input { Value = FuID { "B" }, },
+						["Clip1.OpenEXRFormat.AlphaName"] = Input { Value = FuID { "A" }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -324.403, 505.875 } },
+				},
+				PipeRouter3 = PipeRouter {
+					Inputs = {
+						Input = Input {
+							SourceOp = "Source",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { -324.403, 810.704 } },
+				},
+				PipeRouter1 = PipeRouter {
+					PassThrough = true,
+					CtrlWShown = false,
+					ViewInfo = PipeRouterInfo { Pos = { 392.5, 231.348 } },
+				},
+				PipeRouter2 = PipeRouter {
+					Inputs = {
+						Input = Input {
+							SourceOp = "Merge1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { 308.471, 868.311 } },
+				},
+				PipeRouter1_1 = PipeRouter {
+					PassThrough = true,
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "PipeRouter2_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { -393.289, 729.665 } },
+				},
+				PipeRouter4 = PipeRouter {
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "_UVS_",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { -173.737, 269.44 } },
+				},
+				PipeRouter2_1 = PipeRouter {
+					PassThrough = true,
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "PipeRouter4",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { -393.289, 269.44 } },
+				},
+				_OUT_ = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					NameSet = true,
+					Inputs = {
+						Background = Input {
+							SourceOp = "_Render_",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "PipeRouter3",
+							Source = "Output",
+						},
+						Mix = Input {
+							Value = 0,
+							Expression = "ml_VectorWarp.Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 89.385, 810.704 } },
+					UserControls = ordered() {
+						Mix = {
+							{ MBTNC_AddButton = "Analysys" },
+							{ MBTNC_AddButton = "STMap" },
+							INP_MaxAllowed = 1,
+							INP_Integer = false,
+							INPID_InputControl = "MultiButtonControl",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							MBTNC_ForceButtons = true,
+							MBTNC_Style = "TabButton",
+							MBTNC_StretchToFit = true,
+							LINKS_Name = "Output",
+						}
+					}
+				},
+				Blur1 = Blur {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						XBlurSize = Input { Value = 0, },
+						Input = Input {
+							SourceOp = "CleanPlate1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 308.471, 366.247 } },
+				},
+				CleanPlate1 = CleanPLate {
+					CtrlWShown = false,
+					Inputs = {
+						InsideFill = Input { Value = 1, },
+						HoldTime = Input { Value = 1001, },
+						["Garbage.Matte"] = Input {
+							SourceOp = "PipeRouter1",
+							Source = "Output",
+						},
+						Input = Input {
+							SourceOp = "ChannelBooleans1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 308.471, 257.83 } },
+				},
+				_Display_ = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					NameSet = true,
+					Inputs = {
+						Background = Input {
+							SourceOp = "PipeRouter2",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "_OUT_",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 89.385, 868.311 } },
+					UserControls = ordered() {
+						Mix = {
+							{ MBTNC_AddButton = "Vectors" },
+							{ MBTNC_AddButton = "STMap" },
+							INP_MaxAllowed = 1,
+							INP_Integer = false,
+							INPID_InputControl = "MultiButtonControl",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							MBTNC_ForceButtons = true,
+							MBTNC_Style = "TabButton",
+							MBTNC_StretchToFit = true,
+							LINKS_Name = "View",
+						}
+					}
+				},
+				Merge1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "PipeRouter1",
+							Source = "Output",
+						},
+						Background = Input {
+							SourceOp = "ChannelBooleans1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Blur1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 308.471, 508.234 } },
+				},
+				Dissolve4 = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "ChannelBooleans1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Merge1",
+							Source = "Output",
+						},
+						Mix = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 89.385, 535.289 } },
+					UserControls = ordered() {
+						Mix = {
+							INP_MaxAllowed = 1,
+							INP_Integer = false,
+							INPID_InputControl = "CheckboxControl",
+							INP_MaxScale = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							CBC_TriState = false,
+							LINKS_Name = "Use Matte",
+						}
+					}
+				},
+				VW_SAVER = Saver {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						ProcessWhenBlendIs00 = Input { Value = 0, },
+						Clip = Input {
+							Value = Clip {
+								Filename = "Comp:VectorMapper\\render001..exr",
+								FormatID = "OpenEXRFormat",
+								Length = 0,
+								Saving = true,
+								TrimIn = 0,
+								ExtendFirst = 0,
+								ExtendLast = 0,
+								Loop = 1,
+								AspectMode = 0,
+								Depth = 1,
+								TimeCode = 0,
+								GlobalStart = -2000000000,
+								GlobalEnd = 0
+							},
+						},
+						OutputFormat = Input { Value = FuID { "OpenEXRFormat" }, },
+						SaveFrames = Input { Value = FuID { "HiQInteractive" }, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Input = Input {
+							SourceOp = "_Display_",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 89.385, 929.363 } },
+				},
+				ChannelBooleans1 = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						ToRed = Input {
+							Value = 33,
+							Expression = "iif(ml_VectorWarp.Direction==0,33,31)",
+						},
+						ToGreen = Input {
+							Value = 34,
+							Expression = "iif(ml_VectorWarp.Direction==0,34,32)",
+						},
+						ToBlue = Input { Value = 15, },
+						ToAlpha = Input { Value = 16, },
+						Background = Input {
+							SourceOp = "External",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 89.385, 208.983 } },
+				},
+				Displace1 = Displace {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Type = Input { Value = 1, },
+						XRefraction = Input {
+							Value = 0.00104166666666667,
+							Expression = "iif(time==ml_VectorWarp.ReferenceFrame,0,1/self.Input.OriginalWidth)",
+						},
+						YRefraction = Input {
+							Value = 0.00104166666666667,
+							Expression = "iif(time==ml_VectorWarp.ReferenceFrame,0,1/self.Input.OriginalWidth)",
+						},
+						Input = Input {
+							SourceOp = "Dissolve1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Dissolve4",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 89.385, 618.492 } },
+				},
+				_Render_ = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Background = Input {
+							SourceOp = "PipeRouter1_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Displace1",
+							Source = "Output",
+						},
+						Mix = Input { Expression = "ml_VectorWarp.Render", },
+					},
+					ViewInfo = OperatorInfo { Pos = { 89.385, 729.665 } },
+					UserControls = ordered() {
+						Mix = {
+							{ MBTNC_AddButton = "Clean Pass" },
+							{ MBTNC_AddButton = "Full Render" },
+							INP_MaxAllowed = 1,
+							INP_Integer = false,
+							INPID_InputControl = "MultiButtonControl",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							MBTNC_Style = "TabButton",
+							MBTNC_StretchToFit = true,
+							MBTNC_ForceButtons = true,
+							LINKS_Name = "Render",
+						}
+					}
+				},
+				TimeSpeed1 = TimeSpeed {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Delay = Input {
+							Value = 1,
+							Expression = "iif(ml_VectorWarp.Direction==0,1,-1)",
+						},
+						InterpolateBetweenFrames = Input { Value = 0, },
+						SampleSpread = Input { Disabled = true, },
+						Input = Input {
+							SourceOp = "Source",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -324.403, 618.492 } },
+				},
+				Dissolve1 = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Mix = Input { Expression = "iif(time==ml_VectorWarp.ReferenceFrame,0,1)", },
+						Background = Input {
+							SourceOp = "PipeRouter4",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "TimeSpeed1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -173.737, 618.492 } },
+				},
+				OpticalFlow1 = Dimension.OpticalFlow {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Input = Input {
+							SourceOp = "ChangeDepth1",
+							Source = "Output",
+						},
+						Method = Input { Value = FuID { "Advanced" }, },
+						["Method2.Advanced"] = Input { Value = 1, },
+						["Advanced.Advanced"] = Input { Value = 1, },
+						["Advanced.NumWarps"] = Input { Value = 8, },
+						["Advanced.NumIters"] = Input { Value = 16, },
+						["Advanced.Smoothness"] = Input { Value = 22, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 95.2781, 8.15216 } },
+				},
+				ChangeDepth1 = ChangeDepth {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Depth = Input { Value = 4, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -243.383, 8.15216 } },
+				},
+				External = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Foreground = Input {
+							SourceOp = "OpticalFlow1",
+							Source = "Output",
+						},
+						Mix = Input {
+							Value = 0,
+							Expression = "ml_VectorWarp.VectorSource",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 95.2781, 62.4267 } },
+					UserControls = ordered() {
+						Mix = {
+							{ MBTNC_AddButton = "Internal" },
+							{ MBTNC_AddButton = "External" },
+							INP_MaxAllowed = 1,
+							INPID_InputControl = "MultiButtonControl",
+							INP_MaxScale = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							MBTNC_Style = "TabButton",
+							MBTNC_StretchToFit = true,
+							MBTNC_ForceButtons = true,
+							LINKS_Name = "Vector Source",
+						}
+					}
+				},
+				_UVS_ = Custom {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						LUTIn1 = Input {
+							SourceOp = "_UVS_LUTIn1",
+							Source = "Value",
+						},
+						LUTIn2 = Input {
+							SourceOp = "_UVS_LUTIn2",
+							Source = "Value",
+						},
+						LUTIn3 = Input {
+							SourceOp = "_UVS_LUTIn3",
+							Source = "Value",
+						},
+						LUTIn4 = Input {
+							SourceOp = "_UVS_LUTIn4",
+							Source = "Value",
+						},
+						RedExpression = Input { Value = "x", },
+						GreenExpression = Input { Value = "y", },
+						BlueExpression = Input { Value = "0", },
+						AlphaExpression = Input { Value = "1", },
+						Image1 = Input {
+							SourceOp = "ChangeDepth1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -173.737, 190.742 } },
+				}
+			},
+			UserControls = ordered() {
+				Controls = ControlPage {
+					CT_Visible = true,
+					CTID_DIB_ID = "Icons.Tools.Tabs.Controls",
+					CTS_FullName = "Tooltip for Page1"
+				},
+				Vectors = ControlPage {
+					CT_Visible = true,
+					CTID_DIB_ID = "Icons.Tools.Tabs.Channels",
+					CTS_FullName = "Tooltip for Page1"
+				},
+				Matte = ControlPage {
+					CT_Visible = true,
+					CTID_DIB_ID = "Icons.Tools.Tabs.Matte",
+					CTS_FullName = "Tooltip for Page1"
+				},
+				File = ControlPage {
+					CT_Visible = true,
+					CTID_DIB_ID = "Icons.Tools.Tabs.Solve",
+					CTS_FullName = "Tooltip for Page1"
+				},
+				Hide = ControlPage {
+					CT_Visible = false,
+					CTID_DIB_ID = "Icons.Tools.Tabs.Matte",
+					CTS_FullName = "Tooltip for Page1"
+				},
+				Direction = {
+					{ MBTNC_AddButton = "Forward" },
+					{ MBTNC_AddButton = "Reverse" },
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "MultiButtonControl",
+					MBTNC_ShowBasicButton = true,
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					ICS_ControlPage = "Hide",
+					LINKID_DataType = "Number",
+					MBTNC_ShowName = true,
+					MBTNC_StretchToFit = true,
+					MBTNC_ShowToolTip = true,
+					LINKS_Name = "Direction",
+				},
+				Render = {
+					{ MBTNC_AddButton = "CleanPass" },
+					{ MBTNC_AddButton = "Full Render" },
+					ICD_Width = 0.85,
+					INP_Integer = false,
+					INPID_InputControl = "MultiButtonControl",
+					MBTNC_ShowBasicButton = true,
+					ICS_ControlPage = "Hide",
+					LINKID_DataType = "Number",
+					MBTNC_ShowName = true,
+					MBTNC_StretchToFit = true,
+					MBTNC_ShowToolTip = true,
+					LINKS_Name = "Render",
+				},
+				VectorSource = {
+					{ MBTNC_AddButton = "Internal" },
+					{ MBTNC_AddButton = "External" },
+					ICD_Width = 1,
+					INP_Integer = false,
+					INPID_InputControl = "MultiButtonControl",
+					MBTNC_ShowBasicButton = true,
+					ICS_ControlPage = "Controls",
+					LINKID_DataType = "Number",
+					MBTNC_ShowName = true,
+					MBTNC_StretchToFit = true,
+					MBTNC_ShowToolTip = true,
+					LINKS_Name = "Vector Source",
+				},
+				sep0 = {
+					INPID_InputControl = "SeparatorControl",
+					ICS_ControlPage = "Controls",
+				},
+				ReferenceFrame = {
+					ICD_Width = 1,
+					INP_Integer = true,
+					INPID_InputControl = "ScrewControl",
+					IC_Steps = 100,
+					INP_MaxScale = 100,
+					INP_Default = 1001,
+					INP_MinScale = 0,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Reference Frame",
+				},
+				SetReferenceFrame = {
+					ICD_Width = 1,
+					INP_Integer = false,
+					LINKID_DataType = "Number",
+					BTNCS_Execute = "comp.ActiveTool:SetInput('ReferenceFrame', comp.CurrentTime, fu.TIME_UNDEFINED)",
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "ButtonControl",
+					LINKS_Name = "Set Reference Frame",
+				},
+				GoToFrame = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = "comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED]",
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 1,
+					LINKS_Name = "Go To Frame"
+				},
+				sep1 = {
+					INPID_InputControl = "SeparatorControl",
+					ICS_ControlPage = "Controls",
+				},
+				CompnPass = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+                        local tool = comp.ActiveTool
+                        tool.Depth[0] = 5
+                        local function CopyFile(old_path, new_path)
+                          local old_file = io.open(old_path, "rb")
+                          local new_file = io.open(new_path, "wb")
+                          local old_file_sz, new_file_sz = 0, 0
+                          if not old_file or not new_file then
+                            return false
+                          end
+                          while true do
+                            local block = old_file:read(2^13)
+                            if not block then 
+                              old_file_sz = old_file:seek( "end" )
+                              break
+                            end
+                            new_file:write(block)
+                          end
+                          old_file:close()
+                          new_file_sz = new_file:seek( "end" )
+                          new_file:close()
+                          return new_file_sz == old_file_sz
+                        end
+                        local renderStart = comp:GetAttrs().COMPN_RenderStart
+                        local renderEnd = comp:GetAttrs().COMPN_RenderEnd
+                        local renderOut = renderStart + 1
+                        tool.Render = 0 
+                        tool.Output = 0 
+                        comp:SetAttrs({COMPN_CurrentTime = comp:GetAttrs().COMPN_RenderStart}) 
+                        comp:SetAttrs({COMPN_RenderEnd = renderOut})
+                        comp:Render()
+
+                        comp:SetAttrs({COMPN_RenderEnd = renderEnd})
+                        local svr = tool:GetChildrenList(false, "Saver")[1]
+                        saverClip = svr.Clip[0]
+                        seq = bmd.parseFilename(saverClip)
+                        local ldr = tool:GetChildrenList(false, "Loader")[1]
+                        loaderClip = seq.Path .. seq.CleanName .. renderStart .. seq.Extension
+                        print("loader: " .. loaderClip)
+                        ldr.Clip[0] = loaderClip
+                        
+                        ldr.GlobalOut[0] = renderEnd
+
+                        tool.Depth[0] = 5
+                        
+                        seq = bmd.parseFilename(comp:MapPath(loaderClip))
+                        -- dump(seq)
+
+                        oldName = seq.FullPath
+                        len = renderEnd - renderStart
+                        for i = 1, len do
+                            newName = seq.Path .. seq.CleanName .. tostring(1001 + i) .. seq.Extension
+                            CopyFile(oldName, newName)
+                        end
+                        comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED] 
+                        tool.Output = 1 
+                    ]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 1,
+					LINKS_Name = "Generate StMap"
+				},
+				AnalyzeBackward = {
+                    INP_MaxAllowed = 1000000,
+                    INP_Integer = false,
+                    INPID_InputControl = "ButtonControl",
+                    BTNCS_Execute = [[
+                        print("Running " .. self.Name)
+                        function sleep (a) 
+                            local sec = tonumber(os.clock() + a); 
+                            while (os.clock() < sec) do 
+                            end 
+                        end
+                        local tool = comp.ActiveTool
+                        tool.Render = 1 
+                        tool.Output = 0 
+                        tool.Direction = 1 
+                        comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED]
+                        comp:Loop(false)
+                        fusion.CacheManager:Purge()
+                        temp_time = comp.CurrentTime
+                        comp:Play(true)
+                        while true do
+                            if temp_time > comp.CurrentTime then
+                                temp_time = temp_time - 1
+                                print("Analyzing backward frame " .. temp_time)
+                            end
+                            if not comp:IsPlaying() then
+                                sleep(2)
+                                break
+                            end
+                        end
+                        comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED]
+                        tool.Output = 1
+                    ]],
+                    INP_MaxScale = 1,
+                    INP_MinScale = 0,
+                    INP_MinAllowed = -1000000,
+                    LINKID_DataType = "Number",
+                    ICS_ControlPage = "Controls",
+                    ICD_Width = 0.5,
+                    LINKS_Name = "Analyze Backward"
+                },
+				AnalyzeForward = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+                    BTNCS_Execute = [[
+                        print("Running " .. self.Name)
+                        function sleep (a) 
+                            local sec = tonumber(os.clock() + a); 
+                            while (os.clock() < sec) do 
+                            end 
+                        end
+
+                        local renderEnd = comp:GetAttrs().COMPN_RenderEnd
+                        local renderStart = comp:GetAttrs().COMPN_RenderStart
+                        local tool = comp.ActiveTool
+                        tool.Render = 1 
+                        tool.Output = 0 
+                        tool.Direction = 0 
+                        comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED]
+                        comp:Loop(false)
+                        fusion.CacheManager:Purge()
+                        temp_time = comp.CurrentTime
+                        comp:Play()
+
+                        
+                        while true do 
+                            if temp_time < comp.CurrentTime then
+                                temp_time = temp_time + 1
+                                print("Analyzing forward frame " .. temp_time)
+                            end
+                            if not comp:IsPlaying() then
+                                sleep(2)
+                                break
+                            end
+                        end
+                        comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED]
+                        tool.Output = 1
+                    ]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 0.5,
+					LINKS_Name = "Analyze Forward"
+				},
+                AnalyzeVectors = {
+                    INP_MaxAllowed = 1000000,
+                    INP_Integer = false,
+                    INPID_InputControl = "ButtonControl",
+                    BTNCS_Execute = [[
+                        print("Running " .. self.Name)
+                        function sleep (a) 
+                            local sec = tonumber(os.clock() + a); 
+                            while (os.clock() < sec) do 
+                            end 
+                        end
+                        local tool = comp.ActiveTool
+                        tool.Render = 1 
+                        tool.Output = 0 
+                        tool.Direction = 0 
+                        comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED] 
+                        comp:Loop(false) 
+                        fusion.CacheManager:Purge()
+                        local renderEnd = comp:GetAttrs().COMPN_RenderEnd
+                        local renderStart = comp:GetAttrs().COMPN_RenderStart
+
+                        temp_time = comp.CurrentTime
+                        comp:Play()
+                        while true do 
+                            if temp_time < comp.CurrentTime then
+                                temp_time = temp_time + 1
+                                print("Analyzing forward frame " .. temp_time)
+                            end
+                            if not comp:IsPlaying() then
+                                sleep(2)
+                                break
+                            end
+                        end
+                        comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED]
+                        fusion.CacheManager:Purge()
+                        comp.ActiveTool.Direction = 1 
+                        temp_time = comp.CurrentTime
+                        comp:Play(true)
+                        while true do
+                            if temp_time > comp.CurrentTime then
+                                temp_time = temp_time - 1
+                                print("Analyzing backward frame " .. temp_time)
+                            end
+                            if not comp:IsPlaying() then
+                                sleep(2)
+                                break
+                            end
+                        end
+                        tool.Output = 1                         
+                        comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED]
+                        collectgarbage()
+                    ]],
+                    INP_MaxScale = 1,
+                    INP_MinScale = 0,
+                    INP_MinAllowed = -1000000,
+                    LINKID_DataType = "Number",
+                    ICS_ControlPage = "Controls",
+                    ICD_Width = 1,
+                    LINKS_Name = "Analyze Forward then Backward"
+                },
+				Output = {
+					{ MBTNC_AddButton = "Analysis" },
+					{ MBTNC_AddButton = "STmap" },
+					ICD_Width = 1,
+					INP_Integer = false,
+					CT_Priority = 4,
+					INPID_InputControl = "MultiButtonControl",
+					MBTNC_ShowBasicButton = true,
+					ICS_ControlPage = "Hide",
+					LINKID_DataType = "Number",
+					MBTNC_ShowName = true,
+					MBTNC_StretchToFit = true,
+					MBTNC_ShowToolTip = true,
+					LINKS_Name = "Output",
+				},
+				QuickGuide = {
+					INP_Integer = false,
+					LBLC_DropDownButton = true,
+					LINKID_DataType = "Number",
+					LBLC_NumInputs = 3,
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "LabelControl",
+					LINKS_Name = "Quick Guide",
+				},
+				Guide = {
+					TEC_ReadOnly = false,
+					LINKS_Name = "Guide",
+					LINKID_DataType = "Text",
+					ICS_ControlPage = "Controls",
+					MBTNC_ShowName = false,
+					INPID_InputControl = "TextEditControl",
+					TEC_Lines = 20,
+					TEC_Wrap = true,
+				},
+				sep3 = {
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "SeparatorControl",
+				},
+				Tutorial = {
+					ICD_Width = 0.85,
+					INP_Integer = false,
+					LINKID_DataType = "Number",
+					BTNCS_Execute = "					os.execute('open \"\" \"https://www.youtube.com/watch?v=y_vDqDZ6728\"')\n					os.execute('start \"\" \"https://www.youtube.com/watch?v=y_vDqDZ6728\"')\n					",
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "ButtonControl",
+					LINKS_Name = "Tutorial",
+				}
+			}
+		},
+		_UVS_LUTIn1 = LUTBezier {
+			KeyColorSplines = {
+				[0] = {
+					[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+					[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+				}
+			},
+			SplineColor = { Red = 204, Green = 0, Blue = 0 },
+			CtrlWZoom = false,
+			CustomData = {
+				Path = {
+					Map = {
+						["Setting:"] = "Macros:/"
+					}
+				}
+			},
+		},
+		_UVS_LUTIn2 = LUTBezier {
+			KeyColorSplines = {
+				[0] = {
+					[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+					[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+				}
+			},
+			SplineColor = { Red = 0, Green = 204, Blue = 0 },
+			CtrlWZoom = false,
+			CustomData = {
+				Path = {
+					Map = {
+						["Setting:"] = "Macros:/"
+					}
+				}
+			},
+		},
+		_UVS_LUTIn3 = LUTBezier {
+			KeyColorSplines = {
+				[0] = {
+					[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+					[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+				}
+			},
+			SplineColor = { Red = 0, Green = 0, Blue = 204 },
+			CtrlWZoom = false,
+			CustomData = {
+				Path = {
+					Map = {
+						["Setting:"] = "Macros:/"
+					}
+				}
+			},
+		},
+		_UVS_LUTIn4 = LUTBezier {
+			KeyColorSplines = {
+				[0] = {
+					[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+					[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+				}
+			},
+			SplineColor = { Red = 204, Green = 204, Blue = 204 },
+			CtrlWZoom = false,
+			CustomData = {
+				Path = {
+					Map = {
+						["Setting:"] = "Macros:/"
+					}
+				}
+			},
+		}
+	},
+	ActiveTool = "ml_VectorWarp"
+}
