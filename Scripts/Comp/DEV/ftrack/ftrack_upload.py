@@ -115,7 +115,7 @@ def show_ui(asset_name: str, note_text: str):
     win.Show()
     disp.RunLoop()
     win.Hide()
-    if replace_status:
+    if replace_status is not None:
         return replace_status, note_text
 
 
@@ -124,7 +124,7 @@ def get_shot_number(composition):
     try:
         shot = re.search("_(\d{4})_", name).group(1)
         print(f"found shot name: {shot}")
-    except ValueError:
+    except (AttributeError, ValueError):
         return
     return shot
 
@@ -208,7 +208,7 @@ def publish_ftrack_version(filepath):
 
     shot_number = get_shot_number(comp)
     if not shot_number:
-        print("shot number not found")
+        print("No shot number found in a comp name")
         return
 
     session = ftrack_api.Session()
