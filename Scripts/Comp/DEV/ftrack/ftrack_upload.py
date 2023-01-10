@@ -99,13 +99,14 @@ def show_ui(asset_name: str, note_text: str):
         disp.ExitLoop()
 
     def do_upload(ev):
-        nonlocal replace_status, note_text
+        nonlocal replace_status
+        nonlocal note_text
         replace_status = itm["CheckBox"].Checked
-        note_text = itm["NoteLine"].Text
+        note_text = itm["NoteLine"].PlainText
         disp.ExitLoop()
 
     def clear_note_clicked(ev):
-        itm["NoteLine"].Text = ""
+        itm["NoteLine"].PlainText = ""
 
     win.On.UploadButton.Clicked = do_upload
     win.On.CancelButton.Clicked = cancel
@@ -130,6 +131,7 @@ def get_shot_number(composition):
 
 
 def post_note(text: str, asset_version, user) -> None:
+    print(f"adding note: {text}")
     asset_version.create_note(text, author=user)
 
 
