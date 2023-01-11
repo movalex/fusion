@@ -2,7 +2,7 @@
 https://emiliosapia.myportfolio.com
 Written by : Emilio Sapia, Alexey Bogomolov
 Written on : Jan, 2023
-version 2.1
+version 2.2
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -26,7 +26,20 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			},
 			Inputs = ordered() {
 				CommentsNest = Input { Value = 0, },
-				Guide = Input { Value = "QUICK GUIDE:\n1: Go in the file tab and specify a saver location/name.\n2: click on CleanPass to render an StMap sequence\n3: Go back to the file tab and load that same sequence.\nBE SURE TO SET THE DEPTH 32Bit\n4: Define a Reference Frame and start the analysis using the dedicated buttons\n5: switch to STMap Output\nTo apply the distortion you need an STMapper node (or a Texture node).\nThe distorted image should be the same resolution as the StMap sequence", },
+				File = Input { Value = "Comp:VectorWarp\\render001.1001.exr", },
+				Guide = Input { Value = [[
+QUICK GUIDE:
+1. Connect the Image to the VectorWarp Input. Click Generate StMap button
+    By default the STMap will be rendered to the comp:VectorWarp folder.
+    If your comp is not saved, you will be asked to save the comp first.
+    To specify the STMap location, go to the file tab and set the Saver path accordingly.
+2. Define a Reference Frame with Set Reference Frame button
+    BE SURE TO SET THE INPUT DEPTH TO 32Bit!
+3. Start the analysis using the dedicated buttons
+4. To apply the distortion, connect the VectorWarp to the Input (yellow) of the STMapper (available in Reactor) or a Texture node.
+    The distorted image should be the same resolution as the StMap sequence
+]],
+},
 				Method = InstanceInput {
 					SourceOp = "OpticalFlow1",
 					Source = "Method",
@@ -140,24 +153,24 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					Name = "Save",
 					Width = 1,
 				},
-				Input7 = InstanceInput {
-					SourceOp = "VW_SAVER",
-					Source = "CreateDir",
-					Default = 1,
-				},
-				Input8 = InstanceInput {
-					SourceOp = "VW_SAVER",
-					Source = "CreateDirNow",
-					Width = 0.385,
-				},
-				Input9 = InstanceInput {
-					SourceOp = "VW_SAVER",
-					Source = "OutputFormat",
-				},
-				Input10 = InstanceInput {
-					SourceOp = "VW_SAVER",
-					Source = "SaveFrames",
-				},
+				-- Input7 = InstanceInput {
+				--     SourceOp = "VW_SAVER",
+				--     Source = "CreateDir",
+				--     Default = 1,
+				-- },
+				-- Input8 = InstanceInput {
+				--     SourceOp = "VW_SAVER",
+				--     Source = "CreateDirNow",
+				--     Width = 0.385,
+				-- },
+				-- Input9 = InstanceInput {
+				--     SourceOp = "VW_SAVER",
+				--     Source = "OutputFormat",
+				-- },
+                SaveFrames = InstanceInput {
+                    SourceOp = "VW_SAVER",
+                    Source = "SaveFrames",
+                },
 				GarbageMatte = InstanceInput {
 					SourceOp = "ChangeDepth1",
 					Source = "Input",
@@ -185,7 +198,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				}
 			},
 			ViewInfo = GroupInfo {
-				Pos = { 257.617, 229.349 },
+				Pos = { 49.3133, 315.243 },
 				Flags = {
 					AllowPan = false,
 					ForceModes = false,
@@ -448,7 +461,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 						ProcessWhenBlendIs00 = Input { Value = 0, },
 						Clip = Input {
 							Value = Clip {
-								Filename = "Comp:VectorMapper\\render001..exr",
+								Filename = "Comp:VectorWarp\\render001..exr",
 								FormatID = "OpenEXRFormat",
 								Length = 0,
 								Saving = true,
@@ -464,7 +477,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 							},
 						},
 						OutputFormat = Input { Value = FuID { "OpenEXRFormat" }, },
-						SaveFrames = Input { Value = FuID { "HiQInteractive" }, },
+						SaveFrames = Input { Value = FuID { "Full" }, },
 						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
 						Input = Input {
 							SourceOp = "_Display_",
@@ -548,8 +561,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 							INP_MinScale = 0,
 							INP_MinAllowed = 0,
 							LINKID_DataType = "Number",
-							MBTNC_Style = "TabButton",
 							MBTNC_StretchToFit = true,
+							MBTNC_Style = "TabButton",
 							MBTNC_ForceButtons = true,
 							LINKS_Name = "Render",
 						}
@@ -643,8 +656,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 							INP_MinScale = 0,
 							INP_MinAllowed = 0,
 							LINKID_DataType = "Number",
-							MBTNC_Style = "TabButton",
 							MBTNC_StretchToFit = true,
+							MBTNC_Style = "TabButton",
 							MBTNC_ForceButtons = true,
 							LINKS_Name = "Vector Source",
 						}
@@ -753,8 +766,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					LINKS_Name = "Vector Source",
 				},
 				sep0 = {
-					INPID_InputControl = "SeparatorControl",
 					ICS_ControlPage = "Controls",
+					INPID_InputControl = "SeparatorControl",
 				},
 				ReferenceFrame = {
 					ICD_Width = 1,
@@ -772,7 +785,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					ICD_Width = 1,
 					INP_Integer = false,
 					LINKID_DataType = "Number",
-					BTNCS_Execute = "comp.ActiveTool:SetInput('ReferenceFrame', comp.CurrentTime, fu.TIME_UNDEFINED)",
+					BTNCS_Execute = [[
+                                    tool:SetInput('ReferenceFrame', comp.CurrentTime, fu.TIME_UNDEFINED)]],
 					ICS_ControlPage = "Controls",
 					INPID_InputControl = "ButtonControl",
 					LINKS_Name = "Set Reference Frame",
@@ -781,7 +795,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					INP_MaxAllowed = 1000000,
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
-					BTNCS_Execute = "comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED]",
+					BTNCS_Execute = "comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]",
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
 					INP_MinAllowed = -1000000,
@@ -791,36 +805,35 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					LINKS_Name = "Go To Frame"
 				},
 				sep1 = {
-					INPID_InputControl = "SeparatorControl",
 					ICS_ControlPage = "Controls",
+					INPID_InputControl = "SeparatorControl",
 				},
 				CompnPass = {
 					INP_MaxAllowed = 1000000,
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-                        local tool = comp.ActiveTool
-                        tool.Depth[0] = 5
-                        local function CopyFile(old_path, new_path)
-                          local old_file = io.open(old_path, "rb")
-                          local new_file = io.open(new_path, "wb")
-                          local old_file_sz, new_file_sz = 0, 0
-                          if not old_file or not new_file then
+                    local function CopyFile(old_path, new_path)
+                        local old_file = io.open(old_path, "rb")
+                        local new_file = io.open(new_path, "wb")
+                        local old_file_sz, new_file_sz = 0, 0
+                        if not old_file or not new_file then
                             return false
-                          end
-                          while true do
+                        end
+                        while true do
                             local block = old_file:read(2^13)
                             if not block then 
-                              old_file_sz = old_file:seek( "end" )
-                              break
+                                old_file_sz = old_file:seek( "end" )
+                                break
                             end
                             new_file:write(block)
-                          end
-                          old_file:close()
-                          new_file_sz = new_file:seek( "end" )
-                          new_file:close()
-                          return new_file_sz == old_file_sz
                         end
+                        old_file:close()
+                        new_file_sz = new_file:seek( "end" )
+                        new_file:close()
+                        return new_file_sz == old_file_sz
+                    end
+                    local function CreateCleanPass(tool)
                         local renderStart = comp:GetAttrs().COMPN_RenderStart
                         local renderEnd = comp:GetAttrs().COMPN_RenderEnd
                         local renderOut = renderStart + 1
@@ -836,7 +849,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                         seq = bmd.parseFilename(saverClip)
                         local ldr = tool:GetChildrenList(false, "Loader")[1]
                         loaderClip = seq.Path .. seq.CleanName .. renderStart .. seq.Extension
-                        print("loader: " .. loaderClip)
                         ldr.Clip[0] = loaderClip
                         
                         ldr.GlobalOut[0] = renderEnd
@@ -852,8 +864,29 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                             newName = seq.Path .. seq.CleanName .. tostring(1001 + i) .. seq.Extension
                             CopyFile(oldName, newName)
                         end
+                        print("Clean Pass STMap created: ".. loaderClip)
+                        print("Now press Analyze button")
                         comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED] 
-                        tool.Output = 1 
+                        tool.Output = 1
+                    end
+                    local function checkSaved(tool)
+                        if comp:GetAttrs('COMPS_FileName') == '' then
+                            print('[VectorWarp] Please save the composition')
+                            d = {}
+                            d[1] = {"Warning", Name = "", "Text", ReadOnly = true, Lines = 2, Wrap = false, Default = "Please, save the comp to proceed"}
+                            ret = comp:AskUser("Warning", d) 
+                            if ret then
+                                comp:SaveAs()
+                                CreateCleanPass(tool)
+                            end
+                        else
+                            CreateCleanPass(tool)
+                        end
+                    end
+                    if not tool then
+                        tool = comp.ActiveTool
+                    end
+                    checkSaved(tool)
                     ]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
@@ -874,11 +907,13 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                             while (os.clock() < sec) do 
                             end 
                         end
-                        local tool = comp.ActiveTool
+                        if not tool then
+                            tool = comp.ActiveTool
+                        end
                         tool.Render = 1 
                         tool.Output = 0 
                         tool.Direction = 1 
-                        comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED]
+                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
                         comp:Loop(false)
                         fusion.CacheManager:Purge()
                         temp_time = comp.CurrentTime
@@ -893,7 +928,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                                 break
                             end
                         end
-                        comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED]
+                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
                         tool.Output = 1
                     ]],
                     INP_MaxScale = 1,
@@ -915,19 +950,20 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                             while (os.clock() < sec) do 
                             end 
                         end
-
                         local renderEnd = comp:GetAttrs().COMPN_RenderEnd
                         local renderStart = comp:GetAttrs().COMPN_RenderStart
-                        local tool = comp.ActiveTool
+                        if not tool then
+                            tool = comp.ActiveTool
+                        end
                         tool.Render = 1 
                         tool.Output = 0 
                         tool.Direction = 0 
-                        comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED]
+                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
                         comp:Loop(false)
                         fusion.CacheManager:Purge()
                         temp_time = comp.CurrentTime
+                        tool.SaveFrames = "HiQInteractive"
                         comp:Play()
-
                         
                         while true do 
                             if temp_time < comp.CurrentTime then
@@ -939,8 +975,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                                 break
                             end
                         end
-                        comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED]
+                        tool.SaveFrames = "Full"
+                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
                         tool.Output = 1
+                        
                     ]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
@@ -961,7 +999,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                             while (os.clock() < sec) do 
                             end 
                         end
-                        local tool = comp.ActiveTool
+                        if not tool then
+                            tool = comp.ActiveTool
+                        end
                         tool.Render = 1 
                         tool.Output = 0 
                         tool.Direction = 0 
@@ -972,6 +1012,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                         local renderStart = comp:GetAttrs().COMPN_RenderStart
 
                         temp_time = comp.CurrentTime
+                        tool.SaveFrames = "HiQInteractive"
                         comp:Play()
                         while true do 
                             if temp_time < comp.CurrentTime then
@@ -998,6 +1039,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                                 break
                             end
                         end
+                        tool.SaveFrames = "Full"
                         tool.Output = 1                         
                         comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED]
                         collectgarbage()
@@ -1036,17 +1078,17 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				},
 				Guide = {
 					TEC_ReadOnly = false,
-					LINKS_Name = "Guide",
-					LINKID_DataType = "Text",
+					TEC_Wrap = true,
 					ICS_ControlPage = "Controls",
+					LINKID_DataType = "Text",
 					MBTNC_ShowName = false,
 					INPID_InputControl = "TextEditControl",
 					TEC_Lines = 20,
-					TEC_Wrap = true,
+					LINKS_Name = "Guide",
 				},
 				sep3 = {
-					ICS_ControlPage = "Controls",
 					INPID_InputControl = "SeparatorControl",
+					ICS_ControlPage = "Controls",
 				},
 				Tutorial = {
 					ICD_Width = 0.85,
@@ -1128,5 +1170,5 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			},
 		}
 	},
-	ActiveTool = "ml_VectorWarp"
+	ActiveTool = "ml_VectorWarp_LDR"
 }
