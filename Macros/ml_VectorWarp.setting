@@ -26,7 +26,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			},
 			Inputs = ordered() {
 				CommentsNest = Input { Value = 0, },
-				File = Input { Value = "Comp:VectorWarp\\render001.1001.exr", },
+				File = Input { Value = "Temp:VectorWarp\\render001.1001.exr", },
 				Guide = Input { Value = [[
 QUICK GUIDE:
 1. Connect the Image to the VectorWarp Input. Click Generate StMap button
@@ -219,7 +219,7 @@ QUICK GUIDE:
 					Clips = {
 						Clip {
 							ID = "Clip1",
-							Filename = "Comp:VectorMapper\\render001.1001.exr",
+							Filename = "Temp:VectorMapper\\render001.1001.exr",
 							FormatID = "OpenEXRFormat",
 							StartFrame = 1001,
 							Length = 200,
@@ -461,7 +461,7 @@ QUICK GUIDE:
 						ProcessWhenBlendIs00 = Input { Value = 0, },
 						Clip = Input {
 							Value = Clip {
-								Filename = "Comp:VectorWarp\\render001..exr",
+								Filename = "Temp:VectorWarp\\render001..exr",
 								FormatID = "OpenEXRFormat",
 								Length = 0,
 								Saving = true,
@@ -848,7 +848,8 @@ QUICK GUIDE:
                         saverClip = svr.Clip[0]
                         seq = bmd.parseFilename(saverClip)
                         local ldr = tool:GetChildrenList(false, "Loader")[1]
-                        loaderClip = seq.Path .. seq.CleanName .. renderStart .. seq.Extension
+                        padding = string.format("%04d", renderStart)
+                        loaderClip = seq.Path .. seq.CleanName .. padding .. seq.Extension
                         ldr.Clip[0] = loaderClip
                         
                         ldr.GlobalOut[0] = renderEnd
@@ -861,16 +862,17 @@ QUICK GUIDE:
                         oldName = seq.FullPath
                         len = renderEnd - renderStart
                         for i = 1, len do
-                            newName = seq.Path .. seq.CleanName .. tostring(1001 + i) .. seq.Extension
+                            padding = string.format("%04d", renderStart + i) 
+                            newName = seq.Path .. seq.CleanName .. padding .. seq.Extension
                             CopyFile(oldName, newName)
                         end
                         print("Clean Pass STMap created: ".. loaderClip)
                         print("Now press Analyze button")
-                        comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED] 
+                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED] 
                         tool.Output = 1
                     end
                     local function checkSaved(tool)
-                        if comp:GetAttrs('COMPS_FileName') == '' then
+                        if comp:GetAttrs('COMPS_FileName') == '' and not fu:GetResolve() then
                             print('[VectorWarp] Please save the composition')
                             d = {}
                             d[1] = {"Warning", Name = "", "Text", ReadOnly = true, Lines = 2, Wrap = false, Default = "Please, save the comp to proceed"}
@@ -1005,7 +1007,7 @@ QUICK GUIDE:
                         tool.Render = 1 
                         tool.Output = 0 
                         tool.Direction = 0 
-                        comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED] 
+                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED] 
                         comp:Loop(false) 
                         fusion.CacheManager:Purge()
                         local renderEnd = comp:GetAttrs().COMPN_RenderEnd
@@ -1024,9 +1026,9 @@ QUICK GUIDE:
                                 break
                             end
                         end
-                        comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED]
+                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
                         fusion.CacheManager:Purge()
-                        comp.ActiveTool.Direction = 1 
+                        tool.Direction = 1 
                         temp_time = comp.CurrentTime
                         comp:Play(true)
                         while true do
@@ -1041,7 +1043,7 @@ QUICK GUIDE:
                         end
                         tool.SaveFrames = "Full"
                         tool.Output = 1                         
-                        comp.CurrentTime = comp.ActiveTool.ReferenceFrame[fu.TIME_UNDEFINED]
+                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
                         collectgarbage()
                     ]],
                     INP_MaxScale = 1,
