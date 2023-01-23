@@ -2,7 +2,7 @@
 https://emiliosapia.myportfolio.com
 Written by : Emilio Sapia, Alexey Bogomolov
 Written on : Jan, 2023
-version 2.3
+version 2.4
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -132,6 +132,21 @@ QUICK GUIDE:
 					SourceOp = "Blur1",
 					Source = "XBlurSize",
 					Default = 0,
+				},
+				GlobalIn = InstanceInput {
+					SourceOp = "Source",
+					Source = "GlobalIn",
+					ControlGroup = 7,
+					Page = "File",
+				},
+				GlobalOut = InstanceInput {
+					SourceOp = "Source",
+					Source = "GlobalOut",
+					ControlGroup = 7,
+				},
+				Input51 = InstanceInput {
+					SourceOp = "ChannelBooleans1",
+					Source = "Blank1",
 				},
 				Loader = InstanceInput {
 					SourceOp = "Source",
@@ -751,6 +766,15 @@ QUICK GUIDE:
 					MBTNC_ShowToolTip = true,
 					LINKS_Name = "Render",
 				},
+				SetupLabel = {
+					INP_Integer = false,
+					LBLC_DropDownButton = true,
+					LINKID_DataType = "Number",
+					LBLC_NumInputs = 5,
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "LabelControl",
+					LINKS_Name = "Setup",
+				},
 				VectorSource = {
 					{ MBTNC_AddButton = "Internal" },
 					{ MBTNC_AddButton = "External" },
@@ -804,9 +828,14 @@ QUICK GUIDE:
 					ICD_Width = 1,
 					LINKS_Name = "Go To Frame"
 				},
-				sep1 = {
+				AnalysisLabel = {
+					INP_Integer = false,
+					LBLC_DropDownButton = true,
+					LINKID_DataType = "Number",
+					LBLC_NumInputs = 4,
 					ICS_ControlPage = "Controls",
-					INPID_InputControl = "SeparatorControl",
+					INPID_InputControl = "LabelControl",
+					LINKS_Name = "Analysis",
 				},
 				CompnPass = {
 					INP_MaxAllowed = 1000000,
@@ -1096,7 +1125,7 @@ QUICK GUIDE:
 					ICD_Width = 0.85,
 					INP_Integer = false,
 					LINKID_DataType = "Number",
-					BTNCS_Execute = "					os.execute('open \"\" \"https://www.youtube.com/watch?v=y_vDqDZ6728\"')\n					os.execute('start \"\" \"https://www.youtube.com/watch?v=y_vDqDZ6728\"')\n					",
+					BTNCS_Execute = "					os.execute('open \"\" \"https://youtu.be/-q7VanQSawI\"')\n					os.execute('start \"\" \"https://youtu.be/-q7VanQSawI\"')\n					",
 					ICS_ControlPage = "Controls",
 					INPID_InputControl = "ButtonControl",
 					LINKS_Name = "Tutorial",
