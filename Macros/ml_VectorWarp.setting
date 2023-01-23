@@ -948,6 +948,7 @@ QUICK GUIDE:
                         comp:Loop(false)
                         fusion.CacheManager:Purge()
                         temp_time = comp.CurrentTime
+                        tool.SaveFrames = "HiQInteractive"
                         comp:Play(true)
                         while true do
                             if temp_time > comp.CurrentTime then
@@ -961,6 +962,7 @@ QUICK GUIDE:
                         end
                         comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
                         tool.Output = 1
+                        tool.SaveFrames = "Full"                       
                     ]],
                     INP_MaxScale = 1,
                     INP_MinScale = 0,
