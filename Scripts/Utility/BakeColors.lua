@@ -6,7 +6,7 @@ tool = comp:GetToolList(true)[1]
 if not tool then
 	tool = comp.ActiveTool
 end
--- Ask the user which input, and how often to set keyframes
+-- Ask the user how often to set keyframes
 settings = composition:AskUser("Bake Colors", {
 	{ "Step", "Slider", Integer = true, Default = 1, Min = 1, Max = 10},
 	})
