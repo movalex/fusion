@@ -73,6 +73,7 @@ def increment_comp():
     source_file = Path(comp_attrs["COMPS_FileName"])
     comp_name = Path(comp_attrs["COMPS_Name"])
     save_path = get_save_path(PATH_ENV)
+    print(f"save path found {save_path}")
     if not save_path.exists():
         save_path.mkdir(parents=True)
     number = get_increment_number(save_path)
