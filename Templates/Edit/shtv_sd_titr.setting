@@ -1,0 +1,371 @@
+{
+	Tools = ordered() {
+		shtv_sd_titr = GroupOperator {
+			Inputs = ordered() {
+				Input4 = InstanceInput {
+					SourceOp = "name",
+					Source = "StyledText",
+					Name = "name",
+				},
+				nameRed = InstanceInput {
+					SourceOp = "name",
+					Source = "Red1Clone",
+					Name = "Color",
+					ControlGroup = 5,
+					Default = 0.921568627451,
+				},
+				nameGreen = InstanceInput {
+					SourceOp = "name",
+					Source = "Green1Clone",
+					Name = "Color",
+					ControlGroup = 5,
+					Default = 0.921568627451,
+				},
+				nameBlue = InstanceInput {
+					SourceOp = "name",
+					Source = "Blue1Clone",
+					Name = "Color",
+					ControlGroup = 5,
+					Default = 0.921568627451,
+				},
+				Input6 = InstanceInput {
+					SourceOp = "Follower_name_1",
+					Source = "Delay",
+					Name = "Delay Name",
+					MinScale = 0,
+					MaxScale = 50,
+					Default = 20.2,
+				},
+				Input1 = InstanceInput {
+					SourceOp = "song",
+					Source = "StyledText",
+					Name = "song",
+				},
+				songRed = InstanceInput {
+					SourceOp = "song",
+					Source = "Red1Clone",
+					Name = "Color",
+					ControlGroup = 2,
+					Default = 0.921568627451,
+				},
+				songBlue = InstanceInput {
+					SourceOp = "song",
+					Source = "Blue1Clone",
+					Name = "Color",
+					ControlGroup = 2,
+					Default = 0.921568627451,
+				},
+				songGreen = InstanceInput {
+					SourceOp = "song",
+					Source = "Green1Clone",
+					Name = "Color",
+					ControlGroup = 2,
+					Default = 0.921568627451,
+				},
+				Input3 = InstanceInput {
+					SourceOp = "Follower_song_1",
+					Source = "Delay",
+					Name = "Delay Song",
+					MinScale = 1,
+					MaxScale = 50,
+					Default = 20,
+				},
+				Input7 = InstanceInput {
+					SourceOp = "Loader",
+					Source = "Clip",
+					Name = "BG",
+				},
+			},
+			Outputs = {
+				Output1 = InstanceOutput {
+					SourceOp = "Path1_1_1",
+					Source = "Heading",
+				},
+				MainOutput1 = InstanceOutput {
+					SourceOp = "KeyframeStretcher",
+					Source = "Result",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			Tools = ordered() {
+				Loader = Loader {
+					Clips = {
+						Clip {
+							ID = "Clip1",
+							Filename = "D:\\YandexDisk\\Шансон ТВ (общая)\\БОГОМОЛОВ Алексей\\ТИТРЫ\\assets\\bg_sd\\titr_bg_sd_00000.png",
+							FormatID = "PNGFormat",
+							Length = 274,
+							LengthSetManually = true,
+							TrimIn = 0,
+							TrimOut = 273,
+							ExtendFirst = 0,
+							ExtendLast = 0,
+							Loop = 1,
+							AspectMode = 0,
+							Depth = 0,
+							TimeCode = 0,
+							GlobalStart = 0,
+							GlobalEnd = 273
+						}
+					},
+					NameSet = true,
+					Inputs = {
+						["Clip1.OpenEXRFormat.GreenName"] = Input { Value = FuID { "G" }, },
+						["Clip1.OpenEXRFormat.BlueName"] = Input { Value = FuID { "B" }, },
+						["Clip1.OpenEXRFormat.Channels"] = Input { Value = 1, },
+						["Clip1.OpenEXRFormat.RedName"] = Input { Value = FuID { "R" }, },
+						["Clip1.OpenEXRFormat.AlphaName"] = Input { Value = FuID { "A" }, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						["Clip1.PNGFormat.PostMultiply"] = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 61.6247, 38.2727 } },
+				},
+				song = TextPlus {
+					NameSet = true,
+					Inputs = {
+						Alignment = Input { Value = 1, },
+						GlobalIn = Input { Value = 1001, },
+						GlobalOut = Input { Value = 1200, },
+						Width = Input { Value = 720, },
+						Height = Input { Value = 576, },
+						PixelAspect = Input { Value = { 1.06666672229767, 1 }, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.109335183131002, 0.208078408247288 }, },
+						CharacterSpacing = Input { Value = 0.971, },
+						TransformSize = Input { Value = 1, },
+						CharacterSizeX = Input { Value = 0.95, },
+						Red1 = Input { Value = 0.921568627451, },
+						Green1 = Input { Value = 0.921568627451, },
+						Blue1 = Input { Value = 0.921568627451, },
+						StyledText = Input {
+							SourceOp = "Follower_song_1",
+							Source = "StyledText",
+						},
+						Font = Input { Value = "Arial", },
+						Style = Input { Value = "Italic", },
+						Size = Input { Value = 0.0435, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = -1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 490, -19.3324 } },
+					UserControls = ordered() {
+						delay = {
+							INP_MaxAllowed = 50,
+							INP_Integer = true,
+							INPID_InputControl = "SliderControl",
+							INP_MaxScale = 50,
+							INP_Default = 20,
+							INP_MinScale = 1,
+							INP_MinAllowed = 1,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							ICD_Center = 20,
+							LINKS_Name = "delay"
+						}
+					}
+				},
+				Follower_song_1 = StyledTextFollower {
+					CtrlWZoom = false,
+					NameSet = true,
+					Inputs = {
+						DelayType = Input { Value = 2, },
+						Delay = Input { Value = 20, },
+						Text = Input {
+							SourceOp = "vTextCaseUpper1",
+							Source = "Output",
+						},
+						CharacterSizeY = Input {
+							SourceOp = "Follower_song_1CharacterSizeY",
+							Source = "Value",
+						},
+					},
+				},
+				Follower_song_1CharacterSizeY = BezierSpline {
+					SplineColor = { Red = 28, Green = 216, Blue = 243 },
+					CtrlWZoom = false,
+					NameSet = true,
+					KeyFrames = {
+						[28] = { 0, RH = { 28.6666666666666, 0 }, Flags = { Linear = true } },
+						[30] = { 1, LH = { 29.3333333333334, 1 } }
+					}
+				},
+				name = TextPlus {
+					NameSet = true,
+					Inputs = {
+						Alignment = Input { Value = 1, },
+						GlobalIn = Input { Value = 1001, },
+						GlobalOut = Input { Value = 1200, },
+						Width = Input { Value = 720, },
+						Height = Input { Value = 576, },
+						PixelAspect = Input { Value = { 1.06666672229767, 1 }, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.108675309549579, 0.253214581497244 }, },
+						CharacterSpacing = Input { Value = 0.981, },
+						Red1 = Input { Value = 0.921568627451, },
+						Green1 = Input { Value = 0.921568627451, },
+						Blue1 = Input { Value = 0.921568627451, },
+						StyledText = Input {
+							SourceOp = "Follower_name_1",
+							Source = "StyledText",
+						},
+						Font = Input { Value = "Arial", },
+						Style = Input { Value = "Regular", },
+						Size = Input { Value = 0.0435, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = -1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						delay = Input { Value = 11, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 333.494, -17.8191 } },
+					UserControls = ordered() {
+						delay = {
+							INP_MaxAllowed = 50,
+							INP_Integer = true,
+							INPID_InputControl = "SliderControl",
+							INP_MaxScale = 50,
+							INP_Default = 20,
+							INP_MinScale = 1,
+							INP_MinAllowed = 1,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							ICD_Center = 20,
+							LINKS_Name = "delay"
+						}
+					}
+				},
+				Follower_name_1 = StyledTextFollower {
+					CtrlWZoom = false,
+					NameSet = true,
+					Inputs = {
+						DelayType = Input { Value = 2, },
+						Delay = Input { Value = 20.2, },
+						Text = Input { Value = "Caro EMERALD", },
+						CharacterSizeY = Input {
+							SourceOp = "Follower_name_1CharacterSizeY",
+							Source = "Value",
+						},
+					},
+				},
+				Follower_name_1CharacterSizeY = BezierSpline {
+					SplineColor = { Red = 28, Green = 216, Blue = 243 },
+					CtrlWZoom = false,
+					NameSet = true,
+					KeyFrames = {
+						[12] = { 0, RH = { 12.6733334859212, 0 } },
+						[14.0200004577637] = { 1, LH = { 13.3466669718425, 1 } }
+					}
+				},
+				Rectangle = RectangleMask {
+					NameSet = true,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input {
+							SourceOp = "Path1_1_1",
+							Source = "Position",
+						},
+						Width = Input { Value = 1.257322, },
+						Height = Input { Value = 0.3364312267658, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 672.327, -19.6923 } },
+				},
+				Path1_1_1 = PolyPath {
+					DrawMode = "InsertAndModify",
+					CtrlWZoom = false,
+					Inputs = {
+						Displacement = Input {
+							SourceOp = "Path1_1_1Displacement",
+							Source = "Value",
+						},
+						PolyLine = Input {
+							Value = Polyline {
+								Points = {
+									{ Linear = true, LockY = true, X = 0, Y = -0.5556877, RX = 0, RY = 0.0585194882368293 },
+									{ Linear = true, LockY = true, X = 0, Y = -0.380129235289512, LX = 0, LY = -0.0585194882368293 }
+								}
+							},
+						},
+					},
+				},
+				Path1_1_1Displacement = BezierSpline {
+					SplineColor = { Red = 255, Green = 0, Blue = 255 },
+					CtrlWZoom = false,
+					KeyFrames = {
+						[137] = { 0, RH = { 146.333333333333, 0 }, Flags = { Linear = true, LockedY = true } },
+						[165] = { 1, LH = { 149.444444444444, 1 }, Flags = { LockedY = true } }
+					}
+				},
+				KeyframeStretcher = KeyStretcher {
+					CtrlWZoom = false,
+					NameSet = true,
+					Inputs = {
+						Keyframes = Input {
+							SourceOp = "ChannelBooleans",
+							Source = "Output",
+						},
+						SourceEnd = Input { Value = 165, },
+						StretchStart = Input { Value = 52, },
+						StretchEnd = Input { Value = 137, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 854.604, 38.2727 } },
+				},
+				ChannelBooleans = ChannelBoolean {
+					NameSet = true,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle",
+							Source = "Mask",
+						},
+						Operation = Input { Value = 12, },
+						Background = Input {
+							SourceOp = "Merge",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 672.327, 38.2727 } },
+				},
+				Merge = Merge {
+					NameSet = true,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "song",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 490, 38.2727 } },
+				},
+				Merge1 = Merge {
+					NameSet = true,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Loader",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "name",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 333.494, 38.2727 } },
+				},
+                vTextCaseUpper1 = Fuse.vTextCaseUpper {
+                    Inputs = {
+                        Text = Input { Value = "BBB", },
+                    },
+                    ViewInfo = OperatorInfo { Pos = { 28, -30.303 } },
+                }
+			},
+		}
+	},
+	ActiveTool = "shtv_sd_titr"
+}
