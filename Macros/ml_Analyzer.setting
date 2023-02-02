@@ -142,7 +142,7 @@
 							INP_MaxAllowed = 1000000,
 							INP_Integer = false,
 							INPID_InputControl = "ButtonControl",
-							BTNCS_Execute = "@scripts:/Utility/BakeColors.lua",
+							BTNCS_Execute = "Scripts:/Utility/BakeColors.lua",
 							INP_MaxScale = 1,
 							INP_MinScale = 0,
 							INP_MinAllowed = -1000000,
