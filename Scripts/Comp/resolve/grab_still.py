@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import os
-import time
 
 """
     This is a Davinci Resolve script to save single still in stills folder
@@ -30,34 +29,53 @@ import time
 STILL_FRAME_REF = 2
 
 
+def get_target_folder():
+    target_folder = fu.GetData("ResolveSaveStills.Folder")
+    if not target_folder or target_folder == " ":
+        target_folder = fu.MapPath(os.path.expanduser("~/Desktop"))
+        print(f"Stills folder not set. Defaulting to {target_folder} location")
+        print(f"Set stills location with set_stills_location script")
+    return target_folder
+
+
+def get_timeline_and_gallery():
+    project = resolve.GetProjectManager().GetCurrentProject()
+    timeline = project.GetCurrentTimeline()
+    gallery = project.GetGallery()
+    return timeline, gallery
+
+
 def grab_still():
     """
     create still from current position on the timeline
     save the files to the predefined folder
-    location is not defined by set_stills_location script, still is saved to Desktop 
+    location is not defined by set_stills_location script, still is saved to Desktop
     delete the still from the gallery afterwards
     """
     if not fu.GetResolve():
         print("This is a script for Davinci Resolve")
         return
 
-    project = resolve.GetProjectManager().GetCurrentProject()
-    timeline = project.GetCurrentTimeline()
+    timeline, gallery = get_timeline_and_gallery()
+    albums = gallery.GetGalleryStillAlbums()
+    album_names = [gallery.GetAlbumName(album) for album in albums]
+    if not "export" in album_names:
+        print("Create export album!")
+        return
+    current_clip_name = timeline.GetCurrentVideoItem().GetName()
     timeline_name = timeline.GetName()
-    gallery = project.GetGallery()
-    still = timeline.GrabStill(STILL_FRAME_REF)
-    album = gallery.GetCurrentStillAlbum()
-    target_folder = fu.GetData("ResolveSaveStills.Folder")
-
-    if not target_folder or target_folder == " ":
-        target_folder = fu.MapPath(os.path.expanduser("~/Desktop"))
-        print(f"Stills folder not set. Defaulting to {target_folder} location")
-        print(f"You can set stills location with set_stills_location script (obviously)")
-    
-    album.ExportStills([still], target_folder, timeline_name, "jpg")
-    album.DeleteStills(still)
-    resolve.OpenPage("edit")
-    print(f"Saved still to {target_folder}")
+    file_prefix = f"{current_clip_name}_{timeline_name}"
+    target_folder = get_target_folder()
+    for album in albums:
+        if gallery.GetAlbumName(album) == "export":
+            gallery.SetCurrentStillAlbum(album)
+            current_album = gallery.GetCurrentStillAlbum()
+            still = timeline.GrabStill(STILL_FRAME_REF)
+            current_album.SetLabel(still, current_clip_name)
+            current_album.ExportStills([still], target_folder, file_prefix, "png")
+            # current_album.DeleteStills(still)
+            resolve.OpenPage("edit")
+            print(f"Saved {file_prefix} to {target_folder}")
 
 
 if __name__ == "__main__":
