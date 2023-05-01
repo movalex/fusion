@@ -1,14 +1,18 @@
-#!/usr/bin/env python
+from pathlib import Path
+from grab_still import get_export_album, get_timeline_and_gallery, grab_still
 
 """
     This is a Davinci Resolve script to save all timeline clips as jpg files.
     Author: Alexey Bogomolov
     Email: mail@abogomolov.com
     License: MIT
-    Copyright: 2022
+    Copyright: 2023
 """
 
 STILL_FRAME_REF = 2
+EXPORT_ALBUM = "export_30.04"
+FORMAT = "png"
+
 
 
 def request_dir():
@@ -62,7 +66,7 @@ def request_dir():
     return result
 
 
-def grab_stills():
+def grab_stills(album_name: str):
     """create stills from all clips in a timeline
     save the files to requested folder
     """
@@ -70,27 +74,36 @@ def grab_stills():
         print("This is a script for Davinci Resolve")
         return
 
-    project = resolve.GetProjectManager().GetCurrentProject()
-    timeline = project.GetCurrentTimeline()
     timeline_name = timeline.GetName()
-    gallery = project.GetGallery()
-    stills = timeline.GrabAllStills(STILL_FRAME_REF)
-    album = gallery.GetCurrentStillAlbum()
+    video_track_count = timeline.GetTrackCount("video")
+    print(video_track_count)
+    stills = {}
+    for track_num in range(1, video_track_count + 1):
+        clips = timeline.GetItemListInTrack("video", track_num)
+        for clip in clips:
+            clip_name = clip.GetName()
+
+    # stills = timeline.GrabAllStills(STILL_FRAME_REF)
+    albums = gallery.GetGalleryStillAlbums()
+    album = get_export_album(albums, album_name)
 
     if len(stills) == 0:
         print("no stills saved")
         return
-    folder = request_dir()
-    if folder:
-        print(f"saving stills to {folder}")
+    target_folder = request_dir()
+    if target_folder:
+        print(f"saving stills to {target_folder}")
     else:
         print("Stills folder not set. Defaulting to desktop location")
-        target_folder = fu.MapPath(os.path.expanduser("~/Desktop"))
+        target_folder = Path("~/Desktop/ResolveStills").expanduser()
+        Path.mkdir(target_folder, exist_ok=True, parents=True)
         print(f"saving stills to {target_folder}")
-    album.ExportStills(stills, folder, timeline_name, "jpg")
-    album = gallery.GetCurrentStillAlbum()
-    album.DeleteStills(stills)
+    album.ExportStills(stills, target_folder.as_posix(), timeline_name, FORMAT)
+    # album = gallery.GetCurrentStillAlbum()
+    # album.DeleteStills(stills)
     resolve.OpenPage("edit")
 
 
-grab_stills()
+if __name__ == "__main__":
+    timeline, gallery = get_timeline_and_gallery(resolve)
+    grab_stills(EXPORT_ALBUM)
