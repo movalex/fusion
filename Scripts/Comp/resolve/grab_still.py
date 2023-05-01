@@ -1,6 +1,5 @@
-#!/usr/bin/env python
-
 import os
+from datetime import datetime
 
 """
     This is a Davinci Resolve script to save single still in stills folder
@@ -27,6 +26,7 @@ import os
     
 """
 STILL_FRAME_REF = 2
+EXPORT_ALBUM = "export_30.04"
 
 
 def get_target_folder():
@@ -38,45 +38,53 @@ def get_target_folder():
     return target_folder
 
 
-def get_timeline_and_gallery():
+def get_timeline_and_gallery(resolve):
     project = resolve.GetProjectManager().GetCurrentProject()
     timeline = project.GetCurrentTimeline()
     gallery = project.GetGallery()
     return timeline, gallery
 
 
-def grab_still():
+def get_export_album(albums: list, album_name: str):
+    export_album = None
+    for album in albums:
+        if gallery.GetAlbumName(album) == album_name:
+            gallery.SetCurrentStillAlbum(album)
+            export_album = gallery.GetCurrentStillAlbum()
+            return export_album
+    if not export_album:
+        print(
+            f"Cannot create the album '{album_name}' for you. Do it manually, please"
+        )
+
+
+def grab_still(album_name: str):
     """
     create still from current position on the timeline
     save the files to the predefined folder
-    location is not defined by set_stills_location script, still is saved to Desktop
-    delete the still from the gallery afterwards
     """
     if not fu.GetResolve():
         print("This is a script for Davinci Resolve")
         return
 
-    timeline, gallery = get_timeline_and_gallery()
     albums = gallery.GetGalleryStillAlbums()
-    album_names = [gallery.GetAlbumName(album) for album in albums]
-    if not "export" in album_names:
-        print("Create export album!")
-        return
     current_clip_name = timeline.GetCurrentVideoItem().GetName()
     timeline_name = timeline.GetName()
-    file_prefix = f"{current_clip_name}_{timeline_name}"
-    target_folder = get_target_folder()
-    for album in albums:
-        if gallery.GetAlbumName(album) == "export":
-            gallery.SetCurrentStillAlbum(album)
-            current_album = gallery.GetCurrentStillAlbum()
-            still = timeline.GrabStill(STILL_FRAME_REF)
-            current_album.SetLabel(still, current_clip_name)
-            current_album.ExportStills([still], target_folder, file_prefix, "png")
-            # current_album.DeleteStills(still)
-            resolve.OpenPage("edit")
-            print(f"Saved {file_prefix} to {target_folder}")
+    now = datetime.now()
+    date_time = now.strftime("%m%d%Y")
+    file_prefix = f"{current_clip_name}_{date_time}_{timeline_name}"
+    export_album = get_export_album(albums, album_name)
+    if not export_album:
+        return
+    still = timeline.GrabStill(STILL_FRAME_REF)
+    export_album.SetLabel(still, current_clip_name)
+    export_album.ExportStills([still], target_folder, file_prefix, "png")
+    # export_album.DeleteStills(still)
+    # resolve.OpenPage("edit")
+    print(f"Saved {file_prefix} to {target_folder}")
 
 
 if __name__ == "__main__":
-    grab_still()
+    timeline, gallery = get_timeline_and_gallery(resolve)
+    target_folder = get_target_folder()
+    grab_still(album_name=EXPORT_ALBUM)
