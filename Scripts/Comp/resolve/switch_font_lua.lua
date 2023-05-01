@@ -1,15 +1,11 @@
-#!/usr/bin/env python
-
-    -- This is a Davinci Resolve script switch text+ versions
-    -- Author: Alexey Bogomolov
-    -- Email: mail@abogomolov.com
-    -- License: MIT
-    -- Copyright: 2022
+-- This is a Davinci Resolve script switch text+ versions
+-- Author: Alexey Bogomolov
+-- Email: mail@abogomolov.com
+-- License: MIT
+-- Copyright: 2023
 
 
 FONT_STYLE = "Mongoose"
-
-
 
 
 function switch_font()
