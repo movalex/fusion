@@ -1,0 +1,860 @@
+{
+	Tools = ordered() {
+		simple_lightwrap = GroupOperator {
+			Inputs = ordered() {
+				Input1 = InstanceInput {
+					SourceOp = "Merge1",
+					Source = "BlendClone",
+					Default = 0.185,
+				},
+				MainInput1 = InstanceInput {
+					SourceOp = "input",
+					Source = "Input",
+				},
+				MainInput2 = InstanceInput {
+					SourceOp = "input1",
+					Source = "Input",
+				},
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Merge",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			Tools = ordered() {
+				Merge = Merge {
+					NameSet = true,
+					Inputs = {
+						Background = Input {
+							SourceOp = "input",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Merge1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 526.667, 2.51514 } },
+				},
+				Merge1 = Merge {
+					CtrlWZoom = false,
+					NameSet = true,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Bitmap_1",
+							Source = "Mask",
+						},
+						Blend = Input { Value = 0.185, },
+						Background = Input {
+							SourceOp = "input1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "BrightnessContrast",
+							Source = "Output",
+						},
+						Gain = Input { Value = 0, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 526.667, -199.505 } },
+				},
+				ExpoLightWrap = MacroOperator {
+					NameSet = true,
+					CustomData = { Path = { Map = { ["Setting:"] = "Macros:/" } } },
+					Inputs = ordered() {
+						MainInput1 = InstanceInput {
+							SourceOp = "ChannelBooleans1_2",
+							Source = "Background",
+						},
+						Input1 = InstanceInput {
+							SourceOp = "ChangeDepth_1",
+							Source = "Glow",
+							Page = "Controls",
+							Default = 9.49,
+						},
+						Input2 = InstanceInput {
+							SourceOp = "ChangeDepth_1",
+							Source = "Gain",
+							Page = "Controls",
+							Default = 5,
+						},
+						Input3 = InstanceInput {
+							SourceOp = "ChangeDepth_1",
+							Source = "Range",
+							Page = "Controls",
+							Default = 1,
+						},
+						Input4 = InstanceInput {
+							SourceOp = "ChangeDepth_1",
+							Source = "Falloff",
+							Page = "Controls",
+							Default = 0,
+						},
+						Input5 = InstanceInput {
+							SourceOp = "ChangeDepth_1",
+							Source = "Linear_Fibonacci",
+							Page = "Controls",
+						},
+						Input6 = InstanceInput {
+							SourceOp = "ChangeDepth_1",
+							Source = "Clipping",
+							Page = "Controls",
+						},
+						Input7 = InstanceInput {
+							SourceOp = "Bitmap_1",
+							Source = "EffectMask",
+						}
+					},
+					Outputs = {
+						MainOutput1 = InstanceOutput {
+							SourceOp = "Bitmap_1",
+							Source = "Mask",
+						}
+					},
+					ViewInfo = GroupInfo { Pos = { 671.693, -199.505 } },
+					Tools = ordered() {
+						Bitmap_1 = BitmapMask {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								EffectMask = Input {
+									SourceOp = "Ellipse",
+									Source = "Mask",
+								},
+								PaintMode = Input { Value = FuID { "Minimum" }, },
+								MaskWidth = Input { Value = 1920, },
+								MaskHeight = Input { Value = 1080, },
+								PixelAspect = Input { Value = { 1, 1 }, },
+								ClippingMode = Input { Value = FuID { "None" }, },
+								Image = Input {
+									SourceOp = "Bitmap4_1",
+									Source = "Mask",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 668, 813.488 } },
+						},
+						Bitmap3_1 = BitmapMask {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								MaskWidth = Input { Value = 1920, },
+								MaskHeight = Input { Value = 1080, },
+								PixelAspect = Input { Value = { 1, 1 }, },
+								ClippingMode = Input { Value = FuID { "None" }, },
+								Image = Input {
+									SourceOp = "ColorCurves_1",
+									Source = "Output",
+								},
+								Channel = Input { Value = FuID { "Luminance" }, },
+							},
+							ViewInfo = OperatorInfo { Pos = { 668, 683.368 } },
+						},
+						Bitmap4_1 = BitmapMask {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								EffectMask = Input {
+									SourceOp = "Bitmap3_1",
+									Source = "Mask",
+								},
+								PaintMode = Input { Value = FuID { "Minimum" }, },
+								MaskWidth = Input { Value = 1920, },
+								MaskHeight = Input { Value = 1080, },
+								PixelAspect = Input { Value = { 1, 1 }, },
+								ClippingMode = Input { Value = FuID { "None" }, },
+								Image = Input {
+									SourceOp = "ChannelBooleans1_2",
+									Source = "Output",
+								},
+								Channel = Input { Value = FuID { "Luminance" }, },
+							},
+							ViewInfo = OperatorInfo { Pos = { 668, 745.718 } },
+						},
+						ChannelBoolean_1 = ChannelBoolean {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Blend = Input {
+									Value = 0.976378940759137,
+									Expression = "1.0 / math.pow (ChangeDepth_1.Range,3)",
+								},
+								Operation = Input { Value = 1, },
+								ToAlpha = Input { Value = 4, },
+								Background = Input {
+									SourceOp = "ChannelBoolean1_1",
+									Source = "Output",
+								},
+								Foreground = Input {
+									SourceOp = "Blur9_1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 668, 161.588 } },
+						},
+						ChannelBoolean1_1 = ChannelBoolean {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Blend = Input {
+									Value = 0.98418997228521,
+									Expression = "1.0 / math.pow (ChangeDepth_1.Range,2)",
+								},
+								Operation = Input { Value = 1, },
+								ToAlpha = Input { Value = 4, },
+								Background = Input {
+									SourceOp = "ChannelBoolean2_1",
+									Source = "Output",
+								},
+								Foreground = Input {
+									SourceOp = "Blur6_1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 668, 105.588 } },
+						},
+						ChannelBoolean2_1 = ChannelBoolean {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Blend = Input {
+									Value = 0.992063492063492,
+									Expression = "1.0 / ChangeDepth_1.Range",
+								},
+								Operation = Input { Value = 1, },
+								ToAlpha = Input { Value = 4, },
+								Background = Input {
+									SourceOp = "Blur8_1",
+									Source = "Output",
+								},
+								Foreground = Input {
+									SourceOp = "Blur7_1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 668, 8.02716 } },
+						},
+						ChannelBoolean3_1 = ChannelBoolean {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Blend = Input {
+									Value = 0,
+									Expression = "iif(ChangeDepth_1.Linear_Fibonacci>0,(1.0 / math.pow (ChangeDepth_1.Range,8)),0)",
+								},
+								Operation = Input { Value = 1, },
+								ToAlpha = Input { Value = 4, },
+								Background = Input {
+									SourceOp = "ChannelBoolean6_1",
+									Source = "Output",
+								},
+								Foreground = Input {
+									SourceOp = "Blur3_1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 668, 407.023 } },
+						},
+						Scale_1 = Scale {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								XSize = Input { Value = 2, },
+								PixelAspect = Input { Value = { 1, 1 }, },
+								Input = Input {
+									SourceOp = "ChannelBoolean3_1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 668, 462.102 } },
+						},
+						BrightnessContrast2_1 = BrightnessContrast {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Gain = Input {
+									Value = 4.88,
+									Expression = "ChangeDepth_1.Gain",
+								},
+								Input = Input {
+									SourceOp = "Scale_1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 668, 519.622 } },
+						},
+						ColorGain_1 = ColorGain {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								GainNest = Input { Value = 0, },
+								GainRed = Input { Expression = "ChangeDepth_1.ScaleRed", },
+								GainGreen = Input { Expression = "ChangeDepth_1.ScaleGreen", },
+								GainBlue = Input { Expression = "ChangeDepth_1.ScaleBlue", },
+								GainAlpha = Input { Expression = "ChangeDepth_1.ScaleAlpha", },
+								ColorRanges = Input {
+									Value = ColorCurves {
+										Curves = {
+											{
+												Points = {
+													{ 0, 1 },
+													{ 0.125, 0.75 },
+													{ 0.375, 0.25 },
+													{ 0.5, 0 }
+												}
+											},
+											{
+												Points = {
+													{ 0.5, 0 },
+													{ 0.625, 0.25 },
+													{ 0.875, 0.75 },
+													{ 1, 1 }
+												}
+											}
+										}
+									},
+								},
+								Input = Input {
+									SourceOp = "BrightnessContrast2_1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 668, 569.347 } },
+						},
+						ColorCurves_1 = ColorCurves {
+							PickColor = true,
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Blend = Input {
+									Value = 0,
+									Expression = "ChangeDepth_1.Falloff",
+								},
+								Red = Input {
+									SourceOp = "ColorCurves_1Red",
+									Source = "Value",
+								},
+								Green = Input {
+									SourceOp = "ColorCurves_1Green",
+									Source = "Value",
+								},
+								Blue = Input {
+									SourceOp = "ColorCurves_1Blue",
+									Source = "Value",
+								},
+								Alpha = Input {
+									SourceOp = "ColorCurves_1Alpha",
+									Source = "Value",
+								},
+								NumberOfSamplesOnMatchCurve = Input { Value = 64, },
+								IgnoreTransparent = Input { Value = 1, },
+								Input = Input {
+									SourceOp = "ColorGain_1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 668, 620.129 } },
+							Tools = {
+								ColorCurves_1Blue = LUTBezier {
+									KeyColorSplines = {
+										[0] = {
+											[0] = { 0, RH = { 0.725085910652921, 0.154228855721393 }, Flags = { Linear = true } },
+											[1] = { 1, LH = { 0.573883161512028, 0.696517412935323 } }
+										}
+									},
+									SplineColor = { Red = 68, Green = 68, Blue = 255 },
+									CtrlWZoom = false,
+								},
+								ColorCurves_1Alpha = LUTBezier {
+									KeyColorSplines = {
+										[0] = {
+											[0] = { 0, RH = { 0.725085910652921, 0.154228855721393 }, Flags = { Linear = true } },
+											[1] = { 1, LH = { 0.573883161512028, 0.696517412935323 } }
+										}
+									},
+									SplineColor = { Red = 204, Green = 204, Blue = 204 },
+									CtrlWZoom = false,
+								},
+								ColorCurves_1Red = LUTBezier {
+									KeyColorSplines = {
+										[0] = {
+											[0] = { 0, RH = { 0.725085910652921, 0.154228855721393 }, Flags = { Linear = true } },
+											[1] = { 1, LH = { 0.573883161512028, 0.696517412935323 } }
+										}
+									},
+									SplineColor = { Red = 255, Green = 52, Blue = 52 },
+									CtrlWZoom = false,
+								},
+								ColorCurves_1Green = LUTBezier {
+									KeyColorSplines = {
+										[0] = {
+											[0] = { 0, RH = { 0.725085910652921, 0.154228855721393 }, Flags = { Linear = true } },
+											[1] = { 1, LH = { 0.573883161512028, 0.696517412935323 } }
+										}
+									},
+									SplineColor = { Red = 0, Green = 255, Blue = 0 },
+									CtrlWZoom = false,
+								}
+							},
+						},
+						ChannelBoolean4_1 = ChannelBoolean {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Blend = Input {
+									Value = 0,
+									Expression = "iif(ChangeDepth_1.Linear_Fibonacci>0,(1.0 / math.pow (ChangeDepth_1.Range,5)),0)",
+								},
+								ClippingMode = Input { Value = FuID { "Frame" }, },
+								Operation = Input { Value = 1, },
+								ToAlpha = Input { Value = 4, },
+								Background = Input {
+									SourceOp = "ChannelBoolean5_1",
+									Source = "Output",
+								},
+								Foreground = Input {
+									SourceOp = "Blur2_1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 668, 264.001 } },
+						},
+						ChannelBoolean5_1 = ChannelBoolean {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Blend = Input {
+									Value = 0.968629901546763,
+									Expression = "1.0 / math.pow (ChangeDepth_1.Range,4)",
+								},
+								Operation = Input { Value = 1, },
+								ToAlpha = Input { Value = 4, },
+								Background = Input {
+									SourceOp = "ChannelBoolean_1",
+									Source = "Output",
+								},
+								Foreground = Input {
+									SourceOp = "Blur10_1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 668, 213.972 } },
+						},
+						ChannelBoolean6_1 = ChannelBoolean {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Blend = Input {
+									Value = 0,
+									Expression = "iif(ChangeDepth_1.Linear_Fibonacci>0,(1.0 / math.pow (ChangeDepth_1.Range,7)),0)",
+								},
+								Operation = Input { Value = 1, },
+								ToAlpha = Input { Value = 4, },
+								Background = Input {
+									SourceOp = "ChannelBoolean7_1",
+									Source = "Output",
+								},
+								Foreground = Input {
+									SourceOp = "Blur4_1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 668, 357.915 } },
+						},
+						ChannelBoolean7_1 = ChannelBoolean {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Blend = Input {
+									Value = 0,
+									Expression = "iif(ChangeDepth_1.Linear_Fibonacci>0,(1.0 / math.pow (ChangeDepth_1.Range,6)),0)",
+								},
+								Operation = Input { Value = 1, },
+								ToAlpha = Input { Value = 4, },
+								Background = Input {
+									SourceOp = "ChannelBoolean4_1",
+									Source = "Output",
+								},
+								Foreground = Input {
+									SourceOp = "Blur5_1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 668, 308.256 } },
+						},
+						Blur2_1 = Blur {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Blend = Input { Expression = "ChangeDepth_1.Linear_Fibonacci", },
+								Filter = Input { Value = FuID { "Gaussian" }, },
+								XBlurSize = Input {
+									Value = 75.92,
+									Expression = "ChangeDepth_1.Glow*8",
+								},
+								Passes = Input { Value = 3, },
+								Input = Input {
+									SourceOp = "Scale1_1",
+									Source = "Output",
+								},
+								multiplier = Input { Value = 16, },
+							},
+							ViewInfo = OperatorInfo { Pos = { 542.51, 264.001 } },
+							UserControls = ordered() { multiplier = { INP_Integer = false, LINKID_DataType = "Number", INPID_InputControl = "SliderControl", INP_MinScale = 0, INP_MaxScale = 100, LINKS_Name = "multiplier", } }
+						},
+						Blur3_1 = Blur {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Blend = Input { Expression = "ChangeDepth_1.Linear_Fibonacci", },
+								Filter = Input { Value = FuID { "Gaussian" }, },
+								XBlurSize = Input {
+									Value = 322.66,
+									Expression = "ChangeDepth_1.Glow*34",
+								},
+								Passes = Input { Value = 3, },
+								Input = Input {
+									SourceOp = "Scale1_1",
+									Source = "Output",
+								},
+								multiplier = Input { Value = 16, },
+							},
+							ViewInfo = OperatorInfo { Pos = { 551.12, 407.023 } },
+							UserControls = ordered() { multiplier = { INP_Integer = false, LINKID_DataType = "Number", INPID_InputControl = "SliderControl", INP_MinScale = 0, INP_MaxScale = 100, LINKS_Name = "multiplier", } }
+						},
+						Blur4_1 = Blur {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Blend = Input { Expression = "ChangeDepth_1.Linear_Fibonacci", },
+								Filter = Input { Value = FuID { "Gaussian" }, },
+								XBlurSize = Input {
+									Value = 199.29,
+									Expression = "ChangeDepth_1.Glow*21",
+								},
+								Passes = Input { Value = 3, },
+								Input = Input {
+									SourceOp = "Scale1_1",
+									Source = "Output",
+								},
+								multiplier = Input { Value = 16, },
+							},
+							ViewInfo = OperatorInfo { Pos = { 546.82, 357.915 } },
+							UserControls = ordered() { multiplier = { INP_Integer = false, LINKID_DataType = "Number", INPID_InputControl = "SliderControl", INP_MinScale = 0, INP_MaxScale = 100, LINKS_Name = "multiplier", } }
+						},
+						Blur5_1 = Blur {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Blend = Input { Expression = "ChangeDepth_1.Linear_Fibonacci", },
+								Filter = Input { Value = FuID { "Gaussian" }, },
+								XBlurSize = Input {
+									Value = 123.37,
+									Expression = "ChangeDepth_1.Glow*13",
+								},
+								Passes = Input { Value = 3, },
+								Input = Input {
+									SourceOp = "Scale1_1",
+									Source = "Output",
+								},
+								multiplier = Input { Value = 16, },
+							},
+							ViewInfo = OperatorInfo { Pos = { 543.26, 308.256 } },
+							UserControls = ordered() { multiplier = { INP_Integer = false, LINKID_DataType = "Number", INPID_InputControl = "SliderControl", INP_MinScale = 0, INP_MaxScale = 100, LINKS_Name = "multiplier", } }
+						},
+						Blur6_1 = Blur {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Filter = Input { Value = FuID { "Gaussian" }, },
+								XBlurSize = Input {
+									Value = 15.12,
+									Expression = "ChangeDepth_1.Glow*multiplier",
+								},
+								Passes = Input { Value = 3, },
+								Input = Input {
+									SourceOp = "Scale1_1",
+									Source = "Output",
+								},
+								multiplier = Input {
+									Value = 4,
+									Expression = "iif(ChangeDepth_1.Linear_Fibonacci>0,2,4)",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 536.23, 105.588 } },
+							UserControls = ordered() { multiplier = { INP_Integer = false, LINKID_DataType = "Number", INPID_InputControl = "SliderControl", INP_MinScale = 0, INP_MaxScale = 100, LINKS_Name = "multiplier", } }
+						},
+						Blur7_1 = Blur {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Filter = Input { Value = FuID { "Gaussian" }, },
+								XBlurSize = Input {
+									Value = 7.56,
+									Expression = "ChangeDepth_1.Glow*multiplier",
+								},
+								Passes = Input { Value = 3, },
+								Input = Input {
+									SourceOp = "Scale1_1",
+									Source = "Output",
+								},
+								multiplier = Input {
+									Value = 2,
+									Expression = "iif(ChangeDepth_1.Linear_Fibonacci>0,1,2)",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 537.35, 58.7431 } },
+							UserControls = ordered() { multiplier = { INP_Integer = false, LINKID_DataType = "Number", INPID_InputControl = "SliderControl", INP_MinScale = 0, INP_MaxScale = 100, LINKS_Name = "multiplier", } }
+						},
+						Blur8_1 = Blur {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Filter = Input { Value = FuID { "Gaussian" }, },
+								XBlurSize = Input {
+									Value = 3.78,
+									Expression = "ChangeDepth_1.Glow*multiplier",
+								},
+								Passes = Input { Value = 3, },
+								Input = Input {
+									SourceOp = "Scale1_1",
+									Source = "Output",
+								},
+								multiplier = Input {
+									Value = 1,
+									Expression = "iif(ChangeDepth_1.Linear_Fibonacci>0,1,1)",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 538.55, 8.02716 } },
+							UserControls = ordered() { multiplier = { INP_Integer = false, LINKID_DataType = "Number", INPID_InputControl = "SliderControl", INP_MinScale = 0, INP_MaxScale = 100, LINKS_Name = "multiplier", } }
+						},
+						Blur9_1 = Blur {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Filter = Input { Value = FuID { "Gaussian" }, },
+								XBlurSize = Input {
+									Value = 30.24,
+									Expression = "ChangeDepth_1.Glow*multiplier",
+								},
+								Passes = Input { Value = 3, },
+								Input = Input {
+									SourceOp = "Scale1_1",
+									Source = "Output",
+								},
+								multiplier = Input {
+									Value = 8,
+									Expression = "iif(ChangeDepth_1.Linear_Fibonacci>0,3,8)",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 536.3, 161.588 } },
+							UserControls = ordered() { multiplier = { INP_Integer = false, LINKID_DataType = "Number", INPID_InputControl = "SliderControl", INP_MinScale = 0, INP_MaxScale = 100, LINKS_Name = "multiplier", } }
+						},
+						Blur10_1 = Blur {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Filter = Input { Value = FuID { "Gaussian" }, },
+								XBlurSize = Input {
+									Value = 60.48,
+									Expression = "ChangeDepth_1.Glow*multiplier",
+								},
+								Passes = Input { Value = 3, },
+								Input = Input {
+									SourceOp = "Scale1_1",
+									Source = "Output",
+								},
+								multiplier = Input {
+									Value = 16,
+									Expression = "iif(ChangeDepth_1.Linear_Fibonacci>0,5,16)",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 537.74, 213.972 } },
+							UserControls = ordered() { multiplier = { INP_Integer = false, LINKID_DataType = "Number", INPID_InputControl = "SliderControl", INP_MinScale = 0, INP_MaxScale = 100, LINKS_Name = "multiplier", } }
+						},
+						Scale1_1 = Scale {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								XSize = Input { Value = 0.5, },
+								PixelAspect = Input { Value = { 1, 1 }, },
+								Input = Input {
+									SourceOp = "ChangeDepth_1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 391.5, 105.588 } },
+						},
+						ChangeDepth_1 = ChangeDepth {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Depth = Input { Value = 4, },
+								Dither = Input { Value = 2, },
+								Input = Input {
+									SourceOp = "BrightnessContrast3_1",
+									Source = "Output",
+								},
+								Glow = Input { Value = 3.78, },
+								Gain = Input { Value = 4.88, },
+								Range = Input { Value = 1.008, },
+								GlowOnly = Input { Value = 0, },
+							},
+							ViewInfo = OperatorInfo { Pos = { 281.72, 105.588 } },
+							UserControls = ordered() { Glow = { INP_MaxAllowed = 1000000, INP_Integer = false, INPID_InputControl = "SliderControl", INP_MaxScale = 20, INP_MinScale = 0, INP_MinAllowed = -1000000, LINKID_DataType = "Number", ICS_ControlPage = "Controls", LINKS_Name = "Radius" }, Gain = { INP_MaxAllowed = 1000000, INP_Integer = false, INPID_InputControl = "SliderControl", INP_MaxScale = 10, INP_Default = 0, INP_MinScale = 0, INP_MinAllowed = -1000000, LINKID_DataType = "Number", ICS_ControlPage = "Controls", LINKS_Name = "Gain" }, Range = { INP_MaxAllowed = 1000000, INP_Integer = false, INPID_InputControl = "SliderControl", INP_MaxScale = 2, INP_Default = 1, INP_MinScale = 0.5, INP_MinAllowed = -1000000, LINKID_DataType = "Number", ICS_ControlPage = "Controls", LINKS_Name = "Range" }, Falloff = { LINKS_Name = "Falloff", INP_Integer = false, LINKID_DataType = "Number", ICS_ControlPage = "Controls", INPID_InputControl = "SliderControl", INP_MinScale = 0, INP_MaxScale = 1, INP_Default = 0, }, Threshold = { INP_MaxAllowed = 1, INP_Integer = false, INPID_InputControl = "RangeControl", INP_MaxScale = 1, INP_Default = 0, INP_MinScale = 0, INP_MinAllowed = 0, LINKID_DataType = "Number", IC_ControlID = 0, ICS_ControlPage = "Controls", IC_ControlGroup = 1, LINKS_Name = "Threshold Low" }, Softness = { INP_MaxAllowed = 1000000, INP_Integer = false, INPID_InputControl = "SliderControl", INP_MaxScale = 10, INP_MinScale = 0, INP_MinAllowed = -1000000, LINKID_DataType = "Number", ICS_ControlPage = "Controls", LINKS_Name = "Threshold Blur" }, ScaleRed = { INP_MaxAllowed = 1000000, INP_Integer = false, INPID_InputControl = "SliderControl", INP_MaxScale = 5, INP_Default = 1, INP_MinScale = 0, INP_MinAllowed = -1000000, LINKID_DataType = "Number", ICS_ControlPage = "Controls", ICD_Center = 1, LINKS_Name = "Scale Red" }, ScaleGreen = { INP_MaxAllowed = 1000000, INP_Integer = false, INPID_InputControl = "SliderControl", INP_MaxScale = 5, INP_Default = 1, INP_MinScale = 0, INP_MinAllowed = -1000000, LINKID_DataType = "Number", ICS_ControlPage = "Controls", ICD_Center = 1, LINKS_Name = "Scale Green" }, ScaleBlue = { INP_MaxAllowed = 1000000, INP_Integer = false, INPID_InputControl = "SliderControl", INP_MaxScale = 5, INP_Default = 1, INP_MinScale = 0, INP_MinAllowed = -1000000, LINKID_DataType = "Number", ICS_ControlPage = "Controls", ICD_Center = 1, LINKS_Name = "Scale Blue" }, ScaleAlpha = { INP_Integer = false, INPID_InputControl = "SliderControl", INP_MaxScale = 5, INP_Default = 1, INP_MinScale = 0, LINKID_DataType = "Number", ICS_ControlPage = "Controls", ICD_Center = 1, LINKS_Name = "Scale Alpha", }, GlowOnly = { INP_MaxAllowed = 1000000, INP_Integer = false, INPID_InputControl = "CheckboxControl", INP_MaxScale = 2, INP_Default = 1, INP_MinScale = 1, INP_MinAllowed = -1000000, LINKID_DataType = "Number", ICS_ControlPage = "Controls", CBC_TriState = false, LINKS_Name = "Glow Only" }, Linear_Fibonacci = { INP_MaxAllowed = 1000000, INP_Integer = false, INPID_InputControl = "CheckboxControl", INP_MaxScale = 1, INP_MinScale = 0, INP_MinAllowed = -1000000, LINKID_DataType = "Number", ICS_ControlPage = "Controls", CBC_TriState = false, LINKS_Name = "Fibonacci" }, threshold_hi = { INP_MaxAllowed = 1000000, INP_Integer = false, INPID_InputControl = "RangeControl", INP_MaxScale = 1, INP_Default = 1, INP_MinScale = 0, INP_MinAllowed = -1000000, LINKID_DataType = "Number", IC_ControlID = 1, ICS_ControlPage = "Controls", IC_ControlGroup = 1, LINKS_Name = "Threshold High" }, Clipping = { { MBTNC_AddButton = "Domain" }, { MBTNC_AddButton = "Frame" }, INP_MaxAllowed = 1000000, INP_Integer = false, INPID_InputControl = "MultiButtonControl", ICS_ControlPage = "Controls", MBTNC_ShowBasicButton = true, INP_MaxScale = 1, MBTNC_ButtonHeight = 20, MBTNC_ButtonWidth = 20, INP_MinScale = 0, INP_MinAllowed = -1000000, LINKID_DataType = "Number", MBTNC_ShowName = true, MBTNC_StretchToFit = true, MBTNC_ShowToolTip = false, LINKS_Name = "Clipping" } }
+						},
+						BrightnessContrast3_1 = BrightnessContrast {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Gain = Input { Value = 0.1, },
+								ClipBlack = Input { Value = 1, },
+								Input = Input {
+									SourceOp = "_ClearAlpha_1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 158.64, 105.588 } },
+						},
+						_ClearAlpha_1 = ChannelBoolean {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								ToAlpha = Input { Value = 15, },
+								Background = Input {
+									SourceOp = "LumaKeyer_1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { 29.2, 105.588 } },
+						},
+						LumaKeyer_1 = LumaKeyer {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								High = Input { Expression = "ChangeDepth_1.threshold_hi", },
+								Low = Input { Expression = "ChangeDepth_1.Threshold", },
+								MatteBlur = Input { Expression = "ChangeDepth_1.Softness", },
+								["Solid.MaskNest"] = Input { Value = 1, },
+								["Garbage.MaskNest"] = Input { Value = 1, },
+								["Garbage.MaskInverted"] = Input { Value = 1, },
+								Input = Input {
+									SourceOp = "ChannelBooleans_1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { -100.47, 105.588 } },
+						},
+						ChannelBooleans_1 = ChannelBoolean {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								ToRed = Input { Value = 4, },
+								ToGreen = Input { Value = 4, },
+								ToBlue = Input { Value = 4, },
+								ToAlpha = Input { Value = 4, },
+								Background = Input {
+									SourceOp = "SetDomain_1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { -226.98, 105.588 } },
+						},
+						SetDomain_1 = SetDomain {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								Mode = Input { Expression = "iif (ChangeDepth_1.Clipping == 1, \"Set\", \"Adjust\")", },
+								Input = Input {
+									SourceOp = "ColorSpace_1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { -372.25, 105.588 } },
+						},
+						ColorSpace_1 = ColorSpace {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								ColorSpaceConversion = Input { Value = 1, },
+								ColorType = Input { Value = 6, },
+								Input = Input {
+									SourceOp = "ChannelBooleans1_2",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { -519.64, 105.588 } },
+						},
+						ChannelBooleans1_2 = ChannelBoolean {
+							CtrlWShown = false,
+							NameSet = true,
+							Inputs = {
+								ToRed = Input { Value = 3, },
+								ToGreen = Input { Value = 3, },
+								ToBlue = Input { Value = 3, },
+								ToAlpha = Input { Value = 16, },
+								Background = Input {
+									SourceOp = "input1",
+									Source = "Output",
+								},
+							},
+							ViewInfo = OperatorInfo { Pos = { -668.13, 105.588 } },
+						}
+					},
+				},
+				Ellipse = EllipseMask {
+					NameSet = true,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						SoftEdge = Input { Value = 0.0583, },
+						Invert = Input { Value = 1, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.533906413187166, -0.208551483420593 }, },
+						Height = Input { Value = 0.7983271375465, },
+						Angle = Input { Value = 83.26064, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 832.537, -199.505 } },
+				},
+				BrightnessContrast = BrightnessContrast {
+					NameSet = true,
+					Inputs = {
+						Gamma = Input { Value = 0.86, },
+						Saturation = Input { Value = 1.76, },
+						Input = Input {
+							SourceOp = "Blur",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 247.332, -199.505 } },
+				},
+				Blur = Blur {
+					NameSet = true,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						XBlurSize = Input { Value = 30, },
+						Input = Input {
+							SourceOp = "input",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 49.4907, -199.505 } },
+				},
+				input = PipeRouter {
+					NameSet = true,
+					ViewInfo = PipeRouterInfo { Pos = { -176.301, 2.51514 } },
+				},
+				input1 = PipeRouter {
+					NameSet = true,
+					ViewInfo = PipeRouterInfo { Pos = { 466.574, -295.266 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "simple_lightwrap"
+}
