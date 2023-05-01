@@ -1,5 +1,5 @@
 --[[--
-ReadEXRUltra.fuse v0.33 - 2022-01-13 5.52 PM (UTC -4)
+ReadEXRUltra.fuse v0.34 - 2022-01-13 5.52 PM (UTC -4)
 Created By: We Suck Less (C) 2021-2022
 
 Version History
@@ -42,6 +42,9 @@ https://gitlab.com/AndrewHazelden/AtomTestLab/-/tree/master/Atoms
 
 2022-01-13 Version 0.33 by Andrew Hazelden <andrew@andrewhazelden.com>
 - Code Reformatting
+
+2023-01-09 Version 0.34 by Alex Bogomolov <mail@abogomolov.com>
+- fix frame offset string matching bug
 
 
 
@@ -178,18 +181,18 @@ FuRegisterClass('ReadEXRUltra', CT_Tool, {
 	REG_NoMotionBlurCtrls = true,
 	REG_NoPreCalcProcess = true,
 
-	-- Fuse node version where "033" means v0.33
-	REG_Version = 033,
+	-- Fuse node version where "###" means v#.##
+	REG_Version = 034,
 
 	-- Should the Edit and Reload buttons be hidden?
-	REG_Fuse_NoEdit = true,
-	REG_Fuse_NoReload = true,
+	REG_Fuse_NoEdit = false,
+	REG_Fuse_NoReload = false,
 
 	-- Support SpicyAcorn TextCreate node based linkage to the ReadEXRUltra filename field
 	REGID_InputDataType = 'Text',
 	})
 
-version = 'ReadEXRUltra by We Suck Less - v0.33 Jan 2022'
+version = 'ReadEXRUltra by We Suck Less - v0.34 Jan 2023'
 
 
 -- Edit/Reload ButtonControl code based upon work by Kristof Indeherberge
@@ -327,24 +330,30 @@ local readSequence = tool:GetInput('ReadSequence', fu.TIME_UNDEFINED)
 if readSequence == 1 then
 	-- The parentFolder will not be parsed if the readsequence flag is enabled, this needs to be fixed
 	parentFolder = readdir(srcFilename).Parent
+    local getOffset = tool:GetInput('Offset', -offset, fu.TIME_UNDEFINED) 
 
 	dir = readdir(parentFolder .. '*.exr')
-	num = #dir
+	local totalFrames = #dir
 
 	frameList = {}
-	for i = 1, num do
+	for i = 1, totalFrames do
 		fileName = dir[i].Name
-		sNum = string.match(fileName, '(%d+)%..+$')
+		sNum = string.match(fileName, '(%d+)%.exr$')
 		table.insert(frameList, tonumber(sNum))
-	end
+    end
 
 	table.sort(frameList)
 
-	dump(frameList)
-	offset = frameList[1] - comp:GetAttrs().COMPN_GlobalStart
+	-- dump(frameList)
 
-	-- Push the updated version back into the textfield
-	tool:SetInput('Offset', -offset, fu.TIME_UNDEFINED)
+    if offset ~= getOffset then
+        offset = frameList[1] - comp:GetAttrs().COMPN_GlobalStart
+        -- Push the updated version back into the textfield
+        tool:SetInput('Offset', -offset, fu.TIME_UNDEFINED)
+    else
+        print('Offset not changed')
+    end
+
 end
 --end=lua--
 ]],
@@ -611,7 +620,7 @@ end
 function NotifyChanged(inp, param, time)
 end
 
-local VERBOSE = true
+local VERBOSE = false
 
 -----------------------------------------------------------------------
 -- Debug Logging
