@@ -99,7 +99,7 @@ import subprocess
 import sys
 from pprint import pprint as pp
 
-__VERSION__ = 2.61
+__VERSION__ = 2.7
 __license__ = "MIT"
 __copyright__ = "2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>,\
 2019-2020 additions by Alexey Bogomolov <mail@abogomolov.com>"
@@ -109,7 +109,7 @@ PKG_VERSION = "5.15.2"
 REMOTE = False
 
 # do not auto-load tools on startup if more than set number of tools is selected
-TOOLS_AUTOLOAD = 10
+TOOLS_AUTOLOAD = 20
 
 print("_____________________\nAttribute Spreadsheet version 0.{}".format(__VERSION__))
 
@@ -162,8 +162,8 @@ except Exception as e:
     comp = get_fusion_comp()
     if not comp:
         raise CompNotFoundError("Comp not found")
-    else:
-        current_comp_name = comp.GetAttrs()["COMPS_Name"]
+finally:
+    current_comp_name = comp.GetAttrs()["COMPS_Name"]
 
 
 def print(*args, **kwargs):
