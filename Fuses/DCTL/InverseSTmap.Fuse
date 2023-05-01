@@ -1,0 +1,657 @@
+--[[--
+---------------------------------------------------------------------- 
+Copyright (c) 2020 Jacob Danell, Ember Light AB
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+----------------------------------------------------------------------
+
+Changelog:
+v0.3, 2023-01-09:
+* Tried to make a DCTL version of the sampeling. Only works on very low res images. Slower than the CPU version sadly
+
+v0.2, 2023-01-03:
+* Added 3 different filters for better control
+* Added input for texture to automatically deform it to the wanted result. Gives better result in Linear filtering
+
+v0.1, 2022-12-29:
+* Init relese
+
+--]]--
+
+local version = 0.3
+local authorText = "v" .. tostring(version) .. " - Created by Jacob Danell, Ember Light"
+
+FuRegisterClass("InverseSTmap", CT_Tool, {
+    REGS_Name = "Inverse STmap",
+    REGS_Category = "Color",
+    REGS_OpIconString = "rst",
+    REGS_OpDescription = "Inverse your STmap",
+    REGS_Company = "Ember Light",
+    REG_NoPreCalcProcess = true,
+    REG_Fuse_NoEdit = false,
+    REG_Fuse_NoReload = false,
+    REG_SupportsDoD = true,
+    REG_Version = version,
+})
+
+function Create()   -- size and aspect
+    InFilterMethod = self:AddInput("Filter Method", "FilterMethod", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "MultiButtonControl",
+        INP_Default = 0.0,
+        { MBTNC_AddButton = "Nearest Neighbor"},
+        { MBTNC_AddButton = "Median"},
+        { MBTNC_AddButton = "Linear"},
+        INP_DoNotifyChanged = true,
+        INP_Integer = true,
+        })
+
+
+    InSTMapType = self:AddInput("STMap Type", "STMapType", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "MultiButtonControl",
+        INP_Default = 1.0,
+        { MBTNC_AddButton = "Ignore (0 to Width)", MBTNCS_ToolTip = "First pixel is 0, last pixel is 1"},
+        { MBTNC_AddButton = "Image (0 to Width-1)", MBTNCS_ToolTip = "This is what Custom Tool-generated STmaps looks like and what the Texture node expects"},
+        { MBTNC_AddButton = "Mesh (0.5 to Width-0.5)", MBTNCS_ToolTip = "This is what Nuke-generated STmaps looks like"},
+        INP_DoNotifyChanged = true,
+        INP_Integer = true,
+        })
+    
+    InExpectedOutputSize = self:AddInput("Expected Output Size", "ExpectedOutputSize", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "CheckboxControl",
+        INP_Default = 0.0,
+        INP_Integer = true,
+        INP_DoNotifyChanged = true,
+        })
+
+    InWidth = self:AddInput("Width", "Width", {
+        LINKID_DataType = "Number",
+        LINK_ForceSave = true,          -- always save, even if set to default
+        INPID_InputControl = "SliderControl",
+        INP_MinAllowed = 1,
+        INP_MaxScale = 4096,
+        INP_MaxAllowed = 32767,
+        INP_Integer = true,
+        INP_Default = 1920,             -- will be adjusted in OnAddToFlow()
+        INP_DelayDefault = true,
+        IC_Visible = false,
+        })
+
+    InHeight = self:AddInput("Height", "Height", {
+        LINKID_DataType = "Number",
+        LINK_ForceSave = true,          -- always save, even if set to default
+        INPID_InputControl = "SliderControl",
+        INP_MinAllowed = 1,
+        INP_MaxScale = 4096,
+        INP_MaxAllowed = 32767,
+        INP_Integer = true,
+        INP_Default = 1080,             -- will be adjusted in OnAddToFlow()
+        INP_DelayDefault = true,
+        IC_Visible = false,
+        })
+
+    InFillHoles = self:AddInput("Fill Holes", "FillHoles", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "CheckboxControl",
+        INP_Default = 1.0,
+        INP_Integer = true,
+        INP_DoNotifyChanged = true,
+        })
+
+    InSamples = self:AddInput("Samples", "Samples", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default    = 1.0,
+        INP_MinScale   = 1.0,
+        INP_MaxScale   = 10.0,
+        INP_Integer    = true, 
+        IC_Visible = false,
+        })
+
+    InGPUMode = self:AddInput("GPU Mode (DON'T USE! Only for testing)", "GPUMode", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "CheckboxControl",
+        INP_Default = 0.0,
+        INP_Integer = true,
+        })
+
+    Author = self:AddInput(authorText, "Author", {
+        LINKID_DataType = "Text",
+        INPID_InputControl = "LabelControl",
+        INP_External = false,
+        INP_Passive = true,
+        })
+
+    InSTmap = self:AddInput("STmap", "STmap", {
+        LINKID_DataType = "Image",
+        LINK_Main = 1,
+        INP_Required = true,
+    })
+
+    InTexture = self:AddInput("Texture", "Texture", {
+        LINKID_DataType = "Image",
+        LINK_Main = 2,
+        INP_Required = false,
+    })
+
+    OutImage = self:AddOutput("Output", "Output", {
+       LINKID_DataType = "Image",
+       LINK_Main = 1,
+    })
+end
+
+function NotifyChanged(inp, param, time)
+    if inp ~= nil and param ~= nil then
+        if inp == InExpectedOutputSize then
+            if param.Value == 0 then
+                InWidth:SetAttrs({IC_Visible = false})
+                InHeight:SetAttrs({IC_Visible = false})
+            else
+                InWidth:SetAttrs({IC_Visible = true})
+                InHeight:SetAttrs({IC_Visible = true})
+            end
+        elseif inp == InFillHoles then
+            if param.Value == 0 then
+                InSamples:SetAttrs({IC_Visible = false})
+            else
+                InSamples:SetAttrs({IC_Visible = true})
+            end
+        end
+    end
+end
+
+function OnAddToFlow()
+    -- read default size from comp preferences
+    local formatPrefs = self.Comp:GetPrefs("Comp.FrameFormat")
+    InWidth:SetAttrs({ INP_Default = formatPrefs.Width })
+    InHeight:SetAttrs({ INP_Default = formatPrefs.Height })
+end
+
+function Process(req)
+    local img = InSTmap:GetValue(req)
+    local imgWidth
+    local imgHeight
+    if InExpectedOutputSize:GetValue(req).Value == 0 then
+        imgWidth = img.Width
+        imgHeight = img.Height
+    else
+        imgWidth = InWidth:GetValue(req).Value
+        imgHeight = InHeight:GetValue(req).Value
+    end
+    local dst = Image({IMG_Like = img,
+                        IMG_Width = imgWidth,
+                        IMG_Height = imgHeight,
+                        IMAT_OriginalWidth = imgWidth,
+                        IMAT_OriginalHeight = imgHeight,
+                        IMG_DataWindow = ImgRectI(0, 0, imgWidth, imgHeight),
+                        IMG_ValidWindow = ImgRectI(0, 0, imgWidth, imgHeight),
+                        IMG_Depth = img.Depth < 7 and 7 or img.Depth})
+
+    if not req:IsPreCalc() then
+
+        ---====  PIXEL PROCESS ===---
+        local stMapWidth = img.Width
+        local stMapHeight = img.Height
+        local scalex = imgWidth / stMapWidth
+        local scaley = imgHeight / stMapHeight
+        
+        local stmapType = InSTMapType:GetValue(req).Value
+        local stmapTypeCalc = {0,0}
+        local pixelScale = {1,1}
+        if stmapType == 0 then
+            pixelScale[1] = 1 - (1/stMapWidth)
+            pixelScale[2] = 1 - (1/stMapHeight)
+        elseif stmapType == 2 then
+            stmapTypeCalc = {0.5 ,0.5}
+        end
+
+        local texture = InTexture:GetValue(req)
+        local filter = InFilterMethod:GetValue(req).Value
+        if req:IsQuick() then
+            filter = 1
+        end
+
+        local stmapRef = Image({IMG_Like = dst})
+        local invMap = Image({IMG_Like = dst})
+
+        invMap:Fill(Pixel({R = 0.0, G = 0.0, B = 0.0, A = 0.0}))
+        stmapRef:Fill(Pixel({R = 0.0, G = 0.0, B = 0.0, A = 0.0}))
+
+        if InGPUMode:GetValue(req).Value == 0 then
+
+            local txA = Pixel() -- TextureA Pixel
+            local txB = Pixel() -- TextureB Pixel
+            local ip = Pixel() -- img Pixel
+            local sp = Pixel() -- stmapRef Pixel
+            local xx, yy, rawPix -- New XY positions
+
+            for x=0, stMapWidth-1 do
+                for y=0, stMapHeight-1 do
+                    img:SamplePixelB(x,y,ip)
+
+                    if ip.A <= 0 then
+                        goto continue
+                    end
+
+                    ip.R = ip.R / ip.A;
+                    ip.G = ip.G / ip.A;
+                    xPixel = (((ip.R * pixelScale[1])) * imgWidth) - stmapTypeCalc[1]
+                    yPixel = (((ip.G * pixelScale[2])) * imgHeight) - stmapTypeCalc[2]
+
+                    if filter <= 1 then
+                        xx = math.floor(xPixel+0.49999)
+                        yy = math.floor(yPixel+0.49999)
+                        if xx < 0 or xx > imgWidth or yy < 0 or yy > imgHeight then
+                            goto continue
+                        end
+                    end
+      
+                    if texture then
+                        texture:SamplePixelD(x, y, txA) -- Texture A
+                    else
+                        txA.R = x / stMapWidth
+                        txA.G = y / stMapHeight
+                    end
+
+                    if filter == 0 then
+                        stmapRef:SamplePixelB(xx,yy,sp)
+                        rawPix = xx+yy
+
+                        if sp.A == 0.0 or math.abs(rawPix - (xPixel + yPixel)) < math.abs(sp.R + sp.G) then
+                            stmapRef:SetPixel(xx, yy, ip)
+                            invMap:SetPixel(xx, yy, txA)
+                        end
+                        
+                        ip.R = txA.R
+                        ip.G = txA.G
+                        ip.B = txA.B
+                        invMap:SetPixel(xx, yy, ip)
+                    elseif filter == 1 then
+                        invMap:SamplePixelD(xx, yy, txB) -- Texture B
+                        ip.R = txA.R + txB.R
+                        ip.G = txA.G + txB.G
+                        ip.B = txA.B + txB.B
+                        ip.A = 1 + txB.A
+                        invMap:SetPixel(xx, yy, ip)
+                    elseif filter == 2 then
+                        x1 = math.floor(xPixel)
+                        x2 =  math.ceil(xPixel)
+                        y1 = math.floor(yPixel)
+                        y2 =  math.ceil(yPixel)
+
+                        if x1 >= 0 and y1 >= 0 then
+                            invMap:SamplePixelD(x1, y1, txB)
+                            dif = 1-math.max(math.abs(x1-xPixel), math.abs(y1-yPixel))
+                            ip.R = txB.R + txA.R*dif
+                            ip.G = txB.G + txA.G*dif
+                            ip.B = txB.B + txA.B*dif
+                            ip.A = txB.A + dif
+                            invMap:SetPixel(x1, y1, ip)
+                        end
+
+                        if x2 < imgWidth and y1 >= 0  then
+                            invMap:SamplePixelD(x2, y1, txB)
+                            dif = 1-math.max(math.abs(x2-xPixel), math.abs(y1-yPixel))
+                            ip.R = txB.R + txA.R*dif 
+                            ip.G = txB.G + txA.G*dif 
+                            ip.B = txB.B + txA.B*dif 
+                            ip.A = txB.A + dif
+                            invMap:SetPixel(x2, y1, ip)
+                        end
+
+                        if x1 >= 0 and y2 < imgHeight then
+                            invMap:SamplePixelD(x1, y2, txB)
+                            dif = 1-math.max(math.abs(x1-xPixel), math.abs(y2-yPixel))
+                            ip.R = txB.R + txA.R*dif
+                            ip.G = txB.G + txA.G*dif
+                            ip.B = txB.B + txA.B*dif
+                            ip.A = txB.A + dif
+                            invMap:SetPixel(x1, y2, ip)
+                        end
+
+                        if x2 < imgWidth and y2 < imgHeight then
+                            invMap:SamplePixelD(x2, y2, txB)
+                            dif = 1-math.max(math.abs(x2-xPixel), math.abs(y2-yPixel))
+                            ip.R = txB.R + txA.R*dif
+                            ip.G = txB.G + txA.G*dif
+                            ip.B = txB.B + txA.B*dif
+                            ip.A = txB.A + dif
+                            invMap:SetPixel(x2, y2, ip)
+                        end
+                    end
+                    
+                    ::continue::
+                end
+            end
+        
+        else
+
+            -- DCTL cleanup (Extend single pixels, remove solo pixels)
+            --This calls on our kernel to process the image we created.
+            local node = DVIPComputeNode(req, "SampleSTmapKernel", SampleSTmapKernel, "SampleSTmapParams", SampleSTmapParams)
+         
+            local params = node:GetParamBlock(SampleSTmapParams)
+            params.srcDoD[0] = img.Width
+            params.srcDoD[1] = img.Height
+
+            --This gets the values of our sliders from the control panel.
+            params.srcCompOrder = img:IsMask() and 1 or 15
+            local stmapType = InSTMapType:GetValue(req).Value
+            local stmapTypeCalc = {0,0}
+            params.pixelScale[0] = 1
+            params.pixelScale[1] = 1
+            if stmapType == 0 then
+                params.pixelScale[0] = 1 - (1/imgDataWidth)
+                params.pixelScale[1] = 1 - (1/imgDataHeight)
+            elseif stmapType == 2 then
+                stmapTypeCalc = {0.5 / stMapWidth,0.5 / stMapHeight}
+            end
+            params.stmapType[0] = stmapTypeCalc[1]
+            params.stmapType[1] = stmapTypeCalc[2]
+         
+            node:SetParamBlock(params)
+
+            --node:AddSampler("RowSampler", TEX_FILTER_MODE_BOX, TEX_ADDRESS_MODE_BORDER, TEX_NORMALIZED_COORDS_FALSE)
+         
+            node:AddInput("stmapInput", img)
+            node:AddInput("textureInput", texture)
+            node:AddOutput("dst", dst)
+         
+            local ok = node:RunSession(req)
+         
+            if not ok then
+                dst = nil
+                dump(node:GetErrorLog())
+            end
+
+            invMap = dst
+
+        end
+        
+        if filter >= 1 then
+            -- DCTL cleanup (Extend single pixels, remove solo pixels)
+            --This calls on our kernel to process the image we created.
+            local node = DVIPComputeNode(req, "MultiplySTmapKernel", MultiplySTmapKernel, "InverseSTmapParams", InverseSTmapParams)
+         
+            local params = node:GetParamBlock(InverseSTmapParams)
+            params.srcDoD[0] = img.Width
+            params.srcDoD[1] = img.Height
+
+            --This gets the values of our sliders from the control panel.
+            params.srcCompOrder = img:IsMask() and 1 or 15
+         
+            node:SetParamBlock(params)
+
+            node:AddSampler("RowSampler", TEX_FILTER_MODE_BOX, TEX_ADDRESS_MODE_BORDER, TEX_NORMALIZED_COORDS_FALSE)
+         
+            node:AddInput("src", invMap)
+            node:AddOutput("dst", dst)
+         
+            local ok = node:RunSession(req)
+         
+            if not ok then
+                dst = nil
+                dump(node:GetErrorLog())
+            end
+            
+            invMap = dst
+        end
+
+        if InFillHoles:GetValue(req).Value == 1 then
+            -- DCTL cleanup (Extend single pixels, remove solo pixels)
+            --This calls on our kernel to process the image we created.
+            local node = DVIPComputeNode(req, "FilterSTmapKernel", FilterSTmapKernel, "InverseSTmapParams", InverseSTmapParams)
+         
+            local params = node:GetParamBlock(InverseSTmapParams)
+            params.srcDoD[0] = img.Width
+            params.srcDoD[1] = img.Height
+            params.samples = InSamples:GetValue(req).Value
+
+            --This gets the values of our sliders from the control panel.
+            params.srcCompOrder = img:IsMask() and 1 or 15
+         
+            node:SetParamBlock(params)
+
+            node:AddSampler("RowSampler", TEX_FILTER_MODE_BOX, TEX_ADDRESS_MODE_BORDER, TEX_NORMALIZED_COORDS_FALSE)
+         
+            node:AddInput("src", invMap)
+            node:AddOutput("dst", dst)
+         
+            local ok = node:RunSession(req)
+         
+            if not ok then
+                dst = nil
+                dump(node:GetErrorLog())
+            end
+        else
+            dst = invMap
+        end
+        
+    end
+
+
+    OutImage:Set(req, dst)
+    collectgarbage()
+end
+
+SampleSTmapParams = [[
+    float srcDoD[2];
+    int srcCompOrder;
+    float stmapType[2];
+    float pixelScale[2];
+]]
+
+SampleSTmapKernel = [[
+    __KERNEL__ void SampleSTmapKernel(
+        __CONSTANTREF__ SampleSTmapParams *params,
+        __TEXTURE2D__ stmapInput,
+        __TEXTURE2D__ textureInput,
+        __TEXTURE2D_WRITE__ dst
+    )
+    {
+        DEFINE_KERNEL_ITERATORS_XY(x, y);
+        if (x < params->srcDoD[0] && y < params->srcDoD[1])
+        {
+            float4 Color = to_float4_s(0.0f);
+
+            // Loop through all pixels
+            for (int xx = 0; xx < params->srcDoD[0]; ++xx)
+            {
+                for (int yy = 0; yy < params->srcDoD[1]; ++yy)
+                {
+                    // Check if STmap has an alpha. If so, sample pixels!
+                    float4 stmap = _tex2DVecN(stmapInput, xx, yy, params->srcCompOrder);
+                    //if (stmap.w > 0) {
+                        // divide by alpha
+                        stmap.x = stmap.x / stmap.w;
+                        stmap.y = stmap.y / stmap.w;
+
+                        // Calculate pixel position
+                        float xPixel = (((stmap.x * params->pixelScale[0])) * params->srcDoD[0]) - params->stmapType[0];
+                        float yPixel = (((stmap.y * params->pixelScale[1])) * params->srcDoD[1]) - params->stmapType[1];
+
+                        if (_floor(xPixel) == x and _floor(yPixel) == y ) {
+                            Color = _tex2DVecN(textureInput, xx, yy, params->srcCompOrder);
+                        }
+                    //}
+                }
+            }
+            
+            _tex2DVec4Write(dst, x, y, Color);
+        }
+    }
+]]
+
+
+
+--These are the parameters that we need access to in our kernel.
+InverseSTmapParams = [[
+    float srcDoD[2];
+    int srcCompOrder;
+    int samples;
+]]
+
+--This is the GPU kernel, all of the image algorithms happen here.
+MultiplySTmapKernel = [[
+    __KERNEL__ void MultiplySTmapKernel(
+        __CONSTANTREF__ InverseSTmapParams *params,
+        __TEXTURE2D__ src,
+        __TEXTURE2D_WRITE__ dst
+    )
+    {
+        DEFINE_KERNEL_ITERATORS_XY(x, y);
+        if (x < params->srcDoD[0] && y < params->srcDoD[1])
+        {
+            // Loop through all pixels to find the closest correct pixel
+            float4 Color = _tex2DVecN(src, x, y, params->srcCompOrder);
+            if (Color.w == 0.0f) {
+                _tex2DVec4Write(dst, x, y, Color);
+                return;
+            }
+            Color.x /= Color.w;
+            Color.y /= Color.w;
+            Color.z /= Color.w;
+            Color.w = 1;
+            _tex2DVec4Write(dst, x, y, Color);
+        }
+    }
+]]
+
+--This is the GPU kernel, all of the image algorithms happen here.
+FilterSTmapKernel = [[
+    __KERNEL__ void FilterSTmapKernel(
+        __CONSTANTREF__ InverseSTmapParams *params,
+        __TEXTURE2D__ src,
+        __TEXTURE2D_WRITE__ dst
+    )
+    {
+        DEFINE_KERNEL_ITERATORS_XY(x, y);
+        if (x < params->srcDoD[0] && y < params->srcDoD[1])
+        {
+            // Loop through all pixels to find the closest correct pixel
+            float4 Color = _tex2DVecN(src, x, y, params->srcCompOrder);
+            if (Color.w > 0.0f) {
+                _tex2DVec4Write(dst, x, y, Color);
+                return;
+            }
+
+            int steps = params->samples;
+
+            int eD = 1;
+            int neD = 1;
+            int nD = 1;
+            int nwD = 1;
+            int wD = 1;
+            int swD = 1;
+            int sD = 1;
+            int seD = 1;
+            float4 e = to_float4_s(0.0f);
+            float4 ne = to_float4_s(0.0f);
+            float4 n = to_float4_s(0.0f);
+            float4 nw = to_float4_s(0.0f);
+            float4 w = to_float4_s(0.0f);
+            float4 sw = to_float4_s(0.0f);
+            float4 s = to_float4_s(0.0f);
+            float4 se = to_float4_s(0.0f);
+            int totalPixels = 0;
+            for (eD; eD<=steps; eD++) {
+                e = _tex2DVecN(src, x + eD, y, params->srcCompOrder);
+                if (e.w > 0.0f) {
+                    eD = steps+1;
+                }
+            }
+            for (neD; neD<=steps; neD++) {
+                ne = _tex2DVecN(src, x + neD, y + neD, params->srcCompOrder);
+                if (ne.w > 0.0f) {
+                    neD = steps+1;
+                }
+            }
+            for (nD; nD<=steps; nD++) {
+                n = _tex2DVecN(src, x, y + nD, params->srcCompOrder);
+                if (n.w > 0.0f) {
+                    nD = steps+1;
+                }
+            }
+            for (nwD; nwD<=steps; nwD++) {
+                nw = _tex2DVecN(src, x - nwD, y + nwD, params->srcCompOrder);
+                if (nw.w > 0.0f) {
+                    nwD = steps+1;
+                }
+            }
+            for (wD; wD<=steps; wD++) {
+                w = _tex2DVecN(src, x - wD, y, params->srcCompOrder);
+                if (w.w > 0.0f) {
+                    wD = steps+1;
+                }
+            }
+            for (swD; swD<=steps; swD++) {
+                sw = _tex2DVecN(src, x - swD, y - swD, params->srcCompOrder);
+                if (sw.w > 0.0f) {
+                    swD = steps+1;
+                }
+            }
+            for (sD; sD<=steps; sD++) {
+                s = _tex2DVecN(src, x, y - sD, params->srcCompOrder);
+                if (s.w > 0.0f) {
+                    sD = steps+1;
+                }
+            }
+            for (seD; seD<=steps; seD++) {
+                se = _tex2DVecN(src, x + seD, y - seD, params->srcCompOrder);
+                if (se.w > 0.0f) {
+                    seD = steps+1;
+                }
+            }
+
+            if (e.w > 0.0f) {
+                totalPixels += 1;
+            }
+            if (ne.w > 0.0f) {
+                totalPixels += 1;
+            }
+            if (n.w > 0.0f) {
+                totalPixels += 1;
+            }
+            if (nw.w > 0.0f) {
+                totalPixels += 1;
+            }
+            if (w.w > 0.0f) {
+                totalPixels += 1;
+            }
+            if (sw.w > 0.0f) {
+                totalPixels += 1;
+            }
+            if (s.w > 0.0f) {
+                totalPixels += 1;
+            }
+            if (se.w > 0.0f) {
+                totalPixels += 1;
+            }
+            Color = (e + ne + n + nw + w + sw + s + se) / totalPixels;
+
+            if (isnan(Color.x)) {
+                Color = to_float4_s(0.0f);
+            }
+            
+            _tex2DVec4Write(dst, x, y, Color);
+        }
+    }
+]]

@@ -1,0 +1,518 @@
+--[[--
+
+GIF Saver
+
+Chris Ridings
+www.chrisridings.com
+
+--]]--
+
+FuRegisterClass("GIFSaver", CT_Tool, {
+	REGS_Category = "Fuses",
+	REGS_OpIconString = "fGS",
+	REGS_OpDescription = "GIF Saver",
+	})
+
+
+
+function Create()	
+
+	SiteButton = self:AddInput("Visit www.chrisridings.com", "Label1", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "ButtonControl",
+		INP_DoNotifyChanged = true,
+		INP_External = false,
+	})	
+	YouTubeButton = self:AddInput("Visit the Youtube Channel", "Label2", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "ButtonControl",
+		INP_DoNotifyChanged = true,
+		INP_External = false,
+	})	
+	Dither = self:AddInput("Dither", "Dither", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Default = 1,
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+	})	
+	ShowPalette = self:AddInput("Show Palette", "ShowPalette", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Default = 0,
+		INP_MinScale = 0,
+		INP_MaxScale = 1,
+	})	
+	OutFile = self:AddInput("Output File", "OutFile", {
+		LINKID_DataType = "Text",
+		INPID_InputControl =  "FileControl",
+		FC_ClipBrowse = true,
+		FC_IsSaver = true,
+		FCS_FilterString = 'GIF Files (*.gif)|*.gif|',
+		INP_DoNotifyChanged  = true,
+	})
+	InfoLabel = self:AddInput("", "InfoLabel", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "LabelControl",
+		INP_External = false,
+		INP_Passive = true,
+	})		
+	Snapshot = self:AddInput("Snapshot As Gif", "Label3", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "ButtonControl",
+		INP_DoNotifyChanged = true,
+		INP_External = false,
+	})			
+	Animation = self:AddInput("Make Animation", "Label4", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "ButtonControl",
+		INP_DoNotifyChanged = true,
+		INP_External = false,
+	})	
+
+	InImage = self:AddInput("Input", "Input", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})
+	OutImage = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})		
+		
+end
+
+
+function NotifyChanged(inp, param, time)
+	if (param ~= nil) then
+		if (param.Value == 1) then
+			if (inp == SiteButton) then
+				os.execute('open "" "https://www.chrisridings.com"')
+				os.execute('start "" "https://www.chrisridings.com"')
+			end
+			if (inp == YouTubeButton) then
+				os.execute('open "" "https://www.youtube.com/c/ChrisRidings"')
+				os.execute('start "" "https://www.youtube.com/c/ChrisRidings"')
+			end	
+			if (inp == OutFile) then
+				if (OutFile:GetSource(0).Value ~= nil and OutFile:GetSource(0).Value ~= "") then			
+					InfoLabel:SetSource(Text(""),0)
+					return
+				end
+			end
+			if (inp == Snapshot) then			
+				-- Grab the image and save it to a file				
+				if (OutFile:GetSource(0).Value == nil or OutFile:GetSource(0).Value == "") then			
+					InfoLabel:SetSource(Text("Set an output file"),0)
+					return
+				end
+				local img = InImage:GetSource(time)				
+				startGif(OutFile:GetSource(0).Value, img.Width, img.Height)		
+				addGCEBlock(0)
+				addFusionImageToGif(img)
+				endGif()
+			end
+			if (inp == Animation) then
+				if (OutFile:GetSource(0).Value == nil or OutFile:GetSource(0).Value == "") then			
+					InfoLabel:SetSource(Text("Set an output file"),0)
+					return
+				end
+				local cstart = self.Comp.RenderStart
+				local cend = self.Comp.RenderEnd
+				local framerate = self.Comp:GetPrefs("Comp.FrameFormat.Rate")
+				local delay = 1 / framerate
+				local img = InImage:GetSource(time)
+				startGif(OutFile:GetSource(0).Value, img.Width, img.Height)
+				addApplicationExtensionBlock() -- adds the block so it's known this is an animated gif
+				for o = cstart, cend do
+					-- Add a Graphic Control Extension Block
+					addGCEBlock(delay)
+					-- Then add the image
+					img = InImage:GetSource(o)
+					addFusionImageToGif(img)
+				end
+				endGif()
+			end
+		end
+	end
+end
+
+-- GIF Functions
+-- We always output a 256 color gif
+-- The binary string method used in this isn't terribly efficient, but it's easier/clear.
+
+local outfile
+local bin = ""
+local chars = {}
+local curchar = 1
+local gifwidth = 2
+local gifheight = 2
+local bitsize = 9
+local hashlzwlookup = {}
+local nextlzw = 1
+local p = {}
+
+function resetLZWLookup()
+	-- resets the lzwlookup to defaults and sets the bitsize
+	nextlzw = 0
+	hashlzwlookup = {}
+	for f = 1, 258 do
+		hashlzwlookup["l" .. (f - 1)] = f - 1
+		nextlzw = nextlzw + 1
+	end
+	-- set the bitsize based off the maxkey
+	setLZWBitSize()
+end
+
+function setLZWBitSize()
+	-- Calculate and set the bit size
+	bitsize = math.floor((math.log(nextlzw) / math.log(2)) + 1)
+end
+
+function startGif(filename, width, height)
+	-- Open the gif file and write the header and global colour table
+	outfile = io.open(filename,"wb");
+	if (outfile == nil) then
+		InfoLabel:SetSource(Text("Cannot write file"),0)
+		return
+	end
+	-- First output the gif header
+	outfile:write("GIF89a")
+	gifwidth = width
+	gifheight = height
+	outfile:write(string.char(gifwidth % 256))
+	outfile:write(string.char(math.floor(gifwidth / 256)))
+	outfile:write(string.char(gifheight % 256))
+	outfile:write(string.char(math.floor(gifheight / 256)))		
+	outfile:write(string.char(247)) -- Global colour table, 256 colours
+	outfile:write(string.char(254)) -- background colour index
+	outfile:write(string.char(0)) -- pixel aspect ratio
+	-- Build the global colour table
+	for blue = 0, 255, 51 do
+		for green = 0, 255, 51 do
+			for red = 0, 255, 51	do			
+				outfile:write(string.char(red,green,blue))
+			end
+		end
+	end
+	for fill = 1, 40 do
+		outfile:write(string.char(0,0,0))
+	end
+end
+
+function startImageInGif()
+	-- Outputs an image descriptor
+	outfile:write(string.char(44)) -- image block
+	outfile:write(string.char(0,0,0,0))
+	outfile:write(string.char(gifwidth % 256))
+	outfile:write(string.char(math.floor(gifwidth / 256)))
+	outfile:write(string.char(gifheight % 256))
+	outfile:write(string.char(math.floor(gifheight / 256)))				
+	outfile:write(string.char(0))				
+	outfile:write(string.char(8)) -- bit size	
+	chars = {}
+	curchar = 1
+	resetLZWLookup()
+	p = { 256 }
+end
+
+function imageAddCharacter(lchar)
+	-- This adds a character to an image in the gif	taking into account lzw compression
+	if (nextlzw > 4090) then		
+		for k, v in pairs(p) do
+			bin = table.concat(toBits(v,bitsize)) .. bin
+		end
+		bin = table.concat(toBits(256,bitsize)) .. bin
+		imageProcessCharacters(0)
+		resetLZWLookup()
+		p = { }
+	end
+	local check = {table.unpack(p)}
+	table.insert(check,lchar)
+	local codep = -1
+	local codecheck = -1	
+	local search = "l" .. table.concat(check,"-")
+	local i = hashlzwlookup[search]
+	if (i ~= nil) then
+		codecheck = i
+		p = {table.unpack(check)}
+	else
+		local queue = "l" .. table.concat(p,"-")
+		local qu = hashlzwlookup[queue]
+		if (qu ~= nil) then	
+			codep = qu
+		end
+		bin = table.concat(toBits(codep,bitsize)) .. bin
+		imageProcessCharacters(0)
+		-- add check to lzwlookup	
+		if (codep ~= 256) then -- The clear character doesn't get indexed to the dictionary
+			hashlzwlookup["l" .. table.concat(check,"-")] = nextlzw	
+			setLZWBitSize()		
+			nextlzw = nextlzw + 1
+		end
+		p = { lchar }
+	end	
+	
+end
+
+function imageProcessCharacters(forcewrite)
+	-- We need to pull off the last 8 bits of the bin variable to generate a character to add to our chars array
+	while (string.len(bin) >= 8) do
+		-- While the length is 8 or more, grab the end to encode into a character
+		thisstring = string.sub(bin, string.len(bin) - 7)
+		bin = string.sub(bin,1,string.len(bin)-8)
+		chars[curchar] = binStringToByte(thisstring)
+		curchar = curchar + 1
+	end
+	-- Output stuff to the file at certain points
+	if (curchar > 250 or forcewrite == 1) then
+		outfile:write(string.char(curchar-1))
+		for q = 1, curchar - 1 do
+			outfile:write(string.char(chars[q]))
+		end
+		curchar = 1		
+		chars = {}	
+	end
+end
+
+function endImageInGif()
+	-- Here we close off the image in a gif
+	imageAddCharacter(257)
+	-- Pad bin to a multiple of 8 bits
+	while (string.len(bin)/8 ~= math.floor(string.len(bin)/8)) do
+		bin = "0" .. bin
+	end
+	imageProcessCharacters(1)
+	curchar = 1
+	chars = {}
+	bin = ""
+	outfile:write(string.char(0)) -- terminating block
+end
+
+function endGif()
+	-- Finish the gif file and close it
+	outfile:write(string.char(59)) -- gif file terminator
+	outfile:close()
+end
+
+function addApplicationExtensionBlock()
+	-- Add the application extension block to the gif (needed for animations)
+	outfile:write(string.char(33,255,11,78,69,84,83,67,65,80,69,50,46,48))
+	outfile:write(string.char(3,1,0,0)) -- repeat infinitely
+	outfile:write(string.char(0)) -- block terminator	
+end
+
+function addGCEBlock(delay)
+	-- Add the graphic control extension block (for animation)
+	outfile:write(string.char(33,249))	
+	outfile:write(string.char(4))
+	outfile:write(string.char(13))
+	delay = math.floor(delay * 100)
+	outfile:write(string.char(delay % 256))
+	outfile:write(string.char(math.floor(delay / 256)))
+	outfile:write(string.char(255)) -- transparent color
+	outfile:write(string.char(0))
+end
+
+function addFusionImageToGif(img)				
+	-- Take the passed image and add it to the gif
+	local limg = img:CopyOf()
+	startImageInGif()
+	local p = Pixel()
+	for y = limg.Height - 1, 0, -1 do
+		for x = 0, limg.Width - 1 do
+			limg:GetPixel(x,y,p)
+			-- Convert the r g b data to the color palette offset						
+			local red = p.R
+			local green = p.G
+			local blue = p.B
+			red = red * 255
+			red = red / 51
+			red = math.floor(red + 0.5)
+			green = green * 255
+			green = green / 51
+			green = math.floor(green+ 0.5)
+			blue = blue * 255
+			blue = blue / 51
+			blue = math.floor(blue + 0.5)
+			-- red, green, blue each now contain values 0 to 5
+			local offset = (blue * 6 * 6) + (green * 6) + red
+			if (p.A ~= 1) then offset = 255 end -- transparent			
+			imageAddCharacter(offset)
+			if (Dither:GetSource(0).Value == 1) then
+				-- Now calculate the dithering
+				local q = Pixel()
+				red = (math.floor((p.R * 5)+0.5) * 51)/255
+				q.R = red;
+				green = (math.floor((p.G * 5)+0.5) * 51)/255
+				q.G = green;
+				blue = (math.floor((p.B * 5)+0.5) * 51)/255
+				q.B = blue;
+				local dp = Pixel()
+				if (x + 1 < limg.Width - 1) then
+					limg:GetPixel(x+1, y, dp)
+					dp.R = dp.R + ((p.R - q.R) * 7/16)
+					dp.G = dp.G + ((p.G - q.G) * 7/16)
+					dp.B = dp.B + ((p.B - q.B) * 7/16)
+					if (dp.R > 1) then dp.R = 1 end
+					if (dp.G > 1) then dp.G = 1 end
+					if (dp.B > 1) then dp.B = 1 end		
+					if (dp.R < 0) then dp.R = 0 end
+					if (dp.G < 0) then dp.G = 0 end					
+					if (dp.B < 0) then dp.B = 0 end					
+					limg:SetPixel(x+1, y, dp)
+				end
+				if (x + 1 < limg.Width -1 and y - 1 >= 0) then
+					limg:GetPixel(x+1, y-1, dp)
+					dp.R = dp.R + ((p.R - q.R) * 1/16)
+					dp.G = dp.G + ((p.G - q.G) * 1/16)
+					dp.B = dp.B + ((p.B - q.B) * 1/16)
+					if (dp.R > 1) then dp.R = 1 end
+					if (dp.G > 1) then dp.G = 1 end
+					if (dp.B > 1) then dp.B = 1 end	
+					if (dp.R < 0) then dp.R = 0 end
+					if (dp.G < 0) then dp.G = 0 end					
+					if (dp.B < 0) then dp.B = 0 end	
+					limg:SetPixel(x+1, y-1, dp)
+				end
+				if (y - 1 >= 0) then
+					limg:GetPixel(x, y-1, dp)
+					dp.R = dp.R + ((p.R - q.R) * 5/16)
+					dp.G = dp.G + ((p.G - q.G) * 5/16)
+					dp.B = dp.B + ((p.B - q.B) * 5/16)
+					if (dp.R > 1) then dp.R = 1 end
+					if (dp.G > 1) then dp.G = 1 end
+					if (dp.B > 1) then dp.B = 1 end	
+					if (dp.R < 0) then dp.R = 0 end
+					if (dp.G < 0) then dp.G = 0 end					
+					if (dp.B < 0) then dp.B = 0 end						
+					limg:SetPixel(x, y-1, dp)
+				end	
+				if (x - 1 >= 0 and y - 1 >= 0) then
+					limg:GetPixel(x-1, y-1, dp)
+					dp.R = dp.R + ((p.R - q.R) * 3/16)
+					dp.G = dp.G + ((p.G - q.G) * 3/16)
+					dp.B = dp.B + ((p.B - q.B) * 3/16)
+					if (dp.R > 1) then dp.R = 1 end
+					if (dp.G > 1) then dp.G = 1 end
+					if (dp.B > 1) then dp.B = 1 end	
+					if (dp.R < 0) then dp.R = 0 end
+					if (dp.G < 0) then dp.G = 0 end					
+					if (dp.B < 0) then dp.B = 0 end						
+					limg:SetPixel(x-1, y-1, dp)
+				end	
+			end
+		end
+	end
+	endImageInGif()
+end
+
+function binStringToByte(binstring)
+	-- Convert the passed 8 bit binary held in a string to an integer for the byte
+	local i = math.pow(2,string.len(binstring)-1);
+	local v = 0
+	for j = 1, string.len(binstring) do
+		tc = string.sub(binstring,j,j)
+		if (tc == "1") then v = v + i end
+		i = i / 2
+	end
+	return v
+end
+
+function toBits(num, bits)	
+    -- returns a table of bits	
+    local t={} -- will contain the bits
+	for b=bits,1,-1 do
+		rest=math.fmod(num,2)
+		t[b]=rest	
+		num=(num-rest)/2
+	end
+    return t
+end
+
+
+function Process(req) 
+	-- This is really just a preview. We do this so the user can see how the
+	-- file would look when saved.
+	local img = InImage:GetValue(req)
+	local workingimg = img:CopyOf()
+	local out = Image({IMG_Like = img})	
+	if (ShowPalette:GetValue(req).Value == 0) then
+		for y = 0,workingimg.Height - 1 do	
+			for x=0,workingimg.Width-1 do
+				local p = Pixel()
+				workingimg:GetPixel(x,y,p)
+				-- Adjust the pixel to the nearest web safe palette value. This will allow us to
+				-- recreate the gif in the palette later.
+				local red = p.R
+				local green = p.G
+				local blue = p.B
+				local q = Pixel();
+				red = (math.floor((p.R * 5)+0.5) * 51)/255
+				q.R = red;
+				green = (math.floor((p.G * 5)+0.5) * 51)/255
+				q.G = green;
+				blue = (math.floor((p.B * 5)+0.5) * 51)/255
+				q.B = blue;
+				q.A = 1;
+				out:SetPixel(x,y,q)	
+				if (Dither:GetValue(req).Value == 1) then
+					-- Now apply dithering
+					local dp = Pixel()
+					if (x + 1 < workingimg.Width - 1) then
+						workingimg:GetPixel(x+1, y, dp)
+						dp.R = dp.R + ((p.R - q.R) * 7/16)
+						dp.G = dp.G + ((p.G - q.G) * 7/16)
+						dp.B = dp.B + ((p.B - q.B) * 7/16)
+						workingimg:SetPixel(x+1, y, dp)
+					end
+					if (x + 1 < workingimg.Width -1 and y + 1 < workingimg.Height - 1) then
+						workingimg:GetPixel(x+1, y+1, dp)
+						dp.R = dp.R + ((p.R - q.R) * 1/16)
+						dp.G = dp.G + ((p.G - q.G) * 1/16)
+						dp.B = dp.B + ((p.B - q.B) * 1/16)
+						workingimg:SetPixel(x+1, y+1, dp)
+					end
+					if (y + 1 < workingimg.Height - 1) then
+						workingimg:GetPixel(x, y+1, dp)
+						dp.R = dp.R + ((p.R - q.R) * 5/16)
+						dp.G = dp.G + ((p.G - q.G) * 5/16)
+						dp.B = dp.B + ((p.B - q.B) * 5/16)
+						workingimg:SetPixel(x, y+1, dp)
+					end	
+					if (x - 1 >= 0 and y + 1 < workingimg.Height - 1) then
+						workingimg:GetPixel(x-1, y+1, dp)
+						dp.R = dp.R + ((p.R - q.R) * 3/16)
+						dp.G = dp.G + ((p.G - q.G) * 3/16)
+						dp.B = dp.B + ((p.B - q.B) * 3/16)
+						workingimg:SetPixel(x-1, y+1, dp)
+					end			
+				end
+			end
+		end
+	else
+		-- Show the palette
+		-- divide 18 colors on x, 12 on y
+		for y = 0, img.Height - 1 do
+			for x = 0, img.Width - 1 do
+				xoffset = math.floor((x/img.Width) * 18)
+				yoffset = math.floor((y/img.Height) * 12)
+				offset = xoffset + (yoffset * 18)
+				if (y == 6) then print(offset) end
+				-- Here we have to convert offset to the red, green, blue equivalent
+				local blue = math.floor(offset/(6*6))
+				offset = offset - (blue * 6 * 6)
+				local green = math.floor(offset/6)
+				offset = offset - (green * 6)
+				local red = offset
+				local p = Pixel()
+				p.R = (red*51)/255
+				p.G = (green*51)/255
+				p.B = (blue*51)/255
+				p.A = 1
+				out:SetPixel(x,y,p)
+			end
+		end
+	end
+	OutImage:Set(req, out)
+end
+

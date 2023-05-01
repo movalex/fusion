@@ -1,0 +1,329 @@
+{
+    Action
+    {
+        ID = "ADD_CONTEXT1",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/addContext.lua', {CONTEXT=1})
+                ]],
+            },
+        },
+    },
+    Action
+    {
+        ID = "ADD_CONTEXT2",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/addContext.lua', {CONTEXT=2})
+                ]],
+            },
+        },
+    },
+    Action
+    {
+        ID = "ADD_CONTEXT3",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/addContext.lua', {CONTEXT=3})
+                ]],
+            },
+        },
+    },
+    Action
+    {
+        ID = "ADD_CONTEXT4",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/addContext.lua', {CONTEXT=4})
+                ]],
+            },
+        },
+    },
+    Action
+    {
+        ID = "ADD_CONTEXT5",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/addContext.lua', {CONTEXT=5})
+                ]],
+            },
+        },
+    },
+    Action
+    {
+        ID = "ADD_CONTEXT6",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/addContext.lua', {CONTEXT=6})
+                ]],
+            },
+        },
+    },
+    Action
+    {
+        ID = "ADD_CONTEXT7",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/addContext.lua', {CONTEXT=7})
+                ]],
+            },
+        },
+    },
+    Action
+    {
+        ID = "ADD_CONTEXT8",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/addContext.lua', {CONTEXT=8})
+                ]],
+            },
+        },
+    },
+    Action
+    {
+        ID = "ADD_CONTEXT9",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/addContext.lua', {CONTEXT=9})
+                ]],
+            },
+        },
+    },
+    Action
+    {
+        ID = "ADD_CONTEXT0",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/addContext.lua', {CONTEXT=0})
+                ]],
+            },
+        },
+    },
+
+    Action
+    {
+        ID = "VIEW_CONTEXT1",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/viewContext.lua', {CONTEXT=1})
+                ]],
+            },
+        },
+    },
+    Action
+    {
+        ID = "VIEW_CONTEXT2",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/viewContext.lua', {CONTEXT=2})
+                ]],
+            },
+        },
+    },
+    Action
+    {
+        ID = "VIEW_CONTEXT3",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/viewContext.lua', {CONTEXT=3})
+                ]],
+            },
+        },
+    },
+    Action
+    {
+        ID = "VIEW_CONTEXT4",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/viewContext.lua', {CONTEXT=4})
+                ]],
+            },
+        },
+    },
+    Action
+    {
+        ID = "VIEW_CONTEXT5",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/viewContext.lua', {CONTEXT=5})
+                ]],
+            },
+        },
+    },
+
+    Action
+    {
+        ID = "VIEW_CONTEXT6",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/viewContext.lua', {CONTEXT=6})
+                ]],
+            },
+        },
+    },
+    Action
+    {
+        ID = "VIEW_CONTEXT7",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/viewContext.lua', {CONTEXT=7})
+                ]],
+            },
+        },
+    },
+    Action
+    {
+        ID = "VIEW_CONTEXT8",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/viewContext.lua', {CONTEXT=8})
+                ]],
+            },
+        },
+    },
+    Action
+    {
+        ID = "VIEW_CONTEXT9",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/viewContext.lua', {CONTEXT=9})
+                ]],
+            },
+        },
+    },
+    Action
+    {
+        ID = "VIEW_CONTEXT0",
+        Category = 'ContextTool',
+        Targets = 
+        {
+            Composition = 
+            {
+                Execute = 
+                [[
+                    target:RunScript('Scripts:Comp/ContextTool/viewContext.lua', {CONTEXT=0})
+                ]],
+            },
+        },
+    },
+
+    Hotkeys
+    {
+      Target = "FuFrame",
+      SHIFT_ALT_1 = "ADD_CONTEXT1",
+      SHIFT_ALT_2 = "ADD_CONTEXT2",
+      SHIFT_ALT_3 = "ADD_CONTEXT3",
+      SHIFT_ALT_4 = "ADD_CONTEXT4",
+      SHIFT_ALT_5 = "ADD_CONTEXT5",
+      SHIFT_ALT_6 = "ADD_CONTEXT6",
+      SHIFT_ALT_7 = "ADD_CONTEXT7",
+      SHIFT_ALT_8 = "ADD_CONTEXT8",
+      SHIFT_ALT_9 = "ADD_CONTEXT9",
+      SHIFT_ALT_0 = "ADD_CONTEXT0",
+      ALT_1 = "VIEW_CONTEXT1",
+      ALT_2 = "VIEW_CONTEXT2",
+      ALT_3 = "VIEW_CONTEXT3",
+      ALT_4 = "VIEW_CONTEXT4",
+      ALT_5 = "VIEW_CONTEXT5",
+      ALT_6 = "VIEW_CONTEXT6",
+      ALT_7 = "VIEW_CONTEXT7",
+      ALT_8 = "VIEW_CONTEXT8",
+      ALT_9 = "VIEW_CONTEXT9",
+      ALT_0 = "VIEW_CONTEXT0",
+    },
+}

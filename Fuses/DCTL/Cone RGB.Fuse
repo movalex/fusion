@@ -1,0 +1,192 @@
+--[[--
+---------------------------------------------------------------------- 
+Copyright (c) 2020 Jacob Danell, Ember Light AB
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+----------------------------------------------------------------------
+
+Changelog:
+v1.1, 2022-08-02:
+* Init relese
+
+--]]--
+
+FuRegisterClass("ConeRGB", CT_Tool, {
+    REGS_Name = "Cone RGB",
+    REGS_Category = "Color",
+    REGS_OpIconString = "cr",
+    REGS_OpDescription = "Converts RGB to Cone and back",
+    REGS_Company = "Ember Light",
+    REG_Fuse_NoEdit = false,
+    REG_Fuse_NoReload = false,
+    REG_SupportsDoD = true,
+})
+
+function Create()
+    InConversion = self:AddInput("Conversion", "Conversion", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "MultiButtonControl",
+        INP_Default = 0.0,
+        INP_Integer = true,
+        MBTNC_ForceButtons =    true,
+        INP_MinScale        = 0,
+        INP_MaxScale        = 1,
+        INP_MinAllowed      = 0,
+        INP_MaxAllowed      = 1,
+        MBTNC_ShowBasicButton = true,
+        MBTNC_StretchToFit = true,
+        { MBTNC_AddButton = "to Cone",},
+        { MBTNC_AddButton = "to RGB",},
+    })
+    
+    InImage = self:AddInput("Input", "Input", {
+        LINKID_DataType = "Image",
+        LINK_Main = 1,
+        INP_Required = true,
+    })
+
+    OutImage = self:AddOutput("Output", "Output", {
+       LINKID_DataType = "Image",
+       LINK_Main = 1,
+    })
+end
+ 
+function Process(req)
+    local src = InImage:GetValue(req)
+    local dod = req:GetInputDoD(InImage)
+    local datawnd = dod:Intersect(src.DataWindow)
+
+    local dst = Image({IMG_Like = src,
+                        IMG_DataWindow = datawnd})
+
+    if not req:IsPreCalc() then
+
+        ---====  PIXEL PROCESS ===---
+       
+        --This calls on our kernel to process the image we created.
+        local node = nil
+        if InConversion:GetValue(req).Value == 0 then
+            node = DVIPComputeNode(req, "jd_ConeKernel", jd_ConeKernel, "jd_ConeRGBConversionParams", jd_ConeRGBConversionParams)
+        else
+            node = DVIPComputeNode(req, "jd_RGBKernel", jd_RGBKernel, "jd_ConeRGBConversionParams", jd_ConeRGBConversionParams)
+        end
+     
+        local params = node:GetParamBlock(jd_ConeRGBConversionParams)
+        params.srcSize[0] = src.DataWindow:Width()
+        params.srcSize[1] = src.DataWindow:Height()
+        --This gets the values of our sliders from the control panel.
+        params.srcCompOrder = src:IsMask() and 1 or 15
+     
+        node:SetParamBlock(params)
+     
+        node:AddInput("src", src)
+        node:AddOutput("dst", dst)
+     
+        local ok = node:RunSession(req)
+     
+        if not ok then
+            dst = nil
+            dump(node:GetErrorLog())
+        end
+
+        collectgarbage()
+    end
+
+    OutImage:Set(req, dst)
+    collectgarbage()
+end
+
+--These are the parameters that we need access to in our kernel.
+jd_ConeRGBConversionParams = [[
+    int srcSize[2];
+    int srcCompOrder;
+    int size;
+]]
+ 
+--This is the GPU kernel, all of the image algorithms happen here.
+jd_ConeKernel = [[
+    __KERNEL__ void jd_ConeKernel(
+        __CONSTANTREF__ jd_ConeRGBConversionParams *params,
+        __TEXTURE2D__ src,
+        __TEXTURE2D_WRITE__ dst
+    )
+    {
+        DEFINE_KERNEL_ITERATORS_XY(x, y);
+        if (x < params->srcSize[0] && y < params->srcSize[1])
+        {
+            float4 Color = _tex2DVecN(src, x, y, params->srcCompOrder);
+
+            //set the rgb values as rgb floats
+            float r = Color.x;
+            float g = Color.y;
+            float b = Color.z + 0.001f;
+
+            //converse to spherical coordinates "pOc"
+            float4 pOc;
+
+            pOc.x = _sqrtf(_powf(r,2) + _powf(g,2) + _powf(b,2));
+
+            if (g >= b){
+            pOc.y = _acosf((2*r-g-b) / (2*_sqrtf(_powf(r,2)+_powf(g,2)+_powf(b,2)-r*g-r*b-g*b)));
+            } 
+
+            if (g < b){
+            pOc.y = 2 * M_PI - _acosf((2*r-g-b)/(2*_sqrtf(_powf(r,2)+_powf(g,2)+_powf(b,2)-r*g-r*b-g*b)));
+            }
+
+            pOc.z = _acosf((r+g+b)/(_sqrtf(3.0f)*(_sqrtf(_powf(r,2)+_powf(g,2)+_powf(b,2)))));
+
+
+            //compress the color space
+            pOc.x = pOc.x * 0.576f;
+            pOc.y = pOc.y * 0.159f;
+            pOc.z = pOc.z * 1.046f;
+            pOc.w = Color.w;
+
+            _tex2DVec4Write(dst, x, y, pOc);
+        }
+    }
+]]
+
+jd_RGBKernel = [[
+    __KERNEL__ void jd_RGBKernel(
+        __CONSTANTREF__ jd_ConeRGBConversionParams *params,
+        __TEXTURE2D__ src,
+        __TEXTURE2D_WRITE__ dst
+    )
+    {
+        DEFINE_KERNEL_ITERATORS_XY(x, y);
+        if (x < params->srcSize[0] && y < params->srcSize[1])
+        {
+            float4 Color = _tex2DVecN(src, x, y, params->srcCompOrder);
+
+            //set spherical coordinates pOc from rgb
+            float p = Color.x * (1.0f/0.576f);
+            float O = Color.y * (1.0f/0.159f);
+            float c = Color.z * (1.0f/1.046f);
+
+            //inverse from spherical coordinates to rgb
+            Color.x = _sqrtf(6.0f)/3*p*_sinf(c)*_cosf(O)+_sqrtf(3.0f)/3*p*_cosf(c);
+            Color.y = -_sqrtf(6.0f)/6*p*_sinf(c)*_cosf(O)+_sqrtf(2.0f)/2*p*_sinf(c)*_sinf(O)+_sqrtf(3.0f)/3*p*_cosf(c);
+            Color.z = -_sqrtf(6.0f)/6*p*_sinf(c)*_cosf(O)-_sqrtf(2.0f)/2*p*_sinf(c)*_sinf(O)+_sqrtf(3.0f)/3*p*_cosf(c)-0.001f;
+
+            _tex2DVec4Write(dst, x, y, Color);
+        }
+    }
+]]
