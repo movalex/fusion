@@ -255,10 +255,19 @@ for i, tool in ipairs(toollist) do
         end
     end
 
+    if tool_a.TOOLS_RegID == "SurfaceAlembicMesh" and x.GeoLoaders == 1 then   
+        old_name = tool.Filename[1]
+        newclip = conform(old_name, usePattern)
+        if newclip ~= nil then
+            tool.Filename[fu.TIME_UNDEFINED] = newclip
+        end
+    end
+
     if tool.ID =='MediaIn' and x.Loaders == 1 then
         print('The tool does not work with Resolve\'s MediaIns')
     end
 end
+
 
 -------------------------
 -- close the undo event
