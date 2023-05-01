@@ -1,0 +1,1112 @@
+
+--[[--
+
+License: 
+Author: 
+https://www.shadertoy.com/
+
+Changes:
+v0.1 
+v0.2
+v0.3
+
+--]]--
+
+
+FuRegisterClass("DCTL_TEMPLATE", CT_SourceTool, {
+	REGS_Category      = "Fuses",
+	REGS_OpIconString  = "TMP",
+	REGS_OpDescription = "DCTL TEMPLATE",
+
+	REG_NoObjMatCtrls      = true,
+	REG_NoMotionBlurCtrls  = true,
+
+	REG_Source_GlobalCtrls = true,
+	REG_Source_SizeCtrls   = true,
+	REG_Source_AspectCtrls = true,
+	REG_Source_DepthCtrls  = true,
+	REG_OpNoMask           = false,
+	REG_Fuse_NoEdit        = false,
+	REG_Fuse_NoReload      = false,
+
+	REG_TimeVariant        = true,
+	REGS_Company           = "Tida",
+	REGS_URL               = "https://www.steakunderwater.com/wesuckless/",
+	REG_Version            = 000001,
+	})
+	
+
+ 
+DCTL_TEMPLATEParams = [[
+
+
+	float iC0_Width;
+	float iC0_Height;
+	
+	float iC1_Width;
+	float iC1_Height;
+
+	float iC2_Width;
+	float iC2_Height;	
+	
+	
+	float Center[2];
+	float Angle;
+	float Pivot[2];
+	float Scale;
+	
+	float iTime;
+
+	
+	// ----------- BEGIN DCTL_TEMPLATE Parameters ----------------
+	
+	float Offset01[2];
+	float Offset02[2];
+	float Offset03[2];
+	float Offset04[2];
+	float Offset05[2];	
+	
+	float Screw01;
+	float Screw02;
+	float Screw03;
+	float Screw04;
+	float Screw05;	
+	
+	float Slider01;
+	float Slider02;
+	float Slider03;
+	float Slider04;
+	float Slider05;	
+	
+	float Checkbox01;
+	float Checkbox02;
+	float Checkbox03;
+	float Checkbox04;
+	float Checkbox05;	
+	
+	// ----------- END   DCTL_TEMPLATE Parameters ----------------	
+	
+
+
+	float Color_Sat;
+	float Color_AddHue;
+	float Color_Hue;
+	float Color_Low;
+	float Color_High;
+	float Color_Contrast;
+	float Color_Pivot;
+	
+	float Alpha_Show;
+	float Alpha_Apply;
+	float Alpha_Red;
+	float Alpha_Green;
+	float Alpha_Blue;
+
+	float Alpha_Low;
+	float Alpha_High;
+	float Alpha_Contrast;
+	float Alpha_Pivot;
+	
+	int iC0_CompOrder;
+	int iC1_CompOrder;
+	int iC2_CompOrder;
+
+]]
+ 
+
+
+DCTL_TEMPLATEKernel = [[
+
+	// ---------- BEGIN reliable functions ---------------
+
+
+	__DEVICE__ inline float pow_f(float x, float y) {
+		float ret = _powf(x,y);
+		if (isnan(ret)) {
+			ret = 0.0001f;
+		}
+		return ret;
+	}	
+
+
+	__DEVICE__ float fract_f(float a) {
+		return a - _floor(a);
+	}
+			
+
+	// ---------- END reliable functions ---------------
+
+
+	// ------------- BEGIN COLOR + ALPHA ---------------------
+	// saturation, contrast_curve, RGB_to_HSV, HSV_to_RGB, rotate_Hue
+
+	__DEVICE__ float3 saturation( float3 A, float p_Sat) {
+		float luma = A.x * 0.2126f + A.y * 0.7152f + A.z * 0.0722f;
+		A.x = (1.0f - p_Sat) * luma + A.x * p_Sat;
+		A.y = (1.0f - p_Sat) * luma + A.y * p_Sat;
+		A.z = (1.0f - p_Sat) * luma + A.z * p_Sat;
+		return A;
+	}	
+	
+	
+	__DEVICE__ float contrast_curve( float ch_in, float ch_low, float ch_high, float contrast, float pivot) {
+		float ch_out = 0.0f;		
+		float q = 2.0f / (1.0f - contrast) - 1.0f;
+		if (ch_in < 0.0f) {ch_out = ch_low;}
+		if (ch_in > 1.0f) {ch_out = ch_high;}
+			
+		if (ch_in <= pivot && ch_in >= 0.0f) {	ch_out =         pow_f(ch_in    , q) / pow_f(pivot        , q - 1.0f)  * (ch_high - ch_low) + ch_low; }		
+		if (ch_in >  pivot && ch_in <= 1.0f) {	ch_out = (1.0f - pow_f(1.0f - ch_in , q) / pow_f(1.0f - pivot , q - 1.0f)) * (ch_high - ch_low) + ch_low; }
+			
+		return ch_out;
+	}	
+	
+	
+	__DEVICE__ void RGB_to_HSV( float r, float g, float b, float *h, float *s, float *v ) { 
+		float min = _fminf(_fminf(r, g), b);
+		float max = _fmaxf(_fmaxf(r, g), b);
+		*v = max;
+		float delta = max - min;
+		if (max != 0.0f) {
+			*s = delta / max;
+		} else {
+			*s = 0.0f;
+			*h = 0.0f;
+			return;
+		}
+		if (delta == 0.) {
+			*h = 0.f;
+		} else if (r == max) {
+			*h = (g - b) / delta;
+		} else if (g == max) {
+			*h = 2.0f + (b - r) / delta;
+		} else {
+			*h = 4.0f + (r - g) / delta;
+		}
+		*h *= 1.0f / 6.0f;
+		if (*h < 0) {
+			*h += 1.0f;
+		}
+	}
+
+	__DEVICE__ void HSV_to_RGB(float H, float S, float V, float *r, float *g, float *b) {
+		if (S == 0.0f) {
+			*r = *g = *b = V;
+			return;
+		}
+		H *= 6.0f;
+		int i = _floor(H);
+		float f = H - i;
+		i = (i >= 0) ? (i % 6) : (i % 6) + 6;
+		float p = V * (1.0f - S);
+		float q = V * (1.0f - S * f);
+		float t = V * (1.0f - S * (1.0f - f));
+		*r = i == 0 ? V : i == 1 ? q : i == 2 ? p : i == 3 ? p : i == 4 ? t : V;
+		*g = i == 0 ? t : i == 1 ? V : i == 2 ? V : i == 3 ? q : i == 4 ? p : p;
+		*b = i == 0 ? p : i == 1 ? p : i == 2 ? t : i == 3 ? V : i == 4 ? V : q;
+	}
+
+	__DEVICE__ float3 rotate_Hue(float3 RGB, float rotate, float addhue)
+	{
+		float r, g, b, h, s, v;
+		RGB_to_HSV( RGB.x, RGB.y, RGB.z, &h, &s, &v);
+		if (addhue == 1.0f){h = rotate;} else {h += rotate;}
+		h = h < 0 ? h + 1 : h > 1 ? h - 1 : h;
+		
+		HSV_to_RGB( h, s, v, &r, &g, &b);
+		
+		return to_float3(r, g, b);
+	}
+
+	// ------------- END COLOR + ALPHA ---------------------
+
+ 
+	
+	
+	// ---------- BEGIN  Matrix  ---------
+	// make_mat2, mat2_multi_2f, f2_multi_mat2, mat2_multi_f, determinant_mat2, inverse_mat2
+	// make_mat3, mat3_multi_3f
+	
+	typedef struct{  
+		float2 r0, r1;  
+	} mat2;  
+	
+		typedef struct {  
+		float3 r0, r1, r2;  
+	} mat3; 
+	
+
+	__DEVICE__ inline mat2 make_mat2( float2 A, float2 B)  
+		{  
+		mat2 C;  
+		C.r0 = A;  
+		C.r1 = B;  
+		return C;  
+	} 
+	
+	__DEVICE__ inline float2 mat2_multi_2f( mat2 B, float2 A) {  
+		float2 C;  
+		C.x = A.x * B.r0.x + A.y * B.r0.y;  
+		C.y = A.x * B.r1.x + A.y * B.r1.y;  
+		return C;  
+	}
+	
+	__DEVICE__ inline float2 f2_multi_mat2( float2 A, mat2 B) {  
+		float2 C;  
+		C.x = A.x * B.r0.x + A.y * B.r0.y;  
+		C.y = A.x * B.r1.x + A.y * B.r1.y;  
+		return C;  
+	}  
+	
+	__DEVICE__ inline mat2 mat2_multi_f( mat2 A, float B)  {  
+		return make_mat2(to_float2(A.r0.x * B, A.r0.y * B),to_float2( A.r1.x * B, A.r1.y * B));  
+	}  
+ 
+	__DEVICE__ inline float determinant_mat2(mat2 A) {
+		return A.r0.x*A.r1.y - A.r0.y*A.r1.x;
+	}
+ 
+ 
+	__DEVICE__ mat2 inverse(mat2 A) {
+		mat2 C;
+		float det = determinant_mat2(A);
+		C.r0.x = A.r1.y  / det;
+		C.r0.y = -A.r0.y / det;
+		C.r1.x = -A.r1.x / det;
+		C.r1.y = A.r0.x  / det;
+		return C;
+	}
+	
+	__DEVICE__ inline mat3 make_mat3( float3 A, float3 B, float3 C) {  
+		mat3 D;  
+		D.r0 = A;  
+		D.r1 = B;  
+		D.r2 = C;  
+		return D;  
+	} 
+	
+	
+	__DEVICE__ inline mat3 mat3_multi_f( mat3 A, float B)  {  
+		return make_mat3(A.r0 * B, A.r1 * B, A.r2 * B);  
+	}  
+	
+	
+	__DEVICE__ inline float3 mat3_multi_3f( mat3 B, float3 A) {  
+		float3 C;  
+		C.x = A.x * B.r0.x + A.y * B.r0.y + A.z * B.r0.z;  
+		C.y = A.x * B.r1.x + A.y * B.r1.y + A.z * B.r1.z;  
+		C.z = A.x * B.r2.x + A.y * B.r2.y + A.z * B.r2.z;  
+		return C;  
+	} 
+	// ---------- END  Matrix  ---------	
+
+
+	//------------BEGIN Vector ------------
+	// distance2f, distance3f, mod3f, abs3f, sqrt3f, det, closest0, Xmat2_multi_2f, closest3, closest, dist, dist1, hsv2rgb_smooth, qrot, rotate, spin
+
+	__DEVICE__ float distance2f(float2 pt1, float2 pt2) {
+		float2 v = pt2 - pt1;
+		return sqrt(dot(v,v));
+	}
+		
+	__DEVICE__ float distance3f(float3 pt1, float3 pt2)	{
+		float3 v = pt2 - pt1;
+		return sqrt(dot(v,v));
+	}
+
+	__DEVICE__ float3 mod3f(float3 value, float divisor) {return to_float3(_fmod(value.x, divisor),_fmod(value.y, divisor),_fmod(value.z, divisor));}
+	
+	__DEVICE__ float3 abs3f(float3 a) {return (to_float3(_fabs(a.x), _fabs(a.y),_fabs(a.z)));}
+	
+	__DEVICE__ float3 sqrt3f(float3 a) {float3 r; r.x = _sqrtf(a.x); r.y = _sqrtf(a.y); r.z = _sqrtf(a.z); return r;}
+
+
+	__DEVICE__ float det(float2 c0, float2 c1) {
+		return determinant_mat2(make_mat2(c0,c1));
+	}
+
+	__DEVICE__ float2 closest0(float3 p,float3 q,float3 r,float3 s) {
+		float2 c0 = to_float2(1.0,dot(q,s));
+		float2 c1 = to_float2(-dot(q,s),-1.0f);
+		float2 a = to_float2(dot(r-p,q),dot(r-p,s));
+		return to_float2(det(a,c1),det(c0,a))/det(c0,c1);
+	}
+	
+	__DEVICE__ float2 Xmat2_multi_2f( mat2 B, float2 A) {  
+	  float2 C;  
+		C.x = A.x * B.r0.x + A.y * B.r1.x;  
+		C.y = A.x * B.r0.y + A.y * B.r1.y;  
+		return C;  
+	}	 	
+
+	__DEVICE__ float2 closest3(float3 p,float3 q,float3 r,float3 s) {
+	   float k = dot(q,s);
+	   mat2 m = make_mat2(to_float2(-1.0f,-k),to_float2(k,1.0f));
+	   return Xmat2_multi_2f(m,to_float2(dot(r-p,q),dot(r-p,s)))/(k*k-1.0f);
+	}
+ 
+ 
+	__DEVICE__ float2 closest(float3 p,float3 q,float3 r,float3 s) {
+	   return closest3(p,q,r,s);
+	}
+ 
+	__DEVICE__ float dist(float3 p,float3 q,float3 r,float3 s) {
+		float3 n = normalize(cross(q,s));
+		return _fabs(dot(n,p-r));
+	}
+
+	__DEVICE__ float dist1(float3 p,float3 q,float3 r,float3 s) {
+	   float2 k = closest(p,q,r,s);
+	   return distance3f(p+k.x*q,r+k.y*s);
+	}
+	
+	__DEVICE__ float3 hsv2rgb_smooth(  float3 c ) {
+		float3 rgb = clamp( abs3f(mod3f(c.x*6.0f+to_float3(0.0f,4.0f,2.0f),6.0f)-3.0f)-1.0f, 0.0f, 1.0f );
+		rgb = rgb*rgb*(3.0f-2.0f*rgb); // cubic smoothing	
+		return c.z * _mix( to_float3_s(1.0), rgb, c.y);
+	}
+ 
+
+ 
+	 __DEVICE__ mat3 qrot(float4 q) {
+		float x = q.x, y = q.y, z = q.z, w = q.w;
+		float x2 = x*x, y2 = y*y, z2 = z*z;
+		float xy = x*y, xz = x*z, xw = x*w;
+		float yz = y*z, yw = y*w, zw = z*w;
+		return mat3_multi_f( make_mat3(to_float3(0.5f-y2-z2, xy+zw, xz-yw),
+							to_float3(xy-zw, 0.5f-x2-z2, yz+xw),
+							to_float3(xz+yw, yz-xw, 0.5f-x2-y2)) ,  2.0f);
+	 }
+
+	__DEVICE__ float2 rotate(float2 p, float t) {
+		return p * _cosf(t) + to_float2(p.y, -p.x) * _sinf(t);
+	}
+
+
+	__DEVICE__ float2 spin(float2 uv, float2 center, float angle, float aspect) {
+		float C = _cosf(angle);
+		float S = _sinf(angle);
+		   
+		uv -= center;
+		float x = uv.x;
+		uv.x = (x*aspect * C - uv.y * S);
+		uv.y = (x*aspect * S + uv.y * C);
+		uv += center;
+		return uv;
+	} 
+	
+	//------------END Vector ------------
+
+
+
+
+
+	// ------------- BEGIN DCTL_TEMPLATE FUNCTION --------------
+	
+	
+	// ------------- END   DCTL_TEMPLATE FUNCTION --------------
+		
+	
+	
+  __KERNEL__ void DCTL_TEMPLATEKernel(__CONSTANTREF__ DCTL_TEMPLATEParams *params, __TEXTURE2D__ iChannel0,  __TEXTURE2D__ iChannel1,  __TEXTURE2D__ iChannel2, __TEXTURE2D_WRITE__ dst)
+    {
+		
+    DEFINE_KERNEL_ITERATORS_XY(x, y);
+	if (x < params->iC0_Width && y < params->iC0_Height) {
+					
+		float2 fragCoord 	= to_float2(x, y); 
+		float2 iResolution 	= to_float2(params->iC0_Width, params->iC0_Height);
+		float ratio 		= (float)params->iC0_Width/(float)params->iC0_Height;		
+		float2 uv 			= (fragCoord - 0.5f*iResolution)/iResolution.y;
+		float T 			= 	params->iTime;							
+				
+		// ### Change Dimensions - Scale/Spin/Move ###
+		uv -=  to_float2( (params->Center[0]-0.5f)*ratio, (params->Center[1]-0.5f)); 
+		uv = uv / (float)params->Scale;
+		float2 Pivot = to_float2(((params->Pivot[0]-0.5f)*ratio),(params->Pivot[1]-0.5f));
+		uv = spin(uv, Pivot, params->Angle, 1.0f);					
+				
+	  uv = fragCoord/iResolution;
+		
+
+		
+	// ---------------------------------------------------------------	
+		float4 iC0  = _tex2DVecN(iChannel0,x,y,params->iC0_CompOrder);
+		float3 c0	 =  to_float3(iC0.x ,iC0.y ,iC0.z);
+		
+		float4 iC1  = _tex2DVecN(iChannel1,x,y,params->iC1_CompOrder);
+		float3 c1	 =  to_float3(iC1.x ,iC1.y ,iC1.z);
+
+		float4 iC2  = _tex2DVecN(iChannel2,x,y,params->iC2_CompOrder);
+		float3 c2	 =  to_float3(iC2.x ,iC2.y ,iC2.z);			
+
+		
+	// ------------- BEGIN DCTL_TEMPLATE KERNEL FUNCTION -------------
+			c0 = (c0 + c1 + c2)/3;  // To be deleted
+	/*
+	
+		
+	
+		
+		
+	*/	
+	// ------------- END DCTL_TEMPLATE KERNEL FUNCTION -------------		
+
+	
+
+		float3 color;		
+		color.x = contrast_curve(c0.x , params->Color_Low , params->Color_High , params->Color_Contrast , params->Color_Pivot);
+		color.y = contrast_curve(c0.y , params->Color_Low , params->Color_High , params->Color_Contrast , params->Color_Pivot);
+		color.z = contrast_curve(c0.z , params->Color_Low , params->Color_High , params->Color_Contrast , params->Color_Pivot);			
+		color = saturation(color , params->Color_Sat);				
+		color = rotate_Hue(color, params->Color_Hue, params->Color_AddHue);
+				
+		float luma;
+		luma = (c0.x * params->Alpha_Red + c0.y * params->Alpha_Green + c0.z * params->Alpha_Blue);			
+				
+		float alpha;
+		alpha = contrast_curve(luma , params->Alpha_Low , params->Alpha_High, params->Alpha_Contrast , params->Alpha_Pivot);
+			
+			
+		float4 fragColor;								
+		if (params->Alpha_Show > 0.0f && params->Alpha_Apply) {
+			color = to_float3(alpha,alpha,alpha);
+		}				
+		if (params->Alpha_Apply) {
+			fragColor = to_float4_aw(color, alpha);
+		}
+		else {					
+			fragColor = to_float4_aw(color, 1.0f);
+		}	
+				
+		//_tex2DVec4Write(dst, x, y, fragColor0);				
+		_tex2DVec4Write(dst, x, y, fragColor);
+
+	}			
+    }
+]]
+
+
+
+function Create()
+	
+	InRNDSeed = self:AddInput("RandomSeed", "RandomSeed", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_Integer  	   	= true,					
+		INP_Default = 250.0,
+		INP_MinAllowed = 0.0,
+		INP_MaxAllowed = 500.0,			
+	})
+	
+		
+	InAutoTime = self:AddInput("Auto", "AutoTime", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Integer = true,
+		INP_Default = 1,			
+		})	
+	
+	InRange = self:AddInput("Range", "Range", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Default = 0.0,
+	})
+		
+	
+	InFrequency = self:AddInput("Frequency", "Frequency", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_Default = 1.0,
+		INP_MinScale = 0,
+		INP_MaxScale = 3,			
+		})	
+	
+	self:BeginControlNest("Transform", "Transform", true, {})	
+	
+	
+	InCenter = self:AddInput("Center", "Center", {
+		LINKID_DataType 	= "Point",
+		INPID_InputControl 	= "OffsetControl",
+		INPID_PreviewControl= "CrosshairControl",
+		INP_DoNotifyChanged = true,
+		})
+
+	InScale = self:AddInput("Scale", "Scale", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "SliderControl",
+		RCD_LockAspect     	= 1,
+		RC_DoLockAspect    	= true,
+		RCID_Center        	= "Center", 
+		INP_Default 		= 1.0,
+		INP_MinAllowed 		= 0.1,
+		INP_MaxAllowed 		= 5.0,
+		})
+
+	InAngle = self:AddInput("Angle", "Angle", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "ScrewControl",
+		INPID_PreviewControl= "AngleControl",
+		INP_Default 		= 0,
+		ACID_Center 		= "Center",
+		INP_MinScale 		= 0,
+		INP_MaxScale 		= 360,		
+		})    
+		
+		
+		
+	 InPivot = self:AddInput("Pivot", "Pivot", {
+		LINKID_DataType 	= "Point",
+		INPID_InputControl 	= "OffsetControl",
+		INPID_PreviewControl= "CrosshairControl",
+		CHC_Style 			= "DiagonalCross",
+		})
+	
+	self:EndControlNest()
+
+	
+											
+	-- ============== BEGIN DCTL_TEMPLATE ====================
+
+	self:BeginControlNest("DCTL_TEMPLATE_01", "DCTL_TEMPLATE_01", false, {})	
+	
+	
+	InOffset01 = self:AddInput("Offset01", "Offset01", {
+		LINKID_DataType 	= "Point",
+		INPID_InputControl 	= "OffsetControl",
+		INPID_PreviewControl= "CrosshairControl",
+		INP_DoNotifyChanged = true,
+		})	
+
+	InOffset02 = self:AddInput("Offset02", "Offset02", {
+		LINKID_DataType 	= "Point",
+		INPID_InputControl 	= "OffsetControl",
+		INPID_PreviewControl= "CrosshairControl",
+		INP_DoNotifyChanged = true,
+		})	
+
+	InOffset03 = self:AddInput("Offset03", "Offset03", {
+		LINKID_DataType 	= "Point",
+		INPID_InputControl 	= "OffsetControl",
+		INPID_PreviewControl= "CrosshairControl",
+		INP_DoNotifyChanged = true,
+		})	
+
+	InOffset04 = self:AddInput("Offset04", "Offset04", {
+		LINKID_DataType 	= "Point",
+		INPID_InputControl 	= "OffsetControl",
+		INPID_PreviewControl= "CrosshairControl",
+		INP_DoNotifyChanged = true,
+		})	
+
+	InOffset05 = self:AddInput("Offset05", "Offset05", {
+		LINKID_DataType 	= "Point",
+		INPID_InputControl 	= "OffsetControl",
+		INPID_PreviewControl= "CrosshairControl",
+		INP_DoNotifyChanged = true,
+		})			
+	
+	
+	
+	InScrew01 = self:AddInput("Screw01", "Screw01", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "ScrewControl",
+		INPID_PreviewControl= "AngleControl",
+		INP_Default 		= 0,
+		ACID_Center 		= "Offset01",
+		INP_MinScale 		= 0,
+		INP_MaxScale 		= 360,		
+		})  
+		
+	InScrew02 = self:AddInput("Screw02", "Screw02", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "ScrewControl",
+		INPID_PreviewControl= "AngleControl",
+		INP_Default 		= 0,
+		ACID_Center 		= "Offset02",
+		INP_MinScale 		= 0,
+		INP_MaxScale 		= 360,		
+		})  
+
+	InScrew03 = self:AddInput("Screw03", "Screw03", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "ScrewControl",
+		INPID_PreviewControl= "AngleControl",
+		INP_Default 		= 0,
+		ACID_Center 		= "Offset03",
+		INP_MinScale 		= 0,
+		INP_MaxScale 		= 360,		
+		})  
+
+	InScrew04 = self:AddInput("Screw04", "Screw04", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "ScrewControl",
+		INPID_PreviewControl= "AngleControl",
+		INP_Default 		= 0,
+		ACID_Center 		= "Offset04",
+		INP_MinScale 		= 0,
+		INP_MaxScale 		= 360,		
+		})  
+
+	InScrew05 = self:AddInput("Screw05", "Screw05", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "ScrewControl",
+		INPID_PreviewControl= "AngleControl",
+		INP_Default 		= 0,
+		ACID_Center 		= "Offset05",
+		INP_MinScale 		= 0,
+		INP_MaxScale 		= 360,		
+		})  		
+			
+	
+	
+	InSlider01 = self:AddInput("Slider01", "Slider01", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "SliderControl",
+		INP_Default 		= 0.0,
+		INP_MinScale 		= 0.0,
+		INP_MaxScale 		= 1.0,		
+	})			
+	
+	InSlider02 = self:AddInput("Slider02", "Slider02", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "SliderControl",
+		INP_Default 		= 0.0,
+		INP_MinScale 		= 0.0,
+		INP_MaxScale 		= 1.0,		
+	})			
+
+	InSlider03 = self:AddInput("Slider03", "Slider03", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "SliderControl",
+		INP_Default 		= 0.0,
+		INP_MinScale 		= 0.0,
+		INP_MaxScale 		= 1.0,		
+	})			
+
+	InSlider04 = self:AddInput("Slider04", "Slider04", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "SliderControl",
+		INP_Default 		= 0.0,
+		INP_MinScale 		= 0.0,
+		INP_MaxScale 		= 1.0,		
+	})			
+
+	InSlider05 = self:AddInput("Slider05", "Slider05", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "SliderControl",
+		INP_Default 		= 0.0,
+		INP_MinScale 		= 0.0,
+		INP_MaxScale 		= 1.0,		
+	})				
+	
+	
+	
+	
+	InCheckbox01 = self:AddInput("Checkbox01", "Checkbox01", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "CheckboxControl",
+		INP_Integer 		= true,
+		INP_Default 		= 1,			
+		})	
+		
+	InCheckbox02 = self:AddInput("Checkbox02", "Checkbox02", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "CheckboxControl",
+		INP_Integer 		= true,
+		INP_Default 		= 1,			
+		})	
+
+	InCheckbox03 = self:AddInput("Checkbox03", "Checkbox03", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "CheckboxControl",
+		INP_Integer 		= true,
+		INP_Default 		= 1,			
+		})	
+		
+	InCheckbox04 = self:AddInput("Checkbox04", "Checkbox04", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "CheckboxControl",
+		INP_Integer 		= true,
+		INP_Default 		= 1,			
+		})			
+	
+	InCheckbox05 = self:AddInput("Checkbox05", "Checkbox05", {
+		LINKID_DataType 	= "Number",
+		INPID_InputControl 	= "CheckboxControl",
+		INP_Integer 		= true,
+		INP_Default 		= 1,			
+		})			
+	
+	self:EndControlNest()	
+	
+	
+	-- ============== END DCTL_TEMPLATE ====================
+	
+	
+	
+	
+	
+	self:BeginControlNest("Color", "Color", false, {})	
+	
+	InColor_AddHue = self:AddInput("Add Hue", "ColorAddHue", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Integer = true,
+		INP_Default = 0,			
+		})	
+	InColor_Hue = self:AddInput("Hue", "ColorHue", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ScrewControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 0.0,
+		})	
+		
+	InColor_Sat = self:AddInput("Saturation", "Saturation", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 2.0,
+		INP_Default  = 1.0,
+		})			
+	
+	InColorLow = self:AddInput("Low", "ColorLow", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 0.0,
+		})	
+		
+	InColor_High = self:AddInput("High", "ColorHigh", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 1.0,
+		})			
+		
+	InColor_Contrast = self:AddInput("Contrast", "ColorContrast", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = -0.95,
+		INP_MaxScale = 0.95,
+		INP_Default  = 0.0,
+		})	
+	InColor_Pivot = self:AddInput("Pivot", "ColorPivot", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 0.5,
+		})			
+			
+
+  Sep1 = self:AddInput(string.rep("_", 100), "Separator1", {
+    LINKID_DataType = "Text",
+    INPID_InputControl = "LabelControl",
+    INP_External = false,
+    INP_Passive = true,
+  })
+
+	InAlpha_Apply = self:AddInput("Apply Alpha", "Alpha_Apply", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Integer = false,
+		INP_Default = 0,
+		ICD_Width = 1,
+		INP_DoNotifyChanged = true,			
+		})	
+		
+	InAlpha_Red = self:AddInput("Channel", "Alpha_Red", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 0.2126,
+		IC_ControlGroup = 1,
+		IC_ControlID = 0,
+		})
+		
+	InAlpha_Green = self:AddInput("Alpha Green", "Alpha_Green", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 0.7152,
+		IC_ControlGroup = 1,
+		IC_ControlID = 1,
+		})
+		
+	InAlpha_Blue = self:AddInput("Alpha Blue", "Alpha_Blue", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ColorControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 0.0722,
+		IC_ControlGroup = 1,
+		IC_ControlID = 2,
+		})	
+		
+	InAlpha_Low = self:AddInput("Low", "Alpha_Low", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 0.0,
+		})	
+		
+	InAlpha_High = self:AddInput("High", "Alpha_High", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 1.0,
+		})			
+		
+	InAlpha_Contrast = self:AddInput("Contrast", "Alpha_Contrast", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = -0.95,
+		INP_MaxScale = 0.95,
+		INP_Default  = 0.0,
+		})	
+	InAlpha_Pivot = self:AddInput("Pivot", "Alpha_Pivot", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MinScale = 0.0,
+		INP_MaxScale = 1.0,
+		INP_Default  = 0.5,
+		})			
+		
+	InAlpha_Show = self:AddInput("Show", "Alpha_Show", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Integer = false,
+		INP_Default = 0,
+		ICD_Width = 1,
+		INP_DoNotifyChanged = true,			
+		})			
+		
+		self:EndControlNest()	
+
+
+	InChannel0 = self:AddInput("iChannel0", "iChannel0", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		INP_Required = false
+	})
+	  
+	InChannel1 = self:AddInput("iChannel1", "iChannel1", {
+		LINKID_DataType = "Image",
+		LINK_Main = 2,
+		INP_Required = false
+	})
+	
+	InChannel2 = self:AddInput("iChannel2", "iChannel2", {
+		LINKID_DataType = "Image",
+		LINK_Main = 3,
+		INP_Required = false
+	})	
+		
+		
+    OutImage = self:AddOutput("Output", "Output", {
+        LINKID_DataType 	= "Image",
+        LINK_Main 			= 1,
+    })
+		
+end
+
+function NotifyChanged(inp, param, time)
+	if inp ~= nil and param ~= nil then
+		if inp == InAlpha_Apply then
+			InAlpha_Red:SetAttrs({ IC_Visible = true, })	
+			InAlpha_Low:SetAttrs({ IC_Visible = true, })	
+			InAlpha_High:SetAttrs({ IC_Visible = true, })	
+			InAlpha_Contrast:SetAttrs({ IC_Visible = true, })	
+			InAlpha_Pivot:SetAttrs({ IC_Visible = true, })					
+			InAlpha_Show:SetAttrs({ IC_Visible = true, })				
+			
+			if param.Value == 0 then 				
+				InAlpha_Red:SetAttrs({ IC_Visible = false, })	
+				InAlpha_Low:SetAttrs({ IC_Visible = false, })	
+				InAlpha_High:SetAttrs({ IC_Visible = false, })	
+				InAlpha_Contrast:SetAttrs({ IC_Visible = false, })	
+				InAlpha_Pivot:SetAttrs({ IC_Visible = false, })		
+				InAlpha_Show:SetAttrs({ IC_Visible = false, })								
+			end
+		end
+	end
+end
+
+
+
+
+
+local lastreqtime = -2
+
+function Process(req)
+
+    local imgattrs = {
+        IMG_Document = self.Comp,
+        { IMG_Channel = "Red", },
+        { IMG_Channel = "Green", },
+        { IMG_Channel = "Blue", },
+        { IMG_Channel = "Alpha", },
+        IMG_Width = Width,
+        IMG_Height = Height,
+        IMG_XScale = XAspect,
+        IMG_YScale = YAspect,
+        IMAT_OriginalWidth = realwidth,
+        IMAT_OriginalHeight = realheight,
+        IMG_Quality = not req:IsQuick(),
+        IMG_MotionBlurQuality = not req:IsNoMotionBlur(),
+        }
+   
+    if not req:IsStampOnly() then
+        imgattrs.IMG_ProxyScale = 1
+    end
+   
+    if SourceDepth ~= 0 then
+        imgattrs.IMG_Depth = SourceDepth
+    end
+	
+
+	
+    
+	if (InChannel0:GetValue(req) ~= nil) then
+        iChannel0 = InChannel0:GetValue(req)
+    else
+        iChannel0 = Image(imgattrs)
+				local p = Pixel({R=0,G=0,B=0,A=0})
+        iChannel0:Fill(p)
+    end
+
+    local iChannel1
+	if (InChannel1:GetValue(req) ~= nil) then
+        iChannel1 = InChannel1:GetValue(req)
+    else
+        iChannel1 = Image(imgattrs)
+				local p = Pixel({R=0,G=0,B=0,A=0})
+        iChannel1:Fill(p)
+    end
+
+    local iChannel2
+	if (InChannel2:GetValue(req) ~= nil) then
+        iChannel2 = InChannel2:GetValue(req)
+    else
+        iChannel2 = Image(imgattrs)
+				local p = Pixel({R=0,G=0,B=0,A=0})
+        iChannel2:Fill(p)
+    end	
+	
+	
+	
+    
+    local dst = Image{ IMG_Like = iChannel0, IMG_DeferAlloc = true } 
+ 
+    local node = DVIPComputeNode(req, "DCTL_TEMPLATEKernel", DCTL_TEMPLATEKernel, "DCTL_TEMPLATEParams", DCTL_TEMPLATEParams)
+		
+		if (lastreqtime ~= req.Time - 1) then
+			params = node:GetParamBlock(DCTL_TEMPLATEParams)
+		end
+		lastreqtime = req.Time
+		
+		
+		---
+		params.iC0_Width  	= iChannel0.DataWindow:Width()
+		params.iC0_Height 	= iChannel0.DataWindow:Height()
+		
+		params.iC1_Width  	= iChannel1.DataWindow:Width()
+		params.iC1_Height 	= iChannel1.DataWindow:Height()
+		
+		params.iC2_Width  	= iChannel2.DataWindow:Width()
+		params.iC2_Height 	= iChannel2.DataWindow:Height()		
+		
+		
+		---
+		params.Center[0] 	= InCenter:GetValue(req).X
+		params.Center[1]	= InCenter:GetValue(req).Y		
+		params.Pivot[0] 	= InPivot:GetValue(req).X
+		params.Pivot[1] 	= InPivot:GetValue(req).Y		
+		params.Angle 		= (-InAngle:GetValue(req).Value)/360*3.1415*2
+		params.Scale 		= InScale:GetValue(req).Value						
+		
+		local framerate = self.Comp:GetPrefs("Comp.FrameFormat.Rate")
+		params.iTime = (InRange:GetValue(req).Value*100 + req.Time/ framerate*24*InAutoTime:GetValue(req).Value) * (10^(InFrequency:GetValue(req).Value-3.0)) + InRNDSeed:GetValue(req).Value		
+		---
+		params.Color_Sat 	= InColor_Sat:GetValue(req).Value		
+		params.Color_AddHue	= InColor_AddHue:GetValue(req).Value			
+		params.Color_Hue 	= InColor_Hue:GetValue(req).Value					
+		params.Color_Low 	= InColorLow:GetValue(req).Value											
+		params.Color_High 	= InColor_High:GetValue(req).Value											
+		params.Color_Contrast = InColor_Contrast:GetValue(req).Value											
+		params.Color_Pivot 	= InColor_Pivot:GetValue(req).Value											
+
+		params.Alpha_Apply 	= InAlpha_Apply:GetValue(req).Value									
+		params.Alpha_Show 	= InAlpha_Show:GetValue(req).Value									
+		params.Alpha_Red 	= InAlpha_Red:GetValue(req).Value			
+		params.Alpha_Green 	= InAlpha_Green:GetValue(req).Value			
+		params.Alpha_Blue 	= InAlpha_Blue:GetValue(req).Value					
+		
+		params.Alpha_Low 	= InAlpha_Low:GetValue(req).Value											
+		params.Alpha_High 	= InAlpha_High:GetValue(req).Value											
+		params.Alpha_Contrast = InAlpha_Contrast:GetValue(req).Value											
+		params.Alpha_Pivot 	= InAlpha_Pivot:GetValue(req).Value	
+
+		params.iC0_CompOrder = iChannel0:IsMask() and 1 or 15		
+		params.iC1_CompOrder = iChannel0:IsMask() and 1 or 15		
+		params.iC2_CompOrder = iChannel0:IsMask() and 1 or 15		
+		
+		-----------------				
+		
+		params.Offset01[0]	= InOffset01:GetValue(req).X	
+		params.Offset01[1]	= InOffset01:GetValue(req).Y		
+		params.Offset02[0]	= InOffset02:GetValue(req).X	
+		params.Offset02[1]	= InOffset02:GetValue(req).Y			
+		params.Offset03[0]	= InOffset03:GetValue(req).X
+		params.Offset03[1]	= InOffset03:GetValue(req).Y		
+		params.Offset04[0]	= InOffset04:GetValue(req).X
+		params.Offset04[1]	= InOffset04:GetValue(req).Y		
+		params.Offset05[0]	= InOffset05:GetValue(req).X
+		params.Offset05[1]	= InOffset05:GetValue(req).Y				
+				
+		
+		params.Screw01   	= InScrew01:GetValue(req).Value	
+		params.Screw02   	= InScrew02:GetValue(req).Value	
+		params.Screw03   	= InScrew03:GetValue(req).Value	
+		params.Screw04   	= InScrew04:GetValue(req).Value	
+		params.Screw05   	= InScrew05:GetValue(req).Value	
+	
+		params.Slider01  	= InSlider01:GetValue(req).Value	
+		params.Slider02  	= InSlider02:GetValue(req).Value
+		params.Slider03  	= InSlider03:GetValue(req).Value
+		params.Slider04  	= InSlider04:GetValue(req).Value
+		params.Slider05  	= InSlider05:GetValue(req).Value
+		
+		params.Checkbox01 	= InCheckbox01:GetValue(req).Value	
+		params.Checkbox02 	= InCheckbox02:GetValue(req).Value	
+		params.Checkbox03 	= InCheckbox03:GetValue(req).Value	
+		params.Checkbox04 	= InCheckbox04:GetValue(req).Value	
+		params.Checkbox05 	= InCheckbox05:GetValue(req).Value			
+		
+		-------------
+				
+		
+    node:SetParamBlock(params)
+ 
+    node:AddInput("iChannel0", iChannel0)
+	node:AddInput("iChannel1", iChannel1)
+	node:AddInput("iChannel2", iChannel2)
+    node:AddOutput("dst", dst)
+ 
+    local ok = node:RunSession(req)
+ 
+    if not ok then
+        dst = nil
+		dump(node:GetErrorLog())
+    end
+ 
+    OutImage:Set(req, dst)
+end	

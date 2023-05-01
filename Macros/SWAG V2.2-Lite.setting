@@ -1,0 +1,2558 @@
+{
+	Tools = ordered() {
+		SWAG_Lite = MacroOperator {
+			CtrlWZoom = false,
+			NameSet = true,
+			CustomData = {
+				Path = {
+					Map = {
+						["Setting:"] = "Z:\\08_Personal\\Kristian\\CG RnD\\Fusion Macros\\Glow Macro\\"
+					}
+				},
+			},
+			Inputs = ordered() {
+				Input44 = Input { Value = 0.044, },
+				Input45 = Input { Value = 1, },
+				Input46 = Input { Value = 0.2, },
+				Input27 = Input { Value = 20, },
+				Input31 = Input { Value = 0.389, },
+				Input47 = Input { Value = 0.1, },
+				Input49 = Input { Value = 0.01, },
+				Comments = Input { Value = "WSL post:\nhttps://www.steakunderwater.com/wesuckless/viewtopic.php?t=5810\n\nCreated by Kristian Thuesen | www.1kvisuals.com", },
+				RemoveAlpha = Input { Value = 1, },
+				Threshold = Input { Value = 0.7, },
+				Input2 = InstanceInput {
+					SourceOp = "Frameedgematte_1",
+					Source = "Blend",
+				},
+				Input1 = InstanceInput {
+					SourceOp = "FrameEdge_1",
+					Source = "Length",
+				},
+				Input74 = InstanceInput {
+					SourceOp = "ViewFrameEdgematte",
+					Source = "Mix",
+				},
+				Input8 = InstanceInput {
+					SourceOp = "CoreBrightSat_1",
+					Source = "Blend",
+				},
+				Input9 = InstanceInput {
+					SourceOp = "CoreThickness_1",
+					Source = "XAmount",
+				},
+				Input70 = InstanceInput {
+					SourceOp = "ViewCoreMask_1",
+					Source = "Mix",
+				},
+				Input3 = InstanceInput {
+					SourceOp = "LumaKeyer1_1",
+					Source = "High",
+				},
+				Input4 = InstanceInput {
+					SourceOp = "LumaKeyer1_1",
+					Source = "Low",
+				},
+				Input5 = InstanceInput {
+					SourceOp = "CoreBrightSat_1",
+					Source = "Gain",
+				},
+				Input6 = InstanceInput {
+					SourceOp = "CoreBrightSat_1",
+					Source = "Gamma",
+				},
+				Input7 = InstanceInput {
+					SourceOp = "CoreBrightSat_1",
+					Source = "Saturation",
+				},
+				Input75 = InstanceInput {
+					SourceOp = "PreHue_1",
+					Source = "Blend",
+				},
+				Input10 = InstanceInput {
+					SourceOp = "PreHue_1",
+					Source = "HighHue",
+				},
+				Input11 = InstanceInput {
+					SourceOp = "PreHue_1",
+					Source = "MidHue",
+				},
+				Input12 = InstanceInput {
+					SourceOp = "PreHue_1",
+					Source = "DarkHue",
+				},
+				MasterGlowSettings = Input { Value = 1, },
+				Input16 = InstanceInput {
+					SourceOp = "_BlurRadius1_1_1",
+					Source = "XBlurSize",
+				},
+				Input17 = InstanceInput {
+					SourceOp = "GainGamma_1",
+					Source = "Gain",
+				},
+				Input18 = InstanceInput {
+					SourceOp = "GainGamma_1",
+					Source = "Gamma",
+				},
+				Input19 = InstanceInput {
+					SourceOp = "GainGamma_1",
+					Source = "Saturation",
+				},
+				Input14 = InstanceInput {
+					SourceOp = "ActivateSofterGlow_1",
+					Source = "Mix",
+				},
+				Input39 = InstanceInput {
+					SourceOp = "Tint_1",
+					Source = "Blend",
+				},
+				Input34 = InstanceInput {
+					SourceOp = "Tint_1",
+					Source = "WheelHue1",
+				},
+				Input35 = InstanceInput {
+					SourceOp = "Tint_1",
+					Source = "WheelSaturation1",
+				},
+				Input36 = InstanceInput {
+					SourceOp = "Tint_1",
+					Source = "WheelTintAngle1",
+				},
+				Input37 = InstanceInput {
+					SourceOp = "Tint_1",
+					Source = "WheelTintLength1",
+				},
+				Input38 = InstanceInput {
+					SourceOp = "Tint_1",
+					Source = "WheelRangeDummy1",
+				},
+				Input21 = InstanceInput {
+					SourceOp = "GlowSaturation_1",
+					Source = "Blend",
+				},
+				Input22 = InstanceInput {
+					SourceOp = "LumaKeyer2_1",
+					Source = "High",
+				},
+				Input20 = InstanceInput {
+					SourceOp = "GlowSaturation_1",
+					Source = "Saturation",
+				},
+				Input23 = InstanceInput {
+					SourceOp = "LumaKeyer2_1",
+					Source = "Low",
+				},
+				Input67 = InstanceInput {
+					SourceOp = "CA_1",
+					Source = "Mix",
+				},
+				Input64 = InstanceInput {
+					SourceOp = "DispAmount_1",
+					Source = "RefractionStrength",
+				},
+				Input65 = InstanceInput {
+					SourceOp = "ActivateGreen_1",
+					Source = "Blend",
+				},
+				Input66 = InstanceInput {
+					SourceOp = "CASoftness_1",
+					Source = "XBlurSize",
+				},
+				Output = Input { Value = 1, },
+				Input68 = InstanceInput {
+					SourceOp = "HQSwitch_1",
+					Source = "Mix",
+				},
+				Input69 = InstanceInput {
+					SourceOp = "GlowOnly_1",
+					Source = "Mix",
+				},
+				Input15 = InstanceInput {
+					SourceOp = "_BlurRadius1_1_1",
+					Source = "Filter",
+				},
+				MainInput1 = InstanceInput {
+					SourceOp = "RemoveAlpha_1_1",
+					Source = "Background",
+				},
+				Input13 = InstanceInput {
+					SourceOp = "GlowMask_1",
+					Source = "Garbage.Matte",
+					Name = "Glow Mask",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "ViewFrameEdgematte",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { -4455, 511.5 } },
+			Tools = ordered() {
+				RemoveAlpha_1_1 = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Expression = "SWAG_Lite.RemoveAlpha", },
+						ToAlpha = Input { Value = 15, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -3479, 503.258 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				ChannelBooleans5_1 = ChannelBoolean {
+					CtrlWShown = false,
+					Inputs = {
+						ToRed = Input { Value = 4, },
+						ToGreen = Input { Value = 4, },
+						ToBlue = Input { Value = 4, },
+						ToAlpha = Input { Value = 16, },
+						Background = Input {
+							SourceOp = "RemoveAlpha_1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -3121, 453.372 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				FrameEdge_1 = DirectionalBlur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						ProcessRed = Input { Value = 0, },
+						ProcessGreen = Input { Value = 0, },
+						ProcessBlue = Input { Value = 0, },
+						Type = Input { Value = 3, },
+						Length = Input { Value = -1, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Input = Input {
+							SourceOp = "ChannelBooleans5_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -3011, 420.372 } },
+					Colors = { TileColor = { R = 0.372549019607843, G = 0.6, B = 0.125490196078431 }, }
+				},
+				Frameedgematte_1 = MatteControl {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						["Garbage.Matte"] = Input {
+							SourceOp = "FrameEdge_1",
+							Source = "Output",
+						},
+						["Garbage.MaskNest"] = Input { Value = 1, },
+						["Garbage.MaskInverted"] = Input { Value = 1, },
+						Background = Input {
+							SourceOp = "LumaKeyer1_3",
+							Source = "Output",
+						},
+						Blend = Input { Value = 0, }
+					},
+					ViewInfo = OperatorInfo { Pos = { -3011, 519.372 } },
+					Colors = { TileColor = { R = 0.372549019607843, G = 0.6, B = 0.125490196078431 }, },
+					UserControls = ordered() {
+						Blend = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = true,
+							INPID_InputControl = "CheckboxControl",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Common",
+							CBC_TriState = false,
+							LINKS_Name = "Activate Edge Mask"
+						}
+					}
+				},
+				PreviewQualitySwitch_1 = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Mix = Input {
+							Value = 0,
+							Expression = "HQSwitch_1.Mix",
+						},
+						Background = Input {
+							SourceOp = "PreviewQualitySlider_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Frameedgematte_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -2791, 519.372 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				PreviewQualitySlider_1 = Scale {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						XSize = Input { Value = 0.25, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						Input = Input {
+							SourceOp = "Frameedgematte_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -2791, 453.372 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				LumaKeyer1_1 = LumaKeyer {
+					CtrlWShown = false,
+					Inputs = {
+						ProcessRed = Input { Value = 0, },
+						ProcessGreen = Input { Value = 0, },
+						ProcessBlue = Input { Value = 0, },
+						High = Input { Value = 0.217, },
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						Input = Input {
+							SourceOp = "PreviewQualitySwitch_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -2489, 404.258 } },
+				},
+				CoreBrightSat_1 = BrightnessContrast {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "CoreThickness_1",
+							Source = "Output",
+						},
+						Input = Input {
+							SourceOp = "PreviewQualitySwitch_1",
+							Source = "Output",
+						},
+						Blend = Input { Value = 0, }
+					},
+					ViewInfo = OperatorInfo { Pos = { -2269, 503.258 } },
+					Colors = { TileColor = { R = 0.372549019607843, G = 0.6, B = 0.125490196078431 }, },
+					UserControls = ordered() {
+						Blend = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = true,
+							INPID_InputControl = "CheckboxControl",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Common",
+							CBC_TriState = false,
+							LINKS_Name = "Activate Core GainSat"
+						}
+					}
+				},
+				CoreThickness_1 = ErodeDilate {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Red = Input { Value = 0, },
+						Green = Input { Value = 0, },
+						Blue = Input { Value = 0, },
+						Filter = Input { Value = 1, },
+						XAmount = Input { Value = 0.002, },
+						Input = Input {
+							SourceOp = "LumaKeyer1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -2269, 404.258 } },
+					Colors = { TileColor = { R = 0.372549019607843, G = 0.6, B = 0.125490196078431 }, }
+				},
+				PipeRouter4_1 = PipeRouter {
+					CtrlWShown = false,
+					Inputs = {
+						Input = Input {
+							SourceOp = "RemoveAlpha_1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { -2269, 767.262 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				Instance_LumaKeyer1_1 = LumaKeyer {
+					CtrlWShown = false,
+					SourceOp = "LumaKeyer1_1",
+					Inputs = {
+						EffectMask = Input { },
+						SettingsNest = Input { },
+						["Solid.Matte"] = Input { },
+						["Solid.MaskNest"] = Input { },
+						["Garbage.Matte"] = Input { },
+						["Garbage.MaskNest"] = Input { },
+						Input = Input {
+							SourceOp = "PipeRouter4_1",
+							Source = "Output",
+						},
+						CommentsNest = Input { },
+						FrameRenderScriptNest = Input { },
+						StartRenderScripts = Input { },
+						EndRenderScripts = Input { },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2159, 668.262 } },
+				},
+				PreHue_1 = ColorGain {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						ColorRanges = Input {
+							Value = ColorCurves {
+								Curves = {
+									{
+										Points = {
+											{ 0, 1 },
+											{ 0.125, 0.75 },
+											{ 0.375, 0.25 },
+											{ 0.5, 0 }
+										}
+									},
+									{
+										Points = {
+											{ 0.5, 0 },
+											{ 0.625, 0.25 },
+											{ 0.875, 0.75 },
+											{ 1, 1 }
+										}
+									}
+								}
+							},
+						},
+						Input = Input {
+							SourceOp = "CoreBrightSat_1",
+							Source = "Output",
+						},
+						Blend = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2049, 503.258 } },
+					Colors = { TileColor = { R = 0.623529411764706, G = 0.776470588235294, B = 0.0823529411764706 }, },
+					UserControls = ordered() {
+						Blend = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = true,
+							INPID_InputControl = "CheckboxControl",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Common",
+							CBC_TriState = false,
+							LINKS_Name = "Activate PreHue"
+						}
+					}
+				},
+				Instance_CoreThickness_1 = ErodeDilate {
+					CtrlWShown = false,
+					NameSet = true,
+					SourceOp = "CoreThickness_1",
+					Inputs = {
+						EffectMask = Input { },
+						SettingsNest = Input { },
+						Input = Input {
+							SourceOp = "Instance_LumaKeyer1_1",
+							Source = "Output",
+						},
+						CommentsNest = Input { },
+						FrameRenderScriptNest = Input { },
+						StartRenderScripts = Input { },
+						EndRenderScripts = Input { },
+					},
+					ViewInfo = OperatorInfo { Pos = { -1939, 668.262 } },
+					Colors = { TileColor = { R = 0.372549019607843, G = 0.6, B = 0.125490196078431 }, }
+				},
+				Instance_CoreBrightSat_1 = BrightnessContrast {
+					CtrlWShown = false,
+					NameSet = true,
+					SourceOp = "CoreBrightSat_1",
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Instance_CoreThickness_1",
+							Source = "Output",
+						},
+						SettingsNest = Input { },
+						Input = Input {
+							SourceOp = "PipeRouter4_1",
+							Source = "Output",
+						},
+						CommentsNest = Input { },
+						FrameRenderScriptNest = Input { },
+						StartRenderScripts = Input { },
+						EndRenderScripts = Input { },
+					},
+					ViewInfo = OperatorInfo { Pos = { -1939, 767.262 } },
+					Colors = { TileColor = { R = 0.372549019607843, G = 0.6, B = 0.125490196078431 }, },
+					UserControls = ordered() {
+						Blend = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = true,
+							INPID_InputControl = "CheckboxControl",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Common",
+							CBC_TriState = false,
+							LINKS_Name = "Activate Core GainSat"
+						}
+					}
+				},
+				GlowMask_1 = MatteControl {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						["Garbage.MaskNest"] = Input { Value = 1, },
+						["Garbage.MaskInverted"] = Input { Value = 1, },
+						Background = Input {
+							SourceOp = "PreHue_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -1829, 503.258 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				Pregain_1 = BrightnessContrast {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Gain = Input { Expression = "SWAG_Lite.Pregain", },
+						Input = Input {
+							SourceOp = "GlowMask_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -784, 503.258 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_BlurRadius16_2 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input {
+							Value = FuID { "Gaussian" },
+							Expression = "_BlurRadius1_1_1.Filter",
+						},
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 16,
+							Expression = "_BlurRadius1_1_1.XBlurSize* 16",
+						},
+						Input = Input {
+							SourceOp = "Pregain_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -289, 239.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_BlurRadius8_2 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input {
+							Value = FuID { "Gaussian" },
+							Expression = "_BlurRadius1_1_1.Filter",
+						},
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 8,
+							Expression = "_BlurRadius1_1_1.XBlurSize* 8",
+						},
+						Input = Input {
+							SourceOp = "Pregain_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -289, 206.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_BlurRadius4_2 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input {
+							Value = FuID { "Gaussian" },
+							Expression = "_BlurRadius1_1_1.Filter",
+						},
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 4,
+							Expression = "_BlurRadius1_1_1.XBlurSize * 4",
+						},
+						Input = Input {
+							SourceOp = "Pregain_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -289, 173.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_BlurRadius2_2 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input {
+							Value = FuID { "Gaussian" },
+							Expression = "_BlurRadius1_1_1.Filter",
+						},
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 2,
+							Expression = "_BlurRadius1_1_1.XBlurSize * 2",
+						},
+						Input = Input {
+							SourceOp = "Pregain_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -289, 140.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_BlurRadius1_2 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input {
+							Value = FuID { "Gaussian" },
+							Expression = "_BlurRadius1_1_1.Filter",
+						},
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input { Expression = "_BlurRadius1_1_1.XBlurSize", },
+						Input = Input {
+							SourceOp = "Pregain_1",
+							Source = "Output",
+						},
+						Radius = Input { Value = 0.5, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -289, 8.25354 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, },
+					UserControls = ordered() {
+						Radius = {
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							ICD_Center = 1,
+							INP_MaxScale = 10,
+							INP_Default = 1,
+						}
+					}
+				},
+				_BlurRadius32_2 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input {
+							Value = FuID { "Gaussian" },
+							Expression = "_BlurRadius1_1_1.Filter",
+						},
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 32,
+							Expression = "_BlurRadius1_1_1.XBlurSize* 32",
+						},
+						Input = Input {
+							SourceOp = "Pregain_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -289, 272.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_BlurRadius128_2 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input {
+							Value = FuID { "Gaussian" },
+							Expression = "_BlurRadius1_1_1.Filter",
+						},
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 128,
+							Expression = "_BlurRadius1_1_1.XBlurSize * 128",
+						},
+						Input = Input {
+							SourceOp = "Pregain_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -289, 338.258 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_BlurRadius64_2 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input {
+							Value = FuID { "Gaussian" },
+							Expression = "_BlurRadius1_1_1.Filter",
+						},
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 64,
+							Expression = "_BlurRadius1_1_1.XBlurSize* 64",
+						},
+						Input = Input {
+							SourceOp = "Pregain_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -289, 305.258 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_BlurRadius256_2 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input {
+							Value = FuID { "Gaussian" },
+							Expression = "_BlurRadius1_1_1.Filter",
+						},
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 256,
+							Expression = "_BlurRadius1_1_1.XBlurSize * 256",
+						},
+						Input = Input {
+							SourceOp = "Pregain_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -289, 371.258 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_AddGlow8_1 = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Expression = "1.0 / math.pow(_AddGlow2_1.Falloff, 3)", },
+						Operation = Input { Value = 1, },
+						ToAlpha = Input { Value = 4, },
+						Background = Input {
+							SourceOp = "_AddGlow4_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "_BlurRadius8_2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -124, 206.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_AddGlow4_1 = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Expression = "1.0 / math.pow(_AddGlow2_1.Falloff, 2)", },
+						Operation = Input { Value = 1, },
+						ToAlpha = Input { Value = 4, },
+						Background = Input {
+							SourceOp = "_AddGlow2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "_BlurRadius4_2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -124, 173.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_AddGlow2_1 = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Expression = "1.0 / Falloff", },
+						Operation = Input { Value = 1, },
+						ToAlpha = Input { Value = 4, },
+						Background = Input {
+							SourceOp = "_BlurRadius1_2",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "_BlurRadius2_2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -124, 140.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, },
+					UserControls = ordered() {
+						Falloff = {
+							INPID_InputControl = "SliderControl",
+							INP_MinScale = 0.5,
+							INP_MinAllowed = 0.5,
+							LINKID_DataType = "Number",
+							IC_Steps = 0.1,
+							ICD_Center = 1,
+							INP_MaxScale = 3,
+							INP_Default = 1,
+						}
+					}
+				},
+				_AddGlow16_1 = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Expression = "1.0 / math.pow(_AddGlow2_1.Falloff, 4)", },
+						Operation = Input { Value = 1, },
+						ToAlpha = Input { Value = 4, },
+						Background = Input {
+							SourceOp = "_AddGlow8_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "_BlurRadius16_2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -124, 239.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_AddGlow256_1 = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Expression = "1.0 / math.pow(_AddGlow2_1.Falloff, 8)", },
+						Operation = Input { Value = 1, },
+						ToAlpha = Input { Value = 4, },
+						Background = Input {
+							SourceOp = "_AddGlow128_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "_BlurRadius256_2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -124, 371.258 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_AddGlow64_1 = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Expression = "1.0 / math.pow(_AddGlow2_1.Falloff, 6)", },
+						Operation = Input { Value = 1, },
+						ToAlpha = Input { Value = 4, },
+						Background = Input {
+							SourceOp = "_AddGlow32_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "_BlurRadius64_2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -124, 305.258 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_AddGlow32_1 = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Expression = "1.0 / math.pow(_AddGlow2_1.Falloff, 5)", },
+						Operation = Input { Value = 1, },
+						ToAlpha = Input { Value = 4, },
+						Background = Input {
+							SourceOp = "_AddGlow16_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "_BlurRadius32_2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -124, 272.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_AddGlow128_1 = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Expression = "1.0 / math.pow(_AddGlow2_1.Falloff, 7)", },
+						Operation = Input { Value = 1, },
+						ToAlpha = Input { Value = 4, },
+						Background = Input {
+							SourceOp = "_AddGlow64_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "_BlurRadius128_2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -124, 338.258 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				BrightnessContrast2_1 = BrightnessContrast {
+					CtrlWShown = false,
+					Inputs = {
+						Gain = Input { Value = 0.07, },
+						Input = Input {
+							SourceOp = "Pregain_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -69, 74.2536 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				ActivateSofterGlow_1 = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Background = Input {
+							SourceOp = "_AddGlow256_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "BrightnessContrast1_1",
+							Source = "Output",
+						},
+						Mix = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 96, 503.258 } },
+					UserControls = ordered() {
+						Mix = {
+							INP_MaxAllowed = 1,
+							INP_Integer = true,
+							INPID_InputControl = "CheckboxControl",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							CBC_TriState = false,
+							LINKS_Name = "Activate Softer Glow"
+						}
+					}
+				},
+				_BlurRadius4_1_1 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input {
+							Value = FuID { "Gaussian" },
+							Expression = "_BlurRadius1_1_1.Filter",
+						},
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 4,
+							Expression = "_BlurRadius1_1_1.XBlurSize * 4",
+						},
+						Input = Input {
+							SourceOp = "Merge1_2_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 96, 140.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_BlurRadius256_1_1 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input {
+							Value = FuID { "Gaussian" },
+							Expression = "_BlurRadius1_1_1.Filter",
+						},
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 256,
+							Expression = "_BlurRadius1_1_1.XBlurSize * 256",
+						},
+						Input = Input {
+							SourceOp = "Merge1_1_4_1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 96, 338.258 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_BlurRadius64_1_1 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input {
+							Value = FuID { "Gaussian" },
+							Expression = "_BlurRadius1_1_1.Filter",
+						},
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 64,
+							Expression = "_BlurRadius1_1_1.XBlurSize * 64",
+						},
+						Input = Input {
+							SourceOp = "Merge1_1_3_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 96, 272.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_BlurRadius128_1_1 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input {
+							Value = FuID { "Gaussian" },
+							Expression = "_BlurRadius1_1_1.Filter",
+						},
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 128,
+							Expression = "_BlurRadius1_1_1.XBlurSize * 128",
+						},
+						Input = Input {
+							SourceOp = "Merge1_1_4_3",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 96, 305.258 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_BlurRadius32_1_1 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input {
+							Value = FuID { "Gaussian" },
+							Expression = "_BlurRadius1_1_1.Filter",
+						},
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 32,
+							Expression = "_BlurRadius1_1_1.XBlurSize * 32",
+						},
+						Input = Input {
+							SourceOp = "Merge1_1_2_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 96, 239.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_BlurRadius16_1_1 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input {
+							Value = FuID { "Gaussian" },
+							Expression = "_BlurRadius1_1_1.Filter",
+						},
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 16,
+							Expression = "_BlurRadius1_1_1.XBlurSize * 16",
+						},
+						Input = Input {
+							SourceOp = "Merge1_1_1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 96, 206.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_BlurRadius8_1_1 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input {
+							Value = FuID { "Gaussian" },
+							Expression = "_BlurRadius1_1_1.Filter",
+						},
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 8,
+							Expression = "_BlurRadius1_1_1.XBlurSize * 8",
+						},
+						Input = Input {
+							SourceOp = "Merge1_1_5",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 96, 173.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_BlurRadius2_1_1 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input {
+							Value = FuID { "Gaussian" },
+							Expression = "_BlurRadius1_1_1.Filter",
+						},
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 2,
+							Expression = "_BlurRadius1_1_1.XBlurSize * 2",
+						},
+						Input = Input {
+							SourceOp = "BrightnessContrast2_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 96, 107.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				_BlurRadius1_1_1 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input { Value = FuID { "Gaussian" }, },
+						Alpha = Input { Value = 0, },
+						Input = Input {
+							SourceOp = "BrightnessContrast2_1",
+							Source = "Output",
+						},
+						Radius = Input { Value = 0.5, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 96, 74.2536 } },
+					Colors = { TileColor = { R = 0.372549019607843, G = 0.6, B = 0.125490196078431 }, },
+					UserControls = ordered() {
+						Radius = {
+							LINKID_DataType = "Number",
+							INPID_InputControl = "SliderControl",
+							ICD_Center = 1,
+							INP_MaxScale = 10,
+							INP_Default = 1,
+						}
+					}
+				},
+				Merge1_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "_BlurRadius1_1_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "_BlurRadius2_1_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 206, 107.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				Merge1_1_4_1_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Blend = Input { Value = 0.5, },
+						Background = Input {
+							SourceOp = "Merge1_1_4_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "_BlurRadius128_1_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 206, 305.258 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				Merge1_1_5 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge1_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "_BlurRadius4_1_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 206, 140.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				Merge1_1_4_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Blend = Input { Value = 0.5, },
+						Background = Input {
+							SourceOp = "Merge1_1_4_1_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "_BlurRadius256_1_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 206, 338.258 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				Merge1_1_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge1_1_1_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "_BlurRadius16_1_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 206, 206.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				Merge1_1_1_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge1_1_5",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "_BlurRadius8_1_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 206, 173.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				Merge1_1_3_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge1_1_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "_BlurRadius32_1_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 206, 239.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				Merge1_1_4_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge1_1_3_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "_BlurRadius64_1_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 206, 272.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				GainGamma_1 = BrightnessContrast {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Input = Input {
+							SourceOp = "Falloff_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 454, 519.372 } },
+				},
+				GlowSaturation_1 = BrightnessContrast {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "LumaKeyer2_1",
+							Source = "Output",
+						},
+						Saturation = Input { Value = 3, },
+						Input = Input {
+							SourceOp = "GainGamma_1",
+							Source = "Output",
+						},
+						Blend = Input { Value = 0, }
+					},
+					ViewInfo = OperatorInfo { Pos = { 646, 503.258 } },
+					Colors = { TileColor = { R = 0.623529411764706, G = 0.776470588235294, B = 0.0823529411764706 }, },
+					UserControls = ordered() {
+						Blend = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = true,
+							INPID_InputControl = "CheckboxControl",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Common",
+							CBC_TriState = false,
+							LINKS_Name = "Activate Glow Saturation"
+						}
+					}
+				},
+				LumaKeyer2_1 = LumaKeyer {
+					CtrlWShown = false,
+					Inputs = {
+						ProcessRed = Input { Value = 0, },
+						ProcessGreen = Input { Value = 0, },
+						ProcessBlue = Input { Value = 0, },
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						Invert = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "GainGamma_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 619, 453.372 } },
+					Colors = { TileColor = { R = 0.623529411764706, G = 0.776470588235294, B = 0.0823529411764706 }, }
+				},
+				Tint_1 = ColorCorrector {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						ColorRanges = Input {
+							Value = ColorCurves {
+								Curves = {
+									{
+										Points = {
+											{ 0, 1 },
+											{ 0.4, 0.2 },
+											{ 0.6, 0 },
+											{ 1, 0 }
+										}
+									},
+									{
+										Points = {
+											{ 0, 0 },
+											{ 0.4, 0 },
+											{ 0.6, 0.2 },
+											{ 1, 1 }
+										}
+									}
+								}
+							},
+						},
+						HistogramIgnoreTransparent = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "GlowSaturation_1",
+							Source = "Output",
+						},
+						Blend = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 921, 503.258 } },
+					Colors = { TileColor = { R = 0.623529411764706, G = 0.776470588235294, B = 0.0823529411764706 }, },
+					UserControls = ordered() {
+						Blend = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = true,
+							INPID_InputControl = "CheckboxControl",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Common",
+							CBC_TriState = false,
+							LINKS_Name = "Activate Tint"
+						}
+					}
+				},
+				DispAmount_1 = Displace {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						ProcessGreen = Input { Value = 0, },
+						ProcessBlue = Input { Value = 0, },
+						XOffset = Input { Value = 0.3141, },
+						XRefraction = Input { Value = 0.0327, },
+						Input = Input {
+							SourceOp = "Tint_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "PreviewQualitySwitch_1_1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2076, 272.254 } },
+					Colors = { TileColor = { R = 0.623529411764706, G = 0.776470588235294, B = 0.0823529411764706 }, }
+				},
+				RadialDisplacement_1 = Background {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 3840, },
+						Height = Input { Value = 2160, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Type = Input { Value = FuID { "Gradient" }, },
+						GradientType = Input { Value = FuID { "Radial" }, },
+						Start = Input { Value = { 0.5, 0.5 }, },
+						End = Input { Value = { 1, 1 }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 2131, 107.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				ActivateGreen_1 = Displace {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						ProcessRed = Input { Value = 0, },
+						ProcessBlue = Input { Value = 0, },
+						XOffset = Input { Value = 0.3141, },
+						XRefraction = Input { Value = 0.0327, },
+						RefractionStrength = Input {
+							Value = -0.1,
+							Expression = "DispAmount_1.RefractionStrength*-1",
+						},
+						LightPower = Input { Value = 0.2, },
+						Spread = Input { Value = 0.4, },
+						Input = Input {
+							SourceOp = "DispAmount_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "PreviewQualitySwitch_1_1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2186, 272.254 } },
+					Colors = { TileColor = { R = 0.623529411764706, G = 0.776470588235294, B = 0.0823529411764706 }, },
+					UserControls = ordered() {
+						Blend = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = true,
+							INPID_InputControl = "CheckboxControl",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Common",
+							CBC_TriState = false,
+							LINKS_Name = "Activate Green CA"
+						}
+					}
+				},
+				softness_1 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						Red = Input { Value = 0, },
+						Blue = Input { Value = 0, },
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input {
+							Value = 0,
+							Expression = "CASoftness_1.XBlurSize",
+						},
+						Input = Input {
+							SourceOp = "CASoftness_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2241, 371.258 } },
+				},
+				CASoftness_1 = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						Green = Input { Value = 0, },
+						Blue = Input { Value = 0, },
+						Alpha = Input { Value = 0, },
+						XBlurSize = Input { Value = 0, },
+						Input = Input {
+							SourceOp = "ActivateGreen_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2241, 338.258 } },
+					Colors = { TileColor = { R = 0.623529411764706, G = 0.776470588235294, B = 0.0823529411764706 }, }
+				},
+				CA_1 = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Tint_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "softness_1",
+							Source = "Output",
+						},
+						Mix = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 2241, 503.258 } },
+					Colors = { TileColor = { R = 0.623529411764706, G = 0.776470588235294, B = 0.0823529411764706 }, },
+					UserControls = ordered() {
+						Mix = {
+							INP_MaxAllowed = 1,
+							INP_Integer = true,
+							INPID_InputControl = "CheckboxControl",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							CBC_TriState = false,
+							LINKS_Name = "Activate CA"
+						}
+					}
+				},
+				PreviewQualitySwitch_1_1_1 = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Mix = Input {
+							Value = 0,
+							Expression = "HQSwitch_1.Mix",
+						},
+						Background = Input {
+							SourceOp = "PreviewQualitySlider_1_1_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "RadialDisplacement_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2296, 206.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				PreviewQualitySlider_1_1_1 = Scale {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						XSize = Input { Value = 0.25, },
+						HiQOnly = Input { Value = 0, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						Input = Input {
+							SourceOp = "RadialDisplacement_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2296, 140.254 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				HQSwitch_1 = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Scale1_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "CA_1",
+							Source = "Output",
+						},
+						Mix = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 2626, 503.258 } },
+					Colors = { TileColor = { R = 0.623529411764706, G = 0.776470588235294, B = 0.0823529411764706 }, },
+					UserControls = ordered() {
+						Mix = {
+							INP_MaxAllowed = 1,
+							INP_Integer = true,
+							INPID_InputControl = "CheckboxControl",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							CBC_TriState = false,
+							LINKS_Name = "Activate High Quality"
+						}
+					}
+				},
+				Scale1_1 = Scale {
+					CtrlWShown = false,
+					Inputs = {
+						XSize = Input { Value = 4, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						Input = Input {
+							SourceOp = "CA_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2626, 437.258 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				Scale2_1 = Scale {
+					CtrlWShown = false,
+					Inputs = {
+						XSize = Input {
+							Value = 4,
+							Expression = "iif(HQSwitch_1.Mix<0.99,4,1)",
+						},
+						HiQOnly = Input { Value = 0, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						Input = Input {
+							SourceOp = "CA_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2681, 668.262 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				GlowOnly_1 = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "HQSwitch_1",
+							Source = "Output",
+						},
+						Mix = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 2901, 503.258 } },
+					UserControls = ordered() {
+						Mix = {
+							INP_MaxAllowed = 1,
+							INP_Integer = true,
+							INPID_InputControl = "CheckboxControl",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							CBC_TriState = false,
+							LINKS_Name = "Glow Only"
+						}
+					}
+				},
+				Merge_1 = Merge {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input { Expression = "SWAG_Lite.Mix", },
+						Background = Input {
+							SourceOp = "Instance_CoreBrightSat_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Scale2_1",
+							Source = "Output",
+						},
+						ApplyMode = Input { Value = FuID { "Screen" }, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 2874, 750.372 } },
+					Colors = { TileColor = { R = 0.92156862745098, G = 0.431372549019608, B = 0 }, }
+				},
+				ChannelBooleans1_1 = ChannelBoolean {
+					CtrlWShown = false,
+					Inputs = {
+						ToRed = Input { Value = 3, },
+						ToGreen = Input { Value = 3, },
+						ToBlue = Input { Value = 3, },
+						Background = Input {
+							SourceOp = "Instance_CoreThickness_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 3121, 635.262 } },
+				},
+				ViewCoreMask_1 = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Background = Input {
+							SourceOp = "GlowOnly_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "ChannelBooleans1_1",
+							Source = "Output",
+						},
+						Mix = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 3176, 503.258 } },
+					UserControls = ordered() {
+						Mix = {
+							INP_MaxAllowed = 1,
+							INP_Integer = true,
+							INPID_InputControl = "CheckboxControl",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							CBC_TriState = false,
+							LINKS_Name = "View Core Mask"
+						}
+					}
+				},
+				ViewFrameEdgematte = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Background = Input {
+							SourceOp = "ViewCoreMask_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "ChannelBooleans4",
+							Source = "Output",
+						},
+						Mix = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 3479, 519.372 } },
+					UserControls = ordered() {
+						Mix = {
+							INP_MaxAllowed = 1,
+							INP_Integer = true,
+							INPID_InputControl = "CheckboxControl",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							CBC_TriState = false,
+							LINKS_Name = "View Frame Edge Matte"
+						}
+					}
+				},
+				ChannelBooleans4 = ChannelBoolean {
+					CtrlWShown = false,
+					Inputs = {
+						ToRed = Input { Value = 3, },
+						ToGreen = Input { Value = 3, },
+						ToBlue = Input { Value = 3, },
+						Background = Input {
+							SourceOp = "FrameEdge_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 3424, 387.372 } },
+				},
+				BrightnessContrast1_1 = BrightnessContrast {
+					CtrlWShown = false,
+					Inputs = {
+						Gamma = Input { Value = 0.73, },
+						Input = Input {
+							SourceOp = "Merge1_1_4_2_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 234, 378.998 } },
+				},
+				Falloff_1 = ColorCurves {
+					PickColor = true,
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Blend = Input {
+							Value = 0,
+							Expression = "SWAG_Lite.Falloff*-1+1",
+						},
+						Red = Input {
+							SourceOp = "Falloff_1Red",
+							Source = "Value",
+						},
+						Green = Input {
+							SourceOp = "Falloff_1Green",
+							Source = "Value",
+						},
+						Blue = Input {
+							SourceOp = "Falloff_1Blue",
+							Source = "Value",
+						},
+						Alpha = Input {
+							SourceOp = "Falloff_1Alpha",
+							Source = "Value",
+						},
+						NumberOfSamplesOnMatchCurve = Input { Value = 64, },
+						IgnoreTransparent = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "ActivateSofterGlow_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 289, 519.372 } },
+					Tools = {
+						Falloff_1Green = LUTBezier {
+							KeyColorSplines = {
+								[0] = {
+									[0] = { 0, RH = { 0.50061720330802, -0.000404308059682809 }, Flags = { Linear = true } },
+									[1] = { 1, LH = { 0.500108436347864, 0.997078586035641 } }
+								}
+							},
+							SplineColor = { Red = 0, Green = 255, Blue = 0 },
+							CtrlWZoom = false,
+						},
+						Falloff_1Red = LUTBezier {
+							KeyColorSplines = {
+								[0] = {
+									[0] = { 0, RH = { 0.50061720330802, -0.000404308059682809 }, Flags = { Linear = true } },
+									[1] = { 1, LH = { 0.500108436347864, 0.997078586035641 } }
+								}
+							},
+							SplineColor = { Red = 255, Green = 52, Blue = 52 },
+							CtrlWZoom = false,
+						},
+						Falloff_1Alpha = LUTBezier {
+							KeyColorSplines = {
+								[0] = {
+									[0] = { 0, RH = { 0.50061720330802, -0.000404308059682809 }, Flags = { Linear = true } },
+									[1] = { 1, LH = { 0.500108436347864, 0.997078586035641 } }
+								}
+							},
+							SplineColor = { Red = 204, Green = 204, Blue = 204 },
+							CtrlWZoom = false,
+						},
+						Falloff_1Blue = LUTBezier {
+							KeyColorSplines = {
+								[0] = {
+									[0] = { 0, RH = { 0.50061720330802, -0.000404308059682809 }, Flags = { Linear = true } },
+									[1] = { 1, LH = { 0.500108436347864, 0.997078586035641 } }
+								}
+							},
+							SplineColor = { Red = 68, Green = 68, Blue = 255 },
+							CtrlWZoom = false,
+						}
+					},
+				},
+				LumaKeyer1_3 = LumaKeyer {
+					CtrlWShown = false,
+					Inputs = {
+						Blend = Input {
+							Value = 0,
+							Expression = "SWAG_Lite.GlowThreshold",
+						},
+						ProcessAlpha = Input { Value = 0, },
+						High = Input {
+							Value = 0,
+							Expression = "SWAG_Lite.ThresholdHigh",
+						},
+						Low = Input {
+							Value = 0.7,
+							Expression = "SWAG_Lite.Threshold",
+						},
+						ClippingMode = Input { Value = FuID { "None" }, },
+						["Solid.MaskNest"] = Input { Value = 1, },
+						["Garbage.MaskNest"] = Input { Value = 1, },
+						["Garbage.MaskInverted"] = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "RemoveAlpha_1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -3176, 519.372 } },
+				}
+			},
+			UserControls = ordered() {
+				SwissArmyGlow_Aglowforallyourglowneeds = {
+					INP_Integer = false,
+					LBLC_DropDownButton = false,
+					LINKID_DataType = "Number",
+					INP_External = false,
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "LabelControl",
+					LINKS_Name = "Swiss Army Glow V2.2-Lite",
+				},
+				Aglowforallyourglowneeds = {
+					INP_Integer = false,
+					LBLC_DropDownButton = false,
+					LINKID_DataType = "Number",
+					INP_External = false,
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "LabelControl",
+					LINKS_Name = "A glow for all your glow needs",
+				},
+				Input = {
+					INP_Integer = false,
+					LBLC_DropDownButton = true,
+					LINKID_DataType = "Number",
+					LBLC_NumInputs = 4,
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "LabelControl",
+					LINKS_Name = "Input",
+				},
+				RemoveAlpha = {
+					CBC_TriState = false,
+					INP_Integer = true,
+					INPID_InputControl = "CheckboxControl",
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					INP_MinScale = 0,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Remove Alpha",
+				},
+				GlowThreshold = {
+					CBC_TriState = false,
+					INP_Integer = true,
+					INPID_InputControl = "CheckboxControl",
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					INP_MinScale = 0,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Glow Threshold",
+				},
+				Threshold = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "RangeControl",
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					IC_ControlID = 0,
+					ICS_ControlPage = "Controls",
+					IC_ControlGroup = 42,
+					LINKS_Name = "Threshold Low"
+				},
+				ThresholdHigh = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "RangeControl",
+					INP_MaxScale = 1,
+					IC_ControlGroup = 42,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					IC_ControlID = 1,
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Threshold High"
+				},
+				EdgeMask = {
+					INP_Integer = false,
+					LBLC_DropDownButton = true,
+					LINKID_DataType = "Number",
+					LBLC_NumInputs = 3,
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "LabelControl",
+					LINKS_Name = "Edge Mask",
+				},
+				Input2 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = true,
+					INPID_InputControl = "CheckboxControl",
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					CBC_TriState = false,
+					LINKS_Name = "Active"
+				},
+				Input1 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					INP_MaxScale = 0,
+					INP_Default = -1,
+					INP_MinScale = -2,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Frame Edge Size"
+				},
+				Input74 = {
+					INP_MaxAllowed = 1,
+					INP_Integer = true,
+					INPID_InputControl = "CheckboxControl",
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					INP_MinScale = 0,
+					INP_MinAllowed = 0,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					CBC_TriState = false,
+					LINKS_Name = "View Frame Edge Matte"
+				},
+				TestLabel = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					LBLC_DropDownButton = true,
+					INPID_InputControl = "LabelControl",
+					LBLC_NumInputs = 8,
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Core"
+				},
+				Input8 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = true,
+					INPID_InputControl = "CheckboxControl",
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					CBC_TriState = false,
+					LINKS_Name = "Active"
+				},
+				Input9 = {
+					INP_MaxAllowed = 1,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					INP_MaxScale = 0.00999999977648258,
+					INP_Default = 0.0020000000949949,
+					INP_MinScale = -0.00999999977648258,
+					INP_MinAllowed = -1,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Center = 0,
+					LINKS_Name = "Core Thickness"
+				},
+				Input70 = {
+					INP_MaxAllowed = 1,
+					INP_Integer = true,
+					INPID_InputControl = "CheckboxControl",
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					INP_MinScale = 0,
+					INP_MinAllowed = 0,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					CBC_TriState = false,
+					LINKS_Name = "View Core Matte"
+				},
+				Input3 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "RangeControl",
+					INP_MaxScale = 1,
+					INP_Default = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					IC_ControlID = 1,
+					ICS_ControlPage = "Controls",
+					IC_ControlGroup = 4,
+					LINKS_Name = "High"
+				},
+				Input4 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "RangeControl",
+					INP_MaxScale = 1,
+					INP_Default = 0.5,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					IC_ControlID = 0,
+					ICS_ControlPage = "Controls",
+					IC_ControlGroup = 4,
+					LINKS_Name = "Low"
+				},
+				Input5 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					IC_Steps = 101,
+					INP_MaxScale = 5,
+					INP_Default = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Center = 1,
+					LINKS_Name = "Gain"
+				},
+				Input6 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					IC_Steps = 101,
+					INP_MaxScale = 5,
+					INP_Default = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = 0,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Center = 1,
+					LINKS_Name = "Gamma"
+				},
+				Input7 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					IC_Steps = 101,
+					INP_MaxScale = 5,
+					INP_Default = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = 0,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Center = 1,
+					LINKS_Name = "Saturation"
+				},
+				Prehue = {
+					INP_Integer = false,
+					LBLC_DropDownButton = true,
+					LINKID_DataType = "Number",
+					LBLC_NumInputs = 4,
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "LabelControl",
+					LINKS_Name = "Prehue",
+				},
+				Input75 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = true,
+					INPID_InputControl = "CheckboxControl",
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					CBC_TriState = false,
+					LINKS_Name = "Active"
+				},
+				Input10 = {
+					INP_MaxAllowed = 1,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					IC_Steps = 101,
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					INP_MinScale = -1,
+					INP_MinAllowed = -1,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Center = 0,
+					LINKS_Name = "High"
+				},
+				Input11 = {
+					INP_MaxAllowed = 1,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					IC_Steps = 101,
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					INP_MinScale = -1,
+					INP_MinAllowed = -1,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Center = 0,
+					LINKS_Name = "Mid"
+				},
+				Input12 = {
+					INP_MaxAllowed = 1,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					IC_Steps = 101,
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					INP_MinScale = -1,
+					INP_MinAllowed = -1,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Center = 0,
+					LINKS_Name = "Dark"
+				},
+				MasterGlowSettings = {
+					INP_Integer = false,
+					LBLC_DropDownButton = true,
+					LINKID_DataType = "Number",
+					LBLC_NumInputs = 7,
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "LabelControl",
+					LINKS_Name = "Master Glow Settings",
+				},
+				Pregain = {
+					INP_Default = 1,
+					INP_Integer = false,
+					ICS_ControlPage = "Controls",
+					LINKID_DataType = "Number",
+					INP_MinScale = 0,
+					INPID_InputControl = "SliderControl",
+					INP_MaxScale = 2,
+					LINKS_Name = "Pregain",
+				},
+				Input16 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					IC_Steps = 101,
+					INP_MaxScale = 3,
+					INP_Default = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = 0,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Glow Size"
+				},
+				Input17 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					IC_Steps = 101,
+					INP_MaxScale = 5,
+					INP_Default = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Center = 1,
+					LINKS_Name = "Gain"
+				},
+				Input18 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					IC_Steps = 101,
+					INP_MaxScale = 5,
+					INP_Default = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = 0,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Center = 1,
+					LINKS_Name = "Gamma"
+				},
+				Input19 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					IC_Steps = 101,
+					INP_MaxScale = 5,
+					INP_Default = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = 0,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Center = 1,
+					LINKS_Name = "Saturation"
+				},
+				Falloff = {
+					INP_Integer = false,
+					LINKID_DataType = "Number",
+					LINKS_Name = "Falloff",
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "SliderControl",
+					INP_Default = 1,
+				},
+				Input14 = {
+					INP_MaxAllowed = 1,
+					INP_Integer = true,
+					INPID_InputControl = "CheckboxControl",
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					INP_MinScale = 0,
+					INP_MinAllowed = 0,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					CBC_TriState = false,
+					LINKS_Name = "Alternative Softer Glow"
+				},
+				Tint = {
+					INP_Integer = false,
+					LBLC_DropDownButton = true,
+					LINKID_DataType = "Number",
+					LBLC_NumInputs = 6,
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "LabelControl",
+					LINKS_Name = "Tint",
+				},
+				Input39 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = true,
+					INPID_InputControl = "CheckboxControl",
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					CBC_TriState = false,
+					LINKS_Name = "Active"
+				},
+				Input34 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ColorWheelControl",
+					INP_MaxScale = 1,
+					IC_ControlGroup = 33,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					IC_ControlID = 0,
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Hue"
+				},
+				Input35 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ColorWheelControl",
+					INP_MaxScale = 1,
+					INP_Default = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					IC_ControlID = 1,
+					ICS_ControlPage = "Controls",
+					IC_ControlGroup = 33,
+					LINKS_Name = "Saturation"
+				},
+				Input36 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ColorWheelControl",
+					INP_MaxScale = 1,
+					IC_ControlGroup = 33,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					IC_ControlID = 2,
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Tint Angle"
+				},
+				Input37 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ColorWheelControl",
+					INP_MaxScale = 1,
+					IC_ControlGroup = 33,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					IC_ControlID = 3,
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Tint Length"
+				},
+				Input38 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ColorWheelControl",
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					ICS_ControlPage = "Controls",
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					IC_ControlID = 0,
+					INP_Passive = true,
+					IC_ControlGroup = 33,
+					LINKS_Name = "Wheel Range Dummy 1"
+				},
+				GlowSaturation = {
+					INP_Integer = false,
+					LBLC_DropDownButton = true,
+					LINKID_DataType = "Number",
+					LBLC_NumInputs = 4,
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "LabelControl",
+					LINKS_Name = "Glow Saturation",
+				},
+				Input21 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = true,
+					INPID_InputControl = "CheckboxControl",
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					CBC_TriState = false,
+					LINKS_Name = "Active"
+				},
+				Input22 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "RangeControl",
+					INP_MaxScale = 1,
+					INP_Default = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					IC_ControlID = 1,
+					ICS_ControlPage = "Controls",
+					IC_ControlGroup = 22,
+					LINKS_Name = "Thresh High"
+				},
+				Input20 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					IC_Steps = 101,
+					INP_MaxScale = 5,
+					INP_Default = 3,
+					INP_MinScale = 0,
+					INP_MinAllowed = 0,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Center = 1,
+					LINKS_Name = "Glow Saturation"
+				},
+				Input23 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "RangeControl",
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					IC_ControlID = 0,
+					ICS_ControlPage = "Controls",
+					IC_ControlGroup = 22,
+					LINKS_Name = "Thresh Low"
+				},
+				ChromaticAbberation = {
+					INP_Integer = false,
+					LBLC_DropDownButton = true,
+					LINKID_DataType = "Number",
+					LBLC_NumInputs = 4,
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "LabelControl",
+					LINKS_Name = "Chromatic Abberation",
+				},
+				Input67 = {
+					INP_MaxAllowed = 1,
+					INP_Integer = true,
+					INPID_InputControl = "CheckboxControl",
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					INP_MinScale = 0,
+					INP_MinAllowed = 0,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					CBC_TriState = false,
+					LINKS_Name = "Active"
+				},
+				Input64 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					INP_MaxScale = 2,
+					INP_Default = 0.100000001490116,
+					INP_MinScale = -2,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Amount"
+				},
+				Input65 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = true,
+					INPID_InputControl = "CheckboxControl",
+					INP_MaxScale = 1,
+					INP_Default = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					CBC_TriState = false,
+					LINKS_Name = "Separate Green"
+				},
+				Input66 = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "SliderControl",
+					IC_Steps = 101,
+					INP_MaxScale = 100,
+					INP_Default = 0,
+					INP_MinScale = 0,
+					INP_MinAllowed = 0,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Softness"
+				},
+				Output = {
+					INP_Integer = false,
+					LBLC_DropDownButton = true,
+					LINKID_DataType = "Number",
+					LBLC_NumInputs = 3,
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "LabelControl",
+					LINKS_Name = "Output",
+				},
+				Input68 = {
+					INP_MaxAllowed = 1,
+					INP_Integer = true,
+					INPID_InputControl = "CheckboxControl",
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					INP_MinScale = 0,
+					INP_MinAllowed = 0,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					CBC_TriState = false,
+					LINKS_Name = "High Quality"
+				},
+				Mix = {
+					INP_Default = 1,
+					INP_Integer = false,
+					ICS_ControlPage = "Controls",
+					LINKID_DataType = "Number",
+					INP_MinScale = 0,
+					INPID_InputControl = "SliderControl",
+					INP_MaxScale = 1,
+					LINKS_Name = "Mix",
+				},
+				Input69 = {
+					INP_MaxAllowed = 1,
+					INP_Integer = true,
+					INPID_InputControl = "CheckboxControl",
+					INP_MaxScale = 1,
+					INP_Default = 0,
+					INP_MinScale = 0,
+					INP_MinAllowed = 0,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					CBC_TriState = false,
+					LINKS_Name = "Glow Only"
+				}
+			}
+		}
+	},
+	ActiveTool = "SWAG_Lite"
+}
