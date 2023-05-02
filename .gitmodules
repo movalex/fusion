@@ -1,0 +1,3 @@
+[submodule "Scripts/Comp/SplitScreener"]
+	path = Scripts/Comp/SplitScreener
+	url = https://github.com/brunocbreis/SS-CompScript.git
