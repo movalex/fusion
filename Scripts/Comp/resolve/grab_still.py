@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from pathlib import Path
 
 """
     This is a Davinci Resolve script to save single still in stills folder
@@ -26,7 +27,7 @@ from datetime import datetime
     
 """
 STILL_FRAME_REF = 2
-EXPORT_ALBUM = "export_30.04"
+EXPORT_ALBUM = "export_01.05"
 
 
 def get_target_folder():
@@ -76,12 +77,17 @@ def grab_still(album_name: str):
     export_album = get_export_album(albums, album_name)
     if not export_album:
         return
+    if not target_folder:
+        print("target folder not set")
+        return
+    export_folder = Path(target_folder) / EXPORT_ALBUM
+    export_folder.mkdir(exist_ok=True, parents=True)
     still = timeline.GrabStill(STILL_FRAME_REF)
     export_album.SetLabel(still, current_clip_name)
-    export_album.ExportStills([still], target_folder, file_prefix, "png")
+    export_album.ExportStills([still], export_folder, file_prefix, "png")
     # export_album.DeleteStills(still)
     # resolve.OpenPage("edit")
-    print(f"Saved {file_prefix} to {target_folder}")
+    print(f"Saved {file_prefix} to {export_folder}")
 
 
 if __name__ == "__main__":
