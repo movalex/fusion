@@ -27,7 +27,7 @@ from pathlib import Path
     
 """
 STILL_FRAME_REF = 2
-EXPORT_ALBUM = "export_01.05"
+EXPORT_ALBUM = "export_03.05"
 
 
 def get_target_folder():
@@ -84,7 +84,7 @@ def grab_still(album_name: str):
     export_folder.mkdir(exist_ok=True, parents=True)
     still = timeline.GrabStill(STILL_FRAME_REF)
     export_album.SetLabel(still, current_clip_name)
-    export_album.ExportStills([still], export_folder, file_prefix, "png")
+    export_album.ExportStills([still], export_folder.as_posix(), file_prefix, "png")
     # export_album.DeleteStills(still)
     # resolve.OpenPage("edit")
     print(f"Saved {file_prefix} to {export_folder}")
