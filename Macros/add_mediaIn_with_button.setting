@@ -1,0 +1,86 @@
+-- Rename MediaIn according to layer name
+{
+	Tools = ordered() {
+		MediaIn1 = MediaIn {
+			ExtentSet = true,
+			CtrlWZoom = false,
+			CustomData = {
+				MediaProps = {
+					MEDIA_AUDIO_TRACKS_DESC = {
+						{
+							MEDIA_AUDIO_BIT_DEPTH = 32,
+							MEDIA_AUDIO_FRAME_RATE = 24,
+							MEDIA_AUDIO_NUM_CHANNELS = 2,
+							MEDIA_AUDIO_SAMPLE_RATE = 48000,
+							MEDIA_AUDIO_START_TIME = 0,
+							MEDIA_AUDIO_TRACK_ID = "Timeline Audio",
+							MEDIA_AUDIO_TRACK_NAME = "Timeline Audio [Timeline 2]"
+						}
+					},
+					MEDIA_AUDIO_TRACKS_NUM = 1,
+					MEDIA_FORMAT_TYPE = "EXR",
+					MEDIA_HAS_AUDIO = true,
+					MEDIA_HEIGHT = 2160,
+					MEDIA_IS_SOURCE_RES = true,
+					MEDIA_LAYER_DESC = {
+						{
+							LAYER_IMG_TYPE = "IMG_TYPE_RGBA",
+							LAYER_NAME = "C"
+						},
+						{
+							LAYER_IMG_TYPE = "IMG_TYPE_LUMINANCE",
+							LAYER_NAME = "depth.z"
+						}
+					},
+					MEDIA_MARK_IN = 0,
+					MEDIA_MARK_OUT = 47,
+					MEDIA_NAME = "DoF_demo_v02.[0001-0048].exr",
+					MEDIA_NUM_FRAMES = 48,
+					MEDIA_NUM_LAYERS = 2,
+					MEDIA_PAR = 1,
+					MEDIA_PATH = "P:\\SideFX\\MarketScene\\render\\DoF_demo_v02.[0001-0048].exr",
+					MEDIA_SRC_FRAME_RATE = 24,
+					MEDIA_START_FRAME = 0,
+					MEDIA_WIDTH = 3840
+				},
+			},
+			Inputs = {
+				GlobalOut = Input { Value = 47, },
+				AudioTrack = Input { Value = FuID { "Timeline Audio" }, },
+				Layer = Input { Value = "0", },
+				ClipTimeEnd = Input { Value = 47, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				RedName = Input { Value = FuID { "C.R" }, },
+				GreenName = Input { Value = FuID { "C.G" }, },
+				BlueName = Input { Value = FuID { "C.B" }, },
+				AlphaName = Input { Value = FuID { "C.A" }, },
+				LeftAudio = Input {
+					SourceOp = "Left",
+					Source = "Data",
+				},
+				RightAudio = Input {
+					SourceOp = "Right",
+					Source = "Data",
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 221.935, 48.1354 } },
+			UserControls = ordered() {
+				SetNametoLayer = {
+					LINKS_Name = "Set Name to Layer",
+					LINKID_DataType = "Number",
+					INPID_InputControl = "ButtonControl",
+					INP_Integer = false,
+					BTNCS_Execute = "tool:SetAttrs({TOOLS_Name = comp.ActiveTool.Layer[1], TOOLB_NameSet = true})",
+					ICS_ControlPage = "Image",
+				}
+			}
+		},
+		Left = AudioDisplay {
+		},
+		Right = AudioDisplay {
+			CtrlWZoom = false,
+		}
+	},
+	ActiveTool = "MediaIn1"
+}
+
