@@ -9,7 +9,7 @@ from pathlib import Path
 comp = fu.GetCurrentComp()
 COMP_FOLDER = "FUSION"
 AUTHOR = "ab"
-VERSION = "v01"
+VERSION = 1
 
 
 def parse_comp_name(name=None):
@@ -19,6 +19,7 @@ def parse_comp_name(name=None):
     try:
         name = Path(name).stem
         split_name = name.split("_")
+        shot_number = re.findall("\d{3}")
         if len(split_name) < 4:
             print("Wrong name convention")
             return None
@@ -43,7 +44,7 @@ def save_comp():
     new_folder = Path(folder) / COMP_FOLDER / f"{episode}-{shot}"
     Path.mkdir(new_folder, parents=True, exist_ok=True)
     print(f"folder {new_folder} is created!")
-    comp.Save(str(new_folder / f"{episode}_{shot}_{AUTHOR}_{VERSION}"))
+    comp.Save(str(new_folder / f"{episode}_{shot}_{AUTHOR}_v{VERSION:02d}"))
 
 
 def main():
@@ -53,7 +54,7 @@ def main():
         print("Unable to parse the comp name")
         return
     save_comp()
-    comp_name = comp.GetAttrs()["COMPS_Name"]
+    comp_name = comp.GetAttrs()["COMPS_FileName"]
     comp_parse = parse_comp_name(comp_name)
 
     if comp_parse:
