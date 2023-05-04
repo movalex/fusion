@@ -1,0 +1,8 @@
+{
+    Hotkeys
+    {
+      Target = "FlowView",
+      ALT_H = "RunScript{filename = 'Scripts:Comp/Align_H.lua'}",
+      ALT_V = "RunScript{filename = 'Scripts:Comp/Align_V.lua'}",
+    }
+}
