@@ -1,0 +1,183 @@
+--[[--
+This Fuse clones the functionality of the standard Blur tool in Fusion as closely as possible.
+It is not intended to replace the Blur tool, but to act as an example for anyone creating 
+a Fuse which needs to mimic part of what Blur does.
+
+Currently this tool does not 
+
+ - cloning the common controls Blend slider
+ - MultiBox is just Gaussian blur - passes are ignored.
+ - Have the same default filter
+ 
+Requires   : Fusion 5.21 Build 23 or later
+Written By : Isaac Guenard [izyk@eyeonline.com]
+Written On : December 1st, 2007
+
+Things to document :
+Multibutton
+
+	
+--]]--
+
+FuRegisterClass("FuseBlur", CT_Tool, {
+	REGS_Name = "Fuse Blur",
+	REGS_Category = "Fuses\\Clones\\Blur",
+	REGS_OpIconString = "FBlr",
+	REGS_OpDescription = "Fuse Blur",
+	REG_NoMotionBlurCtrls = true,
+	REG_NoBlendCtrls = true,
+	})
+ 
+function Create()
+	InFilter = self:AddInput("Filter", "Filter", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "MultiButtonControl",
+		INP_Default = 4.0,
+		{MBTNC_AddButton = "Box", 		MBTNCD_ButtonWidth = 0.2, },
+		{MBTNC_AddButton = "Soften", 	MBTNCD_ButtonWidth = 0.2, },
+		{MBTNC_AddButton = "Bartlett", 	MBTNCD_ButtonWidth = 0.2, },
+		{MBTNC_AddButton = "Multi-box", MBTNCD_ButtonWidth = 0.2, },
+		{MBTNC_AddButton = "Gaussian", 	MBTNCD_ButtonWidth = 0.2, },
+		INP_DoNotifyChanged = true, -- We want to hear about changes on this control
+		})
+
+	InR = self:AddInput("Red", "Red", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Integer = true,
+		INP_Default = 1.0,
+		ICD_Width = 0.25,
+		})		
+
+	InG = self:AddInput("Green", "Green", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Integer = true,
+		INP_Default = 1.0,
+		ICD_Width = 0.25,
+		})		
+
+	InB = self:AddInput("Blue", "Blue", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Integer = true,
+		INP_Default = 1.0,
+		ICD_Width = 0.25,
+		})		
+
+	InA = self:AddInput("Alpha", "Alpha", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Integer = true,
+		INP_Default = 1.0,
+		ICD_Width = 0.25,
+		})		
+		
+	InLockXY = self:AddInput("Lock X/Y", "LockXY", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "CheckboxControl",
+		INP_Integer = true,
+		INP_Default = 1.0,
+		INP_DoNotifyChanged = true, -- We want to hear about changes on this control
+		})
+		
+	InBlurX = self:AddInput("X Blur Size", "XBlurSize", {
+		LINKS_Name = "Blur Size",
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MaxScale = 100.0,
+		INP_Default = 1.0,
+		})		
+
+	InBlurY = self:AddInput("Y Blur Size", "YBlurSize", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MaxScale = 100.0,
+		INP_Default = 1.0,
+		IC_Visible = false,
+		})		
+	
+	InPasses = self:AddInput("Num Passes", "NumPasses", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MaxScale = 16.0,
+		INP_Default = 4.0,
+		INP_MaxAllowed = 64.0,
+		INP_Integer = true,
+		IC_Visible = false,
+		})	
+		
+	InBlend = self:AddInput("Blend", "Blend", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "SliderControl",
+		INP_MaxScale = 1.0,
+		INP_MaxAllowed = 1.0,
+		INP_Default = 1.0,
+		})			
+
+	InImage = self:AddInput("Input", "Input", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})
+
+	OutImage = self:AddOutput("Output", "Output", {
+		LINKID_DataType = "Image",
+		LINK_Main = 1,
+		})				
+end
+ 
+function Process(req) 
+	local img = InImage:GetValue(req)
+	local blur_x = InBlurX:GetValue(req).Value / 720
+	local locked = (InLockXY:GetValue(req).Value > 0.5)
+	
+	if locked == true then 
+		blur_y = blur_x
+	else
+		blur_y = InBlurY:GetValue(req).Value / 720
+	end
+	
+	local filter = InFilter:GetValue(req).Value
+	local do_r = InR:GetValue(req).Value
+	local do_g = InG:GetValue(req).Value
+	local do_b = InB:GetValue(req).Value
+	local do_a = InA:GetValue(req).Value
+	local passes = math.floor( InPasses:GetValue(req).Value + 0.5 ) -- make damn sure this is an integer
+	local blend = InBlend:GetValue(req).Value
+	
+	local result = Image({IMG_Like = img})
+	
+	local filters = {"Box", "Soften", "Bartlett", "Multi-box", "Gaussian"}
+	
+	img:Blur(result, {
+		BLUR_Type = filters[filter+1], 
+		BLUR_Red = do_r,
+		BLUR_Green = do_g,
+		BLUR_Blue = do_b,
+		BLUR_Alpha = do_a,
+		BLUR_XSize = blur_x, 
+		BLUR_YSize = blur_y,
+		BLUR_Normalize = 1.0,
+		BLUR_Passes = passes,
+		BLUR_Blend = blend,
+		})
+	
+	OutImage:Set(req, result)
+end
+
+function NotifyChanged(inp, param, time)
+	if inp == InLockXY then   -- Update our sliders
+		local locked = (param.Value > 0.5)
+		
+		if locked then
+			InBlurX:SetAttrs({ LINKS_Name = "Blur Size" })
+			InBlurY:SetAttrs({ IC_Visible = false })
+		else
+			InBlurX:SetAttrs({ LINKS_Name = "X Blur Size" })
+			InBlurY:SetAttrs({ IC_Visible = true })
+		end
+	elseif inp == InFilter then
+	
+		InPasses:SetAttrs({ IC_Visible = (param.Value == 3), })
+	end
+end
