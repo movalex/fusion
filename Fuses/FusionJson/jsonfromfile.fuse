@@ -1,0 +1,82 @@
+-- ============================================================================
+-- modules
+-- ============================================================================
+local jsonutils = self and require("jsonutils") or nil
+
+-- ============================================================================
+-- constants
+-- ============================================================================
+FUSE_NAME = "JSONFromFile"
+DATATYPE = "Text"
+
+-- ============================================================================
+-- fuse
+-- ============================================================================
+FuRegisterClass(FUSE_NAME, CT_Tool, {
+    REGID_DataType = DATATYPE,
+    REGID_InputDataType = DATATYPE,
+    REG_NoCommonCtrls = true,
+    REGS_Category = "Vonk\\JSON",
+    REGS_Name = FUSE_NAME,
+    REGS_OpDescription = "Reads a JSON string from a file.",
+    REGS_OpIconString = FUSE_NAME
+})
+
+function Create()
+    -- [[ Creates the user interface. ]]
+    InFile = self:AddInput("Input" , "Input" , {
+        LINKID_DataType = "Text",
+        INPID_InputControl = "FileControl",
+        FC_IsSaver = false,
+        FC_ClipBrowse = false,
+        FCS_FilterString =  "JSON (*.json)|*.json",
+        LINK_Main = 1
+    })
+
+    InShowInput = self:AddInput("Show Input", "ShowInput", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "CheckboxControl",
+        INP_Integer = true,
+        INP_Default = 0.0,
+        INP_External = false,
+        INP_DoNotifyChanged = true
+    })
+
+    OutText = self:AddOutput("Output" , "Output" , {
+        LINKID_DataType = "Text",
+        LINK_Main = 1
+    })
+end
+
+function NotifyChanged(inp, param, time)
+    --[[
+        Handles all input control events.
+
+        :param inp: Input that triggered a signal.
+        :type inp: Input
+
+        :param param: Parameter object holding the (new) value.
+        :type param: Parameter
+
+        :param time: Current frame number.
+        :type time: float
+    ]]
+    if inp == InShowInput then
+        if param.Value == 1.0 then
+            InFile:SetAttrs({LINK_Visible = true})
+        else
+            InFile:SetAttrs({LINK_Visible = false})
+        end
+    end
+end
+
+function Process(req)
+    -- [[ Creates the output. ]]
+    local rel_path = InFile:GetValue(req).Value
+    local abs_path = self.Comp:MapPath(rel_path)
+
+    local json_str = jsonutils.read_json_string(abs_path)
+    local out = Text(json_str)
+
+    OutText:Set(req, out)
+end
