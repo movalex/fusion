@@ -22,6 +22,9 @@ SOFTWARE.
 ----------------------------------------------------------------------
 
 Changelog:
+v0.4, 2023-02-04:
+* Added a slider for the GPU process to scan only x pixels from the current pixel to try and speed the process up. The result was sadly not what i was after.
+
 v0.3, 2023-01-09:
 * Tried to make a DCTL version of the sampeling. Only works on very low res images. Slower than the CPU version sadly
 
@@ -62,7 +65,6 @@ function Create()   -- size and aspect
         INP_Integer = true,
         })
 
-
     InSTMapType = self:AddInput("STMap Type", "STMapType", {
         LINKID_DataType = "Number",
         INPID_InputControl = "MultiButtonControl",
@@ -92,7 +94,6 @@ function Create()   -- size and aspect
         INP_Integer = true,
         INP_Default = 1920,             -- will be adjusted in OnAddToFlow()
         INP_DelayDefault = true,
-        IC_Visible = false,
         })
 
     InHeight = self:AddInput("Height", "Height", {
@@ -131,6 +132,18 @@ function Create()   -- size and aspect
         INPID_InputControl = "CheckboxControl",
         INP_Default = 0.0,
         INP_Integer = true,
+        INP_DoNotifyChanged = true,
+        })
+
+    InSearchArea = self:AddInput("Search Area", "SearchArea", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_MinScale = 1,
+        INP_MinAllowed = 1,
+        INP_MaxScale = 300,
+        INP_Default = 50,
+        INP_Integer = true,
+        IC_Visible = false,
         })
 
     Author = self:AddInput(authorText, "Author", {
@@ -173,6 +186,12 @@ function NotifyChanged(inp, param, time)
                 InSamples:SetAttrs({IC_Visible = false})
             else
                 InSamples:SetAttrs({IC_Visible = true})
+            end
+        elseif inp == InGPUMode then
+            if param.Value == 0 then
+                InSearchArea:SetAttrs({IC_Visible = false})
+            else
+                InSearchArea:SetAttrs({IC_Visible = true})
             end
         end
     end
@@ -341,8 +360,12 @@ function Process(req)
                     ::continue::
                 end
             end
-        
         else
+
+            local imgDataWidth = img.DataWindow.right - img.DataWindow.left
+            local imgDataHeight = img.DataWindow.top - img.DataWindow.bottom
+            local imgDataLeft = img.DataWindow.left
+            local imgDataBottom = img.DataWindow.bottom
 
             -- DCTL cleanup (Extend single pixels, remove solo pixels)
             --This calls on our kernel to process the image we created.
@@ -362,14 +385,16 @@ function Process(req)
                 params.pixelScale[0] = 1 - (1/imgDataWidth)
                 params.pixelScale[1] = 1 - (1/imgDataHeight)
             elseif stmapType == 2 then
-                stmapTypeCalc = {0.5 / stMapWidth,0.5 / stMapHeight}
+                stmapTypeCalc = {0.5 / imgDataWidth,0.5 / imgDataHeight}
             end
             params.stmapType[0] = stmapTypeCalc[1]
             params.stmapType[1] = stmapTypeCalc[2]
+
+            params.searchArea = InSearchArea:GetValue(req).Value
          
             node:SetParamBlock(params)
 
-            --node:AddSampler("RowSampler", TEX_FILTER_MODE_BOX, TEX_ADDRESS_MODE_BORDER, TEX_NORMALIZED_COORDS_FALSE)
+            node:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR, TEX_ADDRESS_MODE_BORDER, TEX_NORMALIZED_COORDS_TRUE)
          
             node:AddInput("stmapInput", img)
             node:AddInput("textureInput", texture)
@@ -386,6 +411,7 @@ function Process(req)
 
         end
         
+        -- Multiply pixels
         if filter >= 1 then
             -- DCTL cleanup (Extend single pixels, remove solo pixels)
             --This calls on our kernel to process the image we created.
@@ -457,6 +483,7 @@ SampleSTmapParams = [[
     int srcCompOrder;
     float stmapType[2];
     float pixelScale[2];
+    float searchArea;
 ]]
 
 SampleSTmapKernel = [[
@@ -470,28 +497,48 @@ SampleSTmapKernel = [[
         DEFINE_KERNEL_ITERATORS_XY(x, y);
         if (x < params->srcDoD[0] && y < params->srcDoD[1])
         {
-            float4 Color = to_float4_s(0.0f);
 
+            //-----------------------
+            float2 fragCoord = to_float2(x,y) + to_float2_s(0.5f);
+            float2 iResolution = to_float2_v(params->srcDoD);
+            float2 orguv = fragCoord / iResolution;
+            float2 uv;
+            //-----------------------
+
+            float4 Color = to_float4_s(0.0f);
+            bool done = false;
+            
             // Loop through all pixels
-            for (int xx = 0; xx < params->srcDoD[0]; ++xx)
+            for (int xx = _fmaxf(0, x - params->searchArea); xx < x + params->searchArea; ++xx)
             {
-                for (int yy = 0; yy < params->srcDoD[1]; ++yy)
+                for (int yy = _fmaxf(0, y - params->searchArea); yy < y + params->searchArea; ++yy)
                 {
                     // Check if STmap has an alpha. If so, sample pixels!
-                    float4 stmap = _tex2DVecN(stmapInput, xx, yy, params->srcCompOrder);
-                    //if (stmap.w > 0) {
+                    fragCoord = to_float2(xx,yy) + to_float2_s(0.5f);
+                    uv = fragCoord / iResolution;
+
+                    float4 stmapSample = _tex2DVecN(stmapInput, uv.x , uv.y, params->srcCompOrder);
+                    if (stmapSample.w > 0) {
+                        float2 stmap;
                         // divide by alpha
-                        stmap.x = stmap.x / stmap.w;
-                        stmap.y = stmap.y / stmap.w;
+                        stmap.x = stmapSample.x / stmapSample.w;
+                        stmap.y = stmapSample.y / stmapSample.w;
+                        
+                        // Correct pixel scale if 0 to Width
+                        stmap *= to_float2_v(params->pixelScale);
 
-                        // Calculate pixel position
-                        float xPixel = (((stmap.x * params->pixelScale[0])) * params->srcDoD[0]) - params->stmapType[0];
-                        float yPixel = (((stmap.y * params->pixelScale[1])) * params->srcDoD[1]) - params->stmapType[1];
+                        // Apply shift to STmap depending on Match Render setting
+                        stmap -= to_float2_v(params->stmapType);
 
-                        if (_floor(xPixel) == x and _floor(yPixel) == y ) {
-                            Color = _tex2DVecN(textureInput, xx, yy, params->srcCompOrder);
+                        if (_ceil(stmap.x * iResolution.x) == _ceil(orguv.x * iResolution.x) && _ceil(stmap.y * iResolution.y) == _ceil(orguv.y * iResolution.y) ) {
+                            Color = _tex2DVecN(textureInput, uv.x , uv.y, params->srcCompOrder);
+                            done = true;
+                            break;
                         }
-                    //}
+                    }
+                }
+                if (done == true) {
+                    break;
                 }
             }
             
