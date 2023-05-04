@@ -1,0 +1,67 @@
+-- ============================================================================
+-- modules
+-- ============================================================================
+local jsonutils = self and require("jsonutils") or nil
+
+-- ============================================================================
+-- constants
+-- ============================================================================
+FUSE_NAME = "JSONSet"
+DATATYPE = "Text"
+
+-- ============================================================================
+-- fuse
+-- ============================================================================
+FuRegisterClass(FUSE_NAME, CT_Tool, {
+    REGID_DataType = DATATYPE,
+    REGID_InputDataType = DATATYPE,
+    REG_NoCommonCtrls = true,
+    REGS_Category = "Vonk\\JSON",
+    REGS_Name = FUSE_NAME,
+    REGS_OpDescription = "Sets a new key value pair in a JSON table.",
+    REGS_OpIconString = FUSE_NAME
+})
+
+function Create()
+    -- [[ Creates the user interface. ]]
+    InJSON = self:AddInput("Input", "Input", {
+        LINKID_DataType = "Text",
+        LINK_Main = 1
+    })
+
+    InKey = self:AddInput("Key", "Key", {
+        LINKID_DataType = "Text",
+        INPID_InputControl = "TextEditControl",
+        TEC_Lines = 1,
+        ICD_Width = 0.5
+    })
+
+    InValue = self:AddInput("Value", "Value", {
+        LINKID_DataType = "Text",
+        INPID_InputControl = "TextEditControl",
+        TEC_Lines = 1,
+        ICD_Width = 0.5
+    })
+
+    OutText = self:AddOutput("Output" , "Output" , {
+        LINKID_DataType = "Text",
+        LINK_Main = 1
+    })
+end
+
+function Process(req)
+    -- [[ Creates the output. ]]
+    local json_string = InJSON:GetValue(req).Value
+    local key = InKey:GetValue(req).Value
+    local value = InValue:GetValue(req).Value
+
+    local json_table = {}
+    if json_string ~= "" then
+        json_table = jsonutils.decode(json_string)
+    end
+
+    json_table[key] = value
+    local new_json_string = jsonutils.encode(json_table)
+    local out = Text(new_json_string)
+    OutText:Set(req, out)
+end
