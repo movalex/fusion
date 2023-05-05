@@ -2,7 +2,7 @@
 https://emiliosapia.myportfolio.com
 Written by : Emilio Sapia, Alexey Bogomolov
 Written on : Jan, 2023
-version 2.5
+version 2.6
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -843,6 +843,11 @@ QUICK GUIDE:
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
                     local function CopyFile(old_path, new_path)
+                        require("win-125x")
+                        old_path = utf8_to_win(old_path)
+                        new_path = utf8_to_win(new_path)
+                        -- print("old: ", old_path)
+                        -- print("new: ", new_path)
                         local old_file = io.open(old_path, "rb")
                         local new_file = io.open(new_path, "wb")
                         local old_file_sz, new_file_sz = 0, 0
