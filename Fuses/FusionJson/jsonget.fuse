@@ -1,0 +1,97 @@
+-- ============================================================================
+-- modules
+-- ============================================================================
+local jsonutils = self and require("jsonutils") or nil
+
+-- ============================================================================
+-- constants
+-- ============================================================================
+FUSE_NAME = "JSONGet"
+DATATYPE = "Text"
+
+-- ============================================================================
+-- fuse
+-- ============================================================================
+FuRegisterClass(FUSE_NAME, CT_Tool, {
+    REGID_DataType = DATATYPE,
+    REGID_InputDataType = DATATYPE,
+    REG_NoCommonCtrls = true,
+    REGS_Category = "Vonk\\JSON",
+    REGS_Name = FUSE_NAME,
+    REGS_OpDescription = "Gets the value of a JSON key.",
+    REGS_OpIconString = FUSE_NAME
+})
+
+function Create()
+    -- [[ Creates the user interface. ]]
+    InJSON = self:AddInput("Input", "Input", {
+        LINKID_DataType = "Text",
+        LINK_Main = 1
+    })
+
+    InKey = self:AddInput("Key", "Key", {
+        LINKID_DataType = "Text",
+        INPID_InputControl = "TextEditControl",
+        TEC_Lines = 1,
+        LINK_Main = 2
+    })
+
+    InShowInput = self:AddInput("Show Input", "ShowInput", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "CheckboxControl",
+        INP_Integer = true,
+        INP_Default = 0.0,
+        INP_External = false,
+        INP_DoNotifyChanged = true
+    })
+
+    OutText = self:AddOutput("Output" , "Output" , {
+        LINKID_DataType = "Text",
+        LINK_Main = 1
+    })
+end
+
+function NotifyChanged(inp, param, time)
+    --[[
+        Handles all input control events.
+
+        :param inp: Input that triggered a signal.
+        :type inp: Input
+
+        :param param: Parameter object holding the (new) value.
+        :type param: Parameter
+
+        :param time: Current frame number.
+        :type time: float
+    ]]
+    if inp == InShowInput then
+        if param.Value == 1.0 then
+            InKey:SetAttrs({LINK_Visible = true})
+        else
+            InKey:SetAttrs({LINK_Visible = false})
+        end
+    end
+end
+
+function Process(req)
+    -- [[ Creates the output. ]]
+    local json_string = InJSON:GetValue(req).Value
+    local key = InKey:GetValue(req).Value
+
+    local value = nil
+    local value_str = ""
+
+    if key ~= nil then
+        local json_table = jsonutils.decode(json_string)
+        value = jsonutils.get(json_table, key)
+
+        if type(value) == "table" then
+            value_str = jsonutils.encode(value)
+        else
+            value_str = tostring(value)
+        end
+    end
+
+    local out = Text(value_str)
+    OutText:Set(req, out)
+end
