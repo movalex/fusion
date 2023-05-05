@@ -22,6 +22,9 @@ SOFTWARE.
 ----------------------------------------------------------------------
 
 Changelog:
+v0.5, 2023-05-05:
+* Fuse no longer crash if STmap doesn't fit the selected STMap Type (eg STmap type Image when STmap is of typ eIgnore).
+
 v0.4, 2023-02-04:
 * Added a slider for the GPU process to scan only x pixels from the current pixel to try and speed the process up. The result was sadly not what i was after.
 
@@ -278,7 +281,7 @@ function Process(req)
                     if filter <= 1 then
                         xx = math.floor(xPixel+0.49999)
                         yy = math.floor(yPixel+0.49999)
-                        if xx < 0 or xx > imgWidth or yy < 0 or yy > imgHeight then
+                        if xx < 0 or xx > imgWidth-1 or yy < 0 or yy > imgHeight-1 then
                             goto continue
                         end
                     end
