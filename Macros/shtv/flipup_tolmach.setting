@@ -1,0 +1,282 @@
+{
+	Tools = ordered() {
+		FlipUp_Tolmach = GroupOperator {
+			CtrlWZoom = false,
+			CustomData = { Path = { Map = { ["Setting:"] = "Templates:\\Templates.drfx\\Edit\\Titles\\" } }, },
+			Inputs = ordered() {
+				Input1 = InstanceInput {
+					SourceOp = "Text1",
+					Source = "StyledText",
+				},
+				Input2 = InstanceInput {
+					SourceOp = "Text1",
+					Source = "Font",
+					ControlGroup = 2,
+				},
+				Input3 = InstanceInput {
+					SourceOp = "Text1",
+					Source = "Style",
+					ControlGroup = 2,
+				},
+				Input4 = InstanceInput {
+					SourceOp = "Text1",
+					Source = "Red1Clone",
+					Name = "Color",
+					ControlGroup = 3,
+					Default = 1,
+				},
+				Input5 = InstanceInput {
+					SourceOp = "Text1",
+					Source = "Green1Clone",
+					ControlGroup = 3,
+					Default = 1,
+				},
+				Input6 = InstanceInput {
+					SourceOp = "Text1",
+					Source = "Blue1Clone",
+					ControlGroup = 3,
+					Default = 1,
+				},
+				Input7 = InstanceInput {
+					SourceOp = "Text1",
+					Source = "Alpha1Clone",
+					ControlGroup = 3,
+					Default = 1,
+				},
+				Input8 = InstanceInput {
+					SourceOp = "Text1",
+					Source = "Size",
+					Default = 0.05,
+				},
+				Input9 = InstanceInput {
+					SourceOp = "Text1",
+					Source = "CharacterSpacingClone",
+					Name = "Tracking",
+					Default = 1.197,
+				},
+				Input10 = InstanceInput {
+					SourceOp = "Text1",
+					Source = "LineSpacingClone",
+					Default = 1,
+				},
+				Input11 = InstanceInput {
+					SourceOp = "Text1",
+					Source = "Round2",
+					Name = "Round Edges",
+					Default = 0,
+				},
+				Input12 = InstanceInput {
+					SourceOp = "Text1",
+					Source = "Red2",
+					Name = "Background Color",
+					ControlGroup = 8,
+					Default = 0.33666,
+				},
+				Input13 = InstanceInput {
+					SourceOp = "Text1",
+					Source = "Green2",
+					ControlGroup = 8,
+					Default = 0.543,
+				},
+				Input14 = InstanceInput {
+					SourceOp = "Text1",
+					Source = "Blue2",
+					ControlGroup = 8,
+					Default = 0.37957872,
+				},
+				Input15 = InstanceInput {
+					SourceOp = "Text1",
+					Source = "Alpha2",
+					ControlGroup = 8,
+					Default = 1,
+				},
+				Input16 = InstanceInput {
+					SourceOp = "Text1",
+					Source = "MotionBlur",
+					Default = 0,
+				},
+				Input17 = InstanceInput {
+					SourceOp = "Text1",
+					Source = "Quality",
+					Default = 2,
+				},
+				Animation = InstanceInput {
+					SourceOp = "Text1",
+					Source = "Animation",
+					Page = "Controls",
+				},
+				Input20 = InstanceInput {
+					SourceOp = "Follower1",
+					Source = "Order",
+					Default = 0,
+				},
+				Input21 = InstanceInput {
+					SourceOp = "Follower1",
+					Source = "DelayByCharacterPosition",
+					Default = 0,
+				},
+				Input22 = InstanceInput {
+					SourceOp = "Follower1",
+					Source = "FirstSelectedDelay",
+				},
+				Input23 = InstanceInput {
+					SourceOp = "Follower1",
+					Source = "ThisValue",
+					Default = 0,
+				},
+				Input24 = InstanceInput {
+					SourceOp = "Follower1",
+					Source = "DelayType",
+					Default = 1,
+				},
+				Input25 = InstanceInput {
+					SourceOp = "Follower1",
+					Source = "Delay",
+					Default = 2,
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "KeyframeStretcher1",
+					Source = "Result",
+					Name = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Pos = { 468.838, 154.419 },
+				Flags = {
+					AllowPan = false,
+					ConnectedSnap = true,
+					AutoSnap = true,
+					RemoveRouters = true
+				},
+				Size = { 126, 182.929, 63, 24.2424 },
+				Direction = "Horizontal",
+				PipeStyle = "Direct",
+				Scale = 1,
+				Offset = { 0, 0 }
+			},
+			Tools = ordered() {
+				Text1 = TextPlus {
+					CustomData = { Settings = { [1] = { Tools = ordered() { Text1 = TextPlus { Inputs = { ExtendVertical2 = Input { Value = 0.13 }, HorizontalJustificationNew = Input { Value = 3 }, Green2 = Input { Value = 1 }, SelectElement = Input { Value = 1 }, Center = Input { Value = { 0.5, 0.468197879858657 } }, Round2 = Input { Value = 0.039 }, ExtendHorizontal2 = Input { Value = 0.092 }, StyledText = Input { SourceOp = "Follower1", Source = "StyledText" }, Size = Input { Value = 0.0707 }, ElementShape2 = Input { Value = 2 }, Opacity2 = Input { Value = 0.638 }, Blue2 = Input { Value = 1 }, Animation = Input { Value = 1 }, Select = Input { Value = 1 }, PixelAspect = Input { Value = { 1.06666672229767, 1 } }, VerticalJustificationNew = Input { Value = 3 }, Width = Input { Value = 720 }, Style = Input { Value = "Book" }, ["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" } }, LineSpacing = Input { Value = 1.021 }, Font = Input { Value = "AGAvantGardeCyr" }, GlobalOut = Input { Value = 271 }, Height = Input { Value = 576 }, UseFrameFormatSettings = Input { Value = 1 }, Level2 = Input { Value = 1 } }, CtrlWZoom = false, ViewInfo = OperatorInfo { Pos = { 0, 8.47316 } }, UserControls = ordered() { Animation = { INP_Integer = false, LBLC_DropDownButton = true, LINKID_DataType = "Number", LBLC_NumInputs = 6, INPID_InputControl = "LabelControl", LINKS_Name = "Animation" } }, 
+                    CustomData = {	} 
+                                    }, 
+                    Follower1 = StyledTextFollower { Inputs = { TransformRotation = Input { Value = 1 }, CharacterAngleX = Input { SourceOp = "Follower1CharacterAngleX", Source = "Value" }, Opacity1 = Input { SourceOp = "Follower1Opacity", Source = "Value" }, Text = Input { Value = StyledText { Value = "C.C. CATCH\nSTRANGERS BY NIGHT" } }, Delay = Input { Value = 1.7 } }, CtrlWZoom = false }, Follower1CharacterAngleX = BezierSpline { SplineColor = { Green = 216, Blue = 243, Red = 28 }, KeyFrames = { [14.9019190469568] = { -90, RH = { 19.6012793646379, -60 }, Flags = { Linear = true } }, [29.0000000000001] = { 0, LH = { 24.300639682319, -30 }, Flags = { Linear = true } } } }, Follower1Opacity = BezierSpline { SplineColor = { Green = 28, Blue = 244, Red = 179 }, KeyFrames = { [14.9019190469568] = { 0, RH = { 15.6851457665703, 0.333333333333333 }, Flags = { Linear = true } }, [17.2515992057974] = { 1, LH = { 16.4683724861839, 0.666666666666667 }, Flags = { Linear = true } } } } } }, } },
+					Inputs = {
+						GlobalOut = Input { Value = 271, },
+						Width = Input { Value = 720, },
+						Height = Input { Value = 576, },
+						PixelAspect = Input { Value = { 1.06666672229767, 1 }, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.5, 0.468197879858657 }, },
+						LineSpacing = Input { Value = 1.021, },
+						SelectElement = Input { Value = 3, },
+						Select = Input { Value = 3, },
+						Enabled4 = Input { Value = 1, },
+						StyledText = Input {
+							SourceOp = "Follower1",
+							Source = "StyledText",
+						},
+						Font = Input { Value = "AGAvantGardeCyr", },
+						Style = Input { Value = "Book", },
+						Size = Input { Value = 0.0587, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						Animation = Input { Value = 1, },
+						Opacity4 = Input { Value = 0.789, },
+						Level4 = Input { Value = 0, },
+						ExtendHorizontal4 = Input { Value = 0.22, },
+						ExtendVertical4 = Input { Value = 0.22, },
+						Round4 = Input { Value = 0.323, },
+						Red4 = Input { Value = 1, },
+						Blue4 = Input { Value = 0.0117647058823529, },
+						Position4 = Input { Value = 1, },
+						Offset4 = Input { Value = { 0, 0.006 }, },
+						Opacity2 = Input { Value = 0.638, },
+						ElementShape2 = Input { Value = 2, },
+						Level2 = Input { Value = 1, },
+						ExtendHorizontal2 = Input { Value = 0.092, },
+						ExtendVertical2 = Input { Value = 0.13, },
+						Round2 = Input { Value = 0.039, },
+						Green2 = Input { Value = 1, },
+						Blue2 = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, 8.47507 } },
+					UserControls = ordered() { Animation = { INP_Integer = false, LBLC_DropDownButton = true, LINKID_DataType = "Number", LBLC_NumInputs = 6, INPID_InputControl = "LabelControl", LINKS_Name = "Animation", } }
+				},
+				KeyframeStretcher1 = KeyStretcher {
+					CtrlWShown = false,
+					Inputs = {
+						Keyframes = Input {
+							SourceOp = "Transform1_1",
+							Source = "Output",
+						},
+						SourceEnd = Input { Value = 119, },
+						StretchStart = Input { Value = 100, },
+						StretchEnd = Input { Value = 118, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, 125.04 } },
+				},
+				Transform1_1 = Transform {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					Inputs = {
+						Size = Input {
+							SourceOp = "Transform1_1Size",
+							Source = "Value",
+						},
+						Input = Input {
+							SourceOp = "Text1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, 63.7597 } },
+				}
+			},
+		},
+		Follower1 = StyledTextFollower {
+			CtrlWZoom = false,
+			Inputs = {
+				Delay = Input { Value = 1.3, },
+				Text = Input {
+					Value = StyledText {
+						Value = "Iggy POP\nJAMES BOND"
+					},
+				},
+				TransformRotation = Input { Value = 1, },
+				CharacterAngleX = Input {
+					SourceOp = "Follower1CharacterAngleX",
+					Source = "Value",
+				},
+				Opacity1 = Input {
+					SourceOp = "Follower1Opacity1",
+					Source = "Value",
+				},
+			},
+		},
+		Follower1CharacterAngleX = BezierSpline {
+			SplineColor = { Red = 28, Green = 216, Blue = 243 },
+			KeyFrames = {
+				[14.9019190469568] = { -90, RH = { 19.6012793646379, -60 }, Flags = { Linear = true } },
+				[29.0000000000001] = { 0, LH = { 24.300639682319, -30 }, Flags = { Linear = true } }
+			}
+		},
+		Follower1Opacity1 = BezierSpline {
+			SplineColor = { Red = 179, Green = 28, Blue = 244 },
+			KeyFrames = {
+				[14.9019190469568] = { 0, RH = { 15.6851457665703, 0.333333333333333 }, Flags = { Linear = true } },
+				[17.2515992057974] = { 1, LH = { 16.4683724861839, 0.666666666666667 }, Flags = { Linear = true } }
+			}
+		},
+		Transform1_1Size = BezierSpline {
+			SplineColor = { Red = 225, Green = 0, Blue = 225 },
+			CtrlWZoom = false,
+			KeyFrames = {
+				[0] = { 0, RH = { 7.21393055362408, 0 }, Flags = { Linear = true } },
+				[21.6417916608723] = { 1, LH = { 14.4278611072482, 1 } }
+			}
+		}
+	}
+}
+

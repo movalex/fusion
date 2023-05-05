@@ -1,0 +1,58 @@
+-- ============================================================================
+-- modules
+-- ============================================================================
+local jsonutils = self and require("jsonutils") or nil
+
+-- ============================================================================
+-- constants
+-- ============================================================================
+FUSE_NAME = "JSONToFile"
+DATATYPE = "Text"
+
+-- ============================================================================
+-- fuse
+-- ============================================================================
+FuRegisterClass(FUSE_NAME, CT_Tool, {
+    REGID_DataType = DATATYPE,
+    REGID_InputDataType = DATATYPE,
+    REG_NoCommonCtrls = true,
+    REGS_Category = "Vonk\\JSON",
+    REGS_Name = FUSE_NAME,
+    REGS_OpDescription = "Writes a JSON string into a file.",
+    REGS_OpIconString = FUSE_NAME
+})
+
+function Create()
+    -- [[ Creates the user interface. ]]
+    InText = self:AddInput("Input" , "Input" , {
+        LINKID_DataType = "Text",
+        LINK_Main = 1
+    })
+
+    InFile = self:AddInput("File" , "File" , {
+        LINKID_DataType = "Text",
+        INPID_InputControl = "FileControl",
+        FC_IsSaver = true,
+        FC_ClipBrowse = false,
+        LINK_Main = 2,
+        LINK_Visible = false,
+        FCS_FilterString =  "JSON (*.json)|*.json"
+    })
+
+    OutText = self:AddOutput("Output", "Output", {
+        LINKID_DataType = "Text",
+        LINK_Main = 1
+    })
+end
+
+function Process(req)
+    -- [[ Creates the output. ]]
+    local json_string = InText:GetValue(req).Value
+    local rel_path = InFile:GetValue(req).Value
+    local abs_path = self.Comp:MapPath(rel_path)
+
+    jsonutils.write_json_string(json_string, abs_path)
+    local out = Text(json_string)
+
+    OutText:Set(req, out)
+end
