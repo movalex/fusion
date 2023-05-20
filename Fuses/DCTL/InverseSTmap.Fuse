@@ -22,6 +22,10 @@ SOFTWARE.
 ----------------------------------------------------------------------
 
 Changelog:
+v0.5, 2023-05-05:
+* Now works with Alpha!
+* Fuse no longer crash if STmap doesn't fit the selected STMap Type (eg STmap type Image when STmap is of type Ignore).
+
 v0.4, 2023-02-04:
 * Added a slider for the GPU process to scan only x pixels from the current pixel to try and speed the process up. The result was sadly not what i was after.
 
@@ -37,7 +41,7 @@ v0.1, 2022-12-29:
 
 --]]--
 
-local version = 0.3
+local version = 0.5
 local authorText = "v" .. tostring(version) .. " - Created by Jacob Danell, Ember Light"
 
 FuRegisterClass("InverseSTmap", CT_Tool, {
@@ -248,17 +252,21 @@ function Process(req)
             filter = 1
         end
 
-        local stmapRef = Image({IMG_Like = dst})
         local invMap = Image({IMG_Like = dst})
+        local multiplyMap = Image({IMG_Like = dst})
+        local stmapRef = Image({IMG_Like = dst})
 
         invMap:Fill(Pixel({R = 0.0, G = 0.0, B = 0.0, A = 0.0}))
+        multiplyMap:Fill(Pixel({R = 0.0, G = 0.0, B = 0.0, A = 0.0}))
         stmapRef:Fill(Pixel({R = 0.0, G = 0.0, B = 0.0, A = 0.0}))
 
         if InGPUMode:GetValue(req).Value == 0 then
 
             local txA = Pixel() -- TextureA Pixel
             local txB = Pixel() -- TextureB Pixel
+            local txC = Pixel() -- TextureC Pixel
             local ip = Pixel() -- img Pixel
+            local mp = Pixel() -- img Pixel
             local sp = Pixel() -- stmapRef Pixel
             local xx, yy, rawPix -- New XY positions
 
@@ -278,7 +286,7 @@ function Process(req)
                     if filter <= 1 then
                         xx = math.floor(xPixel+0.49999)
                         yy = math.floor(yPixel+0.49999)
-                        if xx < 0 or xx > imgWidth or yy < 0 or yy > imgHeight then
+                        if xx < 0 or xx > imgWidth-1 or yy < 0 or yy > imgHeight-1 then
                             goto continue
                         end
                     end
@@ -288,6 +296,8 @@ function Process(req)
                     else
                         txA.R = x / stMapWidth
                         txA.G = y / stMapHeight
+                        txA.B = 0
+                        txA.A = 1
                     end
 
                     if filter == 0 then
@@ -302,14 +312,18 @@ function Process(req)
                         ip.R = txA.R
                         ip.G = txA.G
                         ip.B = txA.B
+                        ip.A = txA.A
                         invMap:SetPixel(xx, yy, ip)
                     elseif filter == 1 then
                         invMap:SamplePixelD(xx, yy, txB) -- Texture B
+                        multiplyMap:SamplePixelD(xx, yy, mp)
                         ip.R = txA.R + txB.R
                         ip.G = txA.G + txB.G
                         ip.B = txA.B + txB.B
-                        ip.A = 1 + txB.A
+                        ip.A = txA.A + txB.A
+                        mp.A = mp.A + 1
                         invMap:SetPixel(xx, yy, ip)
+                        multiplyMap:SetPixel(xx, yy, mp)
                     elseif filter == 2 then
                         x1 = math.floor(xPixel)
                         x2 =  math.ceil(xPixel)
@@ -318,45 +332,57 @@ function Process(req)
 
                         if x1 >= 0 and y1 >= 0 then
                             invMap:SamplePixelD(x1, y1, txB)
+                            multiplyMap:SamplePixelD(x1, y1, mp)
                             dif = 1-math.max(math.abs(x1-xPixel), math.abs(y1-yPixel))
                             ip.R = txB.R + txA.R*dif
                             ip.G = txB.G + txA.G*dif
                             ip.B = txB.B + txA.B*dif
-                            ip.A = txB.A + dif
+                            ip.A = txB.A + txA.A*dif
+                            mp.A = mp.A + dif
                             invMap:SetPixel(x1, y1, ip)
+                            multiplyMap:SetPixel(x1, y1, mp)
                         end
 
                         if x2 < imgWidth and y1 >= 0  then
                             invMap:SamplePixelD(x2, y1, txB)
+                            multiplyMap:SamplePixelD(x2, y1, mp)
                             dif = 1-math.max(math.abs(x2-xPixel), math.abs(y1-yPixel))
                             ip.R = txB.R + txA.R*dif 
                             ip.G = txB.G + txA.G*dif 
                             ip.B = txB.B + txA.B*dif 
-                            ip.A = txB.A + dif
+                            ip.A = txB.A + txA.A*dif
+                            mp.A = mp.A + dif
                             invMap:SetPixel(x2, y1, ip)
+                            multiplyMap:SetPixel(x2, y1, mp)
                         end
 
                         if x1 >= 0 and y2 < imgHeight then
                             invMap:SamplePixelD(x1, y2, txB)
+                            multiplyMap:SamplePixelD(x1, y2, mp)
                             dif = 1-math.max(math.abs(x1-xPixel), math.abs(y2-yPixel))
                             ip.R = txB.R + txA.R*dif
                             ip.G = txB.G + txA.G*dif
                             ip.B = txB.B + txA.B*dif
-                            ip.A = txB.A + dif
+                            ip.A = txB.A + txA.A*dif
+                            mp.A = mp.A + dif
                             invMap:SetPixel(x1, y2, ip)
+                            multiplyMap:SetPixel(x1, y2, mp)
                         end
 
                         if x2 < imgWidth and y2 < imgHeight then
                             invMap:SamplePixelD(x2, y2, txB)
+                            multiplyMap:SamplePixelD(x2, y2, mp)
                             dif = 1-math.max(math.abs(x2-xPixel), math.abs(y2-yPixel))
                             ip.R = txB.R + txA.R*dif
                             ip.G = txB.G + txA.G*dif
                             ip.B = txB.B + txA.B*dif
-                            ip.A = txB.A + dif
+                            ip.A = txB.A + txA.B*dif
+                            mp.A = mp.A + dif
                             invMap:SetPixel(x2, y2, ip)
+                            multiplyMap:SetPixel(x2, y2, mp)
                         end
                     end
-                    
+
                     ::continue::
                 end
             end
@@ -411,6 +437,7 @@ function Process(req)
 
         end
         
+        
         -- Multiply pixels
         if filter >= 1 then
             -- DCTL cleanup (Extend single pixels, remove solo pixels)
@@ -420,6 +447,11 @@ function Process(req)
             local params = node:GetParamBlock(InverseSTmapParams)
             params.srcDoD[0] = img.Width
             params.srcDoD[1] = img.Height
+            if texture then
+                params.isTexture = true
+            else
+                params.isTexture = false
+            end
 
             --This gets the values of our sliders from the control panel.
             params.srcCompOrder = img:IsMask() and 1 or 15
@@ -429,6 +461,7 @@ function Process(req)
             node:AddSampler("RowSampler", TEX_FILTER_MODE_BOX, TEX_ADDRESS_MODE_BORDER, TEX_NORMALIZED_COORDS_FALSE)
          
             node:AddInput("src", invMap)
+            node:AddInput("multiplymap", multiplyMap)
             node:AddOutput("dst", dst)
          
             local ok = node:RunSession(req)
@@ -470,7 +503,6 @@ function Process(req)
         else
             dst = invMap
         end
-        
     end
 
 
@@ -554,6 +586,7 @@ InverseSTmapParams = [[
     float srcDoD[2];
     int srcCompOrder;
     int samples;
+    bool isTexture;
 ]]
 
 --This is the GPU kernel, all of the image algorithms happen here.
@@ -561,22 +594,27 @@ MultiplySTmapKernel = [[
     __KERNEL__ void MultiplySTmapKernel(
         __CONSTANTREF__ InverseSTmapParams *params,
         __TEXTURE2D__ src,
+        __TEXTURE2D__ multiplymap,
         __TEXTURE2D_WRITE__ dst
     )
     {
         DEFINE_KERNEL_ITERATORS_XY(x, y);
         if (x < params->srcDoD[0] && y < params->srcDoD[1])
         {
-            // Loop through all pixels to find the closest correct pixel
             float4 Color = _tex2DVecN(src, x, y, params->srcCompOrder);
-            if (Color.w == 0.0f) {
+            float4 MultiplyMap = _tex2DVecN(multiplymap, x, y, params->srcCompOrder);
+            if (MultiplyMap.w == 0.0f) {
                 _tex2DVec4Write(dst, x, y, Color);
                 return;
             }
-            Color.x /= Color.w;
-            Color.y /= Color.w;
-            Color.z /= Color.w;
-            Color.w = 1;
+            Color.x /= MultiplyMap.w;
+            Color.y /= MultiplyMap.w;
+            Color.z /= MultiplyMap.w;
+            if (params->isTexture) {
+                Color.w /= MultiplyMap.w;
+            } else {
+                Color.w = 1;
+            }
             _tex2DVec4Write(dst, x, y, Color);
         }
     }
