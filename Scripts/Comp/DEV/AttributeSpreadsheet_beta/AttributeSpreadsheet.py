@@ -1150,7 +1150,7 @@ if __name__ == "__main__":
         main_app = QApplication([])
     main_app.setStyleSheet(css)
     main = MainWindow()
-    main.setWindowTitle(f"Attribute Spreadsheet 0.{__VERSION__}")
+    win_title = f"Attribute Spreadsheet 0.{__VERSION__}"
     if __beta__:
         win_title += "b"
     main.setWindowTitle(win_title)
