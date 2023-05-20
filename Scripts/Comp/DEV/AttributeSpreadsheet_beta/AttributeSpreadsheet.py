@@ -101,7 +101,6 @@ import re
 import subprocess
 import sys
 from pprint import pprint
-from __future__ import print_function
 
 __VERSION__ = 3.0
 __beta__ = True
@@ -125,7 +124,7 @@ def get_fusion(fusion_host):
         import BlackmagicFusion as bmd
         return bmd.scriptapp("Fusion", fusion_host)
     except ModuleNotFoundError:
-        dprint("No BlackmagicFusion module found")
+        print("No BlackmagicFusion module found")
 
 
 def get_comp():
@@ -133,18 +132,18 @@ def get_comp():
         fu_host = sys.argv[1]
     fusion = get_fusion(HOST)
     if not fusion:
-        dprint("No Fusion instance found or instance is not a Studio version")
+        print("No Fusion instance found" "or instance is not a Studio version")
         sys.exit()
     return fusion.GetCurrentComp()
 
 
 def check_py_version():
     supported_python_version = sys.version_info[:2] >= (3, 6)
-    dprint("current python version is {}".format(sys.version))
+    print(f"current python version is {sys.version}")
     if not supported_python_version:
-        msg = "Python >= 3.6 is required!\nClick OK to set Python interpreter in Fusion Preferences"
-        sys.stderr.write(msg)
-        dprint(
+        msg = "Python >= 3.6 is required!"
+        sys.stderr.write(f"{msg}\n")
+        print(
             "Python 3.6 and later is required to run this script\n"
             "Set Python interpreter in Fusion Preferences -> Global Settings -> Script -> Default Script Version"
         )
@@ -154,33 +153,13 @@ def check_py_version():
             fu.ShowPrefs("PrefsScript")
         sys.exit()
 
-print(sys.version_info)
 
-# check for python 3
-if sys.version_info[:2] < (3, 6):
-    msg = "Python >= 3.6 is required!\nClick OK to set Python interpreter in Fusion Preferences"
-    sys.stderr.write(msg)
-    dprint(
-        "Python 3.6 and later is required to run this script\n"
-        "Set Python interpreter in Fusion Preferences -> Global Settings -> Script -> Default Script Version"
-    )
-    dialog = {1: {1: "", 2: "Text", "ReadOnly": True, "Lines": 3, "Default": msg}}
-    dlg = comp.AskUser("Warning", dialog)
-    if dlg:
-        fu.ShowPrefs("PrefsScript")
-    raise Exception("Please use Python >= 3.6")
-
-
-
-def dprint(*args, **kwargs):
-    """override dprint() function"""
-    __builtins__.print("[AS] : ", *args, **kwargs)
-
+check_py_version()
 
 try:
     comp = fu.GetCurrentComp()  # this works in most cases
 except Exception as e:
-    dprint("Starting in standalone mode...")
+    print("Starting in standalone mode...")
     REMOTE_FUSION_ACCESS = True
     load_selected_tools_limit = 3
     comp = get_comp()
@@ -190,6 +169,10 @@ finally:
     current_comp_name = comp.GetAttrs()["COMPS_Name"]
 
 
+def print(*args, **kwargs):
+    """override print() function"""
+
+    __builtins__.print("[AS] : ", *args, **kwargs)
 
 
 try:
@@ -239,8 +222,8 @@ try:
 
 except ImportError:
 
-    dprint("No PySide6 installation found!")
     from install_pip_package import pip_install, get_python_executable
+    print("No PySide6 installation found!")
 
     def show_confirmation_dialogue():
         # ask user permission to install PySide6 automatically
@@ -263,11 +246,11 @@ except ImportError:
     installaion_confirmed = show_confirmation_dialogue()
     python_executable = get_python_executable()
     if installaion_confirmed:
-        dprint("Trying to install PySide6...")
-        pip_install([PKG])
+        print("Trying to install PySide6...")
+        pip_install([f"{PKG}"])
         sys.exit()
     else:
-        dprint(
+        print(
             "PySide6 is required to run this script\n"
             "Please install it manually with following command:\n"
             f"{python_executable} -m pip install {PKG}=={PKG_VERSION}"
@@ -290,19 +273,19 @@ class FUIDComboDelegate(QItemDelegate):
     def createEditor(self, parent, option, index):
         combo = QComboBox(parent)
         combo.addItems(self.items)
-        # self.connect(
-        #     combo,
-        #     SIGNAL("currentIndexChanged(int)"),
-        #     self,
-        #     SLOT("currentIndexChanged()"),
-        # )
+        self.connect(
+            combo,
+            SIGNAL("currentIndexChanged(int)"),
+            self,
+            SLOT("currentIndexChanged()"),
+        )
         return combo
 
     def setEditorData(self, editor, index):
         editor.blockSignals(True)
-        # dprint(index.model().data(index))
-        # editor.setCurrentIndex(self.items.index(str(index.model().data(index))))
-        # editor.setData("Domain")
+        print(index.model().data(index))
+        editor.setCurrentIndex(self.items.index(str(index.model().data(index))))
+        editor.setData("Domain")
         editor.blockSignals(False)
 
     def setModelData(self, editor, model, index):
@@ -360,13 +343,12 @@ class PointDelegate(QItemDelegate):
     def setEditorData(self, editor, index):
         point_data = str(index.model().data(index))
         try:
-            # my attempt of parsing a string like '{1.0:0.5, 2.0:0.5, 3.0:0.0}'
+            # parsing string like '{1:0.5, 2:0.5, 3:0.0}'
             # first remove curly braces and spaces to make it '1.0:0.1,2.0:0.5,3.0:0.0',
             substring = re.sub("[{} ]", "", point_data)
             # split by colon and convert to dictionary {'1.0': '0.5', '2.0': '0.5', '3.0': '0.0'}
             dict_point = dict(ss.split(":") for ss in substring.split(","))
-            # convert keys to float, because Fusion17 returns keys as integers
-            dict_point = {float(k): v for k, v in dict_point.items()}
+            dict_point = {int(k): v for k, v in dict_point.items()}
             x_value = QTableWidgetItem(dict_point[1])
             y_value = QTableWidgetItem(dict_point[2])
             editor.blockSignals(True)
@@ -374,7 +356,7 @@ class PointDelegate(QItemDelegate):
             editor.setItem(0, 1, y_value)
             editor.blockSignals(False)
         except ValueError:
-            dprint(
+            print(
                 "error occurred while parsing the point data. Setting values to default"
             )
             for i in range(2):
@@ -387,7 +369,7 @@ class PointDelegate(QItemDelegate):
             data = [x, y]
             model.sourceModel().stored_edit_role_data = data
         except AttributeError:
-            dprint("Point data not applicable here")
+            print("Point data not applicable here")
 
 
 class TableView(QTableView):
@@ -455,7 +437,7 @@ class TableView(QTableView):
                     index_source.row() == index_target.row()
                     and index_source.column() == index_target.column()
                 ):
-                    dprint("cannot link the input to itself")
+                    print("cannot link the input to itself")
                     return
                 if (
                     index_source.row() > -1
@@ -491,11 +473,12 @@ class TableView(QTableView):
         alternative.)
         """
         tm = self.model()
+        print("Model keys: ", tm.filteredKeys)
 
         # filteredKeys contains the column data types with the indices properly sorted after filtering.
         for k, v in enumerate(tm.filteredKeys):
-            # dprint(f"{k} : {v}")
             if v == "Point":
+                print("setting point")
                 self.setItemDelegateForColumn(k, PointDelegate(self))
             # elif v == "FuID":
             #     self.setItemDelegateForColumn(k, FUIDComboDelegate(self))
@@ -533,13 +516,13 @@ class TableView(QTableView):
                             x, y = [float(i) for i in value]
                         except ValueError:
                             x, y = value
-                        dprint(
+                        print(
                             "setting {} [{}] to [{} : {}]".format(
                                 tool_name, input_name, x, y
                             )
                         )
                     else:
-                        dprint(
+                        print(
                             "setting {} [{}] to {}".format(tool_name, input_name, value)
                         )
                     tm.setData(self.model().mapToSource(s), value, Qt.EditRole)
@@ -621,8 +604,8 @@ class FusionInput:
         return self.fusion_input[item]
 
     def __setitem__(self, key, value):
-        # debug - dprint input attributes
         if value == "p":
+            # debug-print input attributes
             pprint(self.attributes)
             return
 
@@ -633,15 +616,15 @@ class FusionInput:
 
         if self.get_expression():
             if value == "-x" or "-x" in value:
-                dprint("Expression cleared")
+                print("Expression cleared")
                 self.set_expression(None)
             else:
-                dprint(
+                print(
                     "This input is linked by expression. Use '-x' to clear expression"
                 )
             return
 
-        if not isinstance(value, list) and value[0] == "=":
+        if isinstance(value, str) and value.startswith("="):
             self.set_expression(value.lstrip("="))
             return
 
@@ -673,7 +656,7 @@ class FusionInput:
             if self.is_number(value):
                 value = float(value)
             else:
-                dprint("this field requires number input")
+                print("this field requires number input")
                 value = self.fusion_input[key]
 
         if self.attributes["INPS_DataType"] == "Point":
@@ -704,12 +687,16 @@ class FusionInput:
             try:
                 value = [float(i) for i in compute_values]
             except ValueError:
-                x, y = value
-                if x[0] == "=" or y[0] == "=" and len(value) > 1:
-                    value = [v.lstrip("=") for v in value]
-                    self.set_expression("Point({}, {})".format(value[0], value[1]))
-                else:
-                    dprint("Point data accepts only numbers and expressions")
+                if isinstance(value, list):
+                    try:
+                        x, y = value
+                        if x[0] == "=" or y[0] == "=" and len(value) > 1:
+                            value = [v.lstrip("=") for v in value]
+                            self.set_expression("Point({}, {})".format(value[0], value[1]))
+                        else:
+                            print("Point data accepts only numbers and expressions")
+                    except Exception:
+                        print("value should contain 2 elements")
                 return
         self.fusion_input[key] = value
         self.keyframes = self.fusion_input.GetKeyFrames()
@@ -765,10 +752,10 @@ class TableModel(QAbstractTableModel):
         global current_comp_name
         comp_name = comp.GetAttrs()["COMPS_Name"]
         if comp_name and comp_name != current_comp_name:
-            dprint("currently working with {}".format(comp_name))
+            print("currently working with {}".format(comp_name))
             current_comp_name = comp_name
         if not comp:
-            dprint("No comp data found. Probably both Resolve and Fusion are loaded?")
+            print("No comp data found. Probably both Resolve and Fusion are loaded?")
         self.attribute_name_keys = []  # List of unique attribute name keys
         self.attribute_data_types = []  # this list is coupled to the key list
         self.tools_inputs = []
@@ -909,18 +896,15 @@ class TableModel(QAbstractTableModel):
 
         Needs more work
         """
-        if index.isValid():
-            if role == Qt.EditRole:
-                fusion_input = self.tools_inputs[index.row()].get(
-                    self.attribute_name_keys[index.column()], None
-                )
-                if fusion_input:
-                    if isinstance(value, list):
-                        # dprint("setting point data: ", value)
-                        fusion_input[comp.CurrentTime] = value
-                    else:
-                        # dprint("setting string data: ", str(value))
-                        fusion_input[comp.CurrentTime] = str(value)
+        if index.isValid() and role == Qt.EditRole:
+            fusion_input = self.tools_inputs[index.row()].get(
+                self.attribute_name_keys[index.column()], None
+            )
+            if not fusion_input:
+                return
+            if not isinstance(value, list):
+                value = str(value)
+            fusion_input[comp.CurrentTime] = value
 
     def flags(self, index):
         if not index.isValid():
@@ -1013,13 +997,17 @@ class MainWindow(QMainWindow):
         self.status_bar.addPermanentWidget(self.progress_bar)
         self.progress_bar.setValue(0)
         self.progress_bar.setVisible(False)
+
         # Connections
         self.always_on_top.stateChanged.connect(self.changeAlwaysOnTop)
+        self.search_line.returnPressed.connect(self.refresh_button.click)
         self.search_line.textChanged.connect(self.filterRegExpChanged)
         self.clear_button.pressed.connect(self.clear_search)
-        self.refresh_button.released.connect(self.reload_fusion_data)
+        self.clear_button.pressed.connect(self.reload_fusion_data)
+        self.refresh_button.clicked.connect(self.reload_fusion_data)
         self._tm.communicate.broadcast.connect(self.communication)
         self.corner.clicked.connect(self.reset_sorting)
+        
         self.setWindowFlags(
             self.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint
         )
@@ -1162,11 +1150,11 @@ if __name__ == "__main__":
         main_app = QApplication([])
     main_app.setStyleSheet(css)
     main = MainWindow()
-    win_title = "Attribute Spreadsheet 0.{}".format(__VERSION__)
+    main.setWindowTitle(f"Attribute Spreadsheet 0.{__VERSION__}")
     if __beta__:
         win_title += "b"
     main.setWindowTitle(win_title)
     main.setMinimumSize(QSize(740, 200))
     main.show()
     main_app.exec()
-    dprint("Done")
+    print("Done")
