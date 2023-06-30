@@ -69,6 +69,10 @@
         v 0.3
             -- cleanup, separate pip_install script
             -- PySide6 initial support
+        v 0.3.1
+            -- disable table update during search
+            -- cleanup
+            -- refactoring pip_install script
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
@@ -102,18 +106,19 @@ import subprocess
 import sys
 from pprint import pprint
 
-__VERSION__ = 3.0
+__VERSION__ = 3.1
 __beta__ = True
 __license__ = "MIT"
 __copyright__ = "2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>,\
-2019-2020 additions by Alexey Bogomolov <mail@abogomolov.com>"
+2019-2023 additions by Alexey Bogomolov <mail@abogomolov.com>"
 
 
 PKG = "PySide6"
 PKG_VERSION = ""
 REMOTE_FUSION_ACCESS = False
 HOST = "localhost"
-# do not auto-load tools on startup if more than 8 tools selected to speedup UI loading
+# do not auto-load tools on startup if more than `load_selected_tools_limit`
+# tools is selected
 load_selected_tools_limit = 10
 
 print("_____________________\nAttribute Spreadsheet version 0.{}".format(__VERSION__))
@@ -127,52 +132,66 @@ def get_fusion(fusion_host):
         print("No BlackmagicFusion module found")
 
 
-def get_comp():
+def get_fusion_comp():
+    fu_host = HOST
     if len(sys.argv) == 2:
         fu_host = sys.argv[1]
-    fusion = get_fusion(HOST)
+    fusion = get_fusion(fu_host)
     if not fusion:
-        print("No Fusion instance found" "or instance is not a Studio version")
+        print("No Fusion instance found or Fusion is not a Studio version")
         sys.exit()
     return fusion.GetCurrentComp()
 
 
-def check_py_version():
-    supported_python_version = sys.version_info[:2] >= (3, 6)
-    print(f"current python version is {sys.version}")
-    if not supported_python_version:
-        msg = "Python >= 3.6 is required!"
-        sys.stderr.write(f"{msg}\n")
-        print(
-            "Python 3.6 and later is required to run this script\n"
-            "Set Python interpreter in Fusion Preferences -> Global Settings -> Script -> Default Script Version"
-        )
-        dialog = {1: {1: "", 2: "Text", "ReadOnly": True, "Lines": 3, "Default": msg}}
-        dlg = comp.AskUser("Warning", dialog)
-        if dlg:
-            fu.ShowPrefs("PrefsScript")
-        sys.exit()
+def compatible_python():
+    """Only Python 3.8 or higher is supported"""
 
-
-check_py_version()
-
-try:
-    comp = fu.GetCurrentComp()  # this works in most cases
-except Exception as e:
-    print("Starting in standalone mode...")
-    REMOTE_FUSION_ACCESS = True
-    load_selected_tools_limit = 3
-    comp = get_comp()
-    if not comp:
-        raise ModuleNotFoundError("Comp not found")
-finally:
-    current_comp_name = comp.GetAttrs()["COMPS_Name"]
+    compatible = False
+    if sys.version_info.major == 3 and sys.version_info.minor >= 8:
+        compatible = True
+    return compatible
 
 
 def print(*args, **kwargs):
     """override print() function"""
 
     __builtins__.print("[AS] : ", *args, **kwargs)
+
+
+def install_pyside():
+    def show_confirmation_dialogue():
+        # ask user permission to install PySide6 automatically
+        dialogue = {
+            1: {
+                1: "Warning",
+                "Name": "Warning",
+                2: "Text",
+                "Readonly": True,
+                "Default": "Would you like to install\nPyside2 automatically? (y/n)",
+            }
+        }
+        if REMOTE_FUSION_ACCESS:
+            ask = input(dialogue[1]["Default"].replace("\n", " "))
+        else:
+            ask = comp.AskUser("No PySide6 installation found", dialogue)
+        if ask or ask.lower() != "y":
+            return True
+
+    from install_pip_package import pip_install
+    print("No PySide6 installation found!")
+
+    installaion_confirmed = show_confirmation_dialogue()
+    if installaion_confirmed:
+        print("Installing PySide6...")
+        pip_install(PKG)
+        sys.exit()
+    else:
+        print(
+            "PySide6 is required to run this script\n"
+            "Please install it manually with following command:\n"
+            f"{python_executable} -m pip install {PKG}=={PKG_VERSION}"
+        )
+        sys.exit()
 
 
 try:
@@ -222,40 +241,7 @@ try:
 
 except ImportError:
 
-    from install_pip_package import pip_install, get_python_executable
-    print("No PySide6 installation found!")
-
-    def show_confirmation_dialogue():
-        # ask user permission to install PySide6 automatically
-        dialogue = {
-            1: {
-                1: "Warning",
-                "Name": "Warning",
-                2: "Text",
-                "Readonly": True,
-                "Default": "Would you like to install\nPyside2 automatically? (y/n)",
-            }
-        }
-        if REMOTE_FUSION_ACCESS:
-            ask = input(dialogue[1]["Default"].replace("\n", " "))
-        else:
-            ask = comp.AskUser("No PySide6 installation found", dialogue)
-        if ask or ask.lower() != "y":
-            return True
-
-    installaion_confirmed = show_confirmation_dialogue()
-    python_executable = get_python_executable()
-    if installaion_confirmed:
-        print("Trying to install PySide6...")
-        pip_install([f"{PKG}"])
-        sys.exit()
-    else:
-        print(
-            "PySide6 is required to run this script\n"
-            "Please install it manually with following command:\n"
-            f"{python_executable} -m pip install {PKG}=={PKG_VERSION}"
-        )
-        sys.exit()
+    install_pyside()
 
 
 class FUIDComboDelegate(QItemDelegate):
@@ -429,10 +415,10 @@ class TableView(QTableView):
     def mouseReleaseEvent(self, event):
         if self.mouseIsDown:
             self.mouseIsDown = False
-            index_source = self.model().mapToSource(self.indexAt(self.center))
+            index_source = self.model.mapToSource(self.indexAt(self.center))
             source_model = self.model().sourceModel()
             if len(self.selectionModel().selection().indexes()) <= 1:
-                index_target = self.model().mapToSource(self.indexAt(self.startCenter))
+                index_target = self.model.mapToSource(self.indexAt(self.startCenter))
                 if (
                     index_source.row() == index_target.row()
                     and index_source.column() == index_target.column()
@@ -473,12 +459,9 @@ class TableView(QTableView):
         alternative.)
         """
         tm = self.model()
-        print("Model keys: ", tm.filteredKeys)
-
         # filteredKeys contains the column data types with the indices properly sorted after filtering.
         for k, v in enumerate(tm.filteredKeys):
             if v == "Point":
-                print("setting point")
                 self.setItemDelegateForColumn(k, PointDelegate(self))
             # elif v == "FuID":
             #     self.setItemDelegateForColumn(k, FUIDComboDelegate(self))
@@ -489,12 +472,12 @@ class TableView(QTableView):
 
     def commitData(self, editor):
         """
-        commitData makes sure all multiselected cells get the same values applied as the edited cell.
+        commitData makes sure all multiselected cells
+        get the same values applied as the edited cell.
         """
+
         super(TableView, self).commitData(editor)
-        # We need to remap the model index from the filtered proxy model indices to the source model indices
-        tm = self.model().sourceModel()  # mapToSource(self.currentIndex()).model()
-        # Use a stored edit role text
+        tm = self.model().sourceModel()
         value = tm.stored_edit_role_data
         self.commitDataDo(value)
 
@@ -512,9 +495,12 @@ class TableView(QTableView):
                     )
                     input_name = input_name.replace("\n", " ").strip()
                     if isinstance(value, list) and len(value) == 2:
+                        # working with XY point data
                         try:
+                            # convert XY data to float
                             x, y = [float(i) for i in value]
                         except ValueError:
+                            # expression found?
                             x, y = value
                         print(
                             "setting {} [{}] to [{} : {}]".format(
@@ -525,7 +511,7 @@ class TableView(QTableView):
                         print(
                             "setting {} [{}] to {}".format(tool_name, input_name, value)
                         )
-                    tm.setData(self.model().mapToSource(s), value, Qt.EditRole)
+                    tm.setData(self.model.mapToSource(s), value, Qt.EditRole)
             comp.EndUndo(True)
         except Exception as e:
             comp.EndUndo(True)
@@ -748,7 +734,7 @@ class TableModel(QAbstractTableModel):
         try:
             comp = fu.GetCurrentComp()
         except NameError:
-            comp = get_comp()
+            comp = get_fusion_comp()
         global current_comp_name
         comp_name = comp.GetAttrs()["COMPS_Name"]
         if comp_name and comp_name != current_comp_name:
@@ -1075,7 +1061,6 @@ class MainWindow(QMainWindow):
         regExp = self.search_line.text()
         self.proxy_model.filteredKeys = []
         self.proxy_model.setFilterRegularExpression(regExp)
-        self._tv.updateColumns()
 
 
 # increase font size for Retina Display on Mac
@@ -1145,6 +1130,33 @@ QTableWidget::item {{
 # and the script would not load if there's a confusion about which instance of Fusion to use.
 
 if __name__ == "__main__":
+
+    if not compatible_python():
+        print(f"current python version is {sys.version}")
+        msg = "Python >= 3.8 is required!"
+        sys.stderr.write(f"{msg}\n")
+        print(
+            "Python 3.6 and later is required to run this script\n"
+            "Set Python interpreter in Fusion Preferences -> Global Settings -> Script -> Default Script Version"
+        )
+        dialog = {1: {1: "", 2: "Text", "ReadOnly": True, "Lines": 3, "Default": msg+"\nOpen Preferences?"}}
+        dlg = comp.AskUser("Warning", dialog)
+        if dlg:
+            fu.ShowPrefs("PrefsScript")
+        sys.exit()
+
+    try:
+        comp = fu.GetCurrentComp()  # this works in most cases
+    except Exception as e:
+        print("Could not find Fusion comp. Attempt to connect in standalone mode...")
+        REMOTE_FUSION_ACCESS = True
+        load_selected_tools_limit = 3
+        comp = get_fusion_comp()
+        if not comp:
+            raise ModuleNotFoundError("Comp not found")
+    finally:
+        current_comp_name = comp.GetAttrs()["COMPS_Name"]
+
     main_app = QApplication.instance()  # checks if QApplication already exists.
     if not main_app:  # create QApplication if it doesnt exist
         main_app = QApplication([])
