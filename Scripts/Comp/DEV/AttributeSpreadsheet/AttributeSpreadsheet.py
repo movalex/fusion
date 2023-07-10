@@ -108,7 +108,7 @@ import sys
 from pprint import pprint
 
 __VERSION__ = 3.1
-__beta__ = True
+__beta__ = False
 __license__ = "MIT"
 __copyright__ = "2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>,\
 2019-2023 additions by Alexey Bogomolov <mail@abogomolov.com>"
