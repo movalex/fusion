@@ -73,6 +73,7 @@
             -- disable table update during search
             -- cleanup
             -- refactoring pip_install script
+            -- fix pyside6 compatibility for table models
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
@@ -413,12 +414,13 @@ class TableView(QTableView):
             pass
 
     def mouseReleaseEvent(self, event):
+        table_model = self.model()
         if self.mouseIsDown:
             self.mouseIsDown = False
-            index_source = self.model.mapToSource(self.indexAt(self.center))
-            source_model = self.model().sourceModel()
+            index_source = table_model.mapToSource(self.indexAt(self.center))
+            source_model = table_model.sourceModel()
             if len(self.selectionModel().selection().indexes()) <= 1:
-                index_target = self.model.mapToSource(self.indexAt(self.startCenter))
+                index_target = table_model.mapToSource(self.indexAt(self.startCenter))
                 if (
                     index_source.row() == index_target.row()
                     and index_source.column() == index_target.column()
@@ -482,7 +484,8 @@ class TableView(QTableView):
         self.commitDataDo(value)
 
     def commitDataDo(self, value):
-        tm = self.model().sourceModel()
+        table_model = self.model()
+        source_model = table_model.sourceModel()
         comp.StartUndo("Attribute Spreadsheet")
         try:
             for isr in self.selectionModel().selection():
@@ -511,7 +514,7 @@ class TableView(QTableView):
                         print(
                             "setting {} [{}] to {}".format(tool_name, input_name, value)
                         )
-                    tm.setData(self.model.mapToSource(s), value, Qt.EditRole)
+                    source_model.setData(table_model.mapToSource(s), value, Qt.EditRole)
             comp.EndUndo(True)
         except Exception as e:
             comp.EndUndo(True)
