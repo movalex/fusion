@@ -119,8 +119,7 @@ PKG_VERSION = ""
 REMOTE_FUSION_ACCESS = False
 HOST = "localhost"
 
-# do not auto-load tools on startup if more than `LOAD_SELECTED_TOOLS_LIMIT`
-# tools is selected
+# Do not auto-load the spreadsheet on startup if more than given number of tools selected
 LOAD_SELECTED_TOOLS_LIMIT = 10
 
 print("_____________________\nAttribute Spreadsheet version 0.{}".format(__VERSION__))
