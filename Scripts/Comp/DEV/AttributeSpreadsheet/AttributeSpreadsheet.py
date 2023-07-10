@@ -118,9 +118,10 @@ PKG = "PySide6"
 PKG_VERSION = ""
 REMOTE_FUSION_ACCESS = False
 HOST = "localhost"
-# do not auto-load tools on startup if more than `load_selected_tools_limit`
+
+# do not auto-load tools on startup if more than `LOAD_SELECTED_TOOLS_LIMIT`
 # tools is selected
-load_selected_tools_limit = 10
+LOAD_SELECTED_TOOLS_LIMIT = 10
 
 print("_____________________\nAttribute Spreadsheet version 0.{}".format(__VERSION__))
 
@@ -1003,7 +1004,7 @@ class MainWindow(QMainWindow):
         self.tool_list = comp.GetToolList(True)
         if not self.tool_list:
             self.status_bar.showMessage("Select some tools and click Refresh button")
-        if len(self.tool_list.values()) >= load_selected_tools_limit:
+        if len(self.tool_list.values()) >= LOAD_SELECTED_TOOLS_LIMIT:
             self.status_bar.showMessage("Click Refresh button to load selected tools")
         else:
             self.load_fusion_data()
@@ -1153,7 +1154,7 @@ if __name__ == "__main__":
     except Exception as e:
         print("Could not find Fusion comp. Attempt to connect in standalone mode...")
         REMOTE_FUSION_ACCESS = True
-        load_selected_tools_limit = 3
+        LOAD_SELECTED_TOOLS_LIMIT = 3
         comp = get_fusion_comp()
         if not comp:
             raise ModuleNotFoundError("Comp not found")
