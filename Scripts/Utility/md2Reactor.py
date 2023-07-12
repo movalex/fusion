@@ -84,23 +84,6 @@ def markdown_to_bbcode(s):
     return s
 
 
-def pip_install_dialogue():
-    script_path = comp.MapPath("Reactor:Deploy/Scripts/Utility")
-    sys.path.append(script_path)
-    from install_pip_package import (
-        pip_install,
-        show_confirmation_dialogue,
-        fallback_message,
-    )
-
-    print(f"No {PKG_REQUIRED} installation found!")
-
-    installaion_confirmed = show_confirmation_dialogue(comp, PKG_REQUIRED)
-    if installaion_confirmed:
-        print(f"Installing {PKG_REQUIRED}...")
-        pip_install(PKG_REQUIRED)
-
-
 def write_file(file_name, text, suffix):
     with open(file_name + suffix, "w") as out:
         out.write(text)
