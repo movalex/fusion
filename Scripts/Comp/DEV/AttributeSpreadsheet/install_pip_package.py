@@ -3,6 +3,10 @@ import platform
 import subprocess
 from pathlib import Path
 
+import tkinter as tk
+from tkinter import ttk
+from tkinter.messagebox import askyesno
+
 
 def get_python_home() -> Path:
     python_home = Path(os.__file__).parent.parent
@@ -23,6 +27,7 @@ def get_python_executable(python_home=None) -> str:
 
 
 def run_installation_command(python_executable, package):
+    print(f"No {package} installation found!")
     if not python_executable:
         return
     command = [
@@ -53,32 +58,26 @@ def fallback_message(package_name: str):
     )
 
 
-def show_confirmation_dialogue(comp, package_name: str):
+def show_confirmation_dialogue(package_name: str):
     # ask user for permission to install the package automatically
 
-    dialogue = {
-        1: {
-            1: "Warning",
-            "Name": "Warning",
-            2: "Text",
-            "Readonly": True,
-            "Default": f"Would you like to install {package_name} automatically? (y/n)",
-        }
-    }
-    ask = comp.AskUser(f"No {package_name} installation found", dialogue)
-    if ask:
-        return True
-    else:    
-        fallback_message(package_name)
+    message = f"Would you like to install {package_name} automatically?"
+    title = f"Confirm package installation"
+    answer = askyesno(title, message)
+    return answer
 
 
 def pip_install(package: str, fusion_python_home=None):
     if fusion_python_home is None:
         fusion_python_home = get_python_home()
-
+    
+    installaion_confirmed = show_confirmation_dialogue(package)
+    if not installaion_confirmed:
+        fallback_message(package)
+        return
     python_executable = get_python_executable(fusion_python_home)
     if not python_executable:
         return
-    print(f"Installing {package}")
+    print(f"Installing {package}...")
     run_installation_command(python_executable, package)
     print("Done.")
