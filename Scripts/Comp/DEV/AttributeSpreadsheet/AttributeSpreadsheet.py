@@ -114,10 +114,9 @@ __copyright__ = "2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>,\
 2019-2023 additions by Alexey Bogomolov <mail@abogomolov.com>"
 
 
-PKG = "PySide6"
-PKG_VERSION = ""
+PKG_REQUIRED = "PySide6"
 REMOTE_FUSION_ACCESS = False
-HOST = "localhost"
+DEFAULT_HOST = "localhost"
 
 # Do not auto-load the spreadsheet on startup if more than given number of tools selected
 LOAD_SELECTED_TOOLS_LIMIT = 10
@@ -128,20 +127,17 @@ print("_____________________\nAttribute Spreadsheet version 0.{}".format(__VERSI
 def get_fusion(fusion_host):
     try:
         import BlackmagicFusion as bmd
+
         return bmd.scriptapp("Fusion", fusion_host)
     except ModuleNotFoundError:
         print("No BlackmagicFusion module found")
 
 
-def get_fusion_comp():
-    fu_host = HOST
-    if len(sys.argv) == 2:
-        fu_host = sys.argv[1]
-    fusion = get_fusion(fu_host)
-    if not fusion:
+def get_fusion_comp(fusion_object):
+    if not fusion_object:
         print("No Fusion instance found or Fusion is not a Studio version")
         sys.exit()
-    return fusion.GetCurrentComp()
+    return fusion_object.GetCurrentComp()
 
 
 def compatible_python():
@@ -159,40 +155,23 @@ def print(*args, **kwargs):
     __builtins__.print("[AS] : ", *args, **kwargs)
 
 
-def install_pyside():
-    def show_confirmation_dialogue():
-        # ask user permission to install PySide6 automatically
-        dialogue = {
-            1: {
-                1: "Warning",
-                "Name": "Warning",
-                2: "Text",
-                "Readonly": True,
-                "Default": "Would you like to install\nPyside2 automatically? (y/n)",
-            }
-        }
-        if REMOTE_FUSION_ACCESS:
-            ask = input(dialogue[1]["Default"].replace("\n", " "))
-        else:
-            ask = comp.AskUser("No PySide6 installation found", dialogue)
-        if ask or ask.lower() != "y":
-            return True
+def pip_install_dialogue():
+    script_path = comp.MapPath("Reactor:Deploy/Scripts/Utility")
+    sys.path.append(script_path)
+    from install_pip_package import (
+        pip_install,
+        show_confirmation_dialogue,
+        fallback_message,
+    )
 
-    from install_pip_package import pip_install
-    print("No PySide6 installation found!")
+    print(f"No {PKG_REQUIRED} installation found!")
 
-    installaion_confirmed = show_confirmation_dialogue()
+    installaion_confirmed = show_confirmation_dialogue(comp, PKG_REQUIRED)
     if installaion_confirmed:
-        print("Installing PySide6...")
-        pip_install(PKG)
-        sys.exit()
-    else:
-        print(
-            "PySide6 is required to run this script\n"
-            "Please install it manually with following command:\n"
-            f"{python_executable} -m pip install {PKG}=={PKG_VERSION}"
-        )
-        sys.exit()
+        print(f"Installing {PKG_REQUIRED}...")
+        pip_install(PKG_REQUIRED)
+
+    sys.exit()
 
 
 try:
@@ -242,7 +221,7 @@ try:
 
 except ImportError:
 
-    install_pyside()
+    pip_install_dialogue()
 
 
 class FUIDComboDelegate(QItemDelegate):
@@ -681,7 +660,9 @@ class FusionInput:
                         x, y = value
                         if x[0] == "=" or y[0] == "=" and len(value) > 1:
                             value = [v.lstrip("=") for v in value]
-                            self.set_expression("Point({}, {})".format(value[0], value[1]))
+                            self.set_expression(
+                                "Point({}, {})".format(value[0], value[1])
+                            )
                         else:
                             print("Point data accepts only numbers and expressions")
                     except Exception:
@@ -996,7 +977,7 @@ class MainWindow(QMainWindow):
         self.refresh_button.clicked.connect(self.reload_fusion_data)
         self._tm.communicate.broadcast.connect(self.communication)
         self.corner.clicked.connect(self.reset_sorting)
-        
+
         self.setWindowFlags(
             self.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint
         )
@@ -1021,7 +1002,7 @@ class MainWindow(QMainWindow):
     def changeAlwaysOnTop(self):
         if self.always_on_top.checkState():
             self.setWindowFlags(
-                self.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint
+                self.windowFlags() | (Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint)
             )
             self.show()
         else:
@@ -1142,7 +1123,15 @@ if __name__ == "__main__":
             "Python 3.6 and later is required to run this script\n"
             "Set Python interpreter in Fusion Preferences -> Global Settings -> Script -> Default Script Version"
         )
-        dialog = {1: {1: "", 2: "Text", "ReadOnly": True, "Lines": 3, "Default": msg+"\nOpen Preferences?"}}
+        dialog = {
+            1: {
+                1: "",
+                2: "Text",
+                "ReadOnly": True,
+                "Lines": 3,
+                "Default": msg + "\nOpen Preferences?",
+            }
+        }
         dlg = comp.AskUser("Warning", dialog)
         if dlg:
             fu.ShowPrefs("PrefsScript")
@@ -1154,7 +1143,11 @@ if __name__ == "__main__":
         print("Could not find Fusion comp. Attempt to connect in standalone mode...")
         REMOTE_FUSION_ACCESS = True
         LOAD_SELECTED_TOOLS_LIMIT = 3
-        comp = get_fusion_comp()
+        fusion_host = DEFAULT_HOST
+        if len(sys.argv) == 2:
+            fusion_host = sys.argv[1]
+        fusion = get_fusion(fusion_host)
+        comp = get_fusion_comp(fusion)
         if not comp:
             raise ModuleNotFoundError("Comp not found")
     finally:
