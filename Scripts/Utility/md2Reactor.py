@@ -6,30 +6,58 @@ import os
 from pathlib import Path
 
 DEFAULT_DIR = Path("~/Desktop").expanduser()
+PKG_REQUIRED = "markdown"
 
 
-def request_file_name(init_dir):
+def pip_install_dialogue():
+    script_path = comp.MapPath("Reactor:Deploy/Scripts/Utility")
+    sys.path.append(script_path)
+    from install_pip_package import (
+        pip_install,
+        show_confirmation_dialogue,
+    )
+
+    print(f"No {PKG_REQUIRED} installation found!")
+
+    installaion_confirmed = show_confirmation_dialogue(comp, PKG_REQUIRED)
+    if installaion_confirmed:
+        print(f"Installing {PKG_REQUIRED}...")
+        pip_install(PKG_REQUIRED)
+
+    sys.exit()
+
+
+try:
+    from markdown import markdown
+except ModuleNotFoundError:
+    script_path = comp.MapPath("Reactor:Deploy/Scripts/Utility")
+    sys.path.append(script_path)
+    pip_install_dialogue()
+    print("Installation finished. Please restart the script")
+    sys.exit()
+
+
+def request_file_names(init_dir: str) -> list:
     from tkinter import filedialog, Tk
 
     root = Tk()
     root.withdraw()
-    md_file = filedialog.askopenfilename(
+    md_files = filedialog.askopenfilenames(
         initialdir=init_dir, filetypes=[("Markdown files", ".md .MD")]
     )
-    if md_file:
-        return md_file
+    if md_files:
+        return md_files
 
 
-def translate(pattern="{}", g=1):
+def translate(pattern: str, g=1):
     def inline(match):
         s = match.group(g)
         return pattern.format(s)
+
     return inline
 
 
 def markdown_to_bbcode(s):
-    codes = []
-
     s = re.sub(r"(?m)\[(.*?)\]\((https?:\/\/\S+)\)", "[url=\\2]\\1[/url]", s)
     s = re.sub(r"(?m)([*_]{2})(\w+?)\1", "[b]\\2[/b]", s)
     s = re.sub(r"(?m)(?:^| )[^@#\s_`]?_([^_]+)_", "[i]\\1[/i]", s)
@@ -46,7 +74,7 @@ def markdown_to_bbcode(s):
     s = re.sub(r"(?m)^> (.*)$", translate("~[quote]{}[/quote]"), s)
     s = re.sub(r"(?m)^[-+*]\s+(.*)$", translate("~[list]\n[*]{}\n[/list]"), s)
     s = re.sub(r"(?m)^\d+\.\s+(.*)$", translate("~[list=1]\n[*]{}\n[/list]"), s)
-    s = re.sub(r"(?m)^((?!~).*)$", translate(), s)
+    s = re.sub(r"(?m)^((?!~).*)$", translate("{}"), s)
     s = re.sub(r"(?m)^~\[", "[", s)
     s = re.sub(r"(?m)\[/code]\n\[code(=.*?)?]", "\n", s)
     s = re.sub(r"(?m)\[code(=.*?)?]\[/code]", "", s)
@@ -56,17 +84,21 @@ def markdown_to_bbcode(s):
     return s
 
 
-def markdown_to_html(text=None):
-    try:
-        from markdown import markdown
+def pip_install_dialogue():
+    script_path = comp.MapPath("Reactor:Deploy/Scripts/Utility")
+    sys.path.append(script_path)
+    from install_pip_package import (
+        pip_install,
+        show_confirmation_dialogue,
+        fallback_message,
+    )
 
-        text = markdown(text)
-    except ImportError:
-        print(
-            "to convert text to HTML, install markdown package with\n"
-            "`pip install markdown`"
-        )
-    return text
+    print(f"No {PKG_REQUIRED} installation found!")
+
+    installaion_confirmed = show_confirmation_dialogue(comp, PKG_REQUIRED)
+    if installaion_confirmed:
+        print(f"Installing {PKG_REQUIRED}...")
+        pip_install(PKG_REQUIRED)
 
 
 def write_file(file_name, text, suffix):
@@ -75,44 +107,51 @@ def write_file(file_name, text, suffix):
         print(f"[md2Reactor] created {out.name}")
 
 
-def main(file):
-    if not file or not file.exists() or not file.suffix.lower() == ".md":
-        print("no markdown file selected")
+def main(file_path):
+    if not file_path or not file_path.exists() or not file_path.suffix.lower() == ".md":
+        print("no markdown file_path selected")
         return
 
-    with open(file, "r") as fp:
+    with open(file_path, "r") as fp:
         text = fp.read()
 
-    file_name = os.path.splitext(file)[0]
+    file_name, _ = os.path.splitext(file_path)
 
     bbcode_text = markdown_to_bbcode(text)
     write_file(file_name, bbcode_text, "_bbcode.txt")
 
-    atom_text = markdown_to_html(text)
+    atom_text = markdown(text)
     if atom_text:
         write_file(file_name, atom_text, "_atom.html")
 
     print("Done!")
 
 
+def process(file_list):
+    if not file_list:
+        return
+    for file_path in file_list:
+        file_path = Path(file_path).absolute()
+        if not file_path.exists():
+            return
+        main(file_path)
+    fu.SetData("md2reactor.path", str(file_path.parent))
+
+
 if __name__ == "__main__":
     if len(sys.argv) >= 2:
-        for file_path in sys.argv[1:]:
-            file_path = Path(file_path).absolute()
-            main(file_path)
-    else:
+        # working standalone
         try:
             import BlackmagicFusion as bmd
 
             fu = bmd.scriptapp("Fusion")
         except ImportError:
-            print("no Fusion app found")
-
-        folder = DEFAULT_DIR
-        if fu:
-            folder = fu.GetData("md2reactor.path")
-        file_path = Path(request_file_name(folder))
-        if file_path:
-            if fu:
-                fu.SetData("md2reactor.path", str(file_path.parent))
-            main(file_path)
+            raise ImportError("No Fusion instance found")
+        file_list = sys.argv[1:]
+        process(file_list)
+    else:
+        folder = fu.GetData("md2reactor.path")
+        if not folder:
+            folder = DEFAULT_DIR
+        file_paths = request_file_names(folder)
+        process(file_paths)
