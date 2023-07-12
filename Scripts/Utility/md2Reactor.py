@@ -8,32 +8,13 @@ from pathlib import Path
 DEFAULT_DIR = Path("~/Desktop").expanduser()
 PKG_REQUIRED = "markdown"
 
-
-def pip_install_dialogue():
-    script_path = comp.MapPath("Reactor:Deploy/Scripts/Utility")
-    sys.path.append(script_path)
-    from install_pip_package import (
-        pip_install,
-        show_confirmation_dialogue,
-    )
-
-    print(f"No {PKG_REQUIRED} installation found!")
-
-    installaion_confirmed = show_confirmation_dialogue(comp, PKG_REQUIRED)
-    if installaion_confirmed:
-        print(f"Installing {PKG_REQUIRED}...")
-        pip_install(PKG_REQUIRED)
-
-    sys.exit()
-
-
 try:
     from markdown import markdown
 except ModuleNotFoundError:
     script_path = comp.MapPath("Reactor:Deploy/Scripts/Utility")
     sys.path.append(script_path)
-    pip_install_dialogue()
-    print("Installation finished. Please restart the script")
+    from install_pip_package import pip_install
+    pip_install(PKG_REQUIRED)
     sys.exit()
 
 
@@ -122,19 +103,9 @@ def process(file_list):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) >= 2:
-        # working standalone
-        try:
-            import BlackmagicFusion as bmd
-
-            fu = bmd.scriptapp("Fusion")
-        except ImportError:
-            raise ImportError("No Fusion instance found")
-        file_list = sys.argv[1:]
-        process(file_list)
-    else:
-        folder = fu.GetData("md2reactor.path")
-        if not folder:
-            folder = DEFAULT_DIR
-        file_paths = request_file_names(folder)
-        process(file_paths)
+    comp = fu.GetCurrentComp()
+    folder = fu.GetData("md2reactor.path")
+    if not folder:
+        folder = DEFAULT_DIR
+    file_paths = request_file_names(folder)
+    process(file_paths)
