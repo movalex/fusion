@@ -74,6 +74,11 @@
             -- cleanup
             -- refactoring pip_install script
             -- fix pyside6 compatibility for table models
+        v 0.3.2
+            -- use logging module
+            -- refine pip installation script
+            -- fix edit filtered entries
+            -- fix always on top option
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
@@ -105,9 +110,10 @@ import platform
 import re
 import subprocess
 import sys
+import logging
 from pprint import pprint
 
-__VERSION__ = 3.1
+__VERSION__ = 3.2
 __beta__ = False
 __license__ = "MIT"
 __copyright__ = "2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>,\
@@ -117,11 +123,14 @@ __copyright__ = "2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>,\
 PKG_REQUIRED = "PySide6"
 REMOTE_FUSION_ACCESS = False
 DEFAULT_HOST = "localhost"
-
 # Do not auto-load the spreadsheet on startup if more than given number of tools selected
 LOAD_SELECTED_TOOLS_LIMIT = 10
 
 print("_____________________\nAttribute Spreadsheet version 0.{}".format(__VERSION__))
+
+log_level = logging.DEBUG
+fmt = "[AS] - [%(levelname)s] - %(message)s"
+logging.basicConfig(level=log_level, format=fmt)
 
 
 def get_fusion(fusion_host):
@@ -130,12 +139,12 @@ def get_fusion(fusion_host):
 
         return bmd.scriptapp("Fusion", fusion_host)
     except ModuleNotFoundError:
-        print("No BlackmagicFusion module found")
+        logging.info("No BlackmagicFusion module found")
 
 
 def get_fusion_comp(fusion_object):
     if not fusion_object:
-        print("No Fusion instance found or Fusion is not a Studio version")
+        logging.info("No Fusion instance found or Fusion is not a Studio version")
         sys.exit()
     return fusion_object.GetCurrentComp()
 
@@ -149,27 +158,12 @@ def compatible_python():
     return compatible
 
 
-def print(*args, **kwargs):
-    """override print() function"""
-
-    __builtins__.print("[AS] : ", *args, **kwargs)
-
-
 def pip_install_dialogue():
     script_path = comp.MapPath("Reactor:Deploy/Scripts/Utility")
     sys.path.append(script_path)
-    from install_pip_package import (
-        pip_install,
-        show_confirmation_dialogue,
-        fallback_message,
-    )
+    from install_pip_package import pip_install
 
-    print(f"No {PKG_REQUIRED} installation found!")
-
-    installaion_confirmed = show_confirmation_dialogue(comp, PKG_REQUIRED)
-    if installaion_confirmed:
-        print(f"Installing {PKG_REQUIRED}...")
-        pip_install(PKG_REQUIRED)
+    pip_install(PKG_REQUIRED)
 
     sys.exit()
 
@@ -249,7 +243,7 @@ class FUIDComboDelegate(QItemDelegate):
 
     def setEditorData(self, editor, index):
         editor.blockSignals(True)
-        print(index.model().data(index))
+        logging.debug(index.model().data(index))
         editor.setCurrentIndex(self.items.index(str(index.model().data(index))))
         editor.setData("Domain")
         editor.blockSignals(False)
@@ -322,7 +316,7 @@ class PointDelegate(QItemDelegate):
             editor.setItem(0, 1, y_value)
             editor.blockSignals(False)
         except ValueError:
-            print(
+            logging.info(
                 "error occurred while parsing the point data. Setting values to default"
             )
             for i in range(2):
@@ -335,7 +329,7 @@ class PointDelegate(QItemDelegate):
             data = [x, y]
             model.sourceModel().stored_edit_role_data = data
         except AttributeError:
-            print("Point data not applicable here")
+            logging.info("Point data not applicable here")
 
 
 class TableView(QTableView):
@@ -404,7 +398,7 @@ class TableView(QTableView):
                     index_source.row() == index_target.row()
                     and index_source.column() == index_target.column()
                 ):
-                    print("cannot link the input to itself")
+                    logging.info("cannot link the input to itself")
                     return
                 if (
                     index_source.row() > -1
@@ -440,14 +434,17 @@ class TableView(QTableView):
         alternative.)
         """
         tm = self.model()
-        # filteredKeys contains the column data types with the indices properly sorted after filtering.
+        # filteredKeys contains the column data types with the indices sorted after filtering.
+        if tm.is_filtered:
+            # hack to get correct index for filtered keys... eww
+            tm.filteredKeys = tm.filteredKeys[2:]
         for k, v in enumerate(tm.filteredKeys):
             if v == "Point":
                 self.setItemDelegateForColumn(k, PointDelegate(self))
-            # elif v == "FuID":
-            #     self.setItemDelegateForColumn(k, FUIDComboDelegate(self))
             elif v in ["Number", "Float", "Int", "Clip", "Text", "FuID"]:
                 self.setItemDelegateForColumn(k, LineEditDelegate(self))
+            # elif v == "FuID":
+            #     self.setItemDelegateForColumn(k, FUIDComboDelegate(self))
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
 
@@ -484,13 +481,13 @@ class TableView(QTableView):
                         except ValueError:
                             # expression found?
                             x, y = value
-                        print(
+                        logging.info(
                             "setting {} [{}] to [{} : {}]".format(
                                 tool_name, input_name, x, y
                             )
                         )
                     else:
-                        print(
+                        logging.info(
                             "setting {} [{}] to {}".format(tool_name, input_name, value)
                         )
                     source_model.setData(table_model.mapToSource(s), value, Qt.EditRole)
@@ -508,6 +505,7 @@ class TableSortFilterProxyModel(QSortFilterProxyModel):
     def __init__(self, parent=None):
         QSortFilterProxyModel.__init__(self, parent)
         self.filteredKeys = []
+        self.is_filtered = False
 
     def filterAcceptsRow(self, source_row, source_parent):
         return True
@@ -517,19 +515,21 @@ class TableSortFilterProxyModel(QSortFilterProxyModel):
         if pattern == "":
             self.filteredKeys = self.sourceModel().attribute_data_types
             return True
+        self.is_filtered = True
+        keys = pattern.split(" ")
 
         index = self.sourceModel().createIndex(0, source_column)
-        attr_name = self.sourceModel().data(index, Qt.UserRole)
-        data_type = self.sourceModel().data(index, Qt.UserRole + 1)
+        if index.isValid():
+            attr_name = self.sourceModel().data(index, Qt.UserRole)
+            data_type = self.sourceModel().data(index, Qt.UserRole + 1)
 
-        keys = pattern.split(" ")
-        for key in keys:
-            if not key:
-                return False
-            if key.lower() in attr_name.lower():
-                self.filteredKeys.append(data_type)
-                return True
-        return False
+            for key in keys:
+                if not key:
+                    return False
+                if key.lower() in attr_name.lower():
+                    self.filteredKeys.append(data_type)
+                    return True
+            return False
 
 
 class FusionInput:
@@ -584,10 +584,10 @@ class FusionInput:
 
         if self.get_expression():
             if value == "-x" or "-x" in value:
-                print("Expression cleared")
+                logging.info("Expression cleared")
                 self.set_expression(None)
             else:
-                print(
+                logging.info(
                     "This input is linked by expression. Use '-x' to clear expression"
                 )
             return
@@ -624,7 +624,7 @@ class FusionInput:
             if self.is_number(value):
                 value = float(value)
             else:
-                print("this field requires number input")
+                logging.info("this field requires number input")
                 value = self.fusion_input[key]
 
         if self.attributes["INPS_DataType"] == "Point":
@@ -664,9 +664,11 @@ class FusionInput:
                                 "Point({}, {})".format(value[0], value[1])
                             )
                         else:
-                            print("Point data accepts only numbers and expressions")
+                            logging.info(
+                                "Point data accepts only numbers and expressions"
+                            )
                     except Exception:
-                        print("value should contain 2 elements")
+                        logging.info("value should contain 2 elements")
                 return
         self.fusion_input[key] = value
         self.keyframes = self.fusion_input.GetKeyFrames()
@@ -713,7 +715,7 @@ class TableModel(QAbstractTableModel):
         self.stored_edit_role_data = None
 
     def load_fusion_data(self):
-        self.communicate.send("loading tools and inputs")
+        self.communicate.send("Loading tools and inputs")
         start_time = datetime.datetime.now()
         try:
             comp = fu.GetCurrentComp()
@@ -722,10 +724,12 @@ class TableModel(QAbstractTableModel):
         global current_comp_name
         comp_name = comp.GetAttrs()["COMPS_Name"]
         if comp_name and comp_name != current_comp_name:
-            print("currently working with {}".format(comp_name))
+            logging.info("Currently working with {}".format(comp_name))
             current_comp_name = comp_name
         if not comp:
-            print("No comp data found. Probably both Resolve and Fusion are loaded?")
+            logging.info(
+                "No comp data found. Probably both Resolve and Fusion are loaded?"
+            )
         self.attribute_name_keys = []  # List of unique attribute name keys
         self.attribute_data_types = []  # this list is coupled to the key list
         self.tools_inputs = []
@@ -747,24 +751,22 @@ class TableModel(QAbstractTableModel):
             pass
 
         for tool in self.tool_dict.values():
-            tool_inputs = {}
-            tool_inputs_attributes = {}
+            current_tool_inputs = {}
+            current_tool_inputs_attributes = {}
             for v in tool.GetInputList().values():
                 QApplication.processEvents()
                 f = FusionInput(v)
                 if f.attributes["INPS_DataType"] not in self.data_types_to_skip:
                     key = f.Name
-                    tool_inputs[key] = f
+                    current_tool_inputs[key] = f
                     attribute_data_type = f.attributes["INPS_DataType"]
-                    tool_inputs_attributes[key] = f.attributes
+                    current_tool_inputs_attributes[key] = f.attributes
                     self.appendUnique(key, attribute_data_type)
-            if len(tool_inputs):
-                self.tools_inputs.append(tool_inputs)
-                self.tools_attributes.append(tool_inputs_attributes)
-            self.appendUnique("Tool Name")
+            if current_tool_inputs:
+                self.tools_inputs.append(current_tool_inputs)
+                self.tools_attributes.append(current_tool_inputs_attributes)
             self.appendUnique("Tool ID")
-            tool_inputs["Tool Name"] = tool.Name
-            tool_inputs["Tool ID"] = tool.ID
+            current_tool_inputs["Tool ID"] = tool.ID
             progress += 1
             self.communicate.send((100.0 / (len(self.tool_dict))) * progress)
 
@@ -961,6 +963,7 @@ class MainWindow(QMainWindow):
         self.proxy_model.setSortCaseSensitivity(Qt.CaseInsensitive)
         self.proxy_model.setDynamicSortFilter(True)
         self._tv.setModel(self.proxy_model)
+        self._tv.setSortingEnabled(True)
 
         # show the progressbar
         self.progress_bar = QProgressBar()
@@ -970,7 +973,7 @@ class MainWindow(QMainWindow):
 
         # Connections
         self.always_on_top.stateChanged.connect(self.changeAlwaysOnTop)
-        self.search_line.returnPressed.connect(self.refresh_button.click)
+        self.search_line.returnPressed.connect(self.reload_fusion_data)
         self.search_line.textChanged.connect(self.filterRegExpChanged)
         self.clear_button.pressed.connect(self.clear_search)
         self.clear_button.pressed.connect(self.reload_fusion_data)
@@ -1000,16 +1003,15 @@ class MainWindow(QMainWindow):
         self.search_line.clear()
 
     def changeAlwaysOnTop(self):
-        if self.always_on_top.checkState():
+        if self.always_on_top.isChecked():
             self.setWindowFlags(
                 self.windowFlags() | (Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint)
             )
-            self.show()
         else:
             self.setWindowFlags(
                 self.windowFlags() ^ (Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint)
             )
-            self.show()
+        self.show()
 
     def communication(self, value):
         if not value:
@@ -1025,15 +1027,12 @@ class MainWindow(QMainWindow):
     def load_fusion_data(self):
         self._tm.load_fusion_data()
         self.proxy_model.setSourceModel(self._tm)
-        self._tv.setSortingEnabled(True)
         self._tv.updateColumns()
 
     def reload_fusion_data(self):
+        self.proxy_model.filteredKeys = []
         self.proxy_model.setSourceModel(None)
-        self._tm.load_fusion_data()
-        self.proxy_model.setSourceModel(self._tm)
-        self._tv.setSortingEnabled(True)
-        self._tv.updateColumns()
+        self.load_fusion_data()
 
     def filterRegExpChanged(self):
         """
@@ -1041,10 +1040,9 @@ class MainWindow(QMainWindow):
         reason Qt has TableView column delegates decoupled from the underlying ProxyModel and indices get out of sync
         during sorting and filtering.
         """
-
         regExp = self.search_line.text()
-        self.proxy_model.filteredKeys = []
         self.proxy_model.setFilterRegularExpression(regExp)
+        self.proxy_model.filteredKeys = []
 
 
 # increase font size for Retina Display on Mac
@@ -1109,17 +1107,13 @@ QTableWidget::item {{
     font_size
 )
 
-# We define fu and comp as globals so we can basically run the same script from console as well from within Fusion
-# If both Resolve and Fusion are running, Fusion data may load improperly. So we check for scriptapp,
-# and the script would not load if there's a confusion about which instance of Fusion to use.
 
-if __name__ == "__main__":
-
+def check_python_version():
     if not compatible_python():
-        print(f"current python version is {sys.version}")
+        logging.info(f"current python version is {sys.version}")
         msg = "Python >= 3.8 is required!"
         sys.stderr.write(f"{msg}\n")
-        print(
+        logging.info(
             "Python 3.6 and later is required to run this script\n"
             "Set Python interpreter in Fusion Preferences -> Global Settings -> Script -> Default Script Version"
         )
@@ -1137,10 +1131,19 @@ if __name__ == "__main__":
             fu.ShowPrefs("PrefsScript")
         sys.exit()
 
+
+# We define fu and comp as globals so we can basically run the same script from console as well from within Fusion
+# If both Resolve and Fusion are running, Fusion data may load improperly. So we check for scriptapp,
+# and the script would not load if there's a confusion about which instance of Fusion to use.
+
+if __name__ == "__main__":
+    check_python_version()
     try:
         comp = fu.GetCurrentComp()  # this works in most cases
     except Exception as e:
-        print("Could not find Fusion comp. Attempt to connect in standalone mode...")
+        logging.info(
+            "Could not find Fusion comp. Attempt to connect in standalone mode..."
+        )
         REMOTE_FUSION_ACCESS = True
         LOAD_SELECTED_TOOLS_LIMIT = 3
         fusion_host = DEFAULT_HOST
@@ -1149,13 +1152,13 @@ if __name__ == "__main__":
         fusion = get_fusion(fusion_host)
         comp = get_fusion_comp(fusion)
         if not comp:
-            raise ModuleNotFoundError("Comp not found")
-    finally:
-        current_comp_name = comp.GetAttrs()["COMPS_Name"]
+            raise Exception("Comp not found")
+
+    current_comp_name = comp.GetAttrs()["COMPS_Name"]
 
     main_app = QApplication.instance()  # checks if QApplication already exists.
     if not main_app:  # create QApplication if it doesnt exist
-        main_app = QApplication([])
+        main_app = QApplication(sys.argv)
     main_app.setStyleSheet(css)
     main = MainWindow()
     win_title = f"Attribute Spreadsheet 0.{__VERSION__}"
@@ -1165,4 +1168,4 @@ if __name__ == "__main__":
     main.setMinimumSize(QSize(740, 200))
     main.show()
     main_app.exec()
-    print("Done")
+    logging.info("Done")
