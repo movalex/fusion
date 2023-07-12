@@ -9,7 +9,9 @@ def get_python_home() -> Path:
     return python_home
 
 
-def get_python_executable(python_home) -> str:
+def get_python_executable(python_home=None) -> str:
+    if python_home is None:
+        python_home = get_python_home()
     if platform.system() == "Windows":
         python_executable = python_home / "python.exe"
     else:
@@ -40,6 +42,34 @@ def run_installation_command(python_executable, package):
             break
         if output:
             print(output.strip())
+
+
+def fallback_message(package_name: str):
+    python_executable = get_python_executable()
+    print(
+        f"{package_name} is required to run this script\n"
+        "Please install it manually with following command:\n"
+        f"{python_executable} -m pip install {package_name}"
+    )
+
+
+def show_confirmation_dialogue(comp, package_name: str):
+    # ask user for permission to install the package automatically
+
+    dialogue = {
+        1: {
+            1: "Warning",
+            "Name": "Warning",
+            2: "Text",
+            "Readonly": True,
+            "Default": f"Would you like to install {package_name} automatically? (y/n)",
+        }
+    }
+    ask = comp.AskUser(f"No {package_name} installation found", dialogue)
+    if ask:
+        return True
+    else:    
+        fallback_message(package_name)
 
 
 def pip_install(package: str, fusion_python_home=None):
