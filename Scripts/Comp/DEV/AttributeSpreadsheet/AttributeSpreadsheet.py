@@ -7,7 +7,7 @@
     Requires:
         Python >= 3.6
         Fusion 9/16, Davinci Resolve 16
-        PySide2, installed automatically on first launch
+        PySide 6.4+
     Notice:
         Written by Sven Neve (sven[AT]houseofsecrets[DOT]nl)
         Copyright (c) 2013 House of Secrets
@@ -74,11 +74,13 @@
             -- cleanup
             -- refactoring pip_install script
             -- fix pyside6 compatibility for table models
+        2023/07/13
         v 0.3.2
             -- use logging module
             -- refine pip installation script
             -- fix edit filtered entries
             -- fix always on top option
+            -- fix QT deprecation warnings
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
@@ -367,20 +369,21 @@ class TableView(QTableView):
     def mousePressEvent(self, event):
         if event.buttons() == Qt.MiddleButton:
             self.mouseIsDown = True
-            self.center = self.startCenter = QPoint(event.pos().x(), event.pos().y())
+            pos = event.position().toPoint()
+            self.center = self.startCenter = QPoint(pos.x(), pos.y())
 
         elif event.buttons() == Qt.LeftButton:
             self.mouseIsDown = False
             QTableView.mousePressEvent(self, event)
 
     def create_value(self, source_model, index):
-        target_tool = source_model.tool_dict[index.row() + 1].Name
-        target_input_id = (
-            source_model.tools_inputs[index.row()]
-            .get(source_model.attribute_name_keys[index.column()])
-            .ID
-        )
         try:
+            target_tool = source_model.tool_dict[index.row() + 1].Name
+            target_input_id = (
+                source_model.tools_inputs[index.row()]
+                .get(source_model.attribute_name_keys[index.column()])
+                .ID
+            )
             value = "={}.{}".format(target_tool, target_input_id)
             self.commitDataDo(value)
         except KeyError:
@@ -417,7 +420,8 @@ class TableView(QTableView):
 
     def mouseMoveEvent(self, event):
         if self.mouseIsDown:
-            self.center = QPoint(event.pos().x(), event.pos().y())
+            pos = event.position().toPoint()
+            self.center = QPoint(pos.x(), pos.y())
             self.viewport().repaint()
         QTableView.mouseMoveEvent(self, event)
 
