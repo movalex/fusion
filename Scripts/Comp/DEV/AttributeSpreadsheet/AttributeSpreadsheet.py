@@ -7,7 +7,7 @@
     Requires:
         Python >= 3.6
         Fusion 9/16, Davinci Resolve 16
-        PySide2, installed automatically on first launch
+        PySide 6.4+
     Notice:
         Written by Sven Neve (sven[AT]houseofsecrets[DOT]nl)
         Copyright (c) 2013 House of Secrets
@@ -74,11 +74,13 @@
             -- cleanup
             -- refactoring pip_install script
             -- fix pyside6 compatibility for table models
+        2023/07/13
         v 0.3.2
             -- use logging module
             -- refine pip installation script
             -- fix edit filtered entries
             -- fix always on top option
+            -- fix QT deprecation warnings
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
