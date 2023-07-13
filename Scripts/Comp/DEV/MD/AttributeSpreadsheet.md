@@ -65,5 +65,3 @@ https://www.youtube.com/watch?v=uarUXcZpp8Q
 *Copyright:* 2011-2013, Sven Neve (House of Secrets); 2019-2020 additions by Alexey Bogomolov [mail@abogomolov.com](mail@abogomolov.com)
 
 *License:* [MIT](https://mit-license.org/)
-
-*Donations:* [PayPal.me](https://paypal.me/aabogomolov/10usd)

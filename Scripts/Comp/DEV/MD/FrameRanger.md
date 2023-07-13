@@ -17,8 +17,3 @@ _Usage:_
 _Copyright:_ Alexey Bogomolov (mail@abogomolov.com)
 
 _License:_ [MIT](https://mit-license.org/)
-
-_Version History:_ v.1.0 - [2020/12/07] - initial release
-                   v.1.5 - [2021/10/05] - add save IN/OUT ranges 
-
-_Donations:_ [PayPal.me](https://paypal.me/aabogomolov/5usd)
