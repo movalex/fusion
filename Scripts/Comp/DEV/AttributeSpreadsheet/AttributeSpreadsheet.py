@@ -367,20 +367,21 @@ class TableView(QTableView):
     def mousePressEvent(self, event):
         if event.buttons() == Qt.MiddleButton:
             self.mouseIsDown = True
-            self.center = self.startCenter = QPoint(event.pos().x(), event.pos().y())
+            pos = event.position().toPoint()
+            self.center = self.startCenter = QPoint(pos.x(), pos.y())
 
         elif event.buttons() == Qt.LeftButton:
             self.mouseIsDown = False
             QTableView.mousePressEvent(self, event)
 
     def create_value(self, source_model, index):
-        target_tool = source_model.tool_dict[index.row() + 1].Name
-        target_input_id = (
-            source_model.tools_inputs[index.row()]
-            .get(source_model.attribute_name_keys[index.column()])
-            .ID
-        )
         try:
+            target_tool = source_model.tool_dict[index.row() + 1].Name
+            target_input_id = (
+                source_model.tools_inputs[index.row()]
+                .get(source_model.attribute_name_keys[index.column()])
+                .ID
+            )
             value = "={}.{}".format(target_tool, target_input_id)
             self.commitDataDo(value)
         except KeyError:
@@ -417,7 +418,8 @@ class TableView(QTableView):
 
     def mouseMoveEvent(self, event):
         if self.mouseIsDown:
-            self.center = QPoint(event.pos().x(), event.pos().y())
+            pos = event.position().toPoint()
+            self.center = QPoint(pos.x(), pos.y())
             self.viewport().repaint()
         QTableView.mouseMoveEvent(self, event)
 
