@@ -107,10 +107,8 @@
 """
 
 import datetime
-import os
 import platform
 import re
-import subprocess
 import sys
 import logging
 from pprint import pprint
@@ -118,21 +116,76 @@ from pprint import pprint
 __VERSION__ = 3.2
 __beta__ = False
 __license__ = "MIT"
-__copyright__ = "2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>,\
-2019-2023 additions by Alexey Bogomolov <mail@abogomolov.com>"
+__copyright__ = """2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>
+2019-2023, additions by Alexey Bogomolov <mail[AT]abogomolov.com>"""
 
 
 PKG_REQUIRED = "PySide6"
 REMOTE_FUSION_ACCESS = False
 DEFAULT_HOST = "localhost"
-# Do not auto-load the spreadsheet on startup if more than given number of tools selected
+LOG_LEVEL = "info"
+# Do not auto-load the spreadsheet on startup
+# if more than given number of tools selected
 LOAD_SELECTED_TOOLS_LIMIT = 10
+
+
+def compatible_python():
+    """Only Python 3.6 or higher is supported"""
+
+    compatible = False
+    if sys.version_info.major == 3 and sys.version_info.minor >= 6:
+        compatible = True
+    return compatible
+
+
+def check_python_version():
+    if not compatible_python():
+        log.info(f"current python version is {sys.version}")
+        msg = "Python >= 3.6 is required!"
+        sys.stderr.write(f"{msg}\n")
+        log.info(
+            "Python 3.6 and later is required to run this script\n"
+            "Set Python interpreter in Fusion Preferences -> Global Settings -> Script -> Default Script Version"
+        )
+        dialog = {
+            1: {
+                1: "",
+                2: "Text",
+                "ReadOnly": True,
+                "Lines": 3,
+                "Default": msg + "\nOpen Preferences?",
+            }
+        }
+        dlg = comp.AskUser("Warning", dialog)
+        if dlg:
+            fu.ShowPrefs("PrefsScript")
+        sys.exit()
+
+
+check_python_version()
 
 print("_____________________\nAttribute Spreadsheet version 0.{}".format(__VERSION__))
 
-log_level = logging.DEBUG
-fmt = "[AS] - [%(levelname)s] - %(message)s"
-logging.basicConfig(level=log_level, format=fmt)
+
+def set_logging(level):
+    log_levels = {
+        "debug": logging.DEBUG,
+        "info": logging.INFO,
+        "warning": logging.WARNING,
+        "warn": logging.WARN,
+    }
+    logger = logging.getLogger()
+    handler = logging.StreamHandler()
+    handler.setFormatter(
+        logging.Formatter(f"%(levelname)s | [Attribute Spreadsheet] | %(message)s")
+    )
+    logger.addHandler(handler)
+    log_level = log_levels.get(level.lower()) or logging.INFO
+    logger.setLevel(log_level)
+    return logger
+
+
+log = set_logging(LOG_LEVEL)
 
 
 def get_fusion(fusion_host):
@@ -141,23 +194,14 @@ def get_fusion(fusion_host):
 
         return bmd.scriptapp("Fusion", fusion_host)
     except ModuleNotFoundError:
-        logging.info("No BlackmagicFusion module found")
+        log.warn("No BlackmagicFusion module found")
 
 
 def get_fusion_comp(fusion_object):
     if not fusion_object:
-        logging.info("No Fusion instance found or Fusion is not a Studio version")
+        log.warn("No Fusion instance found or Fusion is not a Studio version")
         sys.exit()
     return fusion_object.GetCurrentComp()
-
-
-def compatible_python():
-    """Only Python 3.8 or higher is supported"""
-
-    compatible = False
-    if sys.version_info.major == 3 and sys.version_info.minor >= 8:
-        compatible = True
-    return compatible
 
 
 def pip_install_dialogue():
@@ -184,19 +228,15 @@ try:
         QMainWindow,
         QProgressBar,
         QPushButton,
-        QSizeGrip,
         QSizePolicy,
-        QSpinBox,
         QTableView,
         QTableWidget,
         QTableWidgetItem,
-        QToolButton,
         QVBoxLayout,
         QWidget,
     )
     from PySide6.QtCore import (
         QAbstractTableModel,
-        QCoreApplication,
         QItemSelectionModel,
         QModelIndex,
         QObject,
@@ -216,7 +256,6 @@ try:
     )
 
 except ImportError:
-
     pip_install_dialogue()
 
 
@@ -245,7 +284,7 @@ class FUIDComboDelegate(QItemDelegate):
 
     def setEditorData(self, editor, index):
         editor.blockSignals(True)
-        logging.debug(index.model().data(index))
+        log.debug(index.model().data(index))
         editor.setCurrentIndex(self.items.index(str(index.model().data(index))))
         editor.setData("Domain")
         editor.blockSignals(False)
@@ -291,7 +330,6 @@ class PointDelegate(QItemDelegate):
     """
 
     def __init__(self, parent):
-
         QItemDelegate.__init__(self, parent)
 
     def createEditor(self, parent, option, index):
@@ -318,7 +356,7 @@ class PointDelegate(QItemDelegate):
             editor.setItem(0, 1, y_value)
             editor.blockSignals(False)
         except ValueError:
-            logging.info(
+            log.warn(
                 "error occurred while parsing the point data. Setting values to default"
             )
             for i in range(2):
@@ -331,7 +369,7 @@ class PointDelegate(QItemDelegate):
             data = [x, y]
             model.sourceModel().stored_edit_role_data = data
         except AttributeError:
-            logging.info("Point data not applicable here")
+            log.warn("Point data not applicable here")
 
 
 class TableView(QTableView):
@@ -401,7 +439,7 @@ class TableView(QTableView):
                     index_source.row() == index_target.row()
                     and index_source.column() == index_target.column()
                 ):
-                    logging.info("cannot link the input to itself")
+                    log.warn("cannot link the input to itself")
                     return
                 if (
                     index_source.row() > -1
@@ -485,13 +523,13 @@ class TableView(QTableView):
                         except ValueError:
                             # expression found?
                             x, y = value
-                        logging.info(
+                        log.debug(
                             "setting {} [{}] to [{} : {}]".format(
                                 tool_name, input_name, x, y
                             )
                         )
                     else:
-                        logging.info(
+                        log.debug(
                             "setting {} [{}] to {}".format(tool_name, input_name, value)
                         )
                     source_model.setData(table_model.mapToSource(s), value, Qt.EditRole)
@@ -588,10 +626,10 @@ class FusionInput:
 
         if self.get_expression():
             if value == "-x" or "-x" in value:
-                logging.info("Expression cleared")
+                log.debug("Expression cleared")
                 self.set_expression(None)
             else:
-                logging.info(
+                log.warn(
                     "This input is linked by expression. Use '-x' to clear expression"
                 )
             return
@@ -628,7 +666,7 @@ class FusionInput:
             if self.is_number(value):
                 value = float(value)
             else:
-                logging.info("this field requires number input")
+                log.warn("this field requires number input")
                 value = self.fusion_input[key]
 
         if self.attributes["INPS_DataType"] == "Point":
@@ -668,11 +706,9 @@ class FusionInput:
                                 "Point({}, {})".format(value[0], value[1])
                             )
                         else:
-                            logging.info(
-                                "Point data accepts only numbers and expressions"
-                            )
+                            log.warn("Point data accepts only numbers and expressions")
                     except Exception:
-                        logging.info("value should contain 2 elements")
+                        log.warn("value should contain 2 elements")
                 return
         self.fusion_input[key] = value
         self.keyframes = self.fusion_input.GetKeyFrames()
@@ -728,12 +764,10 @@ class TableModel(QAbstractTableModel):
         global current_comp_name
         comp_name = comp.GetAttrs()["COMPS_Name"]
         if comp_name and comp_name != current_comp_name:
-            logging.info("Currently working with {}".format(comp_name))
+            log.debug("Currently working with {}".format(comp_name))
             current_comp_name = comp_name
         if not comp:
-            logging.info(
-                "No comp data found. Probably both Resolve and Fusion are loaded?"
-            )
+            log.info("No comp data found. Probably both Resolve and Fusion are loaded?")
         self.attribute_name_keys = []  # List of unique attribute name keys
         self.attribute_data_types = []  # this list is coupled to the key list
         self.tools_inputs = []
@@ -1112,42 +1146,15 @@ QTableWidget::item {{
 )
 
 
-def check_python_version():
-    if not compatible_python():
-        logging.info(f"current python version is {sys.version}")
-        msg = "Python >= 3.8 is required!"
-        sys.stderr.write(f"{msg}\n")
-        logging.info(
-            "Python 3.6 and later is required to run this script\n"
-            "Set Python interpreter in Fusion Preferences -> Global Settings -> Script -> Default Script Version"
-        )
-        dialog = {
-            1: {
-                1: "",
-                2: "Text",
-                "ReadOnly": True,
-                "Lines": 3,
-                "Default": msg + "\nOpen Preferences?",
-            }
-        }
-        dlg = comp.AskUser("Warning", dialog)
-        if dlg:
-            fu.ShowPrefs("PrefsScript")
-        sys.exit()
-
-
 # We define fu and comp as globals so we can basically run the same script from console as well from within Fusion
 # If both Resolve and Fusion are running, Fusion data may load improperly. So we check for scriptapp,
 # and the script would not load if there's a confusion about which instance of Fusion to use.
 
 if __name__ == "__main__":
-    check_python_version()
     try:
         comp = fu.GetCurrentComp()  # this works in most cases
     except Exception as e:
-        logging.info(
-            "Could not find Fusion comp. Attempt to connect in standalone mode..."
-        )
+        log.info("Could not find Fusion comp. Attempt to connect in standalone mode...")
         REMOTE_FUSION_ACCESS = True
         LOAD_SELECTED_TOOLS_LIMIT = 3
         fusion_host = DEFAULT_HOST
@@ -1172,4 +1179,4 @@ if __name__ == "__main__":
     main.setMinimumSize(QSize(740, 200))
     main.show()
     main_app.exec()
-    logging.info("Done")
+    log.info("Done")
