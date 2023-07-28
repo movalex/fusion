@@ -911,7 +911,7 @@ class TableModel(QAbstractTableModel):
                 self.attribute_name_keys[index.column()], None
             )
             if not fusion_input:
-                return
+                return False
             if not isinstance(value, list):
                 value = str(value)
             fusion_input[comp.CurrentTime] = value
