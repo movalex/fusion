@@ -69,12 +69,12 @@
         v 0.3
             -- cleanup, separate pip_install script
             -- PySide6 initial support
+        2023/07
         v 0.3.1
             -- disable table update during search
             -- cleanup
             -- refactoring pip_install script
             -- fix pyside6 compatibility for table models
-        2023/07/13
         v 0.3.2
             -- use logging module
             -- refine pip installation script
@@ -1146,15 +1146,11 @@ QTableWidget::item {{
 )
 
 
-# We define fu and comp as globals so we can basically run the same script from console as well from within Fusion
-# If both Resolve and Fusion are running, Fusion data may load improperly. So we check for scriptapp,
-# and the script would not load if there's a confusion about which instance of Fusion to use.
-
 if __name__ == "__main__":
     try:
         comp = fu.GetCurrentComp()  # this works in most cases
     except Exception as e:
-        log.info("Could not find Fusion comp. Attempt to connect in standalone mode...")
+        log.warn("Could not find Fusion comp. Attempt to connect in standalone mode...")
         REMOTE_FUSION_ACCESS = True
         LOAD_SELECTED_TOOLS_LIMIT = 3
         fusion_host = DEFAULT_HOST
