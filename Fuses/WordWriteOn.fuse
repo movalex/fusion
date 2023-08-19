@@ -3,8 +3,11 @@
 Word Write On Fuse
 
 -------------------------------------------------------------------
-Copyright (c) 2019,  Pieter Van Houte
-<pieter[at]secondman[dot]com>
+Copyright (c) 2023,  
+Pieter Van Houte
+<pieter[at]secondman[dot]com>,
+Alexey Bogomolov 
+<mail[at]abogomolov.com>)
 -------------------------------------------------------------------
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -16,10 +19,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 version 0.1 - 20191114 - initial test version, as Word Write On - https://www.steakunderwater.com/wesuckless/viewtopic.php?p=27080#p27080
 version 0.2 - 20191115 - does not delete text from Text+ when adding Modifier (thank you Peter Loveday)
+version 0.3 - 20230819 - add split by and concatenate options (addition by Alexey Bogomolov <mail[at]abogomolov.com>)
 
 --]]
 
-version = "Word Write On v0.2 - 15 November 2019"
+version = "Word Write On v0.3 - 19 August 2023"
 
 -------------------------------------------------------------------
 -------------------------------------------------------------------
@@ -35,7 +39,7 @@ FuRegisterClass("WordWriteOn", CT_Modifier, {
 	REGS_HelpTopic      = "",
 --	REG_Fuse_NoEdit     = true,
 --	REG_Fuse_NoReload   = true,
-	REG_Version			= 020,
+	REG_Version			= 03,
 	})
 	
 function Create()
@@ -45,13 +49,35 @@ function Create()
 		INPID_InputControl = "TextEditControl",
 		LINK_Main = 1,
 		})
+
+	SplitBy = self:AddInput(
+		"Split By:", "splitby", {
+		LINKID_DataType = "Number",
+		INPID_InputControl = "ComboControl",
+		INP_Default = 0.0,
+		INP_Integer = true,
+		{ CCS_AddString = "Space [ ]", },
+		{ CCS_AddString = "Underline [_]", },
+		{ CCS_AddString = "New Line [\\n]", },
+		{ CCS_AddString = "Percent [%]", },
+		{ CCS_AddString = "Forward Slash [/]", },
+		{ CCS_AddString = "Vertical Line [|]", },
+		{ CCS_AddString = "Back Slash [\\]", },
+		{ CCS_AddString = "Ampersand [&]", },
+		{ CCS_AddString = "Caret [^]", },
+		})
+	ConcatText = self:AddInput("Join By:", "Concatenate", {
+		LINKID_DataType = "Text",
+		INPID_InputControl = "TextEditControl",
+		TEC_Lines = 1,
+		})
 	InWords = self:AddInput("Words", "Words", {
 		LINKID_DataType = "Number",
 		INPID_InputControl = "ScrewControl",
 		INP_Integer = true,
 		INP_MinAllowed = 0,
-		INP_MaxScale = 10,
-		INP_Default = 5,
+		INP_MaxScale = 15,
+		INP_Default = 3,
 		})
 	InLabel = self:AddInput(version, "version", {
 		LINKID_DataType = "Text",
@@ -63,7 +89,6 @@ function Create()
 		LINKID_DataType = "Text",
 		LINK_Main = 1,
 		})
-	
 end
 
 function SetSource(out, param, time)
@@ -72,31 +97,53 @@ function SetSource(out, param, time)
   end
 end
 
+function SplitString(inputstr, sep)
+	if sep == nil then
+		sep = "%s"
+	end
+	local textTable={}
+	for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+		table.insert(textTable, str)
+	end
+	return textTable
+end
+
+function TableSlice(tbl, first, last, step)
+  local sliced = {}
+
+  for i = first or 1, last or #tbl, step or 1 do
+    sliced[#sliced+1] = tbl[i]
+  end
+
+  return sliced
+end
+
 function Process(req)
 
-	local intext = InStyledText:GetValue(req).Value
-	local words = InWords:GetValue(req).Value
-	local cutpoint = 1
-	
---	print("|"..intext.."|")
-	local temp,wordcount = intext:gsub("%S+","")
---	print(wordcount)
-	
-	if words > 0 and words < wordcount then
-		for i = 1,words do
-			local x,y = intext:find("%s+", cutpoint+1)
-			cutpoint = y
-		end
-	elseif words >= wordcount then
-		cutpoint = string.len(intext)+1
+	local inText = InStyledText:GetValue(req).Value
+	local wordIndex = InWords:GetValue(req).Value
+	local splitIndex = SplitBy:GetValue(req).Value
+	local concatText = ConcatText:GetValue(req).Value
+	if concatText == "" then
+		concatText = "\n"
 	end
-	
---	print(cutpoint)
-	
-	outtext = intext:sub(1, cutpoint-1)
-	
---	print("|"..outtext.."|")
 
-	OutText:Set(req, Text(outtext))
+	splitSymbols = {
+		"%s",
+		"_",
+		"\n",
+		"%%",
+		"/",
+		"|",
+		"\\",
+		"&",
+		"^"
+	}
 
+	splitBy = splitSymbols[splitIndex + 1]
+	words = SplitString(inText, splitBy)
+	outTab = TableSlice(words, 1, wordIndex)
+	outText = table.concat(outTab, concatText)
+
+	OutText:Set(req, Text(outText))
 end
