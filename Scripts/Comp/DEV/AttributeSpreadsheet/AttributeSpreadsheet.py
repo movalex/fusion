@@ -123,7 +123,7 @@ __copyright__ = """2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>
 PKG_REQUIRED = "PySide6"
 REMOTE_FUSION_ACCESS = False
 DEFAULT_HOST = "localhost"
-LOG_LEVEL = "info"
+LOG_LEVEL = "debug"  # info, warning, debug
 # Do not auto-load the spreadsheet on startup
 # if more than given number of tools selected
 LOAD_SELECTED_TOOLS_LIMIT = 10
@@ -1083,67 +1083,61 @@ class MainWindow(QMainWindow):
         self.proxy_model.filteredKeys = []
 
 
-# increase font size for Retina Display on Mac
-font_size = 12 if platform.system() == "Darwin" else 9
-
 css = """
-*, QTableCornerButton::section {{
-    font: {}pt 'tahoma';
+*, QTableCornerButton::section {
     color: rgb(192, 192, 192);
     background-color: rgb(52, 52, 52);
-    }}
+    }
 
-QLineEdit {{
-    background-color: rgb(40,40,40);
-    }}
+QLineEdit {
+    background-color: rgb(100,100,100);
+    }
 
-QMainWindow {{
+QMainWindow {
     border-top: 1px solid rgb(80,80,80);
     border-left: 1px solid rgb(80,80,80);
     border-right: 1px solid rgb(33,33,33);
     border-bottom: 1px solid rgb(33,33,33);
-    }}
+    }
 
-QTableView {{
+QTableView {
     background-color: rgb(52, 52, 52);
     border-color: rgb(33, 33, 33);
     border-bottom-color: rgb(34, 34, 34);
     color: rgb(192, 192, 192);
     gridline-color: rgb(34, 34, 34);
-    }}
+    }
 
-QHeaderView::section {{
+QHeaderView::section {
     background-color: rgb(100, 100, 100);
     color: rgb(0,0,0);
     padding: 0;
-    }}
+    }
 
-QTableView::item {{
+QTableView::item {
     border: 0px;
     padding-left: 8px;
-    }}
+    }
 
-QToolButton {{
+QToolButton {
     background-color: rgb(52, 52, 52);
-    }}
+    }
 
-QToolButton:checked {{
+QToolButton:checked {
     background-color: rgb(70, 86, 134);
-    }}
+    }
 
-QPushButton:pressed {{
+QPushButton:pressed {
     background-color: rgb(70, 86, 134);
-    }}
+    }
 
-QTableWidget::item {{
+QTableWidget::item {
     text-align: top center;
     border-style: outset;
     border-width: 4px;
     background-color: rgb(30,30,30);
-    }}
-""".format(
-    font_size
-)
+    }
+"""
 
 
 if __name__ == "__main__":
