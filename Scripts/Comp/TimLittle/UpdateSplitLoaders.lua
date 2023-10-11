@@ -1,14 +1,61 @@
+_VERSION = 2.5
 ------------------------------------
+-- written by Tim Little for Fusion 6.4 (timhlittle@gmail.com)
+
+-- V2.3 Update Log:
+-- + Updated syntax to work in Fusion 8
+
 -- V2.4 updated by Alexey Bogomolov <mail@abogomolov.com>
 -- + cleaned up and updated for Fusion 9/17 and Resolve 
 -- + add support for mapped paths
 -- + catch if no path found in a Loader
 
--- V2.3 Update Log:
--- + Updated syntax to work in Fusion 8
+-- v2.5 
+-- + added parseFilename function for Resolve compatibility
 
--- written by Tim Little for Fusion 6.4 (timhlittle@gmail.com)
 
+function parseFilename(filename)
+    ------------------------------------------------------------------------------
+    -- parseFilename() from bmd.scriptlib
+    --
+    -- this is a function for ripping a filepath into little bits
+    -- returns a table with the following
+    --
+    -- FullPath : The raw, original path sent to the function
+    -- Path : The path, without filename
+    -- FullName : The name of the clip w\ extension
+    -- Name : The name without extension
+    -- CleanName: The name of the clip, without extension or sequence
+    -- SNum : The original sequence string, or "" if no sequence
+    -- Number : The sequence as a numeric value, or nil if no sequence
+    -- Extension: The raw extension of the clip
+    -- Padding : Amount of padding in the sequence, or nil if no sequence
+    -- UNC : A true or false value indicating whether the path is a UNC path or not
+    ------------------------------------------------------------------------------
+	local seq = {}
+	seq.FullPath = filename
+	string.gsub(seq.FullPath, "^(.+[/\\])(.+)", function(path, name) seq.Path = path seq.FullName = name end)
+	string.gsub(seq.FullName, "^(.+)(%..+)$", function(name, ext) seq.Name = name seq.Extension = ext end)
+
+	if not seq.Name then -- no extension?
+		seq.Name = seq.FullName
+	end
+
+	string.gsub(seq.Name, "^(.-)(%d+)$", function(name, SNum) seq.CleanName = name seq.SNum = SNum end)
+
+	if seq.SNum then
+		seq.Number = tonumber( seq.SNum )
+		seq.Padding = string.len( seq.SNum )
+	else
+		seq.SNum = ""
+		seq.CleanName = seq.Name
+	end
+
+	if seq.Extension == nil then seq.Extension = "" end
+	seq.UNC = ( string.sub(seq.Path, 1, 2) == [[\\]] )
+
+	return seq
+end
 
 --// Scan Selected Tool //--
 function scanSelectedTool()
@@ -34,7 +81,7 @@ end --End of Function
 --// Scan Composition and Update Loaders //--
 function updateLoaders(oldLoaderClip, newFileName, onlySelectedLoaders)
 	comp:Lock()
-	newClipFileParse = bmd.parseFilename(comp:MapPath(newFileName))
+	newClipFileParse = parseFilename(comp:MapPath(newFileName))
 	for i, tool in ipairs(comp:GetToolList(onlySelectedLoaders, "Loader")) do -- iterate through all tools in the comp
 		toolName = tool:GetAttrs().TOOLS_Name
 		myLoader = tool -- give the tool a variable name that makes sense in the script
@@ -65,13 +112,13 @@ print "============== SCRIPT BEGIN =============="
 oldLoaderClip = scanSelectedTool()
 
 if oldLoaderClip then
-	oldFileParse = bmd.parseFilename(oldLoaderClip)
+	oldFileParse = parseFilename(oldLoaderClip)
 	oldClipFolderPath = oldFileParse.Path
 	oldClipCleanName = oldFileParse.CleanName
 	--=============================================================================================--
 	--// Pop-up Window //--
 
-		ret = comp:AskUser("Update Loaders v2.4",
+		ret = comp:AskUser("Update Loaders " .. _VERSION,
 				{
 				{"Instructions:","Text", Default = "\n- Choose new file for the selected loader\n- The script will update other loaders that share the same file\n- Can update multi-pass sequences that were loaded using the mEXR script", ReadOnly=true, Lines=6},
 				{"Selected Loader:","Text",Lines =1, ReadOnly = true, Default = toolName },
