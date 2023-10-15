@@ -1,7 +1,7 @@
 -- eyeon script for submission to render with Afanasy render manager
 -- written by Mikhail Korovyansky
 -- mclawest@mail.ru
--- updated to work with Afanasy 3 and Fusion 16/17 by Alexey Bogomolov 1.15.2021
+-- updated to work with Afanasy 3 and Fusion 16/17 by Alexey Bogomolov 2021.01.15
 -- mail@abogomolov.com
 
 -- SUBMIT TO AFANASY
