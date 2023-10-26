@@ -1,7 +1,7 @@
 # BG from Loader script
 # Create Background node from loader. Set Pixel aspect ratio and Bit Depth based on that Loader
 # Author: Alexey Bogomolov
-# version: 1.0 - 2019-10-01
+# version: 1.1 - 2023-10-27
 # Lincense: MIT
 
 tool = comp.ActiveTool
@@ -12,7 +12,6 @@ def create_bg_from_loader(tool):
     attrs = tool.GetAttrs()
     width = attrs["TOOLI_ImageWidth"]
     height = attrs["TOOLI_ImageHeight"]
-    print(width)
     posx, posy = flow.GetPosTable(tool).values()
     aspect_list = []
     image_depth = None
