@@ -3,7 +3,6 @@
 # Author: Alexey Bogomolov
 # version: 1.0 - 2019-10-01
 # Lincense: MIT
-# Dotaions: paypal.me/aabogomolov/5usd
 
 tool = comp.ActiveTool
 flow = comp.CurrentFrame.FlowView
