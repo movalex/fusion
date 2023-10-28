@@ -44,7 +44,6 @@ def create_bg_from_loader(tool):
     new_bg.Width = width
     new_bg.Height = height
     comp.SetActiveTool()
-    # flow.Select(too)
     # flow.Select(new_bg)
 
     if aspect_list and image_depth:
