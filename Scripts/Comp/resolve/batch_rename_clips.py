@@ -1,17 +1,12 @@
 #!/usr/bin/env python
 
 """
-    This is a Davinci Resolve script to save all timeline clips as jpg files.
+    This is a Davinci Resolve script to batch rename clips (WIP)
     Author: Alexey Bogomolov
     Email: mail@abogomolov.com
     License: MIT
     Copyright: 2022
 """
-
-from os import rename
-
-
-STILL_FRAME_REF = 2
 
 
 def request_track_number():
@@ -29,18 +24,17 @@ def request_track_number():
         },
         ui.HGroup(
             [
-                ui.Label({"Weight": 0.1, "ID": "FolderLabel", "Text": "folder:"}),
+                ui.Label({"Weight": 0.1, "ID": "Label", "Text": "Track Num:"}),
                 ui.LineEdit(
                     {
                         "Weight": 0.8,
-                        "Text": target or " ",
+                        "Text": target or "",
                         "ID": "TextLine",
                         "Events": {"ReturnPressed": True},
                         "Alignment": {"AlignHCenter": True, "AlignVCenter": True},
                     }
                 ),
                 ui.Button({"Weight": 0.2, "ID": "OkButton", "Text": "Ok"}),
-                # ui.Button({"Weight": 0.1, "ID": "CancelButton", "Text": "Cancel"}),
             ]
         ),
     )
@@ -49,14 +43,10 @@ def request_track_number():
     def close(ev):
         disp.ExitLoop()
 
-    # def request_folder(ev):
-    #     target_folder = fu.RequestDir()
-    #     itm["TextLine"].Text = target_folder
-
     itm["TextLine"].SetPlaceholderText("Select folder")
+
     win.On.OkButton.Clicked = close
     win.On.RenameClipsWindow.Close = close
-    # win.On.CancelButton.Clicked = close
     win.Show()
     disp.RunLoop()
     win.Hide()
@@ -66,7 +56,10 @@ def request_track_number():
 
 
 def rename_clips(track_number):
-    """batch rename clips"""
+    """batch rename clips
+    WIP
+    currently does not do anything
+    """
 
     if not fu.GetResolve():
         print("This is a script for Davinci Resolve")
@@ -85,5 +78,6 @@ def rename_clips(track_number):
     print(dir(clip))
 
 
-track = request_track_number()
-rename_clips(track)
+if __name__ == "__main__":
+    track = request_track_number()
+    rename_clips(track)
