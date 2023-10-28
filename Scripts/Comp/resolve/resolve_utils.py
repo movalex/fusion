@@ -13,8 +13,8 @@ def cleanup_drx(folder: Path):
         "CLEANUP DRX is enabled, all .drx files in the stills location will be erased"
     )
     answer = confirmation_dialogue(
-        "DRX files deletion",
-        f"Do you wish to delete all DRX files in in '{folder}'?",
+        title="DRX files deletion!",
+        request=f"Do you wish to delete all DRX files\nin'{folder.name}'?",
     )
     for file in folder.iterdir():
         if file.suffix == ".drx":
@@ -54,11 +54,27 @@ def confirmation_dialogue(title=None, request=None):
             "ID": "RequestFolder",
             "TargetID": "RequestFolder",
             "WindowTitle": title or "Confirmation Dialogue",
-            "Geometry": [800, 600, 500, 100],
+            "Geometry": [800, 600, 550, 100],
         },
         [
             ui.VGroup(
                 [
+                    ui.Label(
+                        {
+                            "ID": "Lbl1",
+                            "Text": f"<H1>{title}<H1/>",
+                            "Weight": 0.5,
+                            "Alignment": {"AlignHCenter": True, "AlignVCenter": True},
+                        }
+                    ),
+                    ui.Label(
+                        {
+                            "ID": "Lbl2",
+                            "Text": request,
+                            "Weight": 0.5,
+                            "Alignment": {"AlignHCenter": True, "AlignVCenter": True},
+                        }
+                    ),
                     ui.HGroup(
                         {"Alignment": {"AlignHRight": True}, "Weight": 0},
                         [
@@ -75,14 +91,6 @@ def confirmation_dialogue(title=None, request=None):
                                 }
                             ),
                         ],
-                    ),
-                    ui.Label(
-                        {
-                            "ID": "Lbl",
-                            "Text": request,
-                            "Weight": 0.5,
-                            "Alignment": {"AlignHCenter": True, "AlignVCenter": True},
-                        }
                     ),
                 ]
             ),

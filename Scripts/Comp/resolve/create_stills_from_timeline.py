@@ -31,8 +31,8 @@ def post_processing(stills: list, still_album, target_folder=None):
             f"Please note, that DELETE_STILLS is set to True, so new stills in '{still_album_name}' album will be erased"
         )
         answer = confirmation_dialogue(
-            "Confirm Stills Deletion",
-            f"Do you want to delete stills in '{still_album_name}' album?",
+            "Stills Deletion!",
+            f"Do you want to delete stills\nin '{still_album_name}' album?",
         )
         if answer:
             still_album.DeleteStills(stills)
