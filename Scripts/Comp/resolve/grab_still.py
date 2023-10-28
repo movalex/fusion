@@ -1,11 +1,21 @@
 import os
 from datetime import datetime
 from pathlib import Path
+from resolve_utils import (
+    get_timeline_and_gallery,
+    confirmation_dialogue,
+    request_dir,
+    create_folder,
+    cleanup_drx,
+)
+from typing import TypeVar
 
 """
-    This is a Davinci Resolve script to save single still in stills folder
+    This is a Davinci Resolve script to save single still in predefined folder
+
+    License: MIT
+    Copyright © 2023 Alexey Bogomolov
     Email: mail@abogomolov.com
-    Copyright © 2022 Alexey Bogomolov
     
     Permission is hereby granted, free of charge, to any person obtaining
     a copy of this software and associated documentation files (the "Software"),
@@ -26,37 +36,61 @@ from pathlib import Path
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     
 """
-STILL_FRAME_REF = 2
-EXPORT_ALBUM = "export_03.05"
+STILL_FRAME_REF = 1
+STILL_ALBUM = "gal22"
+DELETE_STILLS = True
+OPEN_EDIT_PAGE_AFTER_EXPORT = False
+CLEANUP_DRX = True
+galleryStillAlbum = TypeVar("galleryStillAlbum")
 
 
-def get_target_folder():
-    target_folder = fu.GetData("ResolveSaveStills.Folder")
-    if not target_folder or target_folder == " ":
-        target_folder = fu.MapPath(os.path.expanduser("~/Desktop"))
-        print(f"Stills folder not set. Defaulting to {target_folder} location")
-        print(f"Set stills location with set_stills_location script")
-    return target_folder
+def get_target_folder(app) -> str:
+    """
+    Checks for target folder Resolve data,
+    Shows folder request dialogue if data not found
+    """
+    target_folder_data = app.GetData("ResolveSaveStills.Folder")
+    if not target_folder_data or target_folder_data == "":
+        target_folder = request_dir("The stills will be saved to: ")
+        return target_folder
+
+    return target_folder_data
 
 
-def get_timeline_and_gallery(resolve):
-    project = resolve.GetProjectManager().GetCurrentProject()
-    timeline = project.GetCurrentTimeline()
-    gallery = project.GetGallery()
-    return timeline, gallery
-
-
-def get_export_album(albums: list, album_name: str):
-    export_album = None
+def get_still_album(gallery, album_name: str) -> galleryStillAlbum:
+    still_album = None
+    albums = gallery.GetGalleryStillAlbums()
     for album in albums:
         if gallery.GetAlbumName(album) == album_name:
             gallery.SetCurrentStillAlbum(album)
-            export_album = gallery.GetCurrentStillAlbum()
-            return export_album
-    if not export_album:
+            still_album = gallery.GetCurrentStillAlbum()
+    if not still_album:
         print(
-            f"Cannot create the album '{album_name}' for you. Do it manually, please"
+            f"Stills album '{album_name}' not found. Currently I'm unable to can create the still albums for you. Would you do this manually, please?"
         )
+        print("The stills will be saved to the currently selected album")
+
+        still_album = gallery.GetCurrentStillAlbum()
+    return still_album
+
+
+def get_file_prefix(clip_name, timeline_name):
+    now = datetime.now()
+    date_time = now.strftime("%m%d%Y")
+    file_prefix = f"{clip_name}_{date_time}_{timeline_name}"
+    return file_prefix
+
+
+def post_processing(still, still_album, target_folder):
+    if DELETE_STILLS:
+        print("DELETE_STILLS is enabled, latest still will is deleted")
+        still_album.DeleteStills(still)
+
+    if CLEANUP_DRX:
+        cleanup_drx(target_folder)
+
+    if OPEN_EDIT_PAGE_AFTER_EXPORT:
+        resolve.OpenPage("edit")
 
 
 def grab_still(album_name: str):
@@ -67,30 +101,30 @@ def grab_still(album_name: str):
     if not fu.GetResolve():
         print("This is a script for Davinci Resolve")
         return
-
-    albums = gallery.GetGalleryStillAlbums()
     current_clip_name = timeline.GetCurrentVideoItem().GetName()
     timeline_name = timeline.GetName()
-    now = datetime.now()
-    date_time = now.strftime("%m%d%Y")
-    file_prefix = f"{current_clip_name}_{date_time}_{timeline_name}"
-    export_album = get_export_album(albums, album_name)
-    if not export_album:
+
+    file_prefix = get_file_prefix(current_clip_name, timeline_name)
+
+    still_album = get_still_album(gallery, STILL_ALBUM)
+
+    if not still_album:
         return
+    still_album_name = gallery.GetAlbumName(still_album)
+    target_folder = get_target_folder(fusion)
     if not target_folder:
-        print("target folder not set")
+        print("Target folder is not set, aborting script.")
         return
-    export_folder = Path(target_folder) / EXPORT_ALBUM
-    export_folder.mkdir(exist_ok=True, parents=True)
+    target_folder = Path(target_folder, still_album_name)
+    if not target_folder.exists():
+        create_folder(target_folder)
     still = timeline.GrabStill(STILL_FRAME_REF)
-    export_album.SetLabel(still, current_clip_name)
-    export_album.ExportStills([still], export_folder.as_posix(), file_prefix, "png")
-    # export_album.DeleteStills(still)
-    # resolve.OpenPage("edit")
-    print(f"Saved {file_prefix} to {export_folder}")
+    still_album.SetLabel(still, current_clip_name)
+    still_album.ExportStills([still], target_folder.as_posix(), file_prefix, "png")
+    print(f"Still is saved to {target_folder}")
+    post_processing(still, still_album, target_folder)
 
 
 if __name__ == "__main__":
     timeline, gallery = get_timeline_and_gallery(resolve)
-    target_folder = get_target_folder()
-    grab_still(album_name=EXPORT_ALBUM)
+    grab_still(album_name=STILL_ALBUM)

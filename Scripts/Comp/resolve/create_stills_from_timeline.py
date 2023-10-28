@@ -1,109 +1,85 @@
 from pathlib import Path
-from grab_still import get_export_album, get_timeline_and_gallery, grab_still
+from grab_still import get_still_album, get_target_folder
+from resolve_utils import (
+    request_dir,
+    get_timeline_and_gallery,
+    confirmation_dialogue,
+    create_folder,
+    cleanup_drx,
+)
 
 """
-    This is a Davinci Resolve script to save all timeline clips as jpg files.
-    Author: Alexey Bogomolov
-    Email: mail@abogomolov.com
+    This is a Davinci Resolve script to save all timeline clips to images.
+
     License: MIT
-    Copyright: 2023
+    Copyright © 2023 Alexey Bogomolov
+    Email: mail@abogomolov.com
 """
 
 STILL_FRAME_REF = 2
-EXPORT_ALBUM = "export_30.04"
+STILL_ALBUM = "gal22"
 FORMAT = "png"
+DELETE_STILLS = True
+OPEN_EDIT_PAGE_AFTER_EXPORT = False
+CLEANUP_DRX = True
 
 
+def post_processing(stills: list, still_album, target_folder=None):
+    if DELETE_STILLS:
+        still_album_name = gallery.GetAlbumName(still_album)
+        print(
+            f"Please note, that DELETE_STILLS is set to True, so new stills in '{still_album_name}' album will be erased"
+        )
+        answer = confirmation_dialogue(
+            "Confirm Stills Deletion",
+            f"Do you want to delete stills in '{still_album_name}' album?",
+        )
+        if answer:
+            still_album.DeleteStills(stills)
 
-def request_dir():
-    """request file UI"""
-    target = fu.GetData("ResolveSaveStills.Folder")
+    if CLEANUP_DRX:
+        cleanup_drx(target_folder)
 
-    ui = fu.UIManager
-    disp = bmd.UIDispatcher(ui)
-    win = disp.AddWindow(
-        {
-            "ID": "RequestFolder",
-            "TargetID": "RequestFolder",
-            "WindowTitle": "The stills will be saved to",
-            "Geometry": [800, 600, 630, 50],
-        },
-        ui.HGroup(
-            [
-                ui.Label({"Weight": 0.1, "ID": "FolderLabel", "Text": "folder:"}),
-                ui.LineEdit(
-                    {
-                        "Weight": 0.8,
-                        "Text": target or " ",
-                        "ID": "FolderLine",
-                        "Events": {"ReturnPressed": True},
-                        "Alignment": {"AlignHCenter": True, "AlignVCenter": True},
-                    }
-                ),
-                ui.Button({"Weight": 0.2, "ID": "FolderButton", "Text": "Browse..."}),
-                ui.Button({"Weight": 0.1, "ID": "RunButton", "Text": "Run"}),
-            ]
-        ),
-    )
-    itm = win.GetItems()
-
-    def close(ev):
-        disp.ExitLoop()
-
-    def request_folder(ev):
-        target_folder = fu.RequestDir()
-        itm["FolderLine"].Text = target_folder
-
-    itm["FolderLine"].SetPlaceholderText("Select folder")
-    win.On.FolderButton.Clicked = request_folder
-    win.On.RequestFolder.Close = close
-    win.On.RunButton.Clicked = close
-    win.Show()
-    disp.RunLoop()
-    win.Hide()
-    result = itm["FolderLine"].Text
-    fu.SetData("ResolveSaveStills.Folder", result)
-    return result
+    if OPEN_EDIT_PAGE_AFTER_EXPORT:
+        resolve.OpenPage("edit")
 
 
-def grab_stills(album_name: str):
+def grab_timeline_stills(delete_stills=False):
     """create stills from all clips in a timeline
-    save the files to requested folder
+    save the files to requested folder. Currently GetGalleryStillAlbums() is used,
+    so we are unable to add a label to each still.
     """
-    if not fu.GetResolve():
+    if not app.GetResolve():
         print("This is a script for Davinci Resolve")
         return
 
     timeline_name = timeline.GetName()
     video_track_count = timeline.GetTrackCount("video")
-    print(video_track_count)
-    stills = {}
-    for track_num in range(1, video_track_count + 1):
-        clips = timeline.GetItemListInTrack("video", track_num)
-        for clip in clips:
-            clip_name = clip.GetName()
 
-    # stills = timeline.GrabAllStills(STILL_FRAME_REF)
-    albums = gallery.GetGalleryStillAlbums()
-    album = get_export_album(albums, album_name)
+    print(f"Found {video_track_count} tracks")
+
+    still_album = get_still_album(gallery, STILL_ALBUM)
+    still_album_name = gallery.GetAlbumName(still_album)
+    stills = timeline.GrabAllStills(STILL_FRAME_REF)
 
     if len(stills) == 0:
-        print("no stills saved")
+        print("No stills saved")
         return
-    target_folder = request_dir()
-    if target_folder:
-        print(f"saving stills to {target_folder}")
-    else:
-        print("Stills folder not set. Defaulting to desktop location")
-        target_folder = Path("~/Desktop/ResolveStills").expanduser()
-        Path.mkdir(target_folder, exist_ok=True, parents=True)
-        print(f"saving stills to {target_folder}")
-    album.ExportStills(stills, target_folder.as_posix(), timeline_name, FORMAT)
-    # album = gallery.GetCurrentStillAlbum()
-    # album.DeleteStills(stills)
-    resolve.OpenPage("edit")
+
+    target_folder = get_target_folder(fusion)
+    if not target_folder:
+        print("Target folder is not set, aborting script.")
+        return
+
+    target_folder = Path(target_folder, still_album_name)
+    create_folder(target_folder)
+
+    print(f"Saving stills to {target_folder}")
+
+    still_album.ExportStills(stills, target_folder.as_posix(), timeline_name, FORMAT)
+    post_processing(stills, still_album, target_folder)
 
 
 if __name__ == "__main__":
     timeline, gallery = get_timeline_and_gallery(resolve)
-    grab_stills(EXPORT_ALBUM)
+    grab_timeline_stills()
