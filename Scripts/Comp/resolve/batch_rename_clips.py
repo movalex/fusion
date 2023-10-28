@@ -95,13 +95,13 @@ def rename_clips(track_number: int):
     project = resolve.GetProjectManager().GetCurrentProject()
     timeline = project.GetCurrentTimeline()
     clips = timeline.GetItemListInTrack("Video", int(track_number))
-    print(f"processing {track_number}")
     if not clips:
         print(f"No clips on the track #{track_number}")
         return
+    print(f"Processing track #{track_number}")
 
     for clip in clips:
-        print(f"changing name of {clip.GetName()}")
+        print(f"Changing name of {clip.GetName()}")
         media_pool_item = clip.GetMediaPoolItem()
         for marker_data in clip.GetMarkers().values():
             name = marker_data["name"]
