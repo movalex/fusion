@@ -14,7 +14,7 @@ def cleanup_drx(folder: Path):
     )
     answer = confirmation_dialogue(
         title="DRX files deletion!",
-        request=f"Do you wish to delete all DRX files\nin'{folder.name}'?",
+        request=f"Do you wish to delete all DRX files\nin'{folder}' folder?",
     )
     for file in folder.iterdir():
         if file.suffix == ".drx":
@@ -54,7 +54,7 @@ def confirmation_dialogue(title=None, request=None):
             "ID": "RequestFolder",
             "TargetID": "RequestFolder",
             "WindowTitle": title or "Confirmation Dialogue",
-            "Geometry": [800, 600, 550, 100],
+            "Geometry": [800, 600, 550, 130],
         },
         [
             ui.VGroup(
@@ -166,12 +166,8 @@ def request_dir(window_title: Path):
     disp.RunLoop()
     win.Hide()
     result = itm["FolderLine"].Text
-    if result:
-        fu.SetData("ResolveSaveStills.Folder", result)
-    else:
-        print(
-            f"Tagret folder location is not saved. You can save folder location data by running Set Stills Location script"
-        )
+    print(f"result: '{result}'")
+
     return result
 
 
