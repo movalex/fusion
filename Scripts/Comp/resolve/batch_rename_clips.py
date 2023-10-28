@@ -5,60 +5,88 @@
     Author: Alexey Bogomolov
     Email: mail@abogomolov.com
     License: MIT
-    Copyright: 2022
+    Copyright: 2023
 """
 
 
 def request_track_number():
     """request file UI"""
-    target = fu.GetData("RenameClips.TrackNumber")
+    value = fu.GetData("RenameClips.TrackNumber")
 
     ui = fu.UIManager
     disp = bmd.UIDispatcher(ui)
     win = disp.AddWindow(
         {
-            "ID": "RenameClipsWindow",
-            "TargetID": "RenameClipsWindow",
-            "WindowTitle": "The stills will be saved to",
-            "Geometry": [800, 600, 230, 50],
+            "ID": "RequestTrack",
+            "TargetID": "RequestTrack",
+            "WindowTitle": "Select track number",
+            "Geometry": [800, 600, 230, 100],
         },
-        ui.HGroup(
-            [
-                ui.Label({"Weight": 0.1, "ID": "Label", "Text": "Track Num:"}),
-                ui.LineEdit(
-                    {
-                        "Weight": 0.8,
-                        "Text": target or "",
-                        "ID": "TextLine",
-                        "Events": {"ReturnPressed": True},
-                        "Alignment": {"AlignHCenter": True, "AlignVCenter": True},
-                    }
-                ),
-                ui.Button({"Weight": 0.2, "ID": "OkButton", "Text": "Ok"}),
-            ]
-        ),
+        [
+            ui.VGroup(
+                [
+                    ui.HGroup(
+                        [
+                            ui.Label(
+                                {"Weight": 0.6, "ID": "Label", "Text": "Track Num:"}
+                            ),
+                            ui.SpinBox(
+                                {
+                                    "Weight": 0.4,
+                                    "ID": "SpinBox",
+                                    "Value": int(value) or 0,
+                                    "Minimum": 1,
+                                    "Alignment": {
+                                        "AlignHCenter": True,
+                                        "AlignVCenter": True,
+                                    },
+                                }
+                            ),
+                        ]
+                    ),
+                    ui.HGroup(
+                        [
+                            ui.Button({"Weight": 0.2, "ID": "OkButton", "Text": "Ok"}),
+                            ui.Button(
+                                {"Weight": 0.2, "ID": "CancelButton", "Text": "Cancel"}
+                            ),
+                        ]
+                    ),
+                ],
+            )
+        ],
     )
     itm = win.GetItems()
 
     def close(ev):
         disp.ExitLoop()
 
-    itm["TextLine"].SetPlaceholderText("Select folder")
+    def process(ev):
+        track_number = itm["SpinBox"].Value
+        print(track_number)
+        print(ev)
+        rename_clips(int(track_number))
 
-    win.On.OkButton.Clicked = close
-    win.On.RenameClipsWindow.Close = close
+    def save_data(ev):
+        track_number = itm["SpinBox"].Value
+        fu.SetData("RenameClips.TrackNumber", track_number)
+
+    win.On.SpinBox.ValueChanged = save_data
+    track_number = itm["SpinBox"].Value
+    win.On.OkButton.Clicked = process
+    win.On.CancelButton.Clicked = close
+    win.On.RequestTrack.Close = close
     win.Show()
     disp.RunLoop()
     win.Hide()
-    result = itm["TextLine"].Text
-    fu.SetData("RenameClips.TrackNumber", result)
-    return result
 
 
-def rename_clips(track_number):
+def rename_clips(track_number: int):
     """batch rename clips
-    WIP
-    currently does not do anything
+
+    currently WIP, does not do anything...
+    UPD: Welp, looks like it is not currently possible to change individual clips names with scripting
+
     """
 
     if not fu.GetResolve():
@@ -67,17 +95,22 @@ def rename_clips(track_number):
     project = resolve.GetProjectManager().GetCurrentProject()
     timeline = project.GetCurrentTimeline()
     clips = timeline.GetItemListInTrack("Video", int(track_number))
-    if len(clips) == 0:
-        print(f"no clips on the track #{track_number}")
+    print(f"processing {track_number}")
+    if not clips:
+        print(f"No clips on the track #{track_number}")
         return
 
     for clip in clips:
         print(f"changing name of {clip.GetName()}")
-        print(clip.GetMarkers())
-
+        media_pool_item = clip.GetMediaPoolItem()
+        for marker_data in clip.GetMarkers().values():
+            name = marker_data["name"]
+            print("Marker name: ", name)
+            # print("PROP", media_pool_item.GetClipProperty())
+            # clip.SetProperty("Clip Name", name)
     print(dir(clip))
+    print("PROP", clip.GetProperty())
 
 
 if __name__ == "__main__":
-    track = request_track_number()
-    rename_clips(track)
+    request_track_number()
