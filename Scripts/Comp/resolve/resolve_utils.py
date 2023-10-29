@@ -16,9 +16,10 @@ def cleanup_drx(folder: Path):
         title="DRX files deletion!",
         request=f"Do you wish to delete all DRX files\nin'{folder}' folder?",
     )
-    for file in folder.iterdir():
-        if file.suffix == ".drx":
-            file.unlink()
+    if answer:
+        for file in folder.iterdir():
+            if file.suffix == ".drx":
+                file.unlink()
 
 
 def create_folder(folder_path: Path) -> None:
