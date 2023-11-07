@@ -1,20 +1,28 @@
 {
     Event {
-        Action = "Comp_Start_Render",
+        Action = "Comp_Start_Render1",
         Targets = {
             Composition = {
                 Execute =
                     [[
                     tools = target:GetData("ToolManager.resize")
+                    function EnableResize(tools)
+                        if not tools then
+                            print("Tool Manager data not found")
+                            return
+                        end
 
-                    -- loop via tools in the ToolManager data
-                    target:StartUndo("Enable Tools")
-                    for i, toolName in ipairs(tools) do
-                        tool = target:FindTool(toolName)
-                        print("Enabling " .. tool.Name)
-                        tool:SetAttrs({TOOLB_PassThrough = false})
+
+                        -- loop via tools in the ToolManager data
+                        target:StartUndo("Enable Tools")
+                        for i, toolName in ipairs(tools) do
+                            tool = target:FindTool(toolName)
+                            print("Enabling " .. tool.Name)
+                            tool:SetAttrs({TOOLB_PassThrough = false})
+                        end
+                        target:EndUndo()
                     end
-                    target:EndUndo()
+                    EnableResize(tools)
                     target:Render(false) -- `false` to skip waiting until the render is done
                     ]]
             },
