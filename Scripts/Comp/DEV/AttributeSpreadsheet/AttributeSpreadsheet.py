@@ -117,13 +117,14 @@ __VERSION__ = 3.2
 __beta__ = False
 __license__ = "MIT"
 __copyright__ = """2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>
-2019-2023, additions by Alexey Bogomolov <mail[AT]abogomolov.com>"""
+2019-2023, Alexey Bogomolov <mail[AT]abogomolov.com>"""
 
 
 PKG_REQUIRED = "PySide6"
 REMOTE_FUSION_ACCESS = False
 DEFAULT_HOST = "localhost"
 LOG_LEVEL = "debug"  # info, warning, debug
+
 # Do not auto-load the spreadsheet on startup
 # if more than given number of tools selected
 LOAD_SELECTED_TOOLS_LIMIT = 10
