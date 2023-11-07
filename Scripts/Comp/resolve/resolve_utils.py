@@ -54,7 +54,7 @@ def confirmation_dialogue(title=None, request=None):
         {
             "ID": "RequestFolder",
             "TargetID": "RequestFolder",
-            "WindowTitle": title or "Confirmation Dialogue",
+            "WindowTitle": "Confirmation Dialogue",
             "Geometry": [800, 600, 550, 130],
         },
         [
