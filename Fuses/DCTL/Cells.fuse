@@ -132,9 +132,9 @@ __DEVICE__ float4 worley(float2 x, float w, float iGlobalTime, float speed, floa
             }
         }
     }
-    // color cells based on the mid point location
-	color += dot(m_point, to_float2(.3f, .8f));
-	
+// color cells based on the mid point location
+    color += dot(m_point, to_float2(.3f, .8f));
+
     // show dots
     // color += 1.f - step(.05, m_dist);
 
@@ -181,62 +181,62 @@ DEFINE_KERNEL_ITERATORS_XY(x, y);
     uv = to_float2(uv.x*_cosf(-rad_rot)+ uv.y* -_sinf(-rad_rot), uv.x*_sinf(-rad_rot)+uv.y* _cosf(-rad_rot));
     uv.x *= params->aspect;
     uv *= params->scale * 10.0f;
+    float3 col = to_float3_s(0.0f);
+    
+    if (params->cell_type == 0)
+        // worley 
+        {
+            float4 c = worley(uv, params->w_detail, params->iGlobalTime, params->speed, params->offset);
+            col = to_float3(c.y,c.z,c.w); 
+            
+            // colorize
+            // col = 0.5 + 0.5 * _cosf( c.y*6.2831 + to_float3_s(0.0,1.0,2.0) );	
+            // col *= _clamp(1.0 - 0.4*c.x*c.x,0.0,1.0);
+            // col -= (1.0-smoothstep( 0.08, 0.09, c.x));
 
-if (params->cell_type == 0)
-    {
-        float4 col = to_float4_s(0.0f);
-        float4 c = worley(uv, params->w_detail, params->iGlobalTime, params->speed, params->offset);
-        col = to_float4(c.y,c.z,c.w, col.w); 
-        col.x = gam(col.x, params->a_gamma);
-        col.x = gain(col.x, params->a_gain);
-        col.x = off(col.x, params->a_offset);
-        col.x = con(col.x, params->a_contrast);
-        color = to_float4(col.x, col.x, col.x, 1.0f);
-    }
-else if (params->cell_type == 1)
-    {
-        float3 col = to_float3_s(0.0f);
-        float3 c = voronoi(uv, params->w_detail, params->iGlobalTime, params->speed, params->offset);
+        }
+    else if (params->cell_type == 1)
+        {
+            float3 c = voronoi(uv, params->w_detail, params->iGlobalTime, params->speed, params->offset);
 
-        // isolines
-        // col = c.x*(0.5 + 0.5*sin(120.0*c.x))*to_float3_s(1.0f);
+            // isolines
+            // col += c.x*(0.5 + 0.5*sin(120.0*c.x))*to_float3_s(1.0f);
 
-        // colorize cells
-        col += dot(to_float2(c.z, c.y), to_float2(0.3f,0.8f));
+            // colorize cells
+            col += dot(to_float2(c.z, c.y), to_float2(0.3f,0.8f));
 
-        // gradient fill by borders  
-        // col += dot(c.x, to_float2(.1f, 1.0f));
-        
-        // add borders  
-        col = _mix(to_float3(1.0f,1.0f,1.0f), col, smoothstep( 0.006f, 0.02f, c.x ));
-        
-        // feature points
-        float dd = length( c.yz );
-        col = mix(to_float3(1.0,0.6,0.1), col, smoothstep( 0.0, 0.05, dd) ); //glow
-        col += to_float3(1.0,0.6,0.1)*(1.0-smoothstep( 0.0, 0.01, dd)); //core
-        
-        // add controls
-        col.x = gam(col.x, params->a_gamma);
-        col.x = gain(col.x, params->a_gain);
-        col.x = off(col.x, params->a_offset);
-        col.x = con(col.x, params->a_contrast);
-        color = to_float4(col.x, col.x, col.x, 1.0f);
-        //float4 color = to_float4_s(col.x);
-    }
+            // gradient fill by borders  
+            // col *= dot(to_float2(c.x, c.x), to_float2(.1f, 1.0f));
+            
+            // add borders  
+            col = _mix(to_float3(1.0f,1.0f,1.0f), col, smoothstep( 0.006f, 0.02f, c.x ));
+            
+            // feature points
+            // float dd = length( to_float2(c.y, c.z) );
+            // col = _mix(to_float3(1.0,0.6,0.1), col, smoothstep( 0.0, 0.05, dd) ); //glow
+            // col += to_float3(1.0,0.6,0.1)*(1.0-smoothstep( 0.0, 0.01, dd)); //core
+            
+        }
 	else if (params->cell_type == 2)
 		{
-			float3 col = to_float3_s(0.0f);
 			float3 c = voronoi(uv, params->w_detail, params->iGlobalTime, params->speed, params->offset);
 			// float3 col = 0.5f + 0.5f*cos( c.y*6.2831f + to_float3(0.0f, 1.0f, 2.0f) );	
 			//	col *= clamp(1.0f - 0.4f*c.x*c.x,0.0f,1.0f);
 			
 			col += dot(to_float2(c.z, c.y), to_float2(0.3f,0.8f));
+            
 			//borders
 			//col -= (1.0f - smoothstep( 0.008f, 0.06f, c.x));
 			col -= (1.0-smoothstep( 0.01, 0.02, c.x));
-			//return color
-			color = to_float4(col.x, col.x, col.x, 1.0f);
 		}
+    // add controls
+    col.x = gam(col.x, params->a_gamma);
+    col.x = gain(col.x, params->a_gain);
+    col.x = off(col.x, params->a_offset);
+    col.x = con(col.x, params->a_contrast);
+    
+    // result color
+    color = to_float4(col.x, col.x, col.x, 1.0f);
 	_tex2DVec4Write(dst, x, y, color);
 }
 //end=glsl//
@@ -447,7 +447,7 @@ function Process(req)
     node:AddOutput("dst", dst)
     local ok = node:RunSession(req)
     if not ok then dst = nil end
-    dump(node:GetErrorLog())
+    -- dump(node:GetErrorLog())
     node:SetParamStructCopy(nil, 0)
     dst:DownloadGPUMem(req)
     collectgarbage()
