@@ -28,23 +28,23 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				CommentsNest = Input { Value = 0, },
 				File = Input { Value = "Temp:VectorWarp\\render001.0000.exr", },
 				Guide = Input { Value = [[
-QUICK GUIDE:
-1. Connect the Image to the VectorWarp Input. 
-2. Generate CleanPass StMaps. This will create a bunch of clean STMap files for further processing.
-    By default the STMap will be rendered to the temp:VectorWarp folder.
-	To specify the STMap location, go to the file tab and set the Saver path accordingly.
-    You have two options to create CleanPass STMap:
-	  - Generate CleanPass (fast): one frame is rendered, other just copied. In most cases this is prefferable option.
-		Note that for correct (and fast) CleanPass generation the path to the gebnerated STMaps should not contain non-Latin symbols.
-		If you need to use non-Latin words in your paths, either install provided `win125x.lua` module to the `Modules:Lua` folder, or consider the second option. 
-	  - Render Cleanpass (safe): all clean pass frames will be rendered one by one. This option is added if the first one for some reason does not work for you.
-2. Define a Reference Frame with Set Reference Frame button.
-3. Start the analysis using either of the dedicated buttons:
-	- Analyze Forward
-	- Analyze Backward
-	- Analyze Forward then Backward
-4. To apply the distortion, connect the VectorWarp to the Input (yellow) of the STMapper (available in Reactor) or a Texture node.
-    The image input should be the same resolution as the rendered StMap sequence]],
+					QUICK GUIDE:
+					1. Connect the image to the VectorWarp input.
+					2. Generate CleanPass STMaps. This process will create a series of clean STMap files for further processing.
+						- By default, the STMap will be rendered to the temp:VectorWarp folder.
+						- To specify a different STMap location, navigate to the file tab and set the Saver path accordingly.
+						There are two options for creating CleanPass STMap:
+						  a. Generate CleanPass (fast): Renders one frame and copies the rest. This is usually the preferred option.
+						    Note: For accurate and fast CleanPass generation, ensure the path to the STMaps does not contain non-Latin symbols.
+						    If non-Latin words are required in your paths, either install the provided `win125x.lua` module in the `Modules:Lua` folder or consider the second option.
+						  b. Render Cleanpass (safe): Renders all clean pass frames individually. Use this option if the first one is unsuccessful for any reason.
+					3. Define a Reference Frame using the 'Set Reference Frame' button.
+					4. Start the analysis with one of the dedicated buttons:
+					   - Analyze Forward
+					   - Analyze Backward
+					   - Analyze Forward then Backward
+					5. To apply the distortion, connect the VectorWarp to the Input (yellow) of the STMapper (available in Reactor) or a Texture node. Ensure that the image input matches the resolution of the rendered STMap sequence.
+					]],
 	},
 				Method = InstanceInput {
 					SourceOp = "OpticalFlow1",
