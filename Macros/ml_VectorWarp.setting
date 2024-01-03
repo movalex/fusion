@@ -990,9 +990,26 @@ QUICK GUIDE:
 					INP_Integer = false,
 					LINKID_DataType = "Number",
 					BTNCS_Execute = [[
+						local ldr = tool:GetChildrenList(false, "Loader")[1]
+						
+						local svr = tool:GetChildrenList(false, "Saver")[1]
+                        saverClip = svr.Clip[0]
+						local loaderClip = saverClip
+						
+						local renderStart = comp:GetAttrs().COMPN_RenderStart
+						padding = string.format("%04d", renderStart)
+						
+						local pattern = "%.%.(%w+)$"
+						loaderClip = loaderClip:gsub(pattern, "." ..padding .. ".%1") 
+
+						function sleep (a) 
+                            local sec = tonumber(os.clock() + a); 
+                            while (os.clock() < sec) do 
+                            end 
+                        end
+						
 						tool.Output = 0
 						temp_time = comp.CurrentTime
-						local renderStart = comp:GetAttrs().COMPN_RenderStart
 						comp.CurrentTime = renderStart
 						comp:Loop(false)
 						fusion.CacheManager:Purge()
@@ -1002,16 +1019,17 @@ QUICK GUIDE:
 						while true do 
                             if temp_time < comp.CurrentTime then
                                 temp_time = temp_time + 1
-                                io.write(".")
+                                print(".")
                             end
                             if not comp:IsPlaying() then
                                 sleep(1)
                                 break
                             end
                         end
-                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
+                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED] or temp_time
                         tool.Output = 1
                         tool.SaveFrames = "Full"
+						ldr.Clip[0] = comp:MapPath(loaderClip)
 
 									]],
 					ICS_ControlPage = "Controls",
