@@ -7,9 +7,9 @@
 --    str_win  = utf8_to_win(str_utf8)
 --    str_utf8 = win_to_utf8(str_win)
 ---------------------------------------------------------------------
-
-local codepage = 1252   -- Set your codepage here
-
+module = {}
+local codepage = 1251   -- Set your codepage here
+module.codepage = codepage
 -- The following codepages are supported:
 --   874  Thai
 --  1250  Central European
@@ -189,3 +189,4 @@ do
    end
 
 end
+return module
