@@ -1,8 +1,8 @@
 --[[-- 
 https://emiliosapia.myportfolio.com
 Written by : Emilio Sapia, Alexey Bogomolov
-Written on : Jan, 2023
-version 2.6
+Written on : Jan, 2024
+version 2.7
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -26,20 +26,26 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			},
 			Inputs = ordered() {
 				CommentsNest = Input { Value = 0, },
-				File = Input { Value = "Temp:VectorWarp\\render001.1001.exr", },
+				File = Input { Value = "Temp:VectorWarp\\render001.0000.exr", },
 				Guide = Input { Value = [[
 QUICK GUIDE:
-1. Connect the Image to the VectorWarp Input. Click Generate StMap button
-    By default the STMap will be rendered to the comp:VectorWarp folder.
-    If your comp is not saved, you will be asked to save the comp first.
-    To specify the STMap location, go to the file tab and set the Saver path accordingly.
-2. Define a Reference Frame with Set Reference Frame button
-    BE SURE TO SET THE INPUT DEPTH TO 32Bit!
-3. Start the analysis using the dedicated buttons
+1. Connect the Image to the VectorWarp Input. 
+2. Generate CleanPass StMaps. This will create a bunch of clean STMap files for further processing.
+    By default the STMap will be rendered to the temp:VectorWarp folder.
+	To specify the STMap location, go to the file tab and set the Saver path accordingly.
+    You have two options to create CleanPass STMap:
+	  - Generate CleanPass (fast): one frame is rendered, other just copied. In most cases this is prefferable option.
+		Note that for correct (and fast) CleanPass generation the path to the gebnerated STMaps should not contain non-Latin symbols.
+		If you need to use non-Latin words in your paths, either install provided `win125x.lua` module to the `Modules:Lua` folder, or consider the second option. 
+	  - Render Cleanpass (safe): all clean pass frames will be rendered one by one. This option is added if the first one for some reason does not work for you.
+2. Define a Reference Frame with Set Reference Frame button.
+3. Start the analysis using either of the dedicated buttons:
+	- Analyze Forward
+	- Analyze Backward
+	- Analyze Forward then Backward
 4. To apply the distortion, connect the VectorWarp to the Input (yellow) of the STMapper (available in Reactor) or a Texture node.
-    The distorted image should be the same resolution as the StMap sequence
-]],
-},
+    The image input should be the same resolution as the rendered StMap sequence]],
+	},
 				Method = InstanceInput {
 					SourceOp = "OpticalFlow1",
 					Source = "Method",
@@ -168,20 +174,6 @@ QUICK GUIDE:
 					Name = "Save",
 					Width = 1,
 				},
-				-- Input7 = InstanceInput {
-				--     SourceOp = "VW_SAVER",
-				--     Source = "CreateDir",
-				--     Default = 1,
-				-- },
-				-- Input8 = InstanceInput {
-				--     SourceOp = "VW_SAVER",
-				--     Source = "CreateDirNow",
-				--     Width = 0.385,
-				-- },
-				-- Input9 = InstanceInput {
-				--     SourceOp = "VW_SAVER",
-				--     Source = "OutputFormat",
-				-- },
                 SaveFrames = InstanceInput {
                     SourceOp = "VW_SAVER",
                     Source = "SaveFrames",
@@ -192,7 +184,7 @@ QUICK GUIDE:
 				},
 				OFInput = InstanceInput {
 					SourceOp = "External",
-					Source = "Background",
+					Source = "Foreground",
 					Name = "VectorsInput",
 				},
 				Input = InstanceInput {
@@ -206,11 +198,6 @@ QUICK GUIDE:
 					SourceOp = "VW_SAVER",
 					Source = "Output",
 				},
-				VectorsOutput = InstanceOutput {
-					SourceOp = "External",
-					Source = "Output",
-					Name = "VectorsOutput",
-				}
 			},
 			ViewInfo = GroupInfo {
 				Pos = { 49.3133, 315.243 },
@@ -234,26 +221,28 @@ QUICK GUIDE:
 					Clips = {
 						Clip {
 							ID = "Clip1",
-							Filename = "Temp:VectorMapper\\render001.1001.exr",
+							Filename = "Temp:VectorMapper\\render001.0000.exr",
 							FormatID = "OpenEXRFormat",
-							StartFrame = 1001,
-							Length = 200,
+							StartFrame = 0,
+							Length = 1500,
 							LengthSetManually = true,
 							TrimIn = 0,
-							TrimOut = 500,
+							TrimOut = 1500,
 							ExtendFirst = 0,
 							ExtendLast = 0,
 							Loop = 1,
 							AspectMode = 0,
-							Depth = 0,
+							Depth = 5,
 							TimeCode = 0,
-							GlobalStart = 1001,
+							GlobalStart = 0,
 							GlobalEnd = 1500
 						}
 					},
 					CtrlWShown = false,
 					NameSet = true,
 					Inputs = {
+						MissingFrames = Input { Value = 2, },
+						Depth = Input { Value = 5, },
 						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
 						["Clip1.OpenEXRFormat.RedName"] = Input { Value = FuID { "R" }, },
 						["Clip1.OpenEXRFormat.GreenName"] = Input { Value = FuID { "G" }, },
@@ -476,7 +465,7 @@ QUICK GUIDE:
 						ProcessWhenBlendIs00 = Input { Value = 0, },
 						Clip = Input {
 							Value = Clip {
-								Filename = "Temp:VectorWarp\\render001..exr",
+								Filename = "Temp:VectorWarp\\render001.0000.exr",
 								FormatID = "OpenEXRFormat",
 								Length = 0,
 								Saving = true,
@@ -651,7 +640,7 @@ QUICK GUIDE:
 					CtrlWShown = false,
 					NameSet = true,
 					Inputs = {
-						Foreground = Input {
+						Background = Input {
 							SourceOp = "OpticalFlow1",
 							Source = "Output",
 						},
@@ -714,22 +703,22 @@ QUICK GUIDE:
 				Controls = ControlPage {
 					CT_Visible = true,
 					CTID_DIB_ID = "Icons.Tools.Tabs.Controls",
-					CTS_FullName = "Tooltip for Page1"
+					CTS_FullName = "Setup and Analysis"
 				},
 				Vectors = ControlPage {
 					CT_Visible = true,
 					CTID_DIB_ID = "Icons.Tools.Tabs.Channels",
-					CTS_FullName = "Tooltip for Page1"
+					CTS_FullName = "Vector Options"
 				},
 				Matte = ControlPage {
 					CT_Visible = true,
 					CTID_DIB_ID = "Icons.Tools.Tabs.Matte",
-					CTS_FullName = "Tooltip for Page1"
+					CTS_FullName = "Matte Options"
 				},
 				File = ControlPage {
 					CT_Visible = true,
 					CTID_DIB_ID = "Icons.Tools.Tabs.Solve",
-					CTS_FullName = "Tooltip for Page1"
+					CTS_FullName = "CleanPass and Saver"
 				},
 				Hide = ControlPage {
 					CT_Visible = false,
@@ -799,7 +788,7 @@ QUICK GUIDE:
 					INPID_InputControl = "ScrewControl",
 					IC_Steps = 100,
 					INP_MaxScale = 100,
-					INP_Default = 1001,
+					INP_Default = 0,
 					INP_MinScale = 0,
 					LINKID_DataType = "Number",
 					ICS_ControlPage = "Controls",
@@ -810,7 +799,10 @@ QUICK GUIDE:
 					INP_Integer = false,
 					LINKID_DataType = "Number",
 					BTNCS_Execute = [[
-                                    tool:SetInput('ReferenceFrame', comp.CurrentTime, fu.TIME_UNDEFINED)]],
+					
+					tool:SetInput('ReferenceFrame', comp.CurrentTime, fu.TIME_UNDEFINED)
+
+									]],
 					ICS_ControlPage = "Controls",
 					INPID_InputControl = "ButtonControl",
 					LINKS_Name = "Set Reference Frame",
@@ -832,22 +824,23 @@ QUICK GUIDE:
 					INP_Integer = false,
 					LBLC_DropDownButton = true,
 					LINKID_DataType = "Number",
-					LBLC_NumInputs = 4,
+					LBLC_NumInputs = 6,
 					ICS_ControlPage = "Controls",
 					INPID_InputControl = "LabelControl",
-					LINKS_Name = "Analysis",
+					LINKS_Name = "Analysis"
 				},
 				CompnPass = {
 					INP_MaxAllowed = 1000000,
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
+
                     local function CopyFile(old_path, new_path)
-                        require("win-125x")
-                        old_path = utf8_to_win(old_path)
-                        new_path = utf8_to_win(new_path)
-                        -- print("old: ", old_path)
-                        -- print("new: ", new_path)
+
+						if utf_module_loaded then
+							old_path = utf8_to_win(old_path)
+							new_path = utf8_to_win(new_path)
+						end
                         local old_file = io.open(old_path, "rb")
                         local new_file = io.open(new_path, "wb")
                         local old_file_sz, new_file_sz = 0, 0
@@ -869,7 +862,7 @@ QUICK GUIDE:
                     end
                     
                     local function ParseFilename(filename)
-                                                local seq = {}
+                        local seq = {}
                         seq.FullPath = filename
                         string.gsub(seq.FullPath, "^(.+[/\\])(.+)", function(path, name)
                                                                     seq.Path = path
@@ -906,28 +899,33 @@ QUICK GUIDE:
                     local function CreateCleanPass(tool)
                         local renderStart = comp:GetAttrs().COMPN_RenderStart
                         local renderEnd = comp:GetAttrs().COMPN_RenderEnd
-                        local renderOut = renderStart + 1
-                        tool.Render = 0 
+                        local second_frame = renderStart + 1
                         tool.Output = 0 
                         comp:SetAttrs({COMPN_CurrentTime = comp:GetAttrs().COMPN_RenderStart}) 
-                        comp:SetAttrs({COMPN_RenderEnd = renderOut})
-                        comp:Render()
-
+                        comp:SetAttrs({COMPN_RenderEnd = second_frame})
+                        
+						comp:Render()
+						print("Rendered a single clean plate file")
                         comp:SetAttrs({COMPN_RenderEnd = renderEnd})
-                        local svr = tool:GetChildrenList(false, "Saver")[1]
+                        
+						local svr = tool:GetChildrenList(false, "Saver")[1]
                         saverClip = svr.Clip[0]
                         seq = ParseFilename(saverClip)
-                        local ldr = tool:GetChildrenList(false, "Loader")[1]
-                        padding = string.format("%04d", renderStart)
-                        loaderClip = seq.Path .. seq.CleanName .. padding .. seq.Extension
-                        ldr.Clip[0] = loaderClip
-                        
-                        ldr.GlobalOut[0] = renderEnd
 
+                        local ldr = tool:GetChildrenList(false, "Loader")[1]
+
+						-- missing frames to color
+						ldr.MissingFrames[0] = 2
+
+                        padding = string.format("%04d", renderStart)
+                        
+						loaderClip = seq.Path .. seq.CleanName .. padding .. seq.Extension
+						print("Clip Parsed and Loaded: ".. loaderClip)
+						comp:Lock()
+						ldr.Loop[0] = 0
                         tool.Depth[0] = 5
                         
                         seq = ParseFilename(comp:MapPath(loaderClip))
-                        -- dump(seq)
 
                         oldName = seq.FullPath
                         len = renderEnd - renderStart
@@ -936,37 +934,89 @@ QUICK GUIDE:
                             newName = seq.Path .. seq.CleanName .. padding .. seq.Extension
                             CopyFile(oldName, newName)
                         end
-                        print("Clean Pass STMap created: ".. loaderClip)
-                        print("Now press Analyze button")
+						comp:Unlock()
+						print("Setting the Clip Path")
+						ldr.Clip[0] = loaderClip
+                        print("Clean Pass STMap files created: ".. loaderClip)
+						print("Now press Analyze button")
                         comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED] 
                         tool.Output = 1
                     end
-                    local function checkSaved(tool)
-                        if comp:GetAttrs('COMPS_FileName') == '' and not fu:GetResolve() then
+
+                    local function check_comp()
+						if fu:GetResolve() then
+							print("This tool is currently tested with Fusion Studio.")
+							return true
+                        elseif comp:GetAttrs('COMPS_FileName') == '' then
                             print('[VectorWarp] Please save the composition')
                             d = {}
                             d[1] = {"Warning", Name = "", "Text", ReadOnly = true, Lines = 2, Wrap = false, Default = "Please, save the comp to proceed"}
-                            ret = comp:AskUser("Warning", d) 
-                            if ret then
+                            ask = comp:AskUser("Warning", d) 
+                            if ask then
                                 comp:SaveAs()
-                                CreateCleanPass(tool)
                             end
-                        else
-                            CreateCleanPass(tool)
+							return ask
                         end
+						return true
                     end
+
                     if not tool then
                         tool = comp.ActiveTool
                     end
-                    checkSaved(tool)
+
+                    if check_comp() then
+						win_utf_module = "win-125x"
+						utf_module_loaded, module = pcall(require, win_utf_module)
+						if utf_module_loaded then
+							codepage_settings = module.codepage
+							print("Current codepage win-125x settings: " .. codepage_settings)
+							require("win-125x")
+							print('Module ' .. win_utf_module .. ' found and loaded')
+						end
+						CreateCleanPass(tool)
+					end
+
                     ]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
 					INP_MinAllowed = -1000000,
 					LINKID_DataType = "Number",
 					ICS_ControlPage = "Controls",
-					ICD_Width = 1,
-					LINKS_Name = "Generate StMap"
+					ICD_Width = 0.5,
+					LINKS_Name = "Generate CleanPass (fast)"
+				},
+				PlayGenerateCleanPass = {
+					ICD_Width = 0.5,
+					INP_Integer = false,
+					LINKID_DataType = "Number",
+					BTNCS_Execute = [[
+						tool.Output = 0
+						temp_time = comp.CurrentTime
+						local renderStart = comp:GetAttrs().COMPN_RenderStart
+						comp.CurrentTime = renderStart
+						comp:Loop(false)
+						fusion.CacheManager:Purge()
+						tool.SaveFrames = "HiQInteractive"
+						comp:Play()
+
+						while true do 
+                            if temp_time < comp.CurrentTime then
+                                temp_time = temp_time + 1
+                                io.write(".")
+                            end
+                            if not comp:IsPlaying() then
+                                sleep(1)
+                                break
+                            end
+                        end
+                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
+                        tool.Output = 1
+                        tool.SaveFrames = "Full"
+
+									]],
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "ButtonControl",
+					LINKS_Name = "Render CleanPass (safe)",
 				},
 				AnalyzeBackward = {
                     INP_MaxAllowed = 1000000,
@@ -982,7 +1032,6 @@ QUICK GUIDE:
                         if not tool then
                             tool = comp.ActiveTool
                         end
-                        tool.Render = 1 
                         tool.Output = 0 
                         tool.Direction = 1 
                         comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
@@ -1029,7 +1078,6 @@ QUICK GUIDE:
                         if not tool then
                             tool = comp.ActiveTool
                         end
-                        tool.Render = 1 
                         tool.Output = 0 
                         tool.Direction = 0 
                         comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
@@ -1126,6 +1174,27 @@ QUICK GUIDE:
                     ICD_Width = 1,
                     LINKS_Name = "Analyze Forward then Backward"
                 },
+				ShowUV = {
+					INP_MaxAllowed = 1000000,
+                    INP_Integer = false,
+                    INPID_InputControl = "ButtonControl",
+                    BTNCS_Execute = [[
+						if tool.Output[0] == 0 then
+							tool.Output = 1
+							print("Active: Rendered UV")
+						else
+							tool.Output = 0
+							print("Active: CleanPass UV")
+						end
+					]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 1,
+					LINKS_Name = "Toggle UV in Viewer"
+				},
 				Output = {
 					{ MBTNC_AddButton = "Analysis" },
 					{ MBTNC_AddButton = "STmap" },
@@ -1172,7 +1241,7 @@ QUICK GUIDE:
 					ICS_ControlPage = "Controls",
 					INPID_InputControl = "ButtonControl",
 					LINKS_Name = "Tutorial",
-				}
+				},
 			}
 		},
 		_UVS_LUTIn1 = LUTBezier {
