@@ -938,7 +938,7 @@ QUICK GUIDE:
 						clipName = ldr.Clip[1]
 						
 						if inPoint == globalStart then
-							print("Render IN and Comp Render Start are the same. Trying to parse the loader filename to find the first frame")
+							print("Render IN and Comp Global Start are the same. Trying to parse the loader filename to find the first frame")
 							if clipName == "" then
 								print("Clip Name is empty. Loader not moved")
 								return
