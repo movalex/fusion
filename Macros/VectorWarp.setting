@@ -1,8 +1,8 @@
 --[[-- 
 https://emiliosapia.myportfolio.com
 Written by : Emilio Sapia, Alexey Bogomolov
-Written on : Jan, 2024
-version 2.7
+Last Update : Jan, 2024
+version 2.8
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -26,12 +26,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			},
 			Inputs = ordered() {
 				CommentsNest = Input { Value = 0, },
-				File = Input { Value = "Temp:VectorWarp\\render001.0000.exr", },
+				File = Input { Value = "comp:VectorWarp\\render001.0000.exr", },
 				Guide = Input { Value = [[
 QUICK GUIDE:
 1. Connect the image to the VectorWarp input.
 2. Generate CleanPass STMaps. This process will create a series of clean STMap files for further processing.
-	- By default, the STMap will be rendered to the temp:VectorWarp folder.
+	- By default, the STMap will be rendered to the comp:VectorWarp folder.
 	- To specify a different STMap location, navigate to the file tab and set the Saver path accordingly.
 	There are two options for creating CleanPass STMap:
 		a. Generate CleanPass (fast): Renders one frame and copies the rest. This is usually the preferred option.
@@ -159,7 +159,7 @@ QUICK GUIDE:
 				Loader = InstanceInput {
 					SourceOp = "Source",
 					Source = "Clip",
-					Name = "Vector Loader",
+					Name = "Loader (autofilled)",
 					Page = "File",
 				},
 				Depth = InstanceInput {
@@ -174,7 +174,7 @@ QUICK GUIDE:
 				SaverOutput = InstanceInput {
 					SourceOp = "VW_SAVER",
 					Source = "Clip",
-					Name = "Vectors Saver",
+					Name = "Saver",
 					Page = "File",
 					Width = 1,
 				},
@@ -839,7 +839,7 @@ QUICK GUIDE:
                         string.gsub(seq.FullName, "^(.+)(%..+)$", function(name, ext)
 							seq.Name = name
 							seq.Extension = ext
-                                                                  end)
+						end)
                         -- check if no extension
                         if not seq.Name then
                             seq.Name = seq.FullName
@@ -1004,7 +1004,7 @@ QUICK GUIDE:
 							string.gsub(seq.FullName, "^(.+)(%..+)$", function(name, ext)
 								seq.Name = name
 								seq.Extension = ext
-																	  end)
+							end)
 							-- check if no extension
 							if not seq.Name then
 								seq.Name = seq.FullName
@@ -1084,7 +1084,7 @@ QUICK GUIDE:
 									print(".")
 								end
 								if not comp:IsPlaying() then
-									sleep(1)
+									sleep(2)
 									break
 								end
 							end
@@ -1111,7 +1111,7 @@ QUICK GUIDE:
 					BTNCS_Execute = [[
 						print("Running " .. self.Name)
 
-						local function ConfirmDialog(error)
+						local function WarningDialog(error)
 							print('[VectorWarp] ' .. error)
 							d = {}
 
@@ -1134,10 +1134,8 @@ QUICK GUIDE:
 	
 							refFrame = tool.ReferenceFrame[fu.TIME_UNDEFINED] 
 							if refFrame < renderStart or refFrame > renderEnd then
-								confirm = ConfirmDialog("Reference frame is incorrect.\n Press OK to set Ref frame to IN point\nOr press Cancel and set it manually")
-								if not confirm then
-									return
-								end
+								warning = WarningDialog("Reference frame [" .. refFrame .. "] is out of the region!\nAnalyze process cancelled.")
+								return
 							end
 							
 							tool.Render = 1
@@ -1153,6 +1151,7 @@ QUICK GUIDE:
 							
 							-- play backward 
 							comp:Play(true)
+
 							while true do
 								if temp_time > comp.CurrentTime then
 									temp_time = temp_time - 1
@@ -1185,7 +1184,7 @@ QUICK GUIDE:
 						BTNCS_Execute = [[
 							print("Running " .. self.Name)
 
-							local function ConfirmDialog(error)
+							local function WarningDialog(error)
 								print('[VectorWarp] ' .. error)
 								d = {}
 	
@@ -1209,10 +1208,8 @@ QUICK GUIDE:
 		
 								refFrame = tool.ReferenceFrame[fu.TIME_UNDEFINED] 
 								if refFrame < renderStart or refFrame > renderEnd then
-									confirm = ConfirmDialog("Reference frame is incorrect.\n Press OK to set Ref frame to IN point\nOr press Cancel and set it manually")
-									if not confirm then
-										return
-									end
+									warning = WarningDialog("Reference frame [" .. refFrame .. "] is out of the region!\nAnalyze process cancelled.")
+									return
 								end
 								
 								tool.Render = 1
@@ -1229,15 +1226,16 @@ QUICK GUIDE:
 								-- play forward 
 								comp:Play()
 								while true do
-									if temp_time > comp.CurrentTime then
-										temp_time = temp_time - 1
-										print("Analyzing backward frame " .. temp_time)
+									if temp_time < comp.CurrentTime then
+										temp_time = temp_time + 1
+										print("Analyzing forward frame " .. temp_time)
 									end
 									if not comp:IsPlaying() then
 										sleep(2)
 										break
 									end
 								end
+
 								comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
 								tool.SaveFrames = "Full"
 							end
@@ -1260,7 +1258,7 @@ QUICK GUIDE:
 						BTNCS_Execute = [[
 							print("Running " .. self.Name)
 
-							local function ConfirmDialog(error)
+							local function WarningDialog(error)
 								print('[VectorWarp] ' .. error)
 								d = {}
 	
@@ -1284,10 +1282,8 @@ QUICK GUIDE:
 		
 								refFrame = tool.ReferenceFrame[fu.TIME_UNDEFINED] 
 								if refFrame < renderStart or refFrame > renderEnd then
-									confirm = ConfirmDialog("Reference frame is incorrect.\n Press OK to set Ref frame to IN point\nOr press Cancel and set it manually")
-									if not confirm then
-										return
-									end
+									warning = WarningDialog("Reference frame [" .. refFrame .. "] is out of the region!\nAnalyze process cancelled.")
+									return
 								end
 
 								tool.Render = 1
