@@ -15,7 +15,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 {
 	Tools = ordered() {
-		ml_VectorWarp = MacroOperator {
+		ml_VectorWarp = GroupOperator {
 			CtrlWZoom = false,
 			CustomData = {
 				Path = {
@@ -28,22 +28,24 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				CommentsNest = Input { Value = 0, },
 				File = Input { Value = "Temp:VectorWarp\\render001.0000.exr", },
 				Guide = Input { Value = [[
-					QUICK GUIDE:
-					1. Connect the image to the VectorWarp input.
-					2. Generate CleanPass STMaps. This process will create a series of clean STMap files for further processing.
-						- By default, the STMap will be rendered to the temp:VectorWarp folder.
-						- To specify a different STMap location, navigate to the file tab and set the Saver path accordingly.
-						There are two options for creating CleanPass STMap:
-						  a. Generate CleanPass (fast): Renders one frame and copies the rest. This is usually the preferred option.
-						    Note: For accurate and fast CleanPass generation, ensure the path to the STMaps does not contain non-Latin symbols.
-						    If non-Latin words are required in your paths, either install the provided `win125x.lua` module in the `Modules:Lua` folder or consider the second option.
-						  b. Render Cleanpass (safe): Renders all clean pass frames individually. Use this option if the first one is unsuccessful for any reason.
-					3. Define a Reference Frame using the 'Set Reference Frame' button.
-					4. Start the analysis with one of the dedicated buttons:
-					   - Analyze Forward
-					   - Analyze Backward
-					   - Analyze Forward then Backward
-					5. To apply the distortion, connect the VectorWarp to the Input (yellow) of the STMapper (available in Reactor) or a Texture node. Ensure that the image input matches the resolution of the rendered STMap sequence.
+QUICK GUIDE:
+1. Connect the image to the VectorWarp input.
+2. Generate CleanPass STMaps. This process will create a series of clean STMap files for further processing.
+	- By default, the STMap will be rendered to the temp:VectorWarp folder.
+	- To specify a different STMap location, navigate to the file tab and set the Saver path accordingly.
+	There are two options for creating CleanPass STMap:
+		a. Generate CleanPass (fast): Renders one frame and copies the rest. This is usually the preferred option.
+		Note: For accurate and fast CleanPass generation, ensure the path to the STMaps does not contain non-Latin symbols.
+		If non-Latin words are required in your paths, either install the provided `win125x.lua` module in the `Modules:Lua` folder or consider the second option.
+		b. Render Cleanpass (safe): Renders all clean pass frames individually. Use this option if the first one is unsuccessful for any reason.
+	- When the CleanPass is generated, the Dialogue window will appears: "Do you want to reset your trimming..."
+	- Press Yes in that Dialogue to load the whole cleanpass sequence.
+3. Define a Reference Frame using the 'Set Reference Frame' button.
+4. Start the analysis with one of the dedicated buttons:
+	- Analyze Forward
+	- Analyze Backward
+	- Analyze Forward then Backward
+5. To apply the distortion, connect the VectorWarp to the Input (yellow) of the STMapper (available in Reactor) or a Texture node. Ensure that the image input matches the resolution of the rendered STMap sequence.
 					]],
 	},
 				Method = InstanceInput {
@@ -171,7 +173,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				SaverOutput = InstanceInput {
 					SourceOp = "VW_SAVER",
 					Source = "Clip",
-					Name = "Save",
+					Name = "Save Vectors Path",
+					Page = "File",
 					Width = 1,
 				},
                 SaveFrames = InstanceInput {
@@ -226,13 +229,13 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					Clips = {
 						Clip {
 							ID = "Clip1",
-							Filename = "Temp:VectorMapper\\render001.0000.exr",
+							Filename = "Comp:VectorMapper\\render001.0000.exr",
 							FormatID = "OpenEXRFormat",
 							StartFrame = 0,
-							Length = 1500,
+							Length = 2000,
 							LengthSetManually = true,
 							TrimIn = 0,
-							TrimOut = 1500,
+							TrimOut = 2000,
 							ExtendFirst = 0,
 							ExtendLast = 0,
 							Loop = 1,
@@ -240,13 +243,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 							Depth = 5,
 							TimeCode = 0,
 							GlobalStart = 0,
-							GlobalEnd = 1500
+							GlobalEnd = 2000
 						}
 					},
 					CtrlWShown = false,
 					NameSet = true,
 					Inputs = {
 						MissingFrames = Input { Value = 2, },
+						Red = Input { Value = 0.5, },
+						Alpha = Input { Value = 1, },
 						Depth = Input { Value = 5, },
 						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
 						["Clip1.OpenEXRFormat.RedName"] = Input { Value = FuID { "R" }, },
@@ -470,7 +475,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 						ProcessWhenBlendIs00 = Input { Value = 0, },
 						Clip = Input {
 							Value = Clip {
-								Filename = "Temp:VectorWarp\\render001.0000.exr",
+								Filename = "Comp:VectorWarp\\render001.0000.exr",
 								FormatID = "OpenEXRFormat",
 								Length = 0,
 								Saving = true,
@@ -479,7 +484,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 								ExtendLast = 0,
 								Loop = 1,
 								AspectMode = 0,
-								Depth = 1,
+								Depth = 0,
 								TimeCode = 0,
 								GlobalStart = -2000000000,
 								GlobalEnd = 0
@@ -488,6 +493,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 						OutputFormat = Input { Value = FuID { "OpenEXRFormat" }, },
 						SaveFrames = Input { Value = FuID { "Full" }, },
 						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						["OpenEXRFormat.Depth"] = Input { Value = 2, },
 						Input = Input {
 							SourceOp = "_Display_",
 							Source = "Output",
@@ -746,20 +752,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					MBTNC_ShowToolTip = true,
 					LINKS_Name = "Direction",
 				},
-				Render = {
-					{ MBTNC_AddButton = "CleanPass" },
-					{ MBTNC_AddButton = "Full Render" },
-					ICD_Width = 0.85,
-					INP_Integer = false,
-					INPID_InputControl = "MultiButtonControl",
-					MBTNC_ShowBasicButton = true,
-					ICS_ControlPage = "Hide",
-					LINKID_DataType = "Number",
-					MBTNC_ShowName = true,
-					MBTNC_StretchToFit = true,
-					MBTNC_ShowToolTip = true,
-					LINKS_Name = "Render",
-				},
 				SetupLabel = {
 					INP_Integer = false,
 					LBLC_DropDownButton = true,
@@ -782,6 +774,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					MBTNC_StretchToFit = true,
 					MBTNC_ShowToolTip = true,
 					LINKS_Name = "Vector Source",
+					INP_External = false
 				},
 				sep0 = {
 					ICS_ControlPage = "Controls",
@@ -804,15 +797,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					INP_Integer = false,
 					LINKID_DataType = "Number",
 					BTNCS_Execute = [[
-					
-					tool:SetInput('ReferenceFrame', comp.CurrentTime, fu.TIME_UNDEFINED)
-
-									]],
-					ICS_ControlPage = "Controls",
-					INPID_InputControl = "ButtonControl",
-					LINKS_Name = "Set Reference Frame",
-				},
-				GoToFrame = {
+						
+						tool:SetInput('ReferenceFrame', comp.CurrentTime, fu.TIME_UNDEFINED)
+						
+						]],
+						ICS_ControlPage = "Controls",
+						INPID_InputControl = "ButtonControl",
+						LINKS_Name = "Set Reference Frame",
+					},
+					GoToFrame = {
 					INP_MaxAllowed = 1000000,
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
@@ -829,30 +822,61 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					INP_Integer = false,
 					LBLC_DropDownButton = true,
 					LINKID_DataType = "Number",
-					LBLC_NumInputs = 6,
+					LBLC_NumInputs = 7,
 					ICS_ControlPage = "Controls",
 					INPID_InputControl = "LabelControl",
 					LINKS_Name = "Analysis"
+				},
+				Render = {
+					{ MBTNC_AddButton = "CleanPass" },
+					{ MBTNC_AddButton = "Full Render" },
+					ICD_Width = 1,
+					INP_Integer = false,
+					INPID_InputControl = "MultiButtonControl",
+					MBTNC_ShowBasicButton = true,
+					ICS_ControlPage = "Controls",
+					LINKID_DataType = "Number",
+					MBTNC_ShowName = true,
+					MBTNC_StretchToFit = true,
+					MBTNC_ShowToolTip = true,
+					LINKS_Name = "Render Process",
+					INP_External = false
+				},
+				Output = {
+					{ MBTNC_AddButton = "Analysis" },
+					{ MBTNC_AddButton = "STmap" },
+					ICD_Width = 1,
+					INP_Integer = false,
+					CT_Priority = 4,
+					INPID_InputControl = "MultiButtonControl",
+					MBTNC_ShowBasicButton = true,
+					ICS_ControlPage = "Controls",
+					LINKID_DataType = "Number",
+					MBTNC_ShowName = true,
+					MBTNC_StretchToFit = true,
+					MBTNC_ShowToolTip = true,
+					LINKS_Name = "Output",
+					INP_External = false
 				},
 				CompnPass = {
 					INP_MaxAllowed = 1000000,
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-
-                    local function CopyFile(old_path, new_path)
-
+						
+					local function CopyFile(old_path, new_path)
+							
 						if utf_module_loaded then
 							old_path = utf8_to_win(old_path)
 							new_path = utf8_to_win(new_path)
 						end
-                        local old_file = io.open(old_path, "rb")
-                        local new_file = io.open(new_path, "wb")
-                        local old_file_sz, new_file_sz = 0, 0
-                        if not old_file or not new_file then
-                            return false
-                        end
-                        while true do
+						local old_file = io.open(old_path, "rb")
+						local new_file = io.open(new_path, "wb")
+						local old_file_sz, new_file_sz = 0, 0
+						if not old_file or not new_file then
+							return false
+						end
+						while true do
                             local block = old_file:read(2^13)
                             if not block then 
                                 old_file_sz = old_file:seek("end")
@@ -870,37 +894,37 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                         local seq = {}
                         seq.FullPath = filename
                         string.gsub(seq.FullPath, "^(.+[/\\])(.+)", function(path, name)
-                                                                    seq.Path = path
-                                                                    seq.FullName = name
-                                                                   end)
+							seq.Path = path
+							seq.FullName = name
+						end)
                         string.gsub(seq.FullName, "^(.+)(%..+)$", function(name, ext)
-                                                                    seq.Name = name
-                                                                    seq.Extension = ext
+							seq.Name = name
+							seq.Extension = ext
                                                                   end)
                         -- check if no extension
                         if not seq.Name then
                             seq.Name = seq.FullName
                         end
-
+						
                         string.gsub(seq.Name, "^(.-)(%d+)$", function(name, SNum)
-                                                                seq.CleanName = name
-                                                                seq.SNum = SNum
-                                                             end)
-
+							seq.CleanName = name
+							seq.SNum = SNum
+						end)
+						
                         if seq.SNum then
                             seq.Number = tonumber(seq.SNum)
                             seq.Padding = string.len(seq.SNum)
                         else
-                           seq.SNum = ""
-                           seq.CleanName = seq.Name
+							seq.SNum = ""
+							seq.CleanName = seq.Name
                         end
-
+						
                         if seq.Extension == nil then
                             seq.Extension = ""
                         end
                         return seq 
                     end
-
+					
                     local function CreateCleanPass(tool)
                         local renderStart = comp:GetAttrs().COMPN_RenderStart
                         local renderEnd = comp:GetAttrs().COMPN_RenderEnd
@@ -916,12 +940,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 						local svr = tool:GetChildrenList(false, "Saver")[1]
                         saverClip = svr.Clip[0]
                         seq = ParseFilename(saverClip)
-
+						
                         local ldr = tool:GetChildrenList(false, "Loader")[1]
-
+						
 						-- missing frames to color
 						ldr.MissingFrames[0] = 2
-
+						
                         padding = string.format("%04d", renderStart)
                         
 						loaderClip = seq.Path .. seq.CleanName .. padding .. seq.Extension
@@ -931,7 +955,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                         tool.Depth[0] = 5
                         
                         seq = ParseFilename(comp:MapPath(loaderClip))
-
+						
                         oldName = seq.FullPath
                         len = renderEnd - renderStart
                         for i = 1, len do
@@ -941,13 +965,16 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                         end
 						comp:Unlock()
 						print("Setting the Clip Path")
+						
+						-- Dialog "Do you want to reset your trimming..." should appear here
 						ldr.Clip[0] = loaderClip
+						
                         print("Clean Pass STMap files created: ".. loaderClip)
 						print("Now press Analyze button")
                         comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED] 
                         tool.Output = 1
                     end
-
+					
                     local function check_comp()
 						if fu:GetResolve() then
 							print("This tool is currently tested with Fusion Studio.")
@@ -968,7 +995,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                     if not tool then
                         tool = comp.ActiveTool
                     end
-
+					
                     if check_comp() then
 						win_utf_module = "win-125x"
 						utf_module_loaded, module = pcall(require, win_utf_module)
@@ -979,8 +1006,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 							print('Module ' .. win_utf_module .. ' found and loaded')
 						end
 						CreateCleanPass(tool)
+						local ldr = tool:GetChildrenList(false, "Loader")[1]
 					end
-
+					
                     ]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
@@ -998,7 +1026,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 						local ldr = tool:GetChildrenList(false, "Loader")[1]
 						
 						local svr = tool:GetChildrenList(false, "Saver")[1]
-                        saverClip = svr.Clip[0]
+						saverClip = svr.Clip[0]
 						local loaderClip = saverClip
 						
 						local renderStart = comp:GetAttrs().COMPN_RenderStart
@@ -1006,12 +1034,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 						
 						local pattern = "%.%.(%w+)$"
 						loaderClip = loaderClip:gsub(pattern, "." ..padding .. ".%1") 
-
+						
 						function sleep (a) 
-                            local sec = tonumber(os.clock() + a); 
-                            while (os.clock() < sec) do 
-                            end 
-                        end
+							local sec = tonumber(os.clock() + a); 
+							while (os.clock() < sec) do 
+							end 
+						end
 						
 						tool.Output = 0
 						temp_time = comp.CurrentTime
@@ -1020,219 +1048,262 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 						fusion.CacheManager:Purge()
 						tool.SaveFrames = "HiQInteractive"
 						comp:Play()
-
+						
 						while true do 
-                            if temp_time < comp.CurrentTime then
-                                temp_time = temp_time + 1
-                                print(".")
-                            end
-                            if not comp:IsPlaying() then
-                                sleep(1)
-                                break
-                            end
-                        end
-                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED] or temp_time
-                        tool.Output = 1
-                        tool.SaveFrames = "Full"
+							if temp_time < comp.CurrentTime then
+								temp_time = temp_time + 1
+								print(".")
+							end
+							if not comp:IsPlaying() then
+								sleep(1)
+								break
+							end
+						end
+						comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED] or temp_time
+						tool.SaveFrames = "Full"
 						ldr.Clip[0] = comp:MapPath(loaderClip)
-
-									]],
+						tool.Output = 1
+						fusion.CacheManager:Purge()
+					]],
 					ICS_ControlPage = "Controls",
 					INPID_InputControl = "ButtonControl",
 					LINKS_Name = "Render CleanPass (safe)",
-				},
+					},
 				AnalyzeBackward = {
-                    INP_MaxAllowed = 1000000,
-                    INP_Integer = false,
-                    INPID_InputControl = "ButtonControl",
-                    BTNCS_Execute = [[
-                        print("Running " .. self.Name)
-                        function sleep (a) 
-                            local sec = tonumber(os.clock() + a); 
-                            while (os.clock() < sec) do 
-                            end 
-                        end
-                        if not tool then
-                            tool = comp.ActiveTool
-                        end
-                        tool.Output = 0 
-                        tool.Direction = 1 
-                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
-                        comp:Loop(false)
-                        fusion.CacheManager:Purge()
-                        temp_time = comp.CurrentTime
-                        tool.SaveFrames = "HiQInteractive"
-                        comp:Play(true)
-                        while true do
-                            if temp_time > comp.CurrentTime then
-                                temp_time = temp_time - 1
-                                print("Analyzing backward frame " .. temp_time)
-                            end
-                            if not comp:IsPlaying() then
-                                sleep(2)
-                                break
-                            end
-                        end
-                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
-                        tool.Output = 1
-                        tool.SaveFrames = "Full"                       
-                    ]],
-                    INP_MaxScale = 1,
-                    INP_MinScale = 0,
-                    INP_MinAllowed = -1000000,
-                    LINKID_DataType = "Number",
-                    ICS_ControlPage = "Controls",
-                    ICD_Width = 0.5,
-                    LINKS_Name = "Analyze Backward"
-                },
-				AnalyzeForward = {
 					INP_MaxAllowed = 1000000,
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
-                    BTNCS_Execute = [[
-                        print("Running " .. self.Name)
-                        function sleep (a) 
-                            local sec = tonumber(os.clock() + a); 
-                            while (os.clock() < sec) do 
-                            end 
-                        end
-                        local renderEnd = comp:GetAttrs().COMPN_RenderEnd
-                        local renderStart = comp:GetAttrs().COMPN_RenderStart
-                        if not tool then
-                            tool = comp.ActiveTool
-                        end
-                        tool.Output = 0 
-                        tool.Direction = 0 
-                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
-                        comp:Loop(false)
-                        fusion.CacheManager:Purge()
-                        temp_time = comp.CurrentTime
-                        tool.SaveFrames = "HiQInteractive"
-                        comp:Play()
-                        
-                        while true do 
-                            if temp_time < comp.CurrentTime then
-                                temp_time = temp_time + 1
-                                print("Analyzing forward frame " .. temp_time)
-                            end
-                            if not comp:IsPlaying() then
-                                sleep(2)
-                                break
-                            end
-                        end
-                        tool.SaveFrames = "Full"
-                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
-                        tool.Output = 1
-                        
-                    ]],
-					INP_MaxScale = 1,
-					INP_MinScale = 0,
-					INP_MinAllowed = -1000000,
-					LINKID_DataType = "Number",
-					ICS_ControlPage = "Controls",
-					ICD_Width = 0.5,
-					LINKS_Name = "Analyze Forward"
-				},
-                AnalyzeVectors = {
-                    INP_MaxAllowed = 1000000,
-                    INP_Integer = false,
-                    INPID_InputControl = "ButtonControl",
-                    BTNCS_Execute = [[
-                        print("Running " .. self.Name)
-                        function sleep (a) 
-                            local sec = tonumber(os.clock() + a); 
-                            while (os.clock() < sec) do 
-                            end 
-                        end
-                        if not tool then
-                            tool = comp.ActiveTool
-                        end
-                        tool.Render = 1 
-                        tool.Output = 0 
-                        tool.Direction = 0 
-                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED] 
-                        comp:Loop(false) 
-                        fusion.CacheManager:Purge()
-                        local renderEnd = comp:GetAttrs().COMPN_RenderEnd
-                        local renderStart = comp:GetAttrs().COMPN_RenderStart
-
-                        temp_time = comp.CurrentTime
-                        tool.SaveFrames = "HiQInteractive"
-                        comp:Play()
-                        while true do 
-                            if temp_time < comp.CurrentTime then
-                                temp_time = temp_time + 1
-                                print("Analyzing forward frame " .. temp_time)
-                            end
-                            if not comp:IsPlaying() then
-                                sleep(2)
-                                break
-                            end
-                        end
-                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
-                        fusion.CacheManager:Purge()
-                        tool.Direction = 1 
-                        temp_time = comp.CurrentTime
-                        comp:Play(true)
-                        while true do
-                            if temp_time > comp.CurrentTime then
-                                temp_time = temp_time - 1
-                                print("Analyzing backward frame " .. temp_time)
-                            end
-                            if not comp:IsPlaying() then
-                                sleep(2)
-                                break
-                            end
-                        end
-                        tool.SaveFrames = "Full"
-                        tool.Output = 1                         
-                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
-                        collectgarbage()
-                    ]],
-                    INP_MaxScale = 1,
-                    INP_MinScale = 0,
-                    INP_MinAllowed = -1000000,
-                    LINKID_DataType = "Number",
-                    ICS_ControlPage = "Controls",
-                    ICD_Width = 1,
-                    LINKS_Name = "Analyze Forward then Backward"
-                },
-				ShowUV = {
-					INP_MaxAllowed = 1000000,
-                    INP_Integer = false,
-                    INPID_InputControl = "ButtonControl",
-                    BTNCS_Execute = [[
-						if tool.Output[0] == 0 then
-							tool.Output = 1
-							print("Active: Rendered UV")
-						else
-							tool.Output = 0
-							print("Active: CleanPass UV")
+					BTNCS_Execute = [[
+						print("Running " .. self.Name)
+						function sleep (a) 
+							local sec = tonumber(os.clock() + a); 
+							while (os.clock() < sec) do 
+							end 
 						end
-					]],
-					INP_MaxScale = 1,
-					INP_MinScale = 0,
-					INP_MinAllowed = -1000000,
-					LINKID_DataType = "Number",
-					ICS_ControlPage = "Controls",
-					ICD_Width = 1,
-					LINKS_Name = "Toggle UV in Viewer"
-				},
-				Output = {
-					{ MBTNC_AddButton = "Analysis" },
-					{ MBTNC_AddButton = "STmap" },
-					ICD_Width = 1,
-					INP_Integer = false,
-					CT_Priority = 4,
-					INPID_InputControl = "MultiButtonControl",
-					MBTNC_ShowBasicButton = true,
-					ICS_ControlPage = "Hide",
-					LINKID_DataType = "Number",
-					MBTNC_ShowName = true,
-					MBTNC_StretchToFit = true,
-					MBTNC_ShowToolTip = true,
-					LINKS_Name = "Output",
-				},
+						if not tool then
+							tool = comp.ActiveTool
+						end
+						tool.Output = 0 
+						tool.Direction = 1 
+						comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
+						comp:Loop(false)
+						fusion.CacheManager:Purge()
+						temp_time = comp.CurrentTime
+						tool.SaveFrames = "HiQInteractive"
+						comp:Play(true)
+						while true do
+							if temp_time > comp.CurrentTime then
+								temp_time = temp_time - 1
+								print("Analyzing backward frame " .. temp_time)
+							end
+							if not comp:IsPlaying() then
+								sleep(2)
+								break
+							end
+						end
+						comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
+						tool.Output = 1
+						tool.SaveFrames = "Full"                       
+						]],
+						INP_MaxScale = 1,
+						INP_MinScale = 0,
+						INP_MinAllowed = -1000000,
+						LINKID_DataType = "Number",
+						ICS_ControlPage = "Controls",
+						ICD_Width = 0.5,
+						LINKS_Name = "Analyze Backward"
+						},
+					AnalyzeForward = {
+						INP_MaxAllowed = 1000000,
+						INP_Integer = false,
+						INPID_InputControl = "ButtonControl",
+						BTNCS_Execute = [[
+							print("Running " .. self.Name)
+							function sleep (a) 
+								local sec = tonumber(os.clock() + a); 
+								while (os.clock() < sec) do 
+								end 
+							end
+							local renderEnd = comp:GetAttrs().COMPN_RenderEnd
+							local renderStart = comp:GetAttrs().COMPN_RenderStart
+							if not tool then
+								tool = comp.ActiveTool
+							end
+							tool.Output = 0 
+							tool.Direction = 0 
+							comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
+							comp:Loop(false)
+							fusion.CacheManager:Purge()
+							temp_time = comp.CurrentTime
+							tool.SaveFrames = "HiQInteractive"
+							comp:Play()
+							
+							while true do 
+								if temp_time < comp.CurrentTime then
+									temp_time = temp_time + 1
+									print("Analyzing forward frame " .. temp_time)
+								end
+								if not comp:IsPlaying() then
+									sleep(2)
+									break
+								end
+							end
+							tool.SaveFrames = "Full"
+							comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
+							tool.Output = 1
+							
+							]],
+						INP_MaxScale = 1,
+						INP_MinScale = 0,
+						INP_MinAllowed = -1000000,
+						LINKID_DataType = "Number",
+						ICS_ControlPage = "Controls",
+						ICD_Width = 0.5,
+						LINKS_Name = "Analyze Forward"
+						},
+					AnalyzeVectors = {
+						INP_MaxAllowed = 1000000,
+						INP_Integer = false,
+						INPID_InputControl = "ButtonControl",
+						BTNCS_Execute = [[
+							print("Running " .. self.Name)
+							function sleep (a) 
+								local sec = tonumber(os.clock() + a); 
+								while (os.clock() < sec) do 
+								end 
+							end
+							if not tool then
+								tool = comp.ActiveTool
+							end
+							tool.Render = 1
+							tool.Output = 0 
+							tool.Direction = 0 
+							comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED] 
+							comp:Loop(false) 
+							fusion.CacheManager:Purge()
+							local renderEnd = comp:GetAttrs().COMPN_RenderEnd
+							local renderStart = comp:GetAttrs().COMPN_RenderStart
+							
+							temp_time = comp.CurrentTime
+							tool.SaveFrames = "HiQInteractive"
+							comp:Play()
+							while true do 
+								if temp_time < comp.CurrentTime then
+									temp_time = temp_time + 1
+									print("Analyzing forward frame " .. temp_time)
+								end
+								if not comp:IsPlaying() then
+									sleep(2)
+									break
+								end
+							end
+							comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
+							fusion.CacheManager:Purge()
+							tool.Direction = 1 
+							temp_time = comp.CurrentTime
+							comp:Play(true)
+							while true do
+								if temp_time > comp.CurrentTime then
+									temp_time = temp_time - 1
+									print("Analyzing backward frame " .. temp_time)
+								end
+								if not comp:IsPlaying() then
+									sleep(2)
+									break
+								end
+							end
+							tool.SaveFrames = "Full"
+							tool.Output = 1                         
+							comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
+							collectgarbage()
+						]],
+						INP_MaxScale = 1,
+						INP_MinScale = 0,
+						INP_MinAllowed = -1000000,
+						LINKID_DataType = "Number",
+						ICS_ControlPage = "Controls",
+						ICD_Width = 1,
+						LINKS_Name = "Analyze Forward then Backward"
+					},
+
+					MoveLoader = {
+						INP_MaxAllowed = 1000000,
+						INP_Integer = false,
+						INPID_InputControl = "ButtonControl",
+						BTNCS_Execute = [[
+
+							local function ParseFilename(filename)
+								local seq = {}
+								seq.FullPath = filename
+								string.gsub(seq.FullPath, "^(.+[/\\])(.+)", function(path, name)
+									seq.Path = path
+									seq.FullName = name
+								end)
+								string.gsub(seq.FullName, "^(.+)(%..+)$", function(name, ext)
+									seq.Name = name
+									seq.Extension = ext
+																		end)
+								-- check if no extension
+								if not seq.Name then
+									seq.Name = seq.FullName
+								end
+								
+								string.gsub(seq.Name, "^(.-)(%d+)$", function(name, SNum)
+									seq.CleanName = name
+									seq.SNum = SNum
+								end)
+								
+								if seq.SNum then
+									seq.Number = tonumber(seq.SNum)
+									seq.Padding = string.len(seq.SNum)
+								else
+									seq.SNum = ""
+									seq.CleanName = seq.Name
+								end
+								
+								if seq.Extension == nil then
+									seq.Extension = ""
+								end
+								return seq 
+							end
+
+							local function MoveLoader(tool)
+								if tool.ID ~= "Loader" then
+									return nil
+								end
+								globalStart = comp:GetAttrs().COMPN_GlobalStart
+								inPoint = comp:GetAttrs().COMPN_RenderStart
+								comp:StartUndo('Move Loader')
+								
+								
+								if inPoint == globalStart then
+									print("Render IN and Comp Render Start are the same. Trying to parse the loader filename to find the first frame")
+									clipName = tool.Clip[1]
+									if clipName == "" then
+										print("Clip Name not found. Loader not moved")
+										return
+									end
+									parsedInPoint = ParseFilename(clipName).Number
+									bmd.MoveClip(tool, globalStart, tonumber(parsedInPoint))
+								else
+									bmd.MoveClip(tool, globalStart, tonumber(inPoint))
+								end
+								comp:EndUndo()
+							end
+							
+							local ldr = tool:GetChildrenList(false, "Loader")[1]
+							MoveLoader(ldr)
+
+							]],
+						INP_MaxScale = 1,
+						INP_MinScale = 0,
+						INP_MinAllowed = -1000000,
+						LINKID_DataType = "Number",
+						ICS_ControlPage = "Controls",
+						ICD_Width = 1,
+						LINKS_Name = "Move Loader to Render Start"
+					},
+
 				QuickGuide = {
 					INP_Integer = false,
 					LBLC_DropDownButton = true,
