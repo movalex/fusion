@@ -118,7 +118,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					Default = 0,
 				},
 				Blank0 = InstanceInput {
-					SourceOp = "ChannelBooleans1",
+					SourceOp = "vectors_to_RGB",
 					Source = "Blank1",
 				},
 				View = InstanceInput {
@@ -127,7 +127,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					Default = 1,
 				},
 				Blank1 = InstanceInput {
-					SourceOp = "ChannelBooleans1",
+					SourceOp = "vectors_to_RGB",
 					Source = "Blank1",
 				},
 				FilterType = InstanceInput {
@@ -151,7 +151,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					ControlGroup = 7,
 				},
 				Input51 = InstanceInput {
-					SourceOp = "ChannelBooleans1",
+					SourceOp = "vectors_to_RGB",
 					Source = "Blank1",
 				},
 				Loader = InstanceInput {
@@ -165,7 +165,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					Source = "Depth",
 				},
 				Input50 = InstanceInput {
-					SourceOp = "ChannelBooleans1",
+					SourceOp = "vectors_to_RGB",
 					Source = "Blank1",
 				},
 				SaverOutput = InstanceInput {
@@ -199,7 +199,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					Source = "Output",
 				},
 				VectorsOutput = InstanceOutput {
-					SourceOp = "External",
+					SourceOp = "vectors_to_RGB",
 					Source = "Output",
 					Name = "VectorsOutput",
 				},
@@ -372,7 +372,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 							Source = "Output",
 						},
 						Input = Input {
-							SourceOp = "ChannelBooleans1",
+							SourceOp = "vectors_to_RGB",
 							Source = "Output",
 						},
 					},
@@ -421,7 +421,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 							Source = "Output",
 						},
 						Background = Input {
-							SourceOp = "ChannelBooleans1",
+							SourceOp = "vectors_to_RGB",
 							Source = "Output",
 						},
 						Foreground = Input {
@@ -439,7 +439,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					CtrlWShown = false,
 					Inputs = {
 						Background = Input {
-							SourceOp = "ChannelBooleans1",
+							SourceOp = "vectors_to_RGB",
 							Source = "Output",
 						},
 						Foreground = Input {
@@ -495,7 +495,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					},
 					ViewInfo = OperatorInfo { Pos = { 89.385, 929.363 } },
 				},
-				ChannelBooleans1 = ChannelBoolean {
+				vectors_to_RGB = ChannelBoolean {
 					CtrlWShown = false,
 					NameSet = true,
 					Inputs = {
