@@ -194,9 +194,14 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				}
 			},
 			Outputs = {
-				MainOutput1 = InstanceOutput {
+				MainOutput = InstanceOutput {
 					SourceOp = "VW_SAVER",
 					Source = "Output",
+				},
+				VectorsOutput = InstanceOutput {
+					SourceOp = "External",
+					Source = "Output",
+					Name = "VectorsOutput",
 				},
 			},
 			ViewInfo = GroupInfo {
