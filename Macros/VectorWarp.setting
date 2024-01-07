@@ -804,6 +804,7 @@ QUICK GUIDE:
 					BTNCS_Execute = [[
 						
 					local function CopyFile(old_path, new_path)
+						print("copying CleanPass to file: " .. new_path)
 							
 						if utf_module_loaded then
 							old_path = utf8_to_win(old_path)
@@ -863,16 +864,32 @@ QUICK GUIDE:
                         end
                         return seq 
                     end
+
+					function sleep (a) 
+						local sec = tonumber(os.clock() + a); 
+						while (os.clock() < sec) do 
+						end 
+					end
 					
                     local function CreateCleanPass(tool)
                         local renderStart = comp:GetAttrs().COMPN_RenderStart
                         local renderEnd = comp:GetAttrs().COMPN_RenderEnd
                         tool.Render = 0
+
+						comp.CurrentTime = renderStart
+						
                         comp:SetAttrs({COMPN_CurrentTime = renderStart}) 
-                        comp:SetAttrs({COMPN_RenderEnd = renderStart})
-                        
-						comp:Render()
+                        comp:SetAttrs({COMPN_RenderEnd = renderStart + 1})
+						
+						fusion.CacheManager:Purge()
+						tool.SaveFrames = "HiQInteractive"
+						comp:Loop(false)
+						comp:Play()
+						sleep(2)
+						tool.SaveFrames = "Full"
+						comp:Stop()
 						print("Rendered a single clean plate file")
+						comp:Lock()
                         comp:SetAttrs({COMPN_RenderEnd = renderEnd})
                         
 						local svr = tool:GetChildrenList(false, "Saver")[1]
@@ -888,7 +905,6 @@ QUICK GUIDE:
                         
 						loaderClip = seq.Path .. seq.CleanName .. padding .. seq.Extension
 						print("Clip Parsed and Loaded: ".. loaderClip)
-						comp:Lock()
 						ldr.Loop[0] = 0
                         tool.Depth[0] = 5
                         
@@ -899,7 +915,9 @@ QUICK GUIDE:
                         for i = 1, len do
                             padding = string.format("%04d", renderStart + i) 
                             newName = seq.Path .. seq.CleanName .. padding .. seq.Extension
-                            CopyFile(oldName, newName)
+							if not bmd.fileexists(newName) then
+                            	CopyFile(oldName, newName)
+							end
                         end
 						comp:Unlock()
 						
@@ -908,6 +926,7 @@ QUICK GUIDE:
 						
                         print("Clean Pass STMap files created: ".. loaderClip)
                         comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED] 
+						comp:Loop(true)
                     end
 					
                     local function check_comp()
@@ -1471,6 +1490,16 @@ QUICK GUIDE:
 								end
 								imageSequenceFilename = seq.Path .. "*" .. seq.Extension
 								print('[Formatted Image Sequence] ' .. imageSequenceFilename)
+								
+								-- Load utf8-win
+								win_utf_module = "win-125x"
+								utf_module_loaded, module = pcall(require, win_utf_module)
+								if utf_module_loaded then
+									require("win-125x")
+								end
+								if utf_module_loaded then
+									imageSequenceFilename = utf8_to_win(imageSequenceFilename)
+								end
 
 								deleteRederedCommand = deleteCommand  .. imageSequenceFilename
 								print("Deleting file equence using command: " .. "[ "..deleteRederedCommand.." ]")
@@ -1486,6 +1515,7 @@ QUICK GUIDE:
 								return ask
 							end
 							process = ConfirmDialog("File removal confirmation dialogue")
+
 							if process then
 								local ldr = tool:GetChildrenList(false, "Loader")[1]
 								local clipPath = comp:MapPath(ldr.Clip[0])
