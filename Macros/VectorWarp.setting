@@ -889,7 +889,6 @@ QUICK GUIDE:
 						tool.SaveFrames = "Full"
 						comp:Stop()
 						print("Rendered a single clean plate file")
-						comp:Lock()
                         comp:SetAttrs({COMPN_RenderEnd = renderEnd})
                         
 						local svr = tool:GetChildrenList(false, "Saver")[1]
@@ -902,7 +901,6 @@ QUICK GUIDE:
 						ldr.MissingFrames[0] = 2
 						
                         padding = string.format("%04d", renderStart)
-                        
 						loaderClip = seq.Path .. seq.CleanName .. padding .. seq.Extension
 						print("Clip Parsed and Loaded: ".. loaderClip)
 						ldr.Loop[0] = 0
@@ -910,6 +908,7 @@ QUICK GUIDE:
                         
                         seq = ParseFilename(comp:MapPath(loaderClip))
 						
+						comp:Lock()
                         oldName = seq.FullPath
                         len = renderEnd - renderStart
                         for i = 1, len do
@@ -1076,19 +1075,26 @@ QUICK GUIDE:
 
 						local function RenderCleanpass()
 							local ldr = tool:GetChildrenList(false, "Loader")[1]
-						
 							local svr = tool:GetChildrenList(false, "Saver")[1]
 							saverClip = svr.Clip[0]
-							local loaderClip = saverClip
 							
 							renderStart = comp:GetAttrs().COMPN_RenderStart
 							renderEnd = comp:GetAttrs().COMPN_RenderEnd
 							
 							-- replace double dots in the saver path
 							padding = string.format("%04d", renderStart)
+							
+							local loaderClip = comp:MapPath(saverClip)
 							local pattern = "%.%.(%w+)$"
-							loaderClip = loaderClip:gsub(pattern, "." ..padding .. ".%1") 
-
+							if string.match(loaderClip, pattern) then
+								loaderClip = loaderClip:gsub(pattern, "." .. padding .. ".%1")
+							else
+								local seq = ParseFilename(loaderClip)
+								dump(seq)
+								loaderClip = seq.Path .. seq.CleanName .. padding .. seq.Extension
+							end
+							
+							-- print("LOADER: " .. loaderClip)
 							tool.Render = 0
 							temp_time = comp.CurrentTime
 							comp.CurrentTime = renderStart
