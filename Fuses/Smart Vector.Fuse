@@ -23,6 +23,12 @@ SOFTWARE.
 
 
 Changelog:
+v0.2, 2024-01-10:
+* Clear Cache now only clears the fuse's cache not not all the cache
+* Clear Cache renamed to Clear Local Cache
+* Changed normal print to error message for errors
+* Removed sleep-delay after each analyze
+
 v0.1, 2024-01-09:
 * Init beta relese
 
@@ -253,13 +259,14 @@ function Create()
     })
     ]]
 
-    InClearCacheBeforePreview = self:AddInput("Clear Cache Before Preview", "InClearCacheBeforePreview", {
-        LINKID_DataType    = "Number",
-        INPID_InputControl = "CheckboxControl",
-        INP_Default        = 1,
-        INP_External       = false,
-        INP_Passive        = true,
-    })
+    InClearLocalCacheBeforePreview = self:AddInput("Clear Local Cache Before Preview", "InClearLocalCacheBeforePreview",
+        {
+            LINKID_DataType    = "Number",
+            INPID_InputControl = "CheckboxControl",
+            INP_Default        = 1,
+            INP_External       = false,
+            INP_Passive        = true,
+        })
 
     InPreviewAll = self:AddInput("Preview All", "PreviewAll", {
         LINKID_DataType     = "Number",
@@ -318,7 +325,7 @@ function Create()
         INPID_InputControl = "SpacerControl",
     })
 
-    InClearCacheBeforeRender = self:AddInput("Clear Cache Before Render", "InClearCacheBeforeRender", {
+    InClearLocalCacheBeforeRender = self:AddInput("Clear Local Cache Before Render", "InClearLocalCacheBeforeRender", {
         LINKID_DataType    = "Number",
         INPID_InputControl = "CheckboxControl",
         INP_Default        = 1,
@@ -366,7 +373,7 @@ function Create()
         ICD_Width           = 1.0,
     })
 
-    InClearCache = self:AddInput("Clear Cache", "ClearCache", {
+    InClearLocalCache = self:AddInput("Clear Local Cache", "ClearLocalCache", {
         LINKID_DataType     = "Number",
         INPID_InputControl  = "ButtonControl",
         INP_DoNotifyChanged = true,
@@ -465,43 +472,43 @@ function NotifyChanged(inp, param, time)
         end
     elseif inp == InPreviewAll then
         if param.Value == 1.0 then
-            if InClearCacheBeforePreview:GetSource(TIME_UNDEFINED).Value == 1 then
-                ClearCache(InSourceFrame:GetSource(TIME_UNDEFINED).Value)
+            if InClearLocalCacheBeforePreview:GetSource(TIME_UNDEFINED).Value == 1 then
+                ClearLocalCache()
             end
             AnalyzeAll(0)
         end
     elseif inp == InPreviewForwards then
         if param.Value == 1.0 then
-            if InClearCacheBeforePreview:GetSource(TIME_UNDEFINED).Value == 1 then
-                ClearCache(InSourceFrame:GetSource(TIME_UNDEFINED).Value)
+            if InClearLocalCacheBeforePreview:GetSource(TIME_UNDEFINED).Value == 1 then
+                ClearLocalCache()
             end
             AnalyzeForwards(0)
         end
     elseif inp == InPreviewBackwards then
         if param.Value == 1.0 then
-            if InClearCacheBeforePreview:GetSource(TIME_UNDEFINED).Value == 1 then
-                ClearCache(InSourceFrame:GetSource(TIME_UNDEFINED).Value)
+            if InClearLocalCacheBeforePreview:GetSource(TIME_UNDEFINED).Value == 1 then
+                ClearLocalCache()
             end
             AnalyzeBackwards(0)
         end
     elseif inp == InRenderAll then
         if param.Value == 1.0 then
-            if InClearCacheBeforeRender:GetSource(TIME_UNDEFINED).Value == 1 then
-                ClearCache(InSourceFrame:GetSource(TIME_UNDEFINED).Value)
+            if InClearLocalCacheBeforeRender:GetSource(TIME_UNDEFINED).Value == 1 then
+                ClearLocalCache()
             end
             AnalyzeAll(1)
         end
     elseif inp == InRenderForwards then
         if param.Value == 1.0 then
-            if InClearCacheBeforeRender:GetSource(TIME_UNDEFINED).Value == 1 then
-                ClearCache(InSourceFrame:GetSource(TIME_UNDEFINED).Value)
+            if InClearLocalCacheBeforeRender:GetSource(TIME_UNDEFINED).Value == 1 then
+                ClearLocalCache()
             end
             AnalyzeForwards(1)
         end
     elseif inp == InRenderBackwards then
         if param.Value == 1.0 then
-            if InClearCacheBeforeRender:GetSource(TIME_UNDEFINED).Value == 1 then
-                ClearCache(InSourceFrame:GetSource(TIME_UNDEFINED).Value)
+            if InClearLocalCacheBeforeRender:GetSource(TIME_UNDEFINED).Value == 1 then
+                ClearLocalCache()
             end
             AnalyzeBackwards(1)
         end
@@ -536,13 +543,15 @@ function NotifyChanged(inp, param, time)
             InDoCreateStmap:SetAttrs({ IC_Visible = false })
             InButton:SetAttrs({ IC_Visible = false })
         end
-    elseif inp == InClearCache then
+    elseif inp == InClearLocalCache then
         if param.Value == 1.0 then
-            ClearCache()
+            ClearLocalCache()
         end
     elseif inp == InButton then
         if param.Value == 1.0 then
-            print(InViewMode:GetSource(0).Value)
+            print(self.Comp:FindTool(node))
+            --self:SetAttrs({ TOOLB_PassThrough = false })
+            --comp:FindTool(node):SetAttrs({ TOOLB_PassThrough = true})
         end
     end
 end
@@ -558,6 +567,14 @@ function FolderCheck()
     end
 end
 
+function _Output_Error(msg)
+    local run_str = [[
+        comp:_Output_Error("{{MSG}}")
+    ]]
+    run_str = run_str:gsub("{{MSG}}", msg)
+    self.Comp:Execute(run_str)
+end
+
 function StopPlayback()
     local run_str = [[
         local tool = comp:FindTool("{{NODE_NAME}}")
@@ -571,29 +588,14 @@ function StopPlayback()
     self.Comp:Execute(run_str)
 end
 
-function ClearCache(frame)
+function ClearLocalCache()
     Img_Buffer = nil
     local run_str = [[
-        fusion.CacheManager:Purge()
+        local tool = comp:FindTool("{{NODE_NAME}}")
+        tool.SetAttrs({ TOOLB_PassThrough = true})
+        tool.SetAttrs({ TOOLB_PassThrough = false})
     ]]
-    if frame ~= nil and self.Comp.CurrentTime ~= frame then
-        run_str = [[
-            comp.CurrentTime = {{FRAME}}
-            function sleep (a)
-                local sec = tonumber(os.clock() + a);
-                while true do
-                    if os.clock() > sec then
-                        break
-                    end
-                end
-            end
-            -- Add a small delay before purching the cache
-            -- Else the old frame will still be cached
-            sleep(1)
-
-        ]] .. run_str
-        run_str = run_str:gsub("{{FRAME}}", frame)
-    end
+    run_str = run_str:gsub("{{NODE_NAME}}", self.Name)
     self.Comp:Execute(run_str)
 end
 
@@ -660,11 +662,6 @@ function AnalyzeBackwards(render)
     InViewMode:SetSource(Number(1), 0)
     local run_str = [[
         local tool = comp:FindTool("{{NODE_NAME}}")
-        function sleep (a)
-            local sec = tonumber(os.clock() + a);
-            while (os.clock() < sec) do
-            end
-        end
         comp.CurrentTime = tool.SourceFrame[fu.TIME_UNDEFINED]
         tool.DoCreateStmap[fu.TIME_UNDEFINED] = 1
         comp:Loop(false)
@@ -679,7 +676,6 @@ function AnalyzeBackwards(render)
                 print("Analyzing backward frame " .. temp_time)
             end
             if not comp:IsPlaying() then
-                sleep(1)
                 break
             end
         end
@@ -709,11 +705,6 @@ function AnalyzeForwards(render)
     InViewMode:SetSource(Number(1), 0)
     local run_str = [[
         local tool = comp:FindTool("{{NODE_NAME}}")
-        function sleep (a)
-            local sec = tonumber(os.clock() + a);
-            while (os.clock() < sec) do
-            end
-        end
         comp.CurrentTime = tool.SourceFrame[fu.TIME_UNDEFINED]
         tool.DoCreateStmap[fu.TIME_UNDEFINED] = 1
         comp:Loop(false)
@@ -728,7 +719,6 @@ function AnalyzeForwards(render)
                 print("Analyzing forward frame " .. temp_time)
             end
             if not comp:IsPlaying() then
-                sleep(1)
                 break
             end
         end
@@ -834,14 +824,14 @@ function Process(req)
     -- Do some pre-checks
     if InFolderNotFound:GetValue(req).Value == 1 then
         local filepath = InFilename:GetValue(req).Value
-        print(self.Name .. " warning: The folder " .. filepath .. " does not exist.")
+        _Output_Error(self.Name .. " warning: The folder " .. filepath .. " does not exist.")
         StopPlayback()
         return
     end
 
     if InVectorChannel:GetValue(req).Value == 0 then
         if src:GetChanSize(CHAN_VECTORX) == 0 or src:GetChanSize(CHAN_VECTORY) == 0 or src:GetChanSize(CHAN_BACKVECTORX) == 0 or src:GetChanSize(CHAN_BACKVECTORY) == 0 then
-            print(self.Name ..
+            _Output_Error(self.Name ..
                 " warning: input image doesn't contain the required forward and backward vector channels.")
             return
         end
