@@ -58,7 +58,7 @@ function convert(tool, conv_srting)
     clipboard = bmd.getclipboard()
     from_string = '= '.. regID .. ' {'
     to_string = '= '..conv_srting .. ' {'
-    if string.len(clipboard) == nil then
+    if not clipboard or #clipboard == nil then
         print("Something went wrong")
         return
     elseif string.sub(clipboard, -1) == '\n'  then
