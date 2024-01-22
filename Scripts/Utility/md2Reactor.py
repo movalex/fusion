@@ -110,9 +110,8 @@ class BBCodeRenderer(BaseRenderer):
         return list_items
 
     def list(self, body, ordered, **attrs):
-        print(f"is ordered: {ordered.cursor}")
-        print(dir(ordered))
-        tag = "=1" if ordered else ""
+        # tag = "=1" if ordered else ""
+        tag = ""
         # Extract the raw text from the data structure
         list_items = self.extract_and_format_list(body)
         # Format the list items with BBCode syntax
