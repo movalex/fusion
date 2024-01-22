@@ -2,7 +2,7 @@
 https://emiliosapia.myportfolio.com
 Written by : Emilio Sapia, Alexey Bogomolov
 Last Update : Jan, 2024
-version 2.8
+version 2.9
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -165,7 +165,7 @@ QUICK GUIDE:
 				Depth = InstanceInput {
 					SourceOp = "Source",
 					Source = "Depth",
-					Page = "Hide",
+					Page = "Hidden",
 				},
 				Input50 = InstanceInput {
 					SourceOp = "vectors_to_RGB",
@@ -181,7 +181,7 @@ QUICK GUIDE:
                 SaveFrames = InstanceInput {
                     SourceOp = "VW_SAVER",
                     Source = "SaveFrames",
-					Page = "Hide",
+					Page = "Hidden",
                 },
 				GarbageMatte = InstanceInput {
 					SourceOp = "ChangeDepth1",
@@ -203,11 +203,11 @@ QUICK GUIDE:
 					SourceOp = "VW_SAVER",
 					Source = "Output",
 				},
-				VectorsOutput = InstanceOutput {
-					SourceOp = "vectors_to_RGB",
-					Source = "Output",
-					Name = "VectorsOutput",
-				},
+				-- VectorsOutput = InstanceOutput {
+				-- 	SourceOp = "vectors_to_RGB",
+				-- 	Source = "Output",
+				-- 	Name = "VectorsOutput",
+				-- },
 			},
 			ViewInfo = GroupInfo {
 				Pos = { 49.3133, 315.243 },
@@ -686,7 +686,7 @@ QUICK GUIDE:
 					CTID_DIB_ID = "Icons.Tools.Tabs.Solve",
 					CTS_FullName = "CleanPass and Saver"
 				},
-				Hide = ControlPage {
+				Hidden = ControlPage {
 					CT_Visible = false,
 					CTID_DIB_ID = "Icons.Tools.Tabs.Matte",
 					CTS_FullName = "Tooltip for Page1"
@@ -700,7 +700,7 @@ QUICK GUIDE:
 					MBTNC_ShowBasicButton = true,
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
-					ICS_ControlPage = "Hide",
+					ICS_ControlPage = "Hidden",
 					LINKID_DataType = "Number",
 					MBTNC_ShowName = true,
 					MBTNC_StretchToFit = true,
@@ -709,9 +709,12 @@ QUICK GUIDE:
 				},
 				SetupLabel = {
 					INP_Integer = false,
+					INP_External = false,
 					LBLC_DropDownButton = true,
+					INP_Passive = false,
 					LINKID_DataType = "Number",
 					LBLC_NumInputs = 5,
+					LBLC_NestLevel = 2,
 					ICS_ControlPage = "Controls",
 					INPID_InputControl = "LabelControl",
 					LINKS_Name = "Setup",
@@ -777,7 +780,7 @@ QUICK GUIDE:
 					INP_Integer = false,
 					LBLC_DropDownButton = true,
 					LINKID_DataType = "Number",
-					LBLC_NumInputs = 8,
+					LBLC_NumInputs = 9,
 					ICS_ControlPage = "Controls",
 					INPID_InputControl = "LabelControl",
 					LINKS_Name = "Analysis"
@@ -789,7 +792,7 @@ QUICK GUIDE:
 					INP_Integer = false,
 					INPID_InputControl = "MultiButtonControl",
 					MBTNC_ShowBasicButton = true,
-					ICS_ControlPage = "Controls",
+					ICS_ControlPage = "Hidden",
 					LINKID_DataType = "Number",
 					MBTNC_ShowName = true,
 					MBTNC_StretchToFit = true,
@@ -910,7 +913,7 @@ QUICK GUIDE:
 						
 						comp:Lock()
                         oldName = seq.FullPath
-                        len = renderEnd - renderStart
+                        len = renderEnd - renderStart + 1 -- add extra frame
                         for i = 1, len do
                             padding = string.format("%04d", renderStart + i) 
                             newName = seq.Path .. seq.CleanName .. padding .. seq.Extension
@@ -1438,7 +1441,7 @@ QUICK GUIDE:
 						LINKID_DataType = "Number",
 						ICS_ControlPage = "Controls",
 						ICD_Width = 0.5,
-						LINKS_Name = "Move Loader to Render Start",
+						LINKS_Name = "Move Vectors to Render Start",
 					},
 
 					DeleteVectors = {
@@ -1540,6 +1543,42 @@ QUICK GUIDE:
 						ICD_Width = 0.5,
 						LINKS_Name = "Delete Vectors"
 					},
+
+					CreateLoader = {
+						INP_MaxAllowed = 1000000,
+						INP_Integer = false,
+						INPID_InputControl = "ButtonControl",
+						BTNCS_Execute = [[
+
+							function CreateLoader(path)
+								comp:Lock()
+								comp:StartUndo('Create Smart Vector Loader')
+								tool = comp.ActiveTool
+								local tool_ldr = tool:GetChildrenList(false, "Loader")[1]
+								local settings = comp:CopySettings(tool_ldr)
+								local flow = comp.CurrentFrame.FlowView
+								x, y = flow:GetPos(tool)
+								local loader = comp:AddTool("Loader")
+								loader:LoadSettings(settings)
+								flow:SetPos(loader, x, y+1)
+								inputs = tool.MainOutput:GetConnectedInputs()
+								for i, input in ipairs(inputs) do
+									input:ConnectTo(loader.Output)
+								end
+								comp:EndUndo()
+								comp:Unlock()
+							end
+							CreateLoader()
+							]],
+						INP_MaxScale = 1,
+						INP_MinScale = 0,
+						INP_MinAllowed = -1000000,
+						LINKID_DataType = "Number",
+						ICS_ControlPage = "Controls",
+						ICD_Width = 1,
+						LINKS_Name = "Create Loader",
+					},
+
 
 				QuickGuide = {
 					INP_Integer = false,

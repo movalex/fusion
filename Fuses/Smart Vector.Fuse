@@ -1,0 +1,1301 @@
+--[[--
+----------------------------------------------------------------------
+Copyright (c) 2020 Jacob Danell, Ember Light AB
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+----------------------------------------------------------------------
+
+
+Changelog:
+v0.2, 2024-01-10:
+* Clear Cache now only clears the fuse's cache not not all the cache
+* Clear Cache renamed to Clear Local Cache
+* Changed normal print to error message for errors
+* Removed sleep-delay after each analyze
+
+v0.1, 2024-01-09:
+* Init beta relese
+
+--]]
+--
+
+local version = "0.1"
+local authorText = "v" .. version .. " - Created by Jacob Danell, Ember Light"
+
+local info = [[
+This fuse accumulates the vectors frame by frame.
+If you jump between non-consecutive frames the result will be scrambled.
+Use the buttons to process the image correctly.
+
+The "CopyAux" channel will look up your node-tree for a CopyAux node and will automatically change its aux channel to Vector/Back Vector as needed.
+If the wrong CopyAux node gets selected for some reason, drag the correct one into the Aux Node box in the UI.
+
+If using the RGB channel as vectors, make sure it uses Forward Vector for frames earlier than the source frame and Back Vector for frame after the source frame.
+
+The preview uses your ram to cache the result.
+If you don't have enough ram preview won't work correctly.
+In that case, render out the result directly insted.
+
+The fuse will render out exr files in 32bit with zip compression.
+]]
+
+DoDebug = true
+
+FuRegisterClass("SmartVector", CT_Tool, {
+    REGS_Name            = "Smart Vector",
+    REGS_Category        = "Color",
+    REGS_OpIconString    = "sv",
+    REGS_OpDescription   = "Smart Vector",
+    REGS_Company         = "Ember Light",
+    REGS_URL             = "https://www.emberlight.se",
+    REGS_HelpTopic       = "https://www.emberlight.se",
+    REG_Version          = 010,
+    REG_Fuse_NoEdit      = false,
+    REG_Fuse_NoReload    = false,
+    REG_SupportsDoD      = true,
+    REG_NoPreCalcProcess = true,
+    REG_OpNoMask         = true,
+})
+
+function Create()
+    InDebug = self:AddInput("Show Debug Controls", "Debug", {
+        LINKID_DataType     = "Number",
+        INPID_InputControl  = "CheckboxControl",
+        IC_ControlPage      = -2,
+        INP_Passive         = true,
+        INP_DoNotifyChanged = true,
+        INP_Default         = 0,
+    })
+
+    InViewMode = self:AddInput("View Mode", "ViewMode", {
+        LINKID_DataType    = "Number",
+        INPID_InputControl = "ComboControl",
+        IC_ControlPage     = -1,
+        INP_Default        = 1,
+        INP_External       = false,
+        { CCS_AddString = "Vectors" },
+        { CCS_AddString = "Final" },
+    });
+
+    InDebugNest = self:BeginControlNest("Debug", "DebugNest", true, {})
+
+    InDoRender = self:AddInput("DoRender", "DoRender", {
+        LINKID_DataType    = "Number",
+        INPID_InputControl = "CheckboxControl",
+        IC_Visible         = false,
+        INP_External       = false,
+        INP_Passive        = true,
+        INP_Default        = 0,
+    })
+
+    InCheckFolder = self:AddInput("CheckFolder", "CheckFolder", {
+        LINKID_DataType     = "Number",
+        INPID_InputControl  = "CheckboxControl",
+        IC_Visible          = false,
+        INP_External        = false,
+        INP_Passive         = true,
+        INP_DoNotifyChanged = true,
+        INP_Default         = 0,
+    })
+
+    InDoCreateStmap = self:AddInput("DoCreateSTmap", "DoCreateStmap", {
+        LINKID_DataType    = "Number",
+        INPID_InputControl = "CheckboxControl",
+        INP_Default        = 0.0,
+        INP_Integer        = true,
+        IC_Visible         = false,
+        INP_External       = false,
+        INP_Passive        = true,
+    })
+
+    InZPadding = self:AddInput("ZPadding", "ZPadding", {
+        LINKID_DataType    = "Number",
+        INPID_InputControl = "ScrewControl",
+        INP_Default        = 4,
+        INP_Integer        = true,
+        IC_Visible         = false,
+        INP_External       = false,
+        INP_Passive        = true,
+    })
+
+    InFolderNotFound = self:AddInput("FolderNotFound", "FolderNotFound", {
+        LINKID_DataType    = "Number",
+        INPID_InputControl = "ScrewControl",
+        INP_Default        = 0,
+        INP_Integer        = true,
+        IC_Visible         = false,
+        INP_External       = false,
+        INP_Passive        = true,
+    })
+
+    InButton = self:AddInput("Button", "Button", {
+        LINKID_DataType     = "Number",
+        INPID_InputControl  = "ButtonControl",
+        INP_DoNotifyChanged = true,
+        IC_Visible          = false,
+        ICD_Width           = 1.0,
+        INP_Priority        = -1000,
+    })
+
+    self:EndControlNest()
+
+    self:BeginControlNest("How to use this fuse:", "InfoNest", false, {})
+
+    Info = self:AddInput(info, "info", {
+        LINKID_DataType    = "Text",
+        INPID_InputControl = "LabelControl",
+        INP_External       = false,
+        INP_Passive        = true,
+        LBLC_MultiLine     = true,
+        IC_NoLabel         = true,
+        IC_NoReset         = true,
+        LBLC_LabelColor    = 1,
+    })
+
+    self:EndControlNest()
+
+    InVectorText = self:AddInput("Vector", "VectorText", {
+        LINKID_DataType    = "Text",
+        INPID_InputControl = "LabelControl",
+        INP_External       = false,
+        INP_Passive        = true,
+        IC_NoLabel         = true,
+    })
+
+    InVectorChannel = self:AddInput("Vector Channel", "VectorChannel", {
+        LINKID_DataType     = "Number",
+        INPID_InputControl  = "ComboControl",
+        INP_Default         = 0.0,
+        INP_Integer         = true,
+        INP_DoNotifyChanged = true,
+        CC_LabelPosition    = "Horizontal",
+        { CCS_AddString = "Vector" },
+        { CCS_AddString = "CopyAux" },
+        { CCS_AddString = "RGB" },
+    })
+
+    InAuxNode = self:AddInput("Aux Node", "AuxNode", {
+        LINKID_DataType      = "Image",
+        INPID_InputControl   = "ImageControl",
+        INP_AcceptsGPUImages = true,
+        INP_Required         = false,
+        IC_Visible           = false,
+    })
+
+    InSourceFrame = self:AddInput(("Source Frame"), "SourceFrame", {
+        LINKID_DataType    = "Number",
+        INPID_InputControl = "ScrewControl",
+        INP_MinScale       = 1.0,
+        INP_MaxScale       = 10.0,
+        INP_DelayDefault   = true, -- to be able to set default later
+        LINK_ForceSave     = true, -- same thing
+        INP_Integer        = true,
+        INP_External       = false,
+    })
+
+    InSetSourceFrame = self:AddInput("Set To Current Frame", "SetSourceFrame", {
+        LINKID_DataType     = "Number",
+        INPID_InputControl  = "ButtonControl",
+        INP_DoNotifyChanged = true,
+        ICD_Width           = 0.6,
+    })
+
+    InGoToSourceFrame = self:AddInput("Go To Frame", "GoToSourceFrame", {
+        LINKID_DataType     = "Number",
+        INPID_InputControl  = "ButtonControl",
+        INP_DoNotifyChanged = true,
+        ICD_Width           = 0.4,
+        INP_Passive         = true,
+    })
+
+    self:AddInput("", "spacerGarbage", {
+        INPID_InputControl = "SpacerControl",
+    })
+
+    InInvertGarbageMatte = self:AddInput("Invert Garbage Matte", "InvertGarbageMatte", {
+        LINKID_DataType    = "Number",
+        INPID_InputControl = "CheckboxControl",
+        INP_Default        = 0,
+    })
+
+    self:AddInput("", "sepPreview", {
+        INPID_InputControl = "SeparatorControl",
+    })
+
+    InPreviewText = self:AddInput("Preview", "PreviewText", {
+        LINKID_DataType    = "Text",
+        INPID_InputControl = "LabelControl",
+        INP_External       = false,
+        INP_Passive        = true,
+        IC_NoLabel         = true,
+    })
+
+    --[[
+    self:AddInput(previewInfo, "PreviewInfo", {
+        LINKID_DataType    = "Text",
+        INPID_InputControl = "LabelControl",
+        INP_External       = false,
+        LBLC_MultiLine     = true,
+        INP_Passive        = true,
+        IC_NoLabel         = true,
+        IC_NoReset         = true,
+        LBLC_LabelColor    = 1,
+    })
+    ]]
+
+    InClearLocalCacheBeforePreview = self:AddInput("Clear Local Cache Before Preview", "InClearLocalCacheBeforePreview",
+        {
+            LINKID_DataType    = "Number",
+            INPID_InputControl = "CheckboxControl",
+            INP_Default        = 1,
+            INP_External       = false,
+            INP_Passive        = true,
+        })
+
+    InPreviewAll = self:AddInput("Preview All", "PreviewAll", {
+        LINKID_DataType     = "Number",
+        INPID_InputControl  = "ButtonControl",
+        ICD_Width           = 1.0,
+        INP_DoNotifyChanged = true,
+    })
+
+    InPreviewBackwards = self:AddInput("Preview Backwards", "PreviewBackwards", {
+        LINKID_DataType     = "Number",
+        INPID_InputControl  = "ButtonControl",
+        ICD_Width           = 0.5,
+        INP_DoNotifyChanged = true,
+    })
+
+    InPreviewForwards = self:AddInput("Preview Forwards", "PreviewForwards", {
+        LINKID_DataType     = "Number",
+        INPID_InputControl  = "ButtonControl",
+        ICD_Width           = 0.5,
+        INP_DoNotifyChanged = true,
+    })
+
+    self:AddInput("", "sepRender", {
+        INPID_InputControl = "SeparatorControl",
+    })
+
+    InRenderText = self:AddInput("Render", "RenderText", {
+        LINKID_DataType    = "Text",
+        INPID_InputControl = "LabelControl",
+        INP_External       = false,
+        INP_Passive        = true,
+        IC_NoLabel         = true,
+    })
+
+    InFilename = self:AddInput('Filename', 'Filename', {
+        LINKID_DataType     = 'Text',
+        INPID_InputControl  = 'FileControl',
+        FC_IsSaver          = true,
+        FC_ClipBrowse       = false,
+        FCS_FilterString    = 'OpenEXR Files (*.exr)|*.exr|',
+        INP_External        = false,
+        INP_DoNotifyChanged = true,
+        INP_DelayDefault    = true,
+        LINK_Main           = -1,
+    })
+
+    InCreateDir = self:AddInput("Create Folder During Render", "CreateDir", {
+        LINKID_DataType    = "Number",
+        INPID_InputControl = "CheckboxControl",
+        INP_External       = false,
+        INP_Passive        = true,
+        INP_Default        = 1,
+    })
+
+    self:AddInput("", "spacerRender", {
+        INPID_InputControl = "SpacerControl",
+    })
+
+    InClearLocalCacheBeforeRender = self:AddInput("Clear Local Cache Before Render", "InClearLocalCacheBeforeRender", {
+        LINKID_DataType    = "Number",
+        INPID_InputControl = "CheckboxControl",
+        INP_Default        = 1,
+        INP_Passive        = true,
+        INP_External       = false,
+    })
+
+    InRenderAll = self:AddInput("Render All", "RenderAll", {
+        LINKID_DataType     = "Number",
+        INPID_InputControl  = "ButtonControl",
+        ICD_Width           = 1.0,
+        INP_DoNotifyChanged = true,
+    })
+
+    InRenderBackwards = self:AddInput("Render Backwards", "RenderBackwards", {
+        LINKID_DataType     = "Number",
+        INPID_InputControl  = "ButtonControl",
+        ICD_Width           = 0.5,
+        INP_DoNotifyChanged = true,
+    })
+
+    InRenderForwards = self:AddInput("Render Forwards", "RenderForwards", {
+        LINKID_DataType     = "Number",
+        INPID_InputControl  = "ButtonControl",
+        ICD_Width           = 0.5,
+        INP_DoNotifyChanged = true,
+    })
+
+    self:AddInput("", "sepHelpers", {
+        INPID_InputControl = "SeparatorControl",
+    })
+
+    InHelpersText = self:AddInput("Helpers", "HelpersText", {
+        LINKID_DataType    = "Text",
+        INPID_InputControl = "LabelControl",
+        INP_External       = false,
+        INP_Passive        = true,
+        IC_NoLabel         = true,
+    })
+
+    InCreateLoader = self:AddInput("Create Loader", "CreateLoader", {
+        LINKID_DataType     = "Number",
+        INPID_InputControl  = "ButtonControl",
+        INP_DoNotifyChanged = true,
+        ICD_Width           = 1.0,
+    })
+
+    InClearLocalCache = self:AddInput("Clear Local Cache", "ClearLocalCache", {
+        LINKID_DataType     = "Number",
+        INPID_InputControl  = "ButtonControl",
+        INP_DoNotifyChanged = true,
+        ICD_Width           = 1.0,
+    })
+
+    self:AddInput("", "sepAuth", {
+        INPID_InputControl = "SeparatorControl",
+    })
+
+    Author = self:AddInput(authorText, "Author", {
+        LINKID_DataType    = "Text",
+        INPID_InputControl = "LabelControl",
+        INP_External       = false,
+        INP_Passive        = true,
+        IC_NoLabel         = true,
+        IC_NoReset         = true,
+        LBLC_LabelColor    = 1,
+    })
+
+    InImage = self:AddInput("Input", "Input", {
+        LINKID_DataType = "Image",
+        LINK_Main       = 1,
+        INP_Required    = true,
+    })
+
+    InGarbageMatte = self:AddInput("Garbage Matte", "GarbageMatte", {
+        LINKID_DataType = "Image",
+        LINK_Main       = 5,
+        INP_Priority    = -1000,
+        INP_Required    = false,
+    })
+
+    OutImage = self:AddOutput("Output", "Output", {
+        LINKID_DataType = "Image",
+        LINK_Main       = 1,
+    })
+end
+
+local Img_Buffer = nil
+
+function OnConnected(inp, old, new)
+    if inp == InImage then
+        local currenttime = self.Comp.CurrentTime
+        InDoRender:SetSource(0, 0)
+        InCheckFolder:SetSource(0, 0)
+        if InVectorChannel:GetSource(currenttime).Value == 1 then
+            FindAuxNode()
+        end
+    end
+end
+
+function OnAddToFlow()
+    -- read currentTime from comp and set as SourceFrame default
+    local currenttime = self.Comp.CurrentTime
+    InSourceFrame:SetAttrs({ INP_Default = currenttime })
+    InDoRender:SetSource(0, 0)
+    InCheckFolder:SetSource(0, 0)
+    -- If the node is new, create a default save location
+    -- set defaults for reference frame slider
+    InFilename:SetAttrs({
+        INPS_DefaultText = CheckFilename("Comp:/" .. self.Name .. "/" .. self.Name .. "..exr"),
+    })
+
+    if InVectorChannel:GetSource(currenttime).Value == 1 then
+        FindAuxNode()
+    end
+end
+
+function NotifyChanged(inp, param, time)
+    if inp == InSetSourceFrame then
+        if param.Value == 1.0 then
+            -- read currentTime from comp and set as SourceFrame
+            InSourceFrame:SetSource(Number(time), time)
+        end
+    elseif inp == InFilename then
+        local filename = InFilename:GetSource(time).Value
+        local newfilename = CheckFilename(filename)
+        if filename ~= newfilename then
+            -- Dissable DoNotifyChange as it would result in an inf loop when setting the source
+            InFilename:SetAttrs({ INP_DoNotifyChanged = false })
+            InFilename:SetSource(Text(newfilename), time)
+            InFilename:SetAttrs({ INP_DoNotifyChanged = true })
+        end
+    elseif inp == InCheckFolder then
+        if param.Value == 1.0 then
+            local foldername = GetFolderNameFromFilepath(InFilename:GetSource(time).Value)
+            if not bmd.fileexists(foldername) then
+                if InCreateDir:GetSource(TIME_UNDEFINED).Value == 1.0 then
+                    print("[Create Input Directory] ", foldername)
+                    bmd.createdir(foldername)
+                else
+                    print("[FOLDER DOES NOT EXIST! THE RENDER WON'T BE SAVED!]")
+                end
+            end
+        end
+    elseif inp == InPreviewAll then
+        if param.Value == 1.0 then
+            if InClearLocalCacheBeforePreview:GetSource(TIME_UNDEFINED).Value == 1 then
+                ClearLocalCache()
+            end
+            AnalyzeAll(0)
+        end
+    elseif inp == InPreviewForwards then
+        if param.Value == 1.0 then
+            if InClearLocalCacheBeforePreview:GetSource(TIME_UNDEFINED).Value == 1 then
+                ClearLocalCache()
+            end
+            AnalyzeForwards(0)
+        end
+    elseif inp == InPreviewBackwards then
+        if param.Value == 1.0 then
+            if InClearLocalCacheBeforePreview:GetSource(TIME_UNDEFINED).Value == 1 then
+                ClearLocalCache()
+            end
+            AnalyzeBackwards(0)
+        end
+    elseif inp == InRenderAll then
+        if param.Value == 1.0 then
+            if InClearLocalCacheBeforeRender:GetSource(TIME_UNDEFINED).Value == 1 then
+                ClearLocalCache()
+            end
+            AnalyzeAll(1)
+        end
+    elseif inp == InRenderForwards then
+        if param.Value == 1.0 then
+            if InClearLocalCacheBeforeRender:GetSource(TIME_UNDEFINED).Value == 1 then
+                ClearLocalCache()
+            end
+            AnalyzeForwards(1)
+        end
+    elseif inp == InRenderBackwards then
+        if param.Value == 1.0 then
+            if InClearLocalCacheBeforeRender:GetSource(TIME_UNDEFINED).Value == 1 then
+                ClearLocalCache()
+            end
+            AnalyzeBackwards(1)
+        end
+    elseif inp == InCreateLoader then
+        if param.Value == 1.0 then
+            CreateLoader(InFilename:GetSource(time).Value:gsub("\\", "\\\\"))
+        end
+    elseif inp == InVectorChannel then
+        if param.Value == 1.0 then
+            InAuxNode:SetAttrs({ IC_Visible = true })
+            FindAuxNode()
+        else
+            InAuxNode:SetAttrs({ IC_Visible = false })
+        end
+    elseif inp == InGoToSourceFrame then
+        if param.Value == 1.0 then
+            GoToFrame(InSourceFrame:GetSource(TIME_UNDEFINED).Value)
+        end
+    elseif inp == InDebug then
+        if param.Value == 1.0 then
+            InDebugNest:SetAttrs({ IC_Visible = true })
+            InDoRender:SetAttrs({ IC_Visible = true })
+            InCheckFolder:SetAttrs({ IC_Visible = true })
+            InZPadding:SetAttrs({ IC_Visible = true })
+            InDoCreateStmap:SetAttrs({ IC_Visible = true })
+            InButton:SetAttrs({ IC_Visible = true })
+        else
+            InDebugNest:SetAttrs({ IC_Visible = false })
+            InDoRender:SetAttrs({ IC_Visible = false })
+            InCheckFolder:SetAttrs({ IC_Visible = false })
+            InZPadding:SetAttrs({ IC_Visible = false })
+            InDoCreateStmap:SetAttrs({ IC_Visible = false })
+            InButton:SetAttrs({ IC_Visible = false })
+        end
+    elseif inp == InClearLocalCache then
+        if param.Value == 1.0 then
+            ClearLocalCache()
+        end
+    elseif inp == InButton then
+        if param.Value == 1.0 then
+            print(self.Comp:FindTool(node))
+            --self:SetAttrs({ TOOLB_PassThrough = false })
+            --comp:FindTool(node):SetAttrs({ TOOLB_PassThrough = true})
+        end
+    end
+end
+
+function FolderCheck()
+    local foldername = GetFolderNameFromFilepath(InFilename:GetSource(time).Value)
+    if bmd.fileexists(foldername) or InCreateDir:GetSource(TIME_UNDEFINED).Value == 1.0 then
+        InFolderNotFound:SetSource(0, 0)
+        return true
+    else
+        InFolderNotFound:SetSource(1, 0)
+        return false
+    end
+end
+
+function _Output_Error(msg)
+    local run_str = [[
+        comp:_Output_Error("{{MSG}}")
+    ]]
+    run_str = run_str:gsub("{{MSG}}", msg)
+    self.Comp:Execute(run_str)
+end
+
+function StopPlayback()
+    local run_str = [[
+        local tool = comp:FindTool("{{NODE_NAME}}")
+        tool.CheckFolder[fu.TIME_UNDEFINED] = 0
+        comp:Stop()
+        tool.DoRender[fu.TIME_UNDEFINED] = 0
+        comp:Loop(true)
+        comp.CurrentTime = tool.SourceFrame[fu.TIME_UNDEFINED]
+    ]]
+    run_str = run_str:gsub("{{NODE_NAME}}", self.Name)
+    self.Comp:Execute(run_str)
+end
+
+function ClearLocalCache()
+    Img_Buffer = nil
+    local run_str = [[
+        local tool = comp:FindTool("{{NODE_NAME}}")
+        tool.SetAttrs({ TOOLB_PassThrough = true})
+        tool.SetAttrs({ TOOLB_PassThrough = false})
+    ]]
+    run_str = run_str:gsub("{{NODE_NAME}}", self.Name)
+    self.Comp:Execute(run_str)
+end
+
+function GoToFrame(frame)
+    local run_str = [[
+        comp.CurrentTime = {{FRAME}}
+    ]]
+    run_str = run_str:gsub("{{FRAME}}", frame)
+    self.Comp:Execute(run_str)
+end
+
+function CreateLoader(path)
+    local run_str = [[
+        comp:Lock()
+        comp:StartUndo('Create Smart Vector Loader')
+        local tool = comp:FindTool("{{NODE_NAME}}")
+        local flow = comp.CurrentFrame.FlowView
+        x, y = flow:GetPos(tool)
+        local loader = comp:AddTool("Loader")
+        loader.Clip = "{{CLIP_PATH}}"
+        flow:SetPos(loader, x, y+1)
+        local inputs = tool.Output:GetConnectedInputs()
+        for i, input in ipairs(inputs) do
+            input:ConnectTo(loader.Output)
+        end
+        comp:EndUndo()
+        comp:Unlock()
+    ]]
+    run_str = run_str:gsub("{{NODE_NAME}}", self.Name)
+    run_str = run_str:gsub("{{CLIP_PATH}}", path)
+    self.Comp:Execute(run_str)
+end
+
+function FindAuxNode()
+    local run_str = [[
+    local tool = comp:FindTool("{{NODE_NAME}}")
+    if tool ~= nil then
+        while true do
+            inp = tool:FindMainInput(1)
+            inpTable = inp:GetConnectedOutput()
+
+            if inpTable == None then
+                break
+            end
+
+            tempTool = inpTable:GetTool()
+
+            if tempTool.ID == "Dimension.CopyAux" then
+                local auxNode = comp:FindTool(tempTool.Name)
+                tool.AuxNode = auxNode
+                break
+            end
+        end
+    end
+    ]]
+    run_str = run_str:gsub("{{NODE_NAME}}", self.Name)
+    self.Comp:Execute(run_str)
+end
+
+function AnalyzeBackwards(render)
+    if self.Comp.RenderStart == InSourceFrame:GetSource(TIME_UNDEFINED).Value then
+        return
+    end
+    InViewMode:SetSource(Number(1), 0)
+    local run_str = [[
+        local tool = comp:FindTool("{{NODE_NAME}}")
+        comp.CurrentTime = tool.SourceFrame[fu.TIME_UNDEFINED]
+        tool.DoCreateStmap[fu.TIME_UNDEFINED] = 1
+        comp:Loop(false)
+        local temp_time = tool.SourceFrame[fu.TIME_UNDEFINED]
+        tool.DoRender[fu.TIME_UNDEFINED] = {{RENDER}}
+        tool.CheckFolder[fu.TIME_UNDEFINED] = {{RENDER}}
+        tool.CheckFolder[fu.TIME_UNDEFINED] = 0
+        comp:Play(true)
+        while true do
+            if temp_time > comp.CurrentTime then
+                temp_time = temp_time - 1
+                print("Analyzing backward frame " .. temp_time)
+            end
+            if not comp:IsPlaying() then
+                break
+            end
+        end
+        tool.DoRender[fu.TIME_UNDEFINED] = 0
+        comp:Loop(true)
+        comp.CurrentTime = tool.SourceFrame[fu.TIME_UNDEFINED]
+        collectgarbage()
+    ]]
+    run_str = run_str:gsub("{{NODE_NAME}}", self.Name)
+    run_str = run_str:gsub("{{RENDER}}", render)
+    if InVectorChannel:GetSource(self.Comp.CurrentTime).Value == 1 then
+        FindAuxNode()
+        run_str = [[
+        local aux_tool = comp:FindTool("{{AUX_NAME}}")
+        aux_tool["Channel"][0] = "Vector"
+
+        ]] .. run_str
+        run_str = run_str:gsub("{{AUX_NAME}}", InAuxNode.Source.Owner.Name)
+    end
+    self.Comp:Execute(run_str)
+end
+
+function AnalyzeForwards(render)
+    if self.Comp.RenderEnd == InSourceFrame:GetSource(TIME_UNDEFINED).Value then
+        return
+    end
+    InViewMode:SetSource(Number(1), 0)
+    local run_str = [[
+        local tool = comp:FindTool("{{NODE_NAME}}")
+        comp.CurrentTime = tool.SourceFrame[fu.TIME_UNDEFINED]
+        tool.DoCreateStmap[fu.TIME_UNDEFINED] = 1
+        comp:Loop(false)
+        local temp_time = tool.SourceFrame[fu.TIME_UNDEFINED]
+        tool.DoRender[fu.TIME_UNDEFINED] = {{RENDER}}
+        tool.CheckFolder[fu.TIME_UNDEFINED] = {{RENDER}}
+        tool.CheckFolder[fu.TIME_UNDEFINED] = 0
+        comp:Play()
+        while true do
+            if temp_time < comp.CurrentTime then
+                temp_time = temp_time + 1
+                print("Analyzing forward frame " .. temp_time)
+            end
+            if not comp:IsPlaying() then
+                break
+            end
+        end
+        tool.DoRender[fu.TIME_UNDEFINED] = 0
+        comp:Loop(true)
+        comp.CurrentTime = tool.SourceFrame[fu.TIME_UNDEFINED]
+        collectgarbage()
+    ]]
+    run_str = run_str:gsub("{{NODE_NAME}}", self.Name)
+    run_str = run_str:gsub("{{RENDER}}", render)
+    if InVectorChannel:GetSource(self.Comp.CurrentTime).Value == 1 then
+        FindAuxNode()
+        run_str = [[
+        local aux_tool = comp:FindTool("{{AUX_NAME}}")
+        aux_tool["Channel"][0] = "BackVector"
+
+        ]] .. run_str
+        run_str = run_str:gsub("{{AUX_NAME}}", InAuxNode.Source.Owner.Name)
+    end
+    self.Comp:Execute(run_str)
+end
+
+function AnalyzeAll(render)
+    AnalyzeBackwards(render)
+    AnalyzeForwards(render)
+end
+
+function GetFolderNameFromFilepath(filepath)
+    -- Using the path module to extract the directory
+    local dir = filepath:match("^(.*[\\/])")
+    -- Remove trailing backslash or forward slash
+    dir = dir:gsub("[\\/]+$", "")
+    return self.Comp:MapPath(dir)
+end
+
+function FileExists(path)
+    local f = io.open(path, "r")
+    if f then
+        f:close()
+        return true
+    else
+        return false
+    end
+end
+
+function Zpad(number, width)
+    local numString = tostring(number)
+    return string.format("%0" .. width .. "d", tonumber(numString))
+end
+
+function CheckFilename(filePath)
+    -- Check if the extension ends with ".exr" and add it if it doesn't
+    if not filePath:match("%.exr$") then
+        filePath = filePath .. ".exr"
+    end
+
+    -- Fetch the last numbers before the extension
+    local lastNumbers = filePath:match("(%d+)%.exr$") or 0
+    if lastNumbers == 0 then
+        -- If the filename doesn't ends with two .. before exr extension
+        if not filePath:match("%..exr$") then
+            filePath = filePath:gsub("(.-%.)exr$", "%1.exr")
+        end
+        filePath = filePath:gsub("(.-%.)%.exr$", "%10000.exr")
+        lastNumbers = 4
+    end
+    InZPadding:SetSource(Number(string.len(lastNumbers)), 0)
+    return filePath
+end
+
+function CreateStmap(req, src)
+    Img_Buffer = Image { IMG_Like = src, IMG_Depth = IMDP_128bitFloat }
+    --This calls on our kernel to process the image we created.
+    local node = DVIPComputeNode(req, "SmartVectorSTMapKernel", SmartVectorSTMapKernel,
+        "SmartVectorSTMapParams", SmartVectorSTMapParams)
+
+    local params = node:GetParamBlock(SmartVectorSTMapParams)
+    params.srcDoD[0] = src.Width
+    params.srcDoD[1] = src.Height
+    params.srcOffset[0] = src.DataWindow.left
+    params.srcOffset[1] = src.DataWindow.bottom
+
+    node:SetParamBlock(params)
+
+    node:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR, TEX_ADDRESS_MODE_BORDER,
+        TEX_NORMALIZED_COORDS_TRUE)
+
+    node:AddInput("src", src)
+    node:AddOutput("dst", Img_Buffer)
+
+    local ok = node:RunSession(req)
+
+    if not ok then
+        Img_Buffer = nil
+        dump(node:GetErrorLog())
+    end
+end
+
+function Process(req)
+    local src = InImage:GetValue(req)
+    local dst = Image { IMG_Like = src, IMG_Depth = IMDP_128bitFloat, }
+
+    -- Do some pre-checks
+    if InFolderNotFound:GetValue(req).Value == 1 then
+        local filepath = InFilename:GetValue(req).Value
+        _Output_Error(self.Name .. " warning: The folder " .. filepath .. " does not exist.")
+        StopPlayback()
+        return
+    end
+
+    if InVectorChannel:GetValue(req).Value == 0 then
+        if src:GetChanSize(CHAN_VECTORX) == 0 or src:GetChanSize(CHAN_VECTORY) == 0 or src:GetChanSize(CHAN_BACKVECTORX) == 0 or src:GetChanSize(CHAN_BACKVECTORY) == 0 then
+            _Output_Error(self.Name ..
+                " warning: input image doesn't contain the required forward and backward vector channels.")
+            return
+        end
+    end
+
+    -- Start the processing
+    if not req:IsPreCalc() then
+        local sourceFrame = InSourceFrame:GetValue(req).Value
+
+        -- copy vector channels into a temporary image
+        if InVectorChannel:GetValue(req).Value == 0 then
+            local vectors = Image({
+                IMG_Like = dst,
+                IMG_Depth = IMDP_128bitFloat,
+                IMG_CopyChannels = false,
+                { IMG_Channel = "Red" },
+                { IMG_Channel = "Green" },
+                { IMG_Channel = "Blue" },
+                { IMG_Channel = "Alpha" },
+            })
+            if req.Time <= sourceFrame then
+                vectors = vectors:ChannelOpOf(
+                    "Copy",
+                    src, {
+                        R = "Fg.VectX",
+                        G = "Fg.VectY",
+                        B = 0.0,
+                        A = 1.0,
+                    })
+            else
+                vectors = vectors:ChannelOpOf(
+                    "Copy",
+                    src, {
+                        R = "Fg.BackVectX",
+                        G = "Fg.BackVectY",
+                        B = 0.0,
+                        A = 1.0,
+                    })
+            end
+            src = vectors
+        end
+
+        ---==== GarbageMatting ===---
+        local gmask = InGarbageMatte:GetValue(req)
+        if gmask ~= nil then
+            ---==== HORIZONTAL PROCESS ===---
+            local hDst = Image({ IMG_Like = dst, })
+
+            --This calls on our kernel to process the image we created.
+            node = DVIPComputeNode(req, "HorizontalFillKernel", HorizontalFillKernel, "FillParams", FillParams)
+            params = node:GetParamBlock(FillParams)
+            params.srcDoD[0] = src.DataWindow:Width()
+            params.srcDoD[1] = src.DataWindow:Height()
+            params.srcOffset[0] = src.DataWindow.left
+            params.srcOffset[1] = src.DataWindow.bottom
+            params.maskOffset[0] = gmask.DataWindow.left
+            params.maskOffset[1] = gmask.DataWindow.bottom
+            if InInvertGarbageMatte:GetValue(req).Value == 1.0 then
+                params.invertMask = true
+            else
+                params.invertMask = false
+            end
+            --This gets the values of our sliders from the control panel.
+            params.maskCompOrder = gmask:IsMask() and 1 or 15
+            params.srcCompOrder = src:IsMask() and 1 or 15
+
+            node:SetParamBlock(params)
+
+            node:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR, TEX_ADDRESS_MODE_BORDER,
+                TEX_NORMALIZED_COORDS_FALSE)
+
+            node:AddInput("src", src)
+            node:AddInput("mask", gmask)
+            node:AddOutput("dst", hDst)
+
+            local ok = node:RunSession(req)
+
+            if not ok then
+                dst = nil
+                dump(node:GetErrorLog())
+            end
+
+            ---==== VERTICAL PROCESS ===---
+            --This calls on our kernel to process the image we created.
+            node = DVIPComputeNode(req, "VerticalFillKernel", VerticalFillKernel, "FillParams", FillParams)
+
+            params = node:GetParamBlock(FillParams)
+            params.srcDoD[0] = src.DataWindow:Width()
+            params.srcDoD[1] = src.DataWindow:Height()
+            --This gets the values of our sliders from the control panel.
+            params.srcCompOrder = src:IsMask() and 1 or 15
+
+            node:SetParamBlock(params)
+
+            node:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR, TEX_ADDRESS_MODE_BORDER,
+                TEX_NORMALIZED_COORDS_FALSE)
+
+            node:AddInput("src", hDst)
+            node:AddOutput("dst", dst)
+
+            local ok = node:RunSession(req)
+
+            if not ok then
+                dst = nil
+                dump(node:GetErrorLog())
+            end
+            src = dst
+        end
+
+        ---==== Generate SmartVector-STMap ===---
+        if InViewMode:GetValue(req).Value == 1 then
+            if req.Time == sourceFrame or Img_Buffer == nil then
+                CreateStmap(req, src)
+                dst = Img_Buffer
+                InDoCreateStmap:SetSource(Number(0), 0)
+            else
+                if InDoCreateStmap:GetValue(req).Value == 1.0 then
+                    CreateStmap(req, src)
+                    dst = Img_Buffer
+                    InDoCreateStmap:SetSource(Number(0), 0)
+                end
+                local vectorDst = Image { IMG_Like = dst }
+                --This calls on our kernel to process the image we created.
+                local node = DVIPComputeNode(req, "SmartVectorWarpingKernel", SmartVectorWarpingKernel,
+                    "SmartVectorWarpingParams", SmartVectorWarpingParams)
+
+                local params = node:GetParamBlock(SmartVectorWarpingParams)
+                params.srcDoD[0] = Img_Buffer.DataWindow:Width()
+                params.srcDoD[1] = Img_Buffer.DataWindow:Height()
+                params.srcOffset[0] = Img_Buffer.DataWindow.left / Img_Buffer.Width
+                params.srcOffset[1] = Img_Buffer.DataWindow.bottom / Img_Buffer.Height
+                params.ofOffset[0] = src.DataWindow.left / Img_Buffer.Width
+                params.ofOffset[1] = src.DataWindow.bottom / Img_Buffer.Height
+                params.halfPixel[0] = 0.5 / Img_Buffer.Width;
+                params.halfPixel[1] = 0.5 / Img_Buffer.Height;
+                --This gets the values of our sliders from the control panel.
+                params.srcCompOrder = Img_Buffer:IsMask() and 1 or 15
+
+                node:SetParamBlock(params)
+
+                node:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR, TEX_ADDRESS_MODE_DUPLICATE,
+                    TEX_NORMALIZED_COORDS_TRUE)
+                node:AddInput("buffer", Img_Buffer)
+                node:AddInput("opticalflow", src)
+                node:AddOutput("dst", vectorDst)
+
+                local ok = node:RunSession(req)
+
+                if not ok then
+                    dst = nil
+                    dump(node:GetErrorLog())
+                end
+
+                Img_Buffer = vectorDst
+                dst = vectorDst
+            end
+        else
+            dst = src
+        end
+
+        dst:SetCanvasColor(Pixel({ R = 0, G = 0, B = 0, A = 0 }))
+
+        ---==== Render out the frames ===---
+        if InDoRender:GetValue(req).Value == 1 then
+            -- Save out the exr file
+            dst:DownloadGPUMem(req)
+            local depth = FLOAT
+            local exr = EXRIO()
+
+            -- Remove number padding and .exr
+            local filepath = InFilename:GetValue(req).Value
+            filepath = string.sub(filepath, 1, -5 - InZPadding:GetValue(req).Value)
+            filepath = filepath .. Zpad(req.Time, InZPadding:GetValue(req).Value) .. ".exr"
+
+            -- Open the new EXR image for write access
+            exr:WriteOpen(self.Comp:MapPath(filepath), tonumber(req.Time))
+
+            local p = exr:Part("Image", dst.ImageWindow, dst.ImageWindow, dst.XScale / dst.YScale)
+
+            exr:Channel("R", depth, dst, CHAN_RED)
+            exr:Channel("G", depth, dst, CHAN_GREEN)
+            exr:Channel("B", depth, dst, CHAN_BLUE)
+            exr:Channel("A", depth, dst, CHAN_ALPHA, 1.0)
+
+            exr:SetAttribute(p, 'compression', 'compression', ZIP_COMPRESSION)
+
+            if exr:WriteHeader() then
+                exr:WritePart(p, {})
+            end
+
+            exr:Close()
+        end
+    end
+
+    OutImage:Set(req, dst)
+    collectgarbage()
+end
+
+--These are the parameters that we need access to in our kernel.
+SmartVectorSTMapParams = [[
+    float srcDoD[2];
+    float srcOffset[2];
+]]
+
+--This is the GPU kernel, all of the image algorithms happen here.
+SmartVectorSTMapKernel = [[
+    __KERNEL__ void SmartVectorSTMapKernel(
+        __CONSTANTREF__ SmartVectorSTMapParams *params,
+        __TEXTURE2D__ src,
+        __TEXTURE2D_WRITE__ dst
+    )
+    {
+        DEFINE_KERNEL_ITERATORS_XY(x, y);
+        if (x < params->srcDoD[0] && y < params->srcDoD[1])
+        {
+            float2 uv = (to_float2(x,y) + to_float2_v(params->srcOffset)) / to_float2_v(params->srcDoD);
+
+            float4 Color = to_float4(uv.x, uv.y, 0.0f, 1.0f);
+            _tex2DVec4Write(dst, x, y, Color);
+        }
+    }
+]]
+
+
+--These are the parameters that we need access to in our kernel.
+SmartVectorWarpingParams = [[
+    float srcDoD[2];
+    float srcOffset[2];
+    float ofOffset[2];
+	float halfPixel[2];
+    int srcCompOrder;
+]]
+
+--This is the GPU kernel, all of the image algorithms happen here.
+SmartVectorWarpingKernel = [[
+    __KERNEL__ void SmartVectorWarpingKernel(
+        __CONSTANTREF__ SmartVectorWarpingParams *params,
+        __TEXTURE2D__ buffer,
+        __TEXTURE2D__ opticalflow,
+        __TEXTURE2D_WRITE__ dst
+    )
+    {
+        DEFINE_KERNEL_ITERATORS_XY(x, y);
+        if (x < params->srcDoD[0] && y < params->srcDoD[1])
+        {
+            //-----------------------
+            int sC = params->srcCompOrder;
+            float2 srcOffset = to_float2_v(params->srcOffset);
+            float2 ofOffset = to_float2_v(params->ofOffset);
+            float2 fragCoord = to_float2(x,y) + to_float2_s(0.5f);
+            float2 iResolution = to_float2_v(params->srcDoD);
+            float2 uv = fragCoord / iResolution;
+			float2 halfPixel = to_float2_v(params->halfPixel);
+            //-----------------------
+
+            // Get Optical Flow data
+            float4 optical_flow = _tex2DVecN(opticalflow, uv.x, uv.y, sC);
+            optical_flow.x /= params->srcDoD[0];
+            optical_flow.y /= params->srcDoD[1];
+
+            // Add it to a clean stmap
+            optical_flow = to_float4(uv.x + srcOffset.x, uv.y + srcOffset.y, 0.0f, 1.0f) + optical_flow;
+
+            // Get the source image from the new OF shape
+            float4 Color = _tex2DVecN(buffer, optical_flow.x - ofOffset.x, optical_flow.y - ofOffset.y, sC);
+
+            _tex2DVec4Write(dst, x, y, Color);
+        }
+    }
+]]
+
+--These are the parameters that we need access to in our kernel.
+FillParams = [[
+    float srcDoD[2];
+    float srcOffset[2];
+    float maskOffset[2];
+    int srcCompOrder;
+    int maskCompOrder;
+    bool invertMask;
+]]
+
+--This is the GPU kernel, all of the image algorithms happen here.
+HorizontalFillKernel = [[
+    __KERNEL__ void HorizontalFillKernel(
+        __CONSTANTREF__ FillParams *params,
+        __TEXTURE2D__ src,
+        __TEXTURE2D__ gmask,
+        __TEXTURE2D_WRITE__ dst
+    )
+    {
+        DEFINE_KERNEL_ITERATORS_XY(x,y);
+        if(x==0){
+            //-----------------------
+            int sC = params->srcCompOrder;
+            int mC = params->maskCompOrder;
+			float2 maskOffset = to_float2_v(params->maskOffset);
+			float2 srcOffset = to_float2_v(params->srcOffset);
+            //-----------------------
+            float4 color;
+            float4 mask = _tex2DVecN(gmask, x + srcOffset.x - maskOffset.x + 0.5f, y + srcOffset.y - maskOffset.y + 0.5f, mC);
+            // Invert the mask if wanted
+            if (params->invertMask == true) {
+                mask.w = 1- mask.w;
+            }
+
+            int firstPixelLocation;
+            float4 firstPixel;
+            bool firstPixelFound = false;
+            bool noFirstPixel = mask.w < 1.0f;
+            int lastPixelLocation;
+            float4 lastPixel;
+            bool lastPixelFound = false;
+            int distance;
+
+            for(int j=0; j<=params->srcDoD[0]; j++)
+            {
+                color = _tex2DVecN(src, j + 0.5f, y + 0.5f, sC);
+                color.w = 0.0f;
+                mask = _tex2DVecN(gmask, j + srcOffset.x - maskOffset.x + 0.5f, y + srcOffset.y - maskOffset.y + 0.5f, mC);
+                // Invert the mask if wanted
+                if (params->invertMask == true) {
+                    mask.w = 1- mask.w;
+                }
+
+                // Write the original image to the output as a default
+                // Needed for some reason
+                _tex2DVec4Write(dst, j, y, color);
+
+                if (mask.w >= 1.0f && firstPixelFound == false)
+                {
+                    if (j == 0) {
+                        firstPixel = to_float4_s(0.0f);
+                    } else {
+                        firstPixel = _tex2DVecN(src, j - 1.0f + 0.5f, y + 0.5f, sC);
+                    }
+                    firstPixelLocation = j;
+                    firstPixelFound = true;
+                }
+                if (mask.w < 1.0f && (firstPixelFound == true || noFirstPixel == true) && lastPixelFound == false)
+                {
+                    lastPixel = color;
+                    lastPixelLocation = j;
+                    lastPixelFound = true;
+
+                    // In calse no first pixel is found
+                    if (noFirstPixel == true) {
+                        firstPixel = lastPixel;
+                        firstPixelLocation = 0;
+                        firstPixelFound = true;
+                        noFirstPixel = false;
+                    }
+                }
+
+                // In case no last pixel is found
+                if(j == params->srcDoD[0] && firstPixelFound && lastPixelFound == false) {
+
+                    lastPixel = firstPixel;
+                    lastPixelLocation = params->srcDoD[0];
+                    lastPixelFound = true;
+                }
+
+                // If start and end have bin found
+                if (firstPixelFound == true && lastPixelFound == true)
+                {
+                    distance = lastPixelLocation - firstPixelLocation;
+                    for(float k=firstPixelLocation; k<lastPixelLocation; k++)
+                    {
+                        float4 mixColor = _mix(lastPixel, firstPixel, (distance-(k-firstPixelLocation))/distance);
+                        mixColor.w = 1.0f;
+                        _tex2DVec4Write(dst, k, y, mixColor);
+                    }
+                    firstPixelFound = false;
+                    lastPixelFound = false;
+                }
+            }
+        }
+    }
+]]
+
+--This is the GPU kernel, all of the image algorithms happen here.
+VerticalFillKernel = [[
+    __KERNEL__ void VerticalFillKernel(
+        __CONSTANTREF__ FillParams *params,
+        __TEXTURE2D__ src,
+        __TEXTURE2D_WRITE__ dst
+    )
+    {
+        DEFINE_KERNEL_ITERATORS_XY(x,y);
+        if(y==0){
+            //-----------------------
+            int sC = params->srcCompOrder;
+            //-----------------------
+            float4 color = _tex2DVecN(src, x + 0.5f, y + 0.5f, sC);
+
+            int firstPixelLocation;
+            float4 firstPixel;
+            bool firstPixelFound = false;
+            bool noFirstPixel = color.w < 1.0f;
+            int lastPixelLocation;
+            float4 lastPixel;
+            bool lastPixelFound = false;
+            int distance;
+            float alpha;
+
+            float4 horizontalColor;
+            for(int j=0; j<=params->srcDoD[1]; j++)
+            {
+                color = _tex2DVecN(src, x + 0.5f, j + 0.5f, sC);
+                float alpha = color.w;
+                color.w = 1.0f;
+                // Write the original image to the output as a default
+                // Needed for some reason
+                _tex2DVec4Write(dst, x, j, color);
+
+
+                if (alpha >= 1.0f && firstPixelFound == false)
+                {
+                    if (j == 0) {
+                        firstPixel = to_float4_s(0.0f);
+                    } else {
+                        firstPixel = _tex2DVecN(src, x + 0.5f, j + 0.5f - 1.0f, sC);
+                    }
+                    firstPixelLocation = j;
+                    firstPixelFound = true;
+                }
+                if (alpha < 1.0f && (firstPixelFound == true || noFirstPixel == true) && lastPixelFound == false)
+                {
+                    lastPixel = color;
+                    lastPixelLocation = j;
+                    lastPixelFound = true;
+
+                    // In calse no first pixel is found
+                    if (noFirstPixel == true) {
+                        firstPixel = lastPixel;
+                        firstPixelLocation = 0;
+                        firstPixelFound = true;
+                        noFirstPixel = false;
+                    }
+                }
+
+                // In case no last pixel is found
+                if(j == params->srcDoD[1] && firstPixelFound && lastPixelFound == false) {
+
+                    lastPixel = firstPixel;
+                    lastPixelLocation = params->srcDoD[1];
+                    lastPixelFound = true;
+                }
+
+                // If start and end have bin found
+                if (firstPixelFound == true && lastPixelFound == true)
+                {
+                    distance = lastPixelLocation - firstPixelLocation;
+                    for(float k=firstPixelLocation; k<lastPixelLocation; k++)
+                    {
+                        float4 horizontalColor = _tex2DVecN(src, x + 0.5f, k + 0.5f, sC);
+                        float4 mixColor = _mix(lastPixel, firstPixel, (distance-(k-firstPixelLocation))/distance);
+                        mixColor = _mix(mixColor, horizontalColor, 0.5f);
+                        mixColor.w = 1.0f;
+                        _tex2DVec4Write(dst, x, k, mixColor);
+                    }
+                    firstPixelFound = false;
+                    lastPixelFound = false;
+                }
+            }
+        }
+    }
+]]
