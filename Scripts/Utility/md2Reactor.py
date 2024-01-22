@@ -29,7 +29,7 @@ class BBCodeRenderer(BaseRenderer):
 
     def heading(self, text, level, **attrs):
         # {'type': 'heading', 'attrs': {'level': 1}, 'style': 'axt', 'children': [{'type': 'text', 'raw': 'First Level'}]}
-        levels = {1: "size=200", 2: "size=150", 3: "size=100"}
+        levels = {1: "size=200", 2: "size=150", 3: "size=120"}
         _level = text["attrs"]["level"]
         heading_size = levels[_level]
         raw_text = None
@@ -46,6 +46,32 @@ class BBCodeRenderer(BaseRenderer):
             for child in element["children"]:
                 bbcode += self.parse_element_to_bbcode(child)
             return bbcode + "\n"
+
+        elif element['type'] == 'list':
+            # Check if the list is ordered by looking at the 'ordered' attribute
+            list_tag = 'list=1' if element['attrs'].get('ordered') else 'list'
+            
+            bbcode = f'[{list_tag}]'
+            for child in element['children']:
+                bbcode += self.parse_element_to_bbcode(child)
+            bbcode += f'[/list]'
+            return bbcode
+
+        elif element['type'] == 'list_item':
+            # BBCode list item tag
+            bbcode = '[*]'
+            for child in element['children']:
+                # Here, we assume that list items will contain block_text which in turn contains text
+                bbcode += self.parse_element_to_bbcode(child)
+            return bbcode
+
+        elif element['type'] == 'block_text':
+            # Assuming block_text will contain the actual text
+            bbcode = ''
+            for child in element['children']:
+                bbcode += self.parse_element_to_bbcode(child)
+            return bbcode
+
         elif element["type"] == "link":
             url = element["attrs"]["url"]
             bbcode = f"[url={url}]"
@@ -61,7 +87,7 @@ class BBCodeRenderer(BaseRenderer):
             bbcode = "[quote]"
             for child in element["children"]:
                 bbcode += self.parse_element_to_bbcode(child)
-            bbcode += "[/quote]"
+            bbcode += "[/quote]\n"
             return bbcode
         elif element["type"] == "codespan":
             bbcode = "[c]" + element["raw"] + "[/c]"
@@ -90,53 +116,21 @@ class BBCodeRenderer(BaseRenderer):
             return ""
 
     def paragraph(self, text, state=None):
+        # print(text)
         return self.parse_element_to_bbcode(text)
-
-    def extract_and_format_list(self, element):
-        # Initialize an empty list to hold the raw text items
-        list_items = []
-
-        # Check if the 'children' key exists and is a list
-        if "children" in element and isinstance(element["children"], list):
-            # Loop through each child (which should be a list item)
-            for child in element["children"]:
-                # Recursively call this function if the child has its own 'children'
-                if "children" in child:
-                    list_items.extend(self.extract_and_format_list(child))
-                # If the child is a 'text' type, append the 'raw' text to the list_items
-                elif child.get("type") == "text" and "raw" in child:
-                    list_items.append(child["raw"])
-        # Return the list of raw text items
-        return list_items
-
-    def list(self, body, ordered, **attrs):
-        # tag = "=1" if ordered else ""
-        tag = ""
-        # Extract the raw text from the data structure
-        list_items = self.extract_and_format_list(body)
-        # Format the list items with BBCode syntax
-        formatted_list = (
-            f"[list{tag}]\n"
-            + "\n".join(f"[*]{item}" for item in list_items)
-            + "\n[/list]\n"
-        )
-
-        return formatted_list
-
+    
+    def block_quote(self, text, state=None):
+        return self.parse_element_to_bbcode(text)
+    
     def block_code(self, code, info=None):
         # {'type': 'block_code', 'raw': 'print("Hello, world!")\n', 'style': 'fenced', 'marker': '```', 'attrs': {'info': 'python'}}
         raw_code = code["raw"]
-        syntax = code["attrs"].get("info", "")
         return f"[code]{raw_code}[/code]\n"
 
-    def block_quote(self, text, state=None):
-        return self.parse_element_to_bbcode(text)
-
-    def link(self, link, title, text):
-        return "[url={link}]{text}[/url]".format(link=link, text=text)
-
-    def image(self, src, title, text):
-        return "[img]{src}[/img]".format(src=src)
+    def list(self, body, ordered, **attrs):
+        print(body)
+        
+        return self.parse_element_to_bbcode(body)
 
     # Add more methods as needed to cover the Markdown features you use
 
