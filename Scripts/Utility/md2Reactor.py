@@ -234,10 +234,10 @@ def process(file_list):
 
 
 if __name__ == "__main__":
-    # comp = fu.GetCurrentComp()
-    # folder = fu.GetData("md2reactor.path")
-    # if not folder:
-    #     folder = DEFAULT_DIR
-    # file_paths = request_file_names(folder)
-    # process(file_paths)
-    main(Path("/Users/videopro/Desktop/test note.md"))
+    comp = fu.GetCurrentComp()
+    folder = fu.GetData("md2reactor.path")
+    if not folder:
+        folder = DEFAULT_DIR
+    file_paths = request_file_names(folder)
+    process(file_paths)
+    # main(Path("/Users/videopro/Desktop/test note.md"))
