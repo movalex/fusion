@@ -38,7 +38,7 @@ class BBCodeRenderer(BaseRenderer):
                 if "type" in child and child["type"] == "text" and "raw" in child:
                     raw_text = child["raw"]
                     break
-        return f"[{heading_size}][b]{raw_text}[/b][/size]\n"
+        return f"\n[{heading_size}][b]{raw_text}[/b][/size]\n\n"
 
     def parse_element_to_bbcode(self, element):
         if element["type"] == "paragraph":
@@ -54,14 +54,13 @@ class BBCodeRenderer(BaseRenderer):
             bbcode = f"[{list_tag}]"
             for child in element["children"]:
                 bbcode += self.parse_element_to_bbcode(child)
-            bbcode += f"[/list]"
+            bbcode += f"[/list]" + "\n"
             return bbcode
 
         elif element["type"] == "list_item":
             # BBCode list item tag
             bbcode = "[*]"
             for child in element["children"]:
-                # Here, we assume that list items will contain block_text which in turn contains text
                 bbcode += self.parse_element_to_bbcode(child)
             return bbcode
 
@@ -116,7 +115,6 @@ class BBCodeRenderer(BaseRenderer):
             return ""
 
     def paragraph(self, text, state=None):
-        # print(text)
         return self.parse_element_to_bbcode(text)
 
     def block_quote(self, text, state=None):
@@ -128,7 +126,6 @@ class BBCodeRenderer(BaseRenderer):
         return f"[code]{raw_code}[/code]\n"
 
     def list(self, body, ordered, **attrs):
-        print(body)
 
         return self.parse_element_to_bbcode(body)
 
