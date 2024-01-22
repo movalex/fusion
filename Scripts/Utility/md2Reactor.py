@@ -47,28 +47,28 @@ class BBCodeRenderer(BaseRenderer):
                 bbcode += self.parse_element_to_bbcode(child)
             return bbcode + "\n"
 
-        elif element['type'] == 'list':
+        elif element["type"] == "list":
             # Check if the list is ordered by looking at the 'ordered' attribute
-            list_tag = 'list=1' if element['attrs'].get('ordered') else 'list'
-            
-            bbcode = f'[{list_tag}]'
-            for child in element['children']:
+            list_tag = "list=1" if element["attrs"].get("ordered") else "list"
+
+            bbcode = f"[{list_tag}]"
+            for child in element["children"]:
                 bbcode += self.parse_element_to_bbcode(child)
-            bbcode += f'[/list]'
+            bbcode += f"[/list]"
             return bbcode
 
-        elif element['type'] == 'list_item':
+        elif element["type"] == "list_item":
             # BBCode list item tag
-            bbcode = '[*]'
-            for child in element['children']:
+            bbcode = "[*]"
+            for child in element["children"]:
                 # Here, we assume that list items will contain block_text which in turn contains text
                 bbcode += self.parse_element_to_bbcode(child)
             return bbcode
 
-        elif element['type'] == 'block_text':
+        elif element["type"] == "block_text":
             # Assuming block_text will contain the actual text
-            bbcode = ''
-            for child in element['children']:
+            bbcode = ""
+            for child in element["children"]:
                 bbcode += self.parse_element_to_bbcode(child)
             return bbcode
 
@@ -118,10 +118,10 @@ class BBCodeRenderer(BaseRenderer):
     def paragraph(self, text, state=None):
         # print(text)
         return self.parse_element_to_bbcode(text)
-    
+
     def block_quote(self, text, state=None):
         return self.parse_element_to_bbcode(text)
-    
+
     def block_code(self, code, info=None):
         # {'type': 'block_code', 'raw': 'print("Hello, world!")\n', 'style': 'fenced', 'marker': '```', 'attrs': {'info': 'python'}}
         raw_code = code["raw"]
@@ -129,7 +129,7 @@ class BBCodeRenderer(BaseRenderer):
 
     def list(self, body, ordered, **attrs):
         print(body)
-        
+
         return self.parse_element_to_bbcode(body)
 
     # Add more methods as needed to cover the Markdown features you use
@@ -161,33 +161,6 @@ def mistune_to_bbcode(markdown_text):
     # Convert Markdown to BBCode
     bbcode_text = markdown_parser(markdown_text)
     return bbcode_text
-
-
-def markdown_to_bbcode(s):
-    s = re.sub(r"(?m)\[(.*?)\]\((https?:\/\/\S+)\)", "[url=\\2]\\1[/url]", s)
-    s = re.sub(r"(?m)([*_]{2})(\w+?)\1", "[b]\\2[/b]", s)
-    s = re.sub(r"(?m)(?:^| )[^@#\s_`]?_([^_]+)_", "[i]\\1[/i]", s)
-    s = re.sub(r"(?m)\B([*])\b(\S.+?)\1", "[i]\\2[/i]", s)
-    s = re.sub(r"(?m)\B@(.*?)(['\s.,:!?\"])", "[mention]\\1[/mention]\\2", s)
-    s = re.sub(r"(?m) {4}(.*)$", "~[code]\\1[/code]", s)
-    s = re.sub(r"(?m)^!\[\]\((.*?)\)$", "~[img]\\1[/img]", s)
-    s = re.sub(r"(?m)^(\S.*)\n=+\s*$", translate("~[size=200][b]{}[/b][/size]"), s)
-    s = re.sub(r"(?m)(`)(.*?)(`)", "[c]\\2[/c]", s)
-    s = re.sub(r"(?m)^(\S.*)\n-+\s*$", translate("~[size=100][b]{}[/b][/size]"), s)
-    s = re.sub(r"(?m)^#\s+(.*?)\s*#*$", translate("~[size=200][b]{}[/b][/size]"), s)
-    s = re.sub(r"(?m)^##\s+(.*?)\s*#*$", translate("~[size=100][b]{}[/b][/size]"), s)
-    s = re.sub(r"(?m)^###\s+(.*?)\s*#*$", translate("~[b]{}[/b]"), s)
-    s = re.sub(r"(?m)^> (.*)$", translate("~[quote]{}[/quote]"), s)
-    s = re.sub(r"(?m)^[-+*]\s+(.*)$", translate("~[list]\n[*]{}\n[/list]"), s)
-    s = re.sub(r"(?m)^\d+\.\s+(.*)$", translate("~[list=1]\n[*]{}\n[/list]"), s)
-    s = re.sub(r"(?m)^((?!~).*)$", translate("{}"), s)
-    s = re.sub(r"(?m)^~\[", "[", s)
-    s = re.sub(r"(?m)\[/code]\n\[code(=.*?)?]", "\n", s)
-    s = re.sub(r"(?m)\[code(=.*?)?]\[/code]", "", s)
-    s = re.sub(r"(?m)\[/quote]\n\[quote]", "\n", s)
-    s = re.sub(r"(?m)\[/list]\n\[list(=1)?]\n", "", s)
-
-    return s
 
 
 def write_file(file_name, text, suffix):
