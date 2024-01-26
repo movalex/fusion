@@ -26,10 +26,9 @@ def get_render_list():
 
 
 def main():
-
     render_job_list = get_render_list()
     if not render_job_list:
-        print(f"Could not get the file queue\nError: {e}")
+        print(f"Queue file not found!")
         return
     render_settings = {}
     timeline = project.GetCurrentTimeline()
