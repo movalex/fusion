@@ -26,6 +26,11 @@ def get_render_list():
 
 
 def main():
+
+    render_job_list = get_render_list()
+    if not render_job_list:
+        print(f"Could not get the file queue\nError: {e}")
+        return
     render_settings = {}
     timeline = project.GetCurrentTimeline()
     timeline_count = project.GetTimelineCount()
@@ -33,12 +38,6 @@ def main():
     for i in range(1, timeline_count):
         timeline = project.GetTimelineByIndex(float(i))
         current_timelines[timeline.GetName()] = float(i)
-
-    try:
-        render_job_list = get_render_list()
-    except Exception as e:
-        print(f"Could not get the file queue\nError: {e}")
-        return
 
     for n, job in enumerate(render_job_list):
         timeline_name = job["TimelineName"]
