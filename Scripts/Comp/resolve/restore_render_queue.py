@@ -20,6 +20,7 @@ def save_render_queue():
 def get_render_list():
     if not QUEUE_FILE.exists():
         print("Export the queue file with 'save_render_queue' function!")
+        return
     with open(QUEUE_FILE, "r", encoding="utf-8") as file:
         return json.load(file)
 
