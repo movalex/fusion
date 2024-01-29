@@ -1,6 +1,7 @@
 import json
 import DaVinciResolveScript as dvr_script
 from pathlib import Path
+from resolve_utils import ConfirmationDialog
 
 
 resolve = dvr_script.scriptapp("Resolve")
@@ -126,6 +127,12 @@ def show_ui(timeline_name: str):
         disp.ExitLoop()
 
     def import_queue(ev):
+        dialog = ConfirmationDialog(fusion=fu, title="Do you want to import the render queue?")
+        confirmed = dialog.run()
+        if not confirmed:
+            print("Cancelled!")
+            return
+
         override_timeline = itm["CheckBox"].Checked
         preset_name = itm["PresetsCombo"].CurrentText
         timeline_name = itm["TimelinesCombo"].CurrentText

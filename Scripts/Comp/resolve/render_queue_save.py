@@ -1,11 +1,11 @@
-# import DaVinciResolveScript as dvr_script
+import DaVinciResolveScript as dvr_script
 import json
 from pathlib import Path
 from resolve_utils import request_dir
 from datetime import datetime
 
 
-# resolve = dvr_script.scriptapp("Resolve")
+resolve = dvr_script.scriptapp("Resolve")
 projectManager = resolve.GetProjectManager()
 project = projectManager.GetCurrentProject()
 
@@ -23,5 +23,4 @@ def save_render_queue(folder_path):
 
 if __name__ == "__main__":
     output_folder = request_dir("Choose folder to export queue")
-    print("output: ", output_folder)
     save_render_queue(folder_path=output_folder)
