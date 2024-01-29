@@ -33,7 +33,8 @@ STILL_FRAME_REF = 2
 
 
 if __name__ == "__main__":
-    target_folder = request_dir("Set stills location")
+    target_data = fu.GetData("ResolveSaveStills.Folder")
+    target_folder = request_dir("Set stills location", target=target_data)
     if not target_folder or target_folder == " ":
         print("Stills folder not set.")
     else:

@@ -118,11 +118,13 @@ def confirmation_dialogue(title=None, request=None):
     return answer
 
 
-def request_dir(window_title: Path):
+def request_dir(window_title: str, target=None):
     """request file UI"""
 
     fu = get_fusion_module()
-    target = fu.GetData("ResolveSaveStills.Folder")
+    if target is None:
+        target = Path("~/Desktop").expanduser().absolute()
+
 
     ui = fu.UIManager
     disp = bmd.UIDispatcher(ui)
@@ -139,14 +141,14 @@ def request_dir(window_title: Path):
                 ui.LineEdit(
                     {
                         "Weight": 0.8,
-                        "Text": target or "",
+                        "Text": str(target) or "",
                         "ID": "FolderLine",
                         "Events": {"ReturnPressed": True},
                         "Alignment": {"AlignHCenter": True, "AlignVCenter": True},
                     }
                 ),
                 ui.Button({"Weight": 0.2, "ID": "FolderButton", "Text": "Browse..."}),
-                ui.Button({"Weight": 0.1, "ID": "RunButton", "Text": "Run"}),
+                ui.Button({"Weight": 0.1, "ID": "RunButton", "Text": "Save"}),
             ]
         ),
     )
