@@ -1,7 +1,6 @@
 from pathlib import Path
 from grab_still import get_still_album, get_target_folder
 from resolve_utils import (
-    request_dir,
     get_timeline_and_gallery,
     ConfirmationDialog,
     create_folder,
