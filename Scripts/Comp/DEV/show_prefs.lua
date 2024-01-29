@@ -1,1 +1,0 @@
-fu:ShowPrefs("PrefsGeneral")
