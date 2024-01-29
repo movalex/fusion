@@ -12,10 +12,13 @@ def cleanup_drx(folder: Path):
     print(
         "CLEANUP DRX is enabled, all .drx files in the stills location will be erased"
     )
-    answer = confirmation_dialogue(
+    dialog = ConfirmationDialog(
+        fu,
         title="DRX files deletion!",
         request=f"Do you wish to delete all DRX files\nin'{folder}' folder?",
     )
+    answer = dialog.run()
+
     if answer:
         for file in folder.iterdir():
             if file.suffix == ".drx":
@@ -44,78 +47,90 @@ def get_timeline_and_gallery(resolve):
     return timeline, gallery
 
 
-def confirmation_dialogue(title=None, request=None):
-    fu = get_fusion_module()
-    target = fu.GetData("ResolveSaveStills.Folder")
+class ConfirmationDialog:
+    def __init__(self, fusion, title=None, request=None):
+        self.confirmed = False
+        self.title = "Confirmation Dialog" if title is None else title
+        self.request = request
+        self.confirmed = False
 
-    ui = fu.UIManager
-    disp = bmd.UIDispatcher(ui)
-    win = disp.AddWindow(
-        {
-            "ID": "RequestFolder",
-            "TargetID": "RequestFolder",
-            "WindowTitle": "Confirmation Dialogue",
-            "Geometry": [800, 600, 550, 130],
-        },
-        [
-            ui.VGroup(
-                [
-                    ui.Label(
-                        {
-                            "ID": "Lbl1",
-                            "Text": f"<H1>{title}<H1/>",
-                            "Weight": 0.5,
-                            "Alignment": {"AlignHCenter": True, "AlignVCenter": True},
-                        }
-                    ),
-                    ui.Label(
-                        {
-                            "ID": "Lbl2",
-                            "Text": request,
-                            "Weight": 0.5,
-                            "Alignment": {"AlignHCenter": True, "AlignVCenter": True},
-                        }
-                    ),
-                    ui.HGroup(
-                        {"Alignment": {"AlignHRight": True}, "Weight": 0},
-                        [
-                            ui.Button(
-                                {
-                                    "ID": "OkButton",
-                                    "Text": "Ok",
-                                }
-                            ),
-                            ui.Button(
-                                {
-                                    "ID": "CancelButton",
-                                    "Text": "Cancel",
-                                }
-                            ),
-                        ],
-                    ),
-                ]
-            ),
-        ],
-    )
-    itm = win.GetItems()
-    answer = False
+        self.ui = fusion.UIManager
+        self.disp = bmd.UIDispatcher(self.ui)
+        self.win = self.create_window()
+        self.setup_callbacks()
 
-    def close(ev):
-        disp.ExitLoop()
+    def setup_callbacks(self):
+        self.win.On.OkButton.Clicked = self.request_confirmed
+        self.win.On.CancelButton.Clicked = self.close
+        self.win.On.RequestFolder.Close = self.close
 
-    def request_confirmed(ev):
-        nonlocal answer
-        print("Ok!")
-        answer = True
-        disp.ExitLoop()
+    def run(self):
+        self.win.Show()
+        self.disp.RunLoop()
+        self.win.Hide()
+        return self.confirmed
 
-    win.On.OkButton.Clicked = request_confirmed
-    win.On.CancelButton.Clicked = close
-    win.On.RequestFolder.Close = close
-    win.Show()
-    disp.RunLoop()
-    win.Hide()
-    return answer
+    def close(self, ev):
+        self.disp.ExitLoop()
+
+    def request_confirmed(self, ev):
+        self.confirmed = True
+        self.disp.ExitLoop()
+
+    def create_window(self):
+        return self.disp.AddWindow(
+            {
+                "ID": "RequestFolder",
+                "TargetID": "RequestFolder",
+                "WindowTitle": "Confirmation Dialogue",
+                "Geometry": [800, 600, 550, 130],
+            },
+            [
+                self.ui.VGroup(
+                    [
+                        self.ui.Label(
+                            {
+                                "ID": "TitleLabel",
+                                "Text": f"<H2>{self.title}<H2/>",
+                                "Weight": 0.5,
+                                "Alignment": {
+                                    "AlignHCenter": True,
+                                    "AlignVCenter": True,
+                                },
+                            }
+                        ),
+                        self.ui.Label(
+                            {
+                                "ID": "RequestLabel",
+                                "Text": self.request,
+                                "Weight": 0.5,
+                                "Alignment": {
+                                    "AlignHCenter": True,
+                                    "AlignVCenter": True,
+                                },
+                            }
+                        ),
+                        self.ui.HGroup(
+                            {"Alignment": {"AlignHRight": True}, "Weight": 0},
+                            [
+                                self.ui.Button(
+                                    {
+                                        "ID": "OkButton",
+                                        "Text": "Ok",
+                                    }
+                                ),
+                                self.ui.Button(
+                                    {
+                                        "ID": "CancelButton",
+                                        "Text": "Cancel",
+                                    }
+                                ),
+                            ],
+                        ),
+                    ]
+                ),
+            ],
+        )
 
 
 def request_dir(window_title: str, target=None):
@@ -124,7 +139,6 @@ def request_dir(window_title: str, target=None):
     fu = get_fusion_module()
     if target is None:
         target = Path("~/Desktop").expanduser().absolute()
-
 
     ui = fu.UIManager
     disp = bmd.UIDispatcher(ui)

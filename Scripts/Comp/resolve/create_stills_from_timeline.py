@@ -3,7 +3,7 @@ from grab_still import get_still_album, get_target_folder
 from resolve_utils import (
     request_dir,
     get_timeline_and_gallery,
-    confirmation_dialogue,
+    ConfirmationDialog,
     create_folder,
     cleanup_drx,
 )
@@ -30,10 +30,11 @@ def post_processing(stills: list, still_album, target_folder=None):
         print(
             f"Please note, that DELETE_STILLS is set to True, so new stills in '{still_album_name}' album will be erased"
         )
-        answer = confirmation_dialogue(
+        dialog = ConfirmationDialog(fu,
             "Stills Deletion!",
             f"Do you want to delete stills\nin '{still_album_name}' album?",
         )
+        answer = dialog.run()
         if answer:
             still_album.DeleteStills(stills)
 

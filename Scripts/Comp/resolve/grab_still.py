@@ -3,7 +3,6 @@ from datetime import datetime
 from pathlib import Path
 from resolve_utils import (
     get_timeline_and_gallery,
-    confirmation_dialogue,
     request_dir,
     create_folder,
     cleanup_drx,
@@ -37,7 +36,7 @@ from typing import TypeVar
     
 """
 STILL_FRAME_REF = 1
-STILL_ALBUM = "gal22"
+STILL_ALBUM = "Stills for Export"
 DELETE_STILLS = True
 OPEN_EDIT_PAGE_AFTER_EXPORT = False
 CLEANUP_DRX = True
@@ -51,7 +50,9 @@ def get_target_folder(app) -> str:
     """
     target_folder_data = app.GetData("ResolveSaveStills.Folder")
     if not target_folder_data or target_folder_data == "":
-        target_folder = request_dir("The stills will be saved to: ", target=target_folder_data)
+        target_folder = request_dir(
+            "The stills will be saved to: ", target=target_folder_data
+        )
         return target_folder
 
     return target_folder_data
