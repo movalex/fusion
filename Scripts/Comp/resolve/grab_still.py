@@ -2,8 +2,8 @@ import os
 from datetime import datetime
 from pathlib import Path
 from resolve_utils import (
+    RequestDir,
     get_timeline_and_gallery,
-    request_dir,
     create_folder,
     cleanup_drx,
 )
@@ -50,9 +50,9 @@ def get_target_folder(app) -> str:
     """
     target_folder_data = app.GetData("ResolveSaveStills.Folder")
     if not target_folder_data or target_folder_data == "":
-        target_folder = request_dir(
+        target_folder = RequestDir(
             "The stills will be saved to: ", target=target_folder_data
-        )
+        ).run()
         return target_folder
 
     return target_folder_data

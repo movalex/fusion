@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from resolve_utils import request_dir
+from resolve_utils import RequestDir
 
 """
     This is a Davinci Resolve script to set stills saving location
@@ -34,7 +34,7 @@ STILL_FRAME_REF = 2
 
 if __name__ == "__main__":
     target_data = fu.GetData("ResolveSaveStills.Folder")
-    target_folder = request_dir("Set stills location", target=target_data)
+    target_folder = RequestDir("Set stills location", target=target_data).run()
     if not target_folder or target_folder == " ":
         print("Stills folder not set.")
     else:
