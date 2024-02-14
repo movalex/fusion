@@ -28,20 +28,20 @@
 					Source = "Evaluation",
 					Default = 1,
 				},
-				Input1 = InstanceInput {
+				Red = InstanceInput {
 					SourceOp = "Analyze",
 					Source = "Red",
 					Name = "Color",
 					ControlGroup = 1,
 					Page = "Controls",
 				},
-				Input2 = InstanceInput {
+				Green = InstanceInput {
 					SourceOp = "Analyze",
 					Source = "Green",
 					ControlGroup = 1,
 					Page = "Controls",
 				},
-				Input3 = InstanceInput {
+				Blue = InstanceInput {
 					SourceOp = "Analyze",
 					Source = "Blue",
 					ControlGroup = 1,
@@ -84,7 +84,7 @@
 			Tools = ordered() {
 				Analyze = ChangeDepth {
 					Inputs = {
-						Depth = Input { Value = 0.116862297058105, },
+						Depth = Input { Value = 3, },
 						Input = Input {
 							SourceOp = "Proxy",
 							Source = "Output",
@@ -142,7 +142,7 @@
 							INP_MaxAllowed = 1000000,
 							INP_Integer = false,
 							INPID_InputControl = "ButtonControl",
-							BTNCS_Execute = "Scripts:/Utility/BakeColors.lua",
+							BTNCS_Execute = "@scripts:/Utility/BakeColors.lua",
 							INP_MaxScale = 1,
 							INP_MinScale = 0,
 							INP_MinAllowed = -1000000,
