@@ -763,7 +763,7 @@ QUICK GUIDE:
 						INPID_InputControl = "ButtonControl",
 						LINKS_Name = "Set Reference Frame",
 					},
-					GoToFrame = {
+				GoToFrame = {
 					INP_MaxAllowed = 1000000,
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
@@ -805,197 +805,196 @@ QUICK GUIDE:
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
+						local function CopyFile(old_path, new_path)
+							print("copying CleanPass to file: " .. new_path)
+								
+							if utf_module_loaded then
+								old_path = utf8_to_win(old_path)
+								new_path = utf8_to_win(new_path)
+							end
+							local old_file = io.open(old_path, "rb")
+							local new_file = io.open(new_path, "wb")
+							local old_file_sz, new_file_sz = 0, 0
+							if not old_file or not new_file then
+								return false
+							end
+							while true do
+								local block = old_file:read(2^13)
+								if not block then 
+									old_file_sz = old_file:seek("end")
+									break
+								end
+								new_file:write(block)
+							end
+							old_file:close()
+							new_file_sz = new_file:seek("end")
+							new_file:close()
+							return new_file_sz == old_file_sz
+						end
 						
-					local function CopyFile(old_path, new_path)
-						print("copying CleanPass to file: " .. new_path)
+						local function ParseFilename(filename)
+							local seq = {}
+							seq.FullPath = filename
+							string.gsub(seq.FullPath, "^(.+[/\\])(.+)", function(path, name)
+								seq.Path = path
+								seq.FullName = name
+							end)
+							string.gsub(seq.FullName, "^(.+)(%..+)$", function(name, ext)
+								seq.Name = name
+								seq.Extension = ext
+							end)
+							-- check if no extension
+							if not seq.Name then
+								seq.Name = seq.FullName
+							end
 							
-						if utf_module_loaded then
-							old_path = utf8_to_win(old_path)
-							new_path = utf8_to_win(new_path)
-						end
-						local old_file = io.open(old_path, "rb")
-						local new_file = io.open(new_path, "wb")
-						local old_file_sz, new_file_sz = 0, 0
-						if not old_file or not new_file then
-							return false
-						end
-						while true do
-                            local block = old_file:read(2^13)
-                            if not block then 
-                                old_file_sz = old_file:seek("end")
-                                break
-                            end
-                            new_file:write(block)
-                        end
-                        old_file:close()
-                        new_file_sz = new_file:seek("end")
-                        new_file:close()
-                        return new_file_sz == old_file_sz
-                    end
-                    
-                    local function ParseFilename(filename)
-                        local seq = {}
-                        seq.FullPath = filename
-                        string.gsub(seq.FullPath, "^(.+[/\\])(.+)", function(path, name)
-							seq.Path = path
-							seq.FullName = name
-						end)
-                        string.gsub(seq.FullName, "^(.+)(%..+)$", function(name, ext)
-							seq.Name = name
-							seq.Extension = ext
-						end)
-                        -- check if no extension
-                        if not seq.Name then
-                            seq.Name = seq.FullName
-                        end
-						
-                        string.gsub(seq.Name, "^(.-)(%d+)$", function(name, SNum)
-							seq.CleanName = name
-							seq.SNum = SNum
-						end)
-						
-                        if seq.SNum then
-                            seq.Number = tonumber(seq.SNum)
-                            seq.Padding = string.len(seq.SNum)
-                        else
-							seq.SNum = ""
-							seq.CleanName = seq.Name
-                        end
-						
-                        if seq.Extension == nil then
-                            seq.Extension = ""
-                        end
-                        return seq 
-                    end
-
-					function sleep (a) 
-						local sec = tonumber(os.clock() + a); 
-						while (os.clock() < sec) do 
-						end 
-					end
-					
-                    local function CreateCleanPass(tool)
-                        local renderStart = comp:GetAttrs().COMPN_RenderStart
-                        local renderEnd = comp:GetAttrs().COMPN_RenderEnd
-                        tool.Render = 0
-
-						comp.CurrentTime = renderStart
-						
-                        comp:SetAttrs({COMPN_CurrentTime = renderStart}) 
-                        comp:SetAttrs({COMPN_RenderEnd = renderStart + 1})
-						
-						fusion.CacheManager:Purge()
-						tool.SaveFrames = "HiQInteractive"
-						comp:Loop(false)
-						comp:Play()
-						sleep(2)
-						tool.SaveFrames = "Full"
-						comp:Stop()
-						print("Rendered a single clean plate file")
-                        comp:SetAttrs({COMPN_RenderEnd = renderEnd})
-                        
-						local svr = tool:GetChildrenList(false, "Saver")[1]
-                        saverClip = svr.Clip[0]
-                        seq = ParseFilename(saverClip)
-						
-                        local ldr = tool:GetChildrenList(false, "Loader")[1]
-						
-						-- missing frames to color
-						ldr.MissingFrames[0] = 2
-						
-                        padding = string.format("%04d", renderStart)
-						loaderClip = seq.Path .. seq.CleanName .. padding .. seq.Extension
-						print("Clip Parsed and Loaded: ".. loaderClip)
-						ldr.Loop[0] = 0
-                        tool.Depth[0] = 5
-                        
-                        seq = ParseFilename(comp:MapPath(loaderClip))
-						
-						comp:Lock()
-                        oldName = seq.FullPath
-                        len = renderEnd - renderStart + 1 -- add extra frame
-                        for i = 1, len do
-                            padding = string.format("%04d", renderStart + i) 
-                            newName = seq.Path .. seq.CleanName .. padding .. seq.Extension
-							if not bmd.fileexists(newName) then
-                            	CopyFile(oldName, newName)
+							string.gsub(seq.Name, "^(.-)(%d+)$", function(name, SNum)
+								seq.CleanName = name
+								seq.SNum = SNum
+							end)
+							
+							if seq.SNum then
+								seq.Number = tonumber(seq.SNum)
+								seq.Padding = string.len(seq.SNum)
+							else
+								seq.SNum = ""
+								seq.CleanName = seq.Name
 							end
-                        end
-						comp:Unlock()
+							
+							if seq.Extension == nil then
+								seq.Extension = ""
+							end
+							return seq 
+						end
+
+						function sleep (a) 
+							local sec = tonumber(os.clock() + a); 
+							while (os.clock() < sec) do 
+							end 
+						end
 						
-						-- Dialog "Do you want to reset your trimming..." should appear here
-						ldr.Clip[0] = loaderClip
+						local function CreateCleanPass(tool)
+							local renderStart = comp:GetAttrs().COMPN_RenderStart
+							local renderEnd = comp:GetAttrs().COMPN_RenderEnd
+							tool.Render = 0
+
+							comp.CurrentTime = renderStart
+							
+							comp:SetAttrs({COMPN_CurrentTime = renderStart}) 
+							comp:SetAttrs({COMPN_RenderEnd = renderStart + 1})
+							
+							fusion.CacheManager:Purge()
+							tool.SaveFrames = "HiQInteractive"
+							comp:Loop(false)
+							comp:Play()
+							sleep(2)
+							tool.SaveFrames = "Full"
+							comp:Stop()
+							print("Rendered a single clean plate file")
+							comp:SetAttrs({COMPN_RenderEnd = renderEnd})
+							
+							local svr = tool:GetChildrenList(false, "Saver")[1]
+							saverClip = svr.Clip[0]
+							seq = ParseFilename(saverClip)
+							
+							local ldr = tool:GetChildrenList(false, "Loader")[1]
+							
+							-- missing frames to color
+							ldr.MissingFrames[0] = 2
+							
+							padding = string.format("%04d", renderStart)
+							loaderClip = seq.Path .. seq.CleanName .. padding .. seq.Extension
+							print("Clip Parsed and Loaded: ".. loaderClip)
+							ldr.Loop[0] = 0
+							tool.Depth[0] = 5
+							
+							seq = ParseFilename(comp:MapPath(loaderClip))
+							
+							comp:Lock()
+							oldName = seq.FullPath
+							len = renderEnd - renderStart + 1 -- add extra frame
+							for i = 1, len do
+								padding = string.format("%04d", renderStart + i) 
+								newName = seq.Path .. seq.CleanName .. padding .. seq.Extension
+								if not bmd.fileexists(newName) then
+									CopyFile(oldName, newName)
+								end
+							end
+							comp:Unlock()
+							
+							-- Dialog "Do you want to reset your trimming..." should appear here
+							ldr.Clip[0] = loaderClip
+							
+							print("Clean Pass STMap files created: ".. loaderClip)
+							comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED] 
+							comp:Loop(true)
+						end
 						
-                        print("Clean Pass STMap files created: ".. loaderClip)
-                        comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED] 
-						comp:Loop(true)
-                    end
-					
-                    local function check_comp()
-						if fu:GetResolve() then
-							print("This tool is currently tested with Fusion Studio.")
+						local function check_comp()
+							if fu:GetResolve() then
+								print("This tool is currently tested with Fusion Studio.")
+								return true
+							elseif comp:GetAttrs('COMPS_FileName') == '' then
+								print('[VectorWarp] Please save the composition')
+								d = {}
+								d[1] = {"Warning", Name = "", "Text", ReadOnly = true, Lines = 2, Wrap = false, Default = "Please, save the comp to proceed"}
+								ask = comp:AskUser("Warning", d) 
+								if ask then
+									comp:SaveAs()
+								end
+								return ask
+							end
 							return true
-                        elseif comp:GetAttrs('COMPS_FileName') == '' then
-                            print('[VectorWarp] Please save the composition')
-                            d = {}
-                            d[1] = {"Warning", Name = "", "Text", ReadOnly = true, Lines = 2, Wrap = false, Default = "Please, save the comp to proceed"}
-                            ask = comp:AskUser("Warning", d) 
-                            if ask then
-                                comp:SaveAs()
-                            end
-							return ask
-                        end
-						return true
-                    end
-
-					local function MoveLoader(ldr)
-						if ldr.ID ~= "Loader" then
-							return nil
 						end
-						globalStart = comp:GetAttrs().COMPN_GlobalStart
-						inPoint = comp:GetAttrs().COMPN_RenderStart
-						comp:StartUndo('Move Loader')
-						
-						clipName = ldr.Clip[1]
-						
-						if inPoint == globalStart then
-							print("Render IN and Comp Global Start are the same. Trying to parse the loader filename to find the first frame")
-							if clipName == "" then
-								print("Clip Name is empty. Loader not moved")
-								return
+
+						local function MoveLoader(ldr)
+							if ldr.ID ~= "Loader" then
+								return nil
 							end
-							local seq = ParseFilename(clipName)
-							inPoint = seq.Number
+							globalStart = comp:GetAttrs().COMPN_GlobalStart
+							inPoint = comp:GetAttrs().COMPN_RenderStart
+							comp:StartUndo('Move Loader')
+							
+							clipName = ldr.Clip[1]
+							
+							if inPoint == globalStart then
+								print("Render IN and Comp Global Start are the same. Trying to parse the loader filename to find the first frame")
+								if clipName == "" then
+									print("Clip Name is empty. Loader not moved")
+									return
+								end
+								local seq = ParseFilename(clipName)
+								inPoint = seq.Number
+							end
+							bmd.MoveClip(ldr, globalStart, tonumber(inPoint))
+							print("New Loader IN point: " .. inPoint)
+							comp:EndUndo()
+							ldr.HoldFirstFrame[0] = 0
+							ldr.HoldLastFrame[0] = 0
 						end
-						bmd.MoveClip(ldr, globalStart, tonumber(inPoint))
-						print("New Loader IN point: " .. inPoint)
-						comp:EndUndo()
-						ldr.HoldFirstFrame[0] = 0
-						ldr.HoldLastFrame[0] = 0
-					end
 
-                    if not tool then
-                        tool = comp.ActiveTool
-                    end
-					
-                    if check_comp() then
-						win_utf_module = "win-125x"
-						utf_module_loaded, module = pcall(require, win_utf_module)
-						if utf_module_loaded then
-							codepage_settings = module.codepage
-							print("Current codepage win-125x settings: " .. codepage_settings)
-							require("win-125x")
-							print('Module ' .. win_utf_module .. ' found and loaded')
+						if not tool then
+							tool = comp.ActiveTool
 						end
-						CreateCleanPass(tool)
-						local ldr = tool:GetChildrenList(false, "Loader")[1]
+						
+						if check_comp() then
+							win_utf_module = "win-125x"
+							utf_module_loaded, module = pcall(require, win_utf_module)
+							if utf_module_loaded then
+								codepage_settings = module.codepage
+								print("Current codepage win-125x settings: " .. codepage_settings)
+								require("win-125x")
+								print('Module ' .. win_utf_module .. ' found and loaded')
+							end
+							CreateCleanPass(tool)
+							local ldr = tool:GetChildrenList(false, "Loader")[1]
 
-						MoveLoader(ldr)
-						print("[Done] Now press Analyze button")
+							MoveLoader(ldr)
+							print("[Done] Now press Analyze button")
 
-					end
-					
-                    ]],
+						end
+						
+					]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
 					INP_MinAllowed = -1000000,
@@ -1270,7 +1269,7 @@ QUICK GUIDE:
 							
 							RenderForward()
 							
-							]],
+						]],
 						INP_MaxScale = 1,
 						INP_MinScale = 0,
 						INP_MinAllowed = -1000000,
@@ -1279,6 +1278,7 @@ QUICK GUIDE:
 						ICD_Width = 0.5,
 						LINKS_Name = "Analyze Forward"
 						},
+					
 					AnalyzeVectors = {
 						INP_MaxAllowed = 1000000,
 						INP_Integer = false,
