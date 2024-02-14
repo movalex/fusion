@@ -1,0 +1,337 @@
+{
+	Tools = ordered() {
+		ColorAnalyzerMacro = MacroOperator {
+			CtrlWZoom = false,
+			Inputs = ordered() {
+				Proxy = InstanceInput {
+					SourceOp = "Proxy",
+					Source = "Proxy",
+					Default = 1,
+				},
+				Evaluation = InstanceInput {
+					SourceOp = "COLOR_PROBE1",
+					Source = "Evaluation",
+					Default = 1,
+				},
+				Red = InstanceInput {
+					SourceOp = "Analyze",
+					Source = "Red",
+					Name = "Color",
+					ControlGroup = 1,
+					Page = "Controls",
+				},
+				Green = InstanceInput {
+					SourceOp = "Analyze",
+					Source = "Green",
+					ControlGroup = 1,
+					Page = "Controls",
+				},
+				Blue = InstanceInput {
+					SourceOp = "Analyze",
+					Source = "Blue",
+					ControlGroup = 1,
+					Page = "Controls",
+				},
+				Analyze = InstanceInput {
+					SourceOp = "Analyze",
+					Source = "Analyze",
+					Page = "Controls",
+				},
+				Width = InstanceInput {
+					SourceOp = "Sample",
+					Source = "Width",
+					Default = 0.5,
+				},
+				Height = InstanceInput {
+					SourceOp = "Sample",
+					Source = "Height",
+					Default = 0.5,
+				},
+				Center = InstanceInput {
+					SourceOp = "Sample",
+					Source = "Center",
+				},
+				MainInput1 = InstanceInput {
+					SourceOp = "PipeRouter2",
+					Source = "Input",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Dissolve",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Pos = { 1310, 260 },
+				Flags = {
+					Expanded = false,
+					AllowPan = false,
+					ConnectedSnap = true,
+					AutoSnap = true,
+					AspectPics = false,
+					ShowInstance = false,
+					Thumbnails = false,
+					RemoveRouters = true
+				},
+				Size = { 313.626, 302.536, 63, 24.2424 },
+				Direction = "Vertical",
+				PipeStyle = "Direct",
+				Scale = 1,
+				Offset = { 2, 0 }
+			},
+			Tools = ordered() {
+				Analyze = ChangeDepth {
+					Inputs = {
+						Depth = Input { Value = 3, },
+						Input = Input {
+							SourceOp = "Proxy",
+							Source = "Output",
+						},
+						Red = Input {
+							SourceOp = "COLOR_PROBE1",
+							Source = "Red",
+						},
+						Green = Input {
+							SourceOp = "COLOR_PROBE1",
+							Source = "Green",
+						},
+						Blue = Input {
+							SourceOp = "COLOR_PROBE1",
+							Source = "Blue",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 88.6194, 161.229 } }
+				},
+				Proxy = Scale {
+					Inputs = {
+						XSize = Input { Expression = "1.0/Proxy", },
+						Edges = Input { Value = 0, },
+						HiQOnly = Input { Value = 0, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						FilterMethod = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "Crop",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 88.6194, 109.045 } },
+					UserControls = ordered() {
+
+					}
+				},
+				Crop = Crop {
+					Inputs = {
+						XOffset = Input {
+							Value = 273,
+							Expression = "Sample.Center.X*(Crop.Input.OriginalWidth)-XSize/2",
+						},
+						YOffset = Input {
+							Value = 98,
+							Expression = "Sample.Center.Y*(Crop.Input.OriginalHeight)-YSize/2",
+						},
+						XSize = Input {
+							Value = 2048,
+							Expression = "Crop.Input.OriginalWidth*Sample.Width",
+						},
+						YSize = Input {
+							Value = 1080,
+							Expression = "Crop.Input.OriginalHeight*Sample.Height",
+						},
+						Input = Input {
+							SourceOp = "PipeRouter2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 88.6194, 60.974 } },
+				},
+				Sample = RectangleMask {
+					Inputs = {
+						Filter = Input { Value = FuID { "Box" }, },
+						OutputSize = Input { Value = FuID { "Custom" }, },
+						MaskWidth = Input {
+							Value = 1920,
+							Expression = "Crop.Input.OriginalWidth",
+						},
+						MaskHeight = Input {
+							Value = 1080,
+							Expression = "Crop.Input.OriginalHeight",
+						},
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						CornerRadius = Input { Expression = "0.0", },
+						Angle = Input { Expression = "0.0", },
+					},
+					ViewInfo = OperatorInfo { Pos = { 6.354, 33.7288 } },
+				},
+				Dissolve = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					Inputs = {
+						Background = Input {
+							SourceOp = "Analyze",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "PipeRouter2",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 88.6194, 208.065 } },
+				},
+				PipeRouter2 = PipeRouter {
+					CtrlWShown = false,
+					ViewInfo = PipeRouterInfo { Pos = { 178.577, 60.974 } },
+				},
+				COLOR_PROBE1 = Probe {
+					CtrlWZoom = false,
+					Inputs = {
+						ImageToProbe = Input {
+							SourceOp = "Proxy",
+							Source = "Output",
+						},
+						Channel = Input { Value = 4, },
+						ProbeRectangle = Input { Value = 1, },
+						Width = Input { Value = 0.5, },
+						Height = Input { Value = 0.5, }
+					},
+					UserControls = ordered() {
+						Position = {
+							INPID_PreviewControl = "",
+							IC_Visible = false,
+						},
+						Width = {
+							INPID_PreviewControl = "",
+							IC_Visible = false,
+						},
+						Height = {
+							INPID_PreviewControl = "",
+							IC_Visible = false,
+						},					
+					}
+				}
+			},
+			UserControls = ordered() {
+				Hidden = ControlPage {
+					CT_Visible = false,
+					CTID_DIB_ID = "Icons.Tools.Tabs.Matte",
+					CTS_FullName = "Tooltip for Page1"
+				},
+				Red = {
+					INP_Integer = false,
+					INPID_InputControl = "ColorControl",
+					CLRC_ColorSpace = "HSV",
+					IC_ControlGroup = 1,
+					CLRC_ShowWheel = false,
+					CLRC_NoPick = true,
+					LINKID_DataType = "Number",
+					IC_ControlID = 0,
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Color"
+				},
+				Green = {
+					INP_Integer = false,
+					INPID_InputControl = "ColorControl",
+					CLRC_ColorSpace = "HSV",
+					IC_ControlGroup = 1,
+					CLRC_ShowWheel = false,
+					LINKID_DataType = "Number",
+					IC_ControlID = 1,
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Green"
+				},
+				Blue = {
+					INP_Integer = false,
+					INPID_InputControl = "ColorControl",
+					CLRC_ColorSpace = "HSV",
+					IC_ControlGroup = 1,
+					CLRC_ShowWheel = false,
+					LINKID_DataType = "Number",
+					IC_ControlID = 2,
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Blue"
+				},
+				sep0 = {
+					INPID_InputControl = "SeparatorControl",
+					ICS_ControlPage = "Controls",
+				},
+				SampleControl = {
+					{ CCS_AddString = "All" },
+					{ CCS_AddString = "Half" },
+					{ CCS_AddString = "Third" },
+					{ CCS_AddString = "Quarter" },
+					{ CCS_AddString = "Fifth" },
+					INP_MinScale = 1,
+					INP_Integer = false,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "ComboControl",
+					CC_LabelPosition = "Horizontal",
+					INP_MaxScale = 5,
+					LINKS_Name = "Sample"
+				},
+				Proxy = {
+					INP_MaxAllowed = 4,
+					INP_Integer = true,
+					INPID_InputControl = "SliderControl",
+					INP_MaxScale = 4,
+					INP_Default = 1,
+					INP_MinScale = 1,
+					INP_MinAllowed = 1,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Proxy"
+				},
+				Center = {
+					LINKS_Name = "Center",
+					LINKID_DataType = "Point",
+					INPID_InputControl = "OffsetControl",
+					INPID_PreviewControl = "CrosshairControl",
+					CHC_Style = "NormalCross",
+					ICS_ControlPage = "Controls",
+				},
+				Evaluation = {
+					LINKS_Name = "Evaluation",
+					LINKID_DataType = "Number",
+					INPID_InputControl = "MultiButtonControl",
+					INP_Integer = false,
+					INP_MinScale = 0,
+					INP_MaxScale = 1,
+					INP_MinAllowed = -1000000,
+					INP_MaxAllowed = 1000000,
+					{ MBTNC_AddButton = "Average" },
+					{ MBTNC_AddButton = "Minimum" },
+					{ MBTNC_AddButton = "Maximum" },
+					MBTNC_ShowBasicButton = true,
+					MBTNC_ShowToolTip = true,
+					MBTNC_ShowName = true,
+					MBTNC_StretchToFit = true,
+					ICS_ControlPage = "Controls",
+				},
+				sep1 = {
+					INPID_InputControl = "SeparatorControl",
+					ICS_ControlPage = "Controls",
+				},
+				AnalyzeButton = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = "@scripts:/Utility/BakeColors.lua",
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 1,
+					LINKS_Name = "Bake Probe Keyframes"
+				},
+				sep2 = {
+					INPID_InputControl = "SeparatorControl",
+					ICS_ControlPage = "Controls",
+				},
+			}
+		},
+	},
+	ActiveTool = "ColorAnalyzerMacro"
+}
