@@ -47,7 +47,7 @@ def get_timeline_and_gallery(resolve):
     return timeline, gallery
 
 
-class BaseDialog:
+class BaseUI:
     def __init__(self, fusion, window_title, geometry, id="DefaultID"):
         self.fusion = fusion
         print(fusion)
@@ -84,7 +84,7 @@ class BaseDialog:
         self.disp.ExitLoop()
 
 
-class ConfirmationDialog(BaseDialog):
+class ConfirmationDialog(BaseUI):
     def __init__(self, fusion, title=None, request=None):
         self.title = "Confirmation Dialog" if title is None else title
         self.request = request
@@ -154,18 +154,18 @@ class ConfirmationDialog(BaseDialog):
         ]
 
 
-class RequestDir(BaseDialog):
+class BaseRequestDialog(BaseUI):
     def __init__(self, fusion, title=None, target=None):
         self.title = "Choose Directory" if title is None else title
         geometry = [800, 700, 630, 50]
         self.target = target or Path("~/Desktop").expanduser().absolute()
-        super().__init__(fusion, self.title, geometry, id="RequestFolderDialog")
+        super().__init__(fusion, self.title, geometry, id="RequestDialog")
         self.itm = self.win.GetItems()
         self.setup_callbacks()
 
     def setup_callbacks(self):
-        self.win.On.FolderButton.Clicked = self.request_folder
-        self.win.On.RequestFolderDialog.Close = self.close
+        self.win.On.RequestButton.Clicked = self.request_action
+        self.win.On.RequestDialog.Close = self.close
         self.win.On.SaveButton.Clicked = self.close
 
     def layout(self):
@@ -182,19 +182,35 @@ class RequestDir(BaseDialog):
                     }
                 ),
                 self.ui.Button(
-                    {"Weight": 0.2, "ID": "FolderButton", "Text": "Browse..."}
+                    {"Weight": 0.2, "ID": "RequestButton", "Text": "Browse..."}
                 ),
                 self.ui.Button({"Weight": 0.1, "ID": "SaveButton", "Text": "Save"}),
             ]
         )
 
-    def request_folder(self, ev):
-        target_folder = self.fusion.RequestDir()
-        self.itm["FolderLine"].Text = target_folder
+    def request_action(self, ev):
+        target = self.get_request_action()
+        self.itm["FolderLine"].Text = target
 
     def run(self):
         self.show()
         return self.itm["FolderLine"].Text
+
+
+class RequestDir(BaseRequestDialog):
+    def __init__(self, fusion, title=None, target=None):
+        super().__init__(fusion, title, target)
+
+    def get_request_action(self):
+        return self.fusion.RequestDir()
+
+
+class RequestFile(BaseRequestDialog):
+    def __init__(self, fusion, title=None, target=None):
+        super().__init__(fusion, title, target)
+
+    def get_request_action(self):
+        return self.fusion.RequestFile()
 
 
 if __name__ == "__main__":
