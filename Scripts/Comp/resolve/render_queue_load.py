@@ -65,6 +65,9 @@ class LoadQueueUI(BaseUI):
         sele.timeline_name = timeline_name
         self.setup_callbacks()
         self.itm = self.win.GetItems()
+        self.fill_timelines()
+        self.fill_custom_presets()
+
 
     def setup_callbacks(self):
         self.win.On.RunButton.Clicked = self.process_queue
@@ -76,6 +79,17 @@ class LoadQueueUI(BaseUI):
         timelines = get_timelines()
         for tl in timelines.keys():
             self.itm["TimelinesCombo"].AddItem(tl)
+
+    def fill_custom_presets(self):
+        preset_list = project.GetRenderPresetList()
+        cut_element = "Pro Tools"
+        if cut_element in preset_list:
+            index = preset_list.index(cut_element) + 1
+            preset_list = preset_list[index:]
+
+        for preset in preset_list:
+            self.itm["PresetsCombo"].AddItem(preset)
+
 
     def layout(self):
         return [
@@ -122,6 +136,7 @@ class LoadQueueUI(BaseUI):
                         [
                             ui.CheckBox(
                                 {
+                                    "Weight": 0,
                                     "ID": "CheckBox",
                                     "Text": "Override Timeline",
                                     "AlignmentFlag": "AlignRight",
@@ -134,19 +149,21 @@ class LoadQueueUI(BaseUI):
                             ui.Label(
                                 {
                                     "ID": "FileLabel",
-                                    "Text": queue_path or "Queue File Not Loaded!",
+                                    "Text": Path(queue_path).name or "Queue File Not Loaded!",
                                     "AlignmentFlag": "AlignRight",
                                 }
                             ),
-                            ui.Button(
-                                {"Weight": 0.1, "ID": "LoadButton", "Text": "Load"}
-                            ),
+                        ]
+                    ),
+                    ui.HGroup(
+                        [
+                            ui.Button({"ID": "LoadButton", "Text": "Load Queue File"}),
                         ]
                     ),
                     ui.HGroup(
                         {"Alignment": {"AlignHRight": True}, "Weight": 0},
                         [
-                            ui.Button({"ID": "RunButton", "Text": "Import Queue"}),
+                            ui.Button({"ID": "RunButton", "Text": "Build Render Queue"}),
                             ui.Button({"ID": "CancelButton", "Text": "Cancel"}),
                         ],
                     ),
@@ -159,7 +176,7 @@ class LoadQueueUI(BaseUI):
         if not queue_file.exists():
             print("Queue File does not exist!")
             return
-        itm["FileLabel"].Text = queue_file.name
+        self.itm["FileLabel"].Text = queue_file.name
         app.SetData("RenderQueueFilePath", queue_file.as_posix())
 
     def process_queue(self, ev):
@@ -178,7 +195,7 @@ class LoadQueueUI(BaseUI):
         disp.ExitLoop()
 
 
-def fill_custom_presets(itm) -> list:
+def fill_custom_presets(itm):
     preset_list = project.GetRenderPresetList()
     cut_element = "Pro Tools"
     if cut_element in preset_list:
@@ -271,7 +288,7 @@ def show_ui(timlelines: list, timeline_name: str):
                     ui.HGroup(
                         {"Alignment": {"AlignHRight": True}, "Weight": 0},
                         [
-                            ui.Button({"ID": "RunButton", "Text": "Build"}),
+                            ui.Button({"ID": "RunButton", "Text": "Build Render Queue"}),
                             ui.Button({"ID": "CancelButton", "Text": "Cancel"}),
                         ],
                     ),
