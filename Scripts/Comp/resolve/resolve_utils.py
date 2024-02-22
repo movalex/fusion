@@ -50,7 +50,6 @@ def get_timeline_and_gallery(resolve):
 class BaseUI:
     def __init__(self, fusion, window_title, geometry, id="DefaultID"):
         self.fusion = fusion
-        print(fusion)
         self.ui = fusion.UIManager
         self.id = id
         self.disp = bmd.UIDispatcher(self.ui)
@@ -85,12 +84,27 @@ class BaseUI:
 
 
 class ConfirmationDialog(BaseUI):
-    def __init__(self, fusion, title=None, request=None):
+    def __init__(self, fusion, title=None, request=None, info=[]):
         self.title = "Confirmation Dialog" if title is None else title
         self.request = request
-        geometry = [800, 600, 550, 130]
-        super().__init__(fusion, self.title, geometry, id="ConfirmationDialog")
+        self.info = info
         self.confirmed = False
+
+        # Truncate the info list
+        if len(self.info) > 10:
+            self.info = self.info[:10]
+            print("Confirmation dialogue is truncated to first 10 elements")
+        # Convert info to HTML content
+        self.info_html = self.info_to_html(self.info)
+        # Adjust the height based on the number of info
+        info_height_per_line = 20  # Estimated height per line
+
+        additional_height = len(self.info) * info_height_per_line
+        base_width, base_height, win_x, win_y = 800, 600, 450, 130
+        adjusted_height = win_y + additional_height # Add some padding for aesthetics
+
+        geometry = [base_width, base_height, win_x, adjusted_height]
+        super().__init__(fusion, self.title, geometry, id="ConfirmationDialog")
         self.setup_callbacks()
 
     def setup_callbacks(self):
@@ -106,6 +120,16 @@ class ConfirmationDialog(BaseUI):
         self.confirmed = True
         self.disp.ExitLoop()
 
+    def info_to_html(self, info: list):
+        max_length = 80  # Maximum allowed length for a line
+        html_content = ""
+        for line in info:
+            if len(line) > max_length:
+                # Notify developer if the text is too large
+                print(f"Warning: Subtitle length exceeds the maximum allowed ({max_length} characters): {line}")
+            html_content += f"<p>{line}</p>"
+        return html_content
+
     def layout(self):
         return [
             self.ui.VGroup(
@@ -113,7 +137,7 @@ class ConfirmationDialog(BaseUI):
                     self.ui.Label(
                         {
                             "ID": "TitleLabel",
-                            "Text": f"<H2>{self.title}<H2/>",
+                            "Text": f"<H2>{self.title}</H2>{self.info_html}",
                             "Weight": 0.5,
                             "Alignment": {
                                 "AlignHCenter": True,
