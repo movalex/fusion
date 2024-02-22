@@ -11,7 +11,7 @@ project = projectManager.GetCurrentProject()
 
 
 def save_render_queue(folder_path):
-    queue_file = Path(folder_path, "render_queue.json")
+    queue_file = Path(folder_path, f"render_queue_{project.GetName()}_{datetime.now().date()}.json")
     render_job_list = project.GetRenderJobList()
     if not render_job_list:
         print("Render Queue list is empty, cancelling")
