@@ -9,9 +9,10 @@ projectManager = resolve.GetProjectManager()
 project = projectManager.GetCurrentProject()
 
 
-def get_render_list(file_path):
-    if not file_path.exists():
-        print("Export the queue file with 'save_render_queue' function!")
+def get_render_list():
+    queue_file = app.GetData("RenderQueueFilePath")
+    if not Path(queue_file).exists():
+        print("Export the queue file!")
         return
     with open(queue_file, "r", encoding="utf-8") as file:
         return json.load(file)
@@ -26,9 +27,8 @@ def get_timelines():
     return current_timelines
 
 
-def build_queue(preset_name, timeline_name, timeline_name_override):
-    render_job_list = get_render_list()
-    if not render_job_list:
+def build_queue(preset_name, timeline_name, timeline_name_override, job_list):
+    if not job_list:
         print(f"Queue file not found!")
         return
     render_settings = {}
@@ -36,7 +36,7 @@ def build_queue(preset_name, timeline_name, timeline_name_override):
 
     current_timelines = get_timelines()
 
-    for n, job in enumerate(render_job_list):
+    for n, job in enumerate(job_list):
         if not timeline_name_override:
             timeline_name = job["TimelineName"]
         timeline_idx = current_timelines.get(timeline_name)
@@ -46,28 +46,36 @@ def build_queue(preset_name, timeline_name, timeline_name_override):
         timeline = project.GetTimelineByIndex(timeline_idx)
         project.SetCurrentTimeline(timeline)
         width = job["FormatWidth"]
-        file_name = job.get("OutputFilename", f"OutputFile_{n}")
+        file_name = job.get("OutputFilename", f"DefaultOutputFileName_{n:03}")
+        file_stem = Path(file_name).stem
         render_job = project.AddRenderJob()
-        print(f"Setting preset: {preset_name}")
+        print(f"Setting preset: {preset_name} for {file_stem}")
         project.LoadRenderPreset(preset_name)
         render_settings["MarkIn"] = job["MarkIn"]
         render_settings["MarkOut"] = job["MarkOut"]
-        render_settings["CustomName"] = file_name
+        render_settings["CustomName"] = file_stem
         project.SetRenderSettings(render_settings)
 
 
 class LoadQueueUI(BaseUI):
     def __init__(self, fusion, timeline_name, title=None):
         self.title = "Main Window" if title is None else title
-        geometry = ([800, 600, 450, 120],)
+        geometry = ([800, 600, 450, 180],)
         super().__init__(fusion, title, geometry, id="LoadQueueWindow")
         sele.timeline_name = timeline_name
         self.setup_callbacks()
+        self.itm = self.win.GetItems()
 
     def setup_callbacks(self):
-        self.win.On.RunButton.Clicked = import_queue
-        self.win.On.CancelButton.Clicked = cancel
-        self.win.On.RestoreRenderQueue.Close = cancel
+        self.win.On.RunButton.Clicked = self.process_queue
+        self.win.On.LoadButton.Clicked = self.load_queue_file
+        self.win.On.CancelButton.Clicked = self.close
+        self.win.On.RestoreRenderQueue.Close = self.close
+
+    def fill_timelines(self):
+        timelines = get_timelines()
+        for tl in timelines.keys():
+            self.itm["TimelinesCombo"].AddItem(tl)
 
     def layout(self):
         return [
@@ -99,6 +107,7 @@ class LoadQueueUI(BaseUI):
                                 {
                                     "ID": "TimelinesCombo",
                                     "Text": "Choose Timeline:",
+                                    "Enabled": False,
                                 }
                             ),
                             ui.ComboBox(
@@ -113,7 +122,6 @@ class LoadQueueUI(BaseUI):
                         [
                             ui.CheckBox(
                                 {
-                                    "Weight": 0,
                                     "ID": "CheckBox",
                                     "Text": "Override Timeline",
                                     "AlignmentFlag": "AlignRight",
@@ -125,9 +133,8 @@ class LoadQueueUI(BaseUI):
                         [
                             ui.Label(
                                 {
-                                    "Weight": 0.9,
                                     "ID": "FileLabel",
-                                    "Text": "",
+                                    "Text": queue_path or "Queue File Not Loaded!",
                                     "AlignmentFlag": "AlignRight",
                                 }
                             ),
@@ -147,6 +154,30 @@ class LoadQueueUI(BaseUI):
             ),
         ]
 
+    def load_queue_file(self, ev):
+        queue_file = Path(fu.RequestFile())
+        if not queue_file.exists():
+            print("Queue File does not exist!")
+            return
+        itm["FileLabel"].Text = queue_file.name
+        app.SetData("RenderQueueFilePath", queue_file.as_posix())
+
+    def process_queue(self, ev):
+        dialog = ConfirmationDialog(
+            fusion=fu, title="Do you want to import the render queue?"
+        )
+        confirmed = dialog.run()
+        if not confirmed:
+            print("Cancelled!")
+            return
+
+        override_timeline = itm["CheckBox"].Checked
+        preset_name = itm["PresetsCombo"].CurrentText
+        timeline_name = itm["TimelinesCombo"].CurrentText
+        build_queue(preset_name, timeline_name, override_timeline)
+        disp.ExitLoop()
+
+
 def fill_custom_presets(itm) -> list:
     preset_list = project.GetRenderPresetList()
     cut_element = "Pro Tools"
@@ -158,9 +189,8 @@ def fill_custom_presets(itm) -> list:
         itm["PresetsCombo"].AddItem(preset)
 
 
-
-
 def show_ui(timlelines: list, timeline_name: str):
+    queue_path = app.GetData("RenderQueueFilePath")
     ui = fu.UIManager
     disp = bmd.UIDispatcher(ui)
     win = disp.AddWindow(
@@ -168,7 +198,7 @@ def show_ui(timlelines: list, timeline_name: str):
             "ID": "RestoreRenderQueue",
             "TargetID": "RestoreRenderQueue",
             "WindowTitle": "Restore Render Queue",
-            "Geometry": [800, 600, 450, 150],
+            "Geometry": [800, 600, 450, 180],
         },
         [
             ui.VGroup(
@@ -199,6 +229,7 @@ def show_ui(timlelines: list, timeline_name: str):
                                 {
                                     "ID": "TimelinesCombo",
                                     "Text": "Choose Timeline:",
+                                    "Enabled": False,
                                 }
                             ),
                             ui.ComboBox(
@@ -226,7 +257,7 @@ def show_ui(timlelines: list, timeline_name: str):
                             ui.Label(
                                 {
                                     "ID": "FileLabel",
-                                    "Text": "",
+                                    "Text": Path(queue_path).name or "Queue File Not Loaded!",
                                     "AlignmentFlag": "AlignRight",
                                 }
                             ),
@@ -234,9 +265,7 @@ def show_ui(timlelines: list, timeline_name: str):
                     ),
                     ui.HGroup(
                         [
-                            ui.Button(
-                                {"ID": "LoadButton", "Text": "Load Queue File"}
-                            ),
+                            ui.Button({"ID": "LoadButton", "Text": "Load Queue File"}),
                         ]
                     ),
                     ui.HGroup(
@@ -262,34 +291,42 @@ def show_ui(timlelines: list, timeline_name: str):
     def cancel(ev):
         disp.ExitLoop()
 
-    def open_queue_file(ev):
+    def load_queue_file(ev):
         queue_file = Path(fu.RequestFile())
-        itm["FileLabel"].Text(queue_file.name)
-        return queue_file
-
-
         if not queue_file.exists():
             print("file not exists")
+            return
+        itm["FileLabel"].Text = queue_file.name
+        app.SetData("RenderQueueFilePath", queue_file.as_posix())
 
+    def toggle_timelines(ev):
+        itm["TimelinesCombo"].Enabled = itm["CheckBox"].Checked
 
-
-    def import_queue(ev):
+    def process_queue(ev):
+        override_timeline = itm["CheckBox"].Checked
+        preset_name = itm["PresetsCombo"].CurrentText
+        timeline_name = itm["TimelinesCombo"].CurrentText
+        render_job_list = get_render_list()
+        if not render_job_list:
+            return
         dialog = ConfirmationDialog(
-            fusion=fu, title="Do you want to import the render queue?"
+            fusion=fu,
+            title="Do you want to import the render queue?",
+            info=[
+                f"Preset selected: {preset_name}",
+                f"Total Jobs to be loaded: {len(render_job_list)}",
+            ],
         )
         confirmed = dialog.run()
         if not confirmed:
             print("Cancelled!")
             return
-
-        override_timeline = itm["CheckBox"].Checked
-        preset_name = itm["PresetsCombo"].CurrentText
-        timeline_name = itm["TimelinesCombo"].CurrentText
-        build_queue(preset_name, timeline_name, override_timeline)
+        build_queue(preset_name, timeline_name, override_timeline, render_job_list)
         disp.ExitLoop()
 
-    win.On.RunButton.Clicked = import_queue
-    win.On.LoadButton.Clicked = open_queue_file
+    win.On.CheckBox.Clicked = toggle_timelines
+    win.On.RunButton.Clicked = process_queue
+    win.On.LoadButton.Clicked = load_queue_file
     win.On.CancelButton.Clicked = cancel
     win.On.RestoreRenderQueue.Close = cancel
 
