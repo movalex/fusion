@@ -25,7 +25,6 @@
     
 """
 
-
 import sys
 from pathlib import Path
 
@@ -40,8 +39,9 @@ def cleanup_drx(folder: Path):
     print(
         "CLEANUP DRX is enabled, all .drx files in the stills location will be erased"
     )
+    fusion = get_fusion_module()
     dialog = ConfirmationDialog(
-        fu,
+        fusion,
         title="DRX files deletion!",
         request=f"Do you wish to delete all DRX files\nin'{folder}' folder?",
     )
@@ -68,11 +68,27 @@ def create_folder(folder_path: Path) -> None:
         raise
 
 
-def get_timeline_and_gallery(resolve):
-    project = resolve.GetProjectManager().GetCurrentProject()
+def get_project_manager(resolve):
+    return resolve.GetProjectManager()
+
+
+def get_current_project(resolve):
+    project_manager = get_project_manager(resolve)
+    project = project_manager.GetCurrentProject()
+    return project
+
+
+def get_current_timeline(resolve):
+    project = get_current_project(resolve)
     timeline = project.GetCurrentTimeline()
+    return timeline
+
+
+def get_gallery(resolve):
+    project_manager = get_project_manager(resolve)
+    project = project_manager.GetCurrentProject()
     gallery = project.GetGallery()
-    return timeline, gallery
+    return gallery
 
 
 class BaseUI:
@@ -129,7 +145,7 @@ class ConfirmationDialog(BaseUI):
 
         additional_height = len(self.info) * info_height_per_line
         base_width, base_height, win_x, win_y = 800, 600, 450, 130
-        adjusted_height = win_y + additional_height # Add some padding for aesthetics
+        adjusted_height = win_y + additional_height  # Add some padding for aesthetics
 
         geometry = [base_width, base_height, win_x, adjusted_height]
         super().__init__(fusion, self.title, geometry, id="ConfirmationDialog")
@@ -154,7 +170,9 @@ class ConfirmationDialog(BaseUI):
         for line in info:
             if len(line) > max_length:
                 # Notify developer if the text is too large
-                print(f"Warning: Subtitle length exceeds the maximum allowed ({max_length} characters): {line}")
+                print(
+                    f"Warning: Subtitle length exceeds the maximum allowed ({max_length} characters): {line}"
+                )
             html_content += f"<p>{line}</p>"
         return html_content
 
