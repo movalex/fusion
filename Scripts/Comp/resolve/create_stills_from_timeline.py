@@ -1,7 +1,8 @@
 from pathlib import Path
 from grab_still import get_still_album, get_target_folder
 from resolve_utils import (
-    get_timeline_and_gallery,
+    get_current_timeline,
+    get_gallery,
     ConfirmationDialog,
     create_folder,
     cleanup_drx,
@@ -16,20 +17,21 @@ from resolve_utils import (
 """
 
 STILL_FRAME_REF = 2
-STILL_ALBUM = "gal22"
+STILL_ALBUM = "Export"
 FORMAT = "png"
 DELETE_STILLS = True
-OPEN_EDIT_PAGE_AFTER_EXPORT = False
+OPEN_EDIT_PAGE_AFTER_EXPORT = True
 CLEANUP_DRX = True
 
 
-def post_processing(stills: list, still_album, target_folder=None):
+def post_processing(stills: list, still_album, gallery, target_folder=None):
     if DELETE_STILLS:
         still_album_name = gallery.GetAlbumName(still_album)
         print(
             f"Please note, that DELETE_STILLS is set to True, so new stills in '{still_album_name}' album will be erased"
         )
-        dialog = ConfirmationDialog(fu,
+        dialog = ConfirmationDialog(
+            fu,
             "Stills Deletion!",
             f"Do you want to delete stills\nin '{still_album_name}' album?",
         )
@@ -53,14 +55,17 @@ def grab_timeline_stills(delete_stills=False):
         print("This is a script for Davinci Resolve")
         return
 
-    timeline_name = timeline.GetName()
-    video_track_count = timeline.GetTrackCount("video")
+    gallery = get_gallery(resolve)
+
+    current_timeline = get_current_timeline(resolve)
+    timeline_name = current_timeline.GetName()
+    video_track_count = current_timeline.GetTrackCount("video")
 
     print(f"Found {video_track_count} tracks")
 
     still_album = get_still_album(gallery, STILL_ALBUM)
     still_album_name = gallery.GetAlbumName(still_album)
-    stills = timeline.GrabAllStills(STILL_FRAME_REF)
+    stills = current_timeline.GrabAllStills(STILL_FRAME_REF)
 
     if len(stills) == 0:
         print("No stills saved")
@@ -77,9 +82,8 @@ def grab_timeline_stills(delete_stills=False):
     print(f"Saving stills to {target_folder}")
 
     still_album.ExportStills(stills, target_folder.as_posix(), timeline_name, FORMAT)
-    post_processing(stills, still_album, target_folder)
+    post_processing(stills, still_album, gallery, target_folder)
 
 
 if __name__ == "__main__":
-    timeline, gallery = get_timeline_and_gallery(resolve)
     grab_timeline_stills()

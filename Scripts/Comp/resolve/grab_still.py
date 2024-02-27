@@ -1,14 +1,3 @@
-import os
-from datetime import datetime
-from pathlib import Path
-from resolve_utils import (
-    RequestDir,
-    get_timeline_and_gallery,
-    create_folder,
-    cleanup_drx,
-)
-from typing import TypeVar
-
 """
     This is a Davinci Resolve script to save single still in predefined folder
 
@@ -35,8 +24,21 @@ from typing import TypeVar
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     
 """
-STILL_FRAME_REF = 1
-STILL_ALBUM = "Stills for Export"
+
+import os
+from datetime import datetime
+from pathlib import Path
+from resolve_utils import (
+    RequestDir,
+    get_gallery,
+    get_current_timeline,
+    create_folder,
+    cleanup_drx,
+)
+from typing import TypeVar
+
+STILL_FRAME_REF = 1  # 1 - First frame, 2 - Middle frame
+STILL_ALBUM = "Export"
 DELETE_STILLS = True
 OPEN_EDIT_PAGE_AFTER_EXPORT = False
 CLEANUP_DRX = True
@@ -102,10 +104,12 @@ def grab_still(album_name: str):
     if not fu.GetResolve():
         print("This is a script for Davinci Resolve")
         return
-    current_clip_name = timeline.GetCurrentVideoItem().GetName()
-    timeline_name = timeline.GetName()
+    current_timeline = get_current_timeline(resolve)
+    current_clip_name = current_timeline.GetCurrentVideoItem().GetName()
+    timeline_name = current_timeline.GetName()
 
     file_prefix = get_file_prefix(current_clip_name, timeline_name)
+    gallery = get_gallery(resolve)
 
     still_album = get_still_album(gallery, STILL_ALBUM)
 
@@ -119,7 +123,7 @@ def grab_still(album_name: str):
     target_folder = Path(target_folder, still_album_name)
     if not target_folder.exists():
         create_folder(target_folder)
-    still = timeline.GrabStill(STILL_FRAME_REF)
+    still = current_timeline.GrabStill(STILL_FRAME_REF)
     still_album.SetLabel(still, current_clip_name)
     still_album.ExportStills([still], target_folder.as_posix(), file_prefix, "png")
     print(f"Still is saved to {target_folder}")
@@ -127,5 +131,4 @@ def grab_still(album_name: str):
 
 
 if __name__ == "__main__":
-    timeline, gallery = get_timeline_and_gallery(resolve)
     grab_still(album_name=STILL_ALBUM)
