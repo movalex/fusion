@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import re
 import sys
 import os
@@ -47,7 +46,7 @@ class BBCodeRenderer(BaseRenderer):
                 bbcode += self.parse_element_to_bbcode(child)
             return bbcode + "\n"
 
-        elif element["type"] == "list":            
+        elif element["type"] == "list":
             # Check if the list is ordered by looking at the 'ordered' attribute
             list_tag = "list=1" if element["attrs"].get("ordered") else "list"
 
@@ -78,57 +77,59 @@ class BBCodeRenderer(BaseRenderer):
                 bbcode += self.parse_element_to_bbcode(child)
             bbcode += "[/url]"
             return bbcode
-        
+
         elif element["type"] == "image":
             url = element["attrs"]["url"]
             bbcode = f"[img]{url}[/img]"
             return bbcode
-        
+
         elif element["type"] == "block_quote":
             bbcode = "[quote]"
             for child in element["children"]:
                 bbcode += self.parse_element_to_bbcode(child)
             bbcode += "[/quote]\n"
             return bbcode
-        
+
         elif element["type"] == "codespan":
-            
             bbcode = "[c]" + element["raw"] + "[/c]"
             return bbcode
-        
+
         elif element["type"] == "block_code":
-            
             bbcode = "\n[code]" + element["raw"] + "[/code]"
             return bbcode
-        
+
         elif element["type"] == "emphasis":
             bbcode = "[i]"
             for child in element["children"]:
                 bbcode += self.parse_element_to_bbcode(child)
             bbcode += "[/i]"
             return bbcode
-        
+
         elif element["type"] == "strong":
             bbcode = "[b]"
             for child in element["children"]:
                 bbcode += self.parse_element_to_bbcode(child)
             bbcode += "[/b]"
             return bbcode
-        
+
         elif element["type"] == "double_emphasis":
             bbcode = "[b]"
             for child in element["children"]:
                 bbcode += self.parse_element_to_bbcode(child)
             bbcode += "[/b]"
             return bbcode
-        
+
         elif element["type"] == "text":
             return element["raw"]
+
         else:
             return ""
 
     def paragraph(self, text, state=None):
         return self.parse_element_to_bbcode(text)
+
+    def thematic_break(self, text, state=None):
+        return self.blank_line()
 
     def block_quote(self, text, state=None):
         return self.parse_element_to_bbcode(text)
@@ -139,7 +140,6 @@ class BBCodeRenderer(BaseRenderer):
         return f"[code]{raw_code}[/code]\n"
 
     def list(self, body, ordered, **attrs):
-
         return self.parse_element_to_bbcode(body)
 
     # Add more methods as needed to cover the Markdown features you use
