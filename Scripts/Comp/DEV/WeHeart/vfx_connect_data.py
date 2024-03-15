@@ -71,11 +71,11 @@ class ShowUI(BaseUI):
         comp.Execute(f"bmd.setclipboard('{output}')")
 
     def copy_nuke_path(self, ev):
-        clips = self.get_loader_clip()
-        clips = [clip.replace("00000000", r"%08d") for clip in clips]
-        output = ("\n").join(clips)
-        print(f"{output}\n")
-        comp.Execute(f"bmd.setclipboard('{output}')")
+        saver = comp.GetToolList(False, "Saver")[1]
+        clip = saver.Clip[1]
+        clip = clip.replace("00000000", r"%08d")
+        print(f"{clip}\n")
+        comp.Execute(f"bmd.setclipboard('{clip}')")
 
     def layout(self):
         ui = self.ui
