@@ -73,7 +73,7 @@ class ShowUI(BaseUI):
     def copy_nuke_path(self, ev):
         saver = comp.GetToolList(False, "Saver")[1]
         clip = saver.Clip[1]
-        clip = clip.replace("00000000", r"%08d")
+        clip = Path(clip.replace("00000000", r"%08d")).as_posix()
         print(f"{clip}\n")
         comp.Execute(f"bmd.setclipboard('{clip}')")
 
