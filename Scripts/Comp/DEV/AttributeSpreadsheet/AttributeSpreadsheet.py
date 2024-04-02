@@ -81,6 +81,9 @@
             -- fix edit filtered entries
             -- fix always on top option
             -- fix QT deprecation warnings
+        2024/04
+        v0.3.3
+            -- Logging info to stdout
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
@@ -113,11 +116,11 @@ import sys
 import logging
 from pprint import pprint
 
-__VERSION__ = 3.2
+__VERSION__ = 3.3
 __beta__ = False
 __license__ = "MIT"
 __copyright__ = """2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>
-2019-2023, Alexey Bogomolov <mail[AT]abogomolov.com>"""
+2019-2024, Alexey Bogomolov <mail[AT]abogomolov.com>"""
 
 
 PKG_REQUIRED = "PySide6"
@@ -133,10 +136,7 @@ LOAD_SELECTED_TOOLS_LIMIT = 10
 def compatible_python():
     """Only Python 3.6 or higher is supported"""
 
-    compatible = False
-    if sys.version_info.major == 3 and sys.version_info.minor >= 6:
-        compatible = True
-    return compatible
+    return sys.version_info.major == 3 and sys.version_info.minor >= 6
 
 
 def check_python_version():
@@ -165,7 +165,25 @@ def check_python_version():
 
 check_python_version()
 
-print("_____________________\nAttribute Spreadsheet version 0.{}".format(__VERSION__))
+print(f"_____________________\nAttribute Spreadsheet version 0.{__VERSION__}\n")
+
+
+def create_handler(stream, level, formatter, filter=None):
+    """
+    Create and configure a logging handler.
+
+    :param stream: The stream the handler will write to.
+    :param level: The minimum logging level of messages the handler will handle.
+    :param formatter: The formatter to use for log messages.
+    :param filter: An optional function to filter log messages.
+    :return: Configured logging.Handler object.
+    """
+    handler = logging.StreamHandler(stream=stream)
+    handler.setLevel(level)
+    handler.setFormatter(formatter)
+    if filter:
+        handler.addFilter(filter)
+    return handler
 
 
 def set_logging(level):
@@ -174,15 +192,36 @@ def set_logging(level):
         "info": logging.INFO,
         "warning": logging.WARNING,
         "warn": logging.WARN,
+        "error": logging.ERROR,
+        "critical": logging.CRITICAL,
     }
     logger = logging.getLogger()
-    handler = logging.StreamHandler()
-    handler.setFormatter(
-        logging.Formatter(f"%(levelname)s | [Attribute Spreadsheet] | %(message)s")
+    logger.setLevel(logging.DEBUG)  # Set the logger to the lowest level
+
+    # Common formatter for both handlers
+    formatter = logging.Formatter("%(levelname)s | [Attribute Spreadsheet] | %(message)s")
+
+    # Handler for stdout, with a filter for messages below WARNING level
+    stdout_handler = create_handler(
+        stream=sys.stdout,
+        level=logging.DEBUG,
+        formatter=formatter,
+        filter=lambda record: record.levelno < logging.WARNING,
     )
-    logger.addHandler(handler)
-    log_level = log_levels.get(level.lower()) or logging.INFO
+
+    # Handler for stderr, for WARNING level and above
+    stderr_handler = create_handler(
+        stream=sys.stderr,
+        level=logging.WARNING,
+        formatter=formatter,
+    )
+
+    # Reset the logger's handlers before adding new ones
+    logger.handlers = [stdout_handler, stderr_handler]
+
+    log_level = log_levels.get(level.lower(), logging.INFO)
     logger.setLevel(log_level)
+
     return logger
 
 
@@ -275,17 +314,12 @@ class FUIDComboDelegate(QItemDelegate):
     def createEditor(self, parent, option, index):
         combo = QComboBox(parent)
         combo.addItems(self.items)
-        self.connect(
-            combo,
-            SIGNAL("currentIndexChanged(int)"),
-            self,
-            SLOT("currentIndexChanged()"),
-        )
+        combo.currentIndexChanged.connect(lambda: self.commitData.emit(combo))
         return combo
 
     def setEditorData(self, editor, index):
         editor.blockSignals(True)
-        log.debug(index.model().data(index))
+        log.debug("Module data: ", index.model().data(index))
         editor.setCurrentIndex(self.items.index(str(index.model().data(index))))
         editor.setData("Domain")
         editor.blockSignals(False)
