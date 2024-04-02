@@ -1,0 +1,570 @@
+--[[--
+----------------------------------------------------------------------
+Copyright (c) 2023, Jacob Danell
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+----------------------------------------------------------------------
+
+Changelog:
+v2.0, 2023-10-03:
+* Init relese
+
+--]]
+--
+
+local ffi = require("ffi")
+
+local version = 2.1
+local oidnVersion = "2.1.0"
+local authorText = "v" .. version .. ". Created by Jacob Danell, Ember Light"
+local print_debug = false
+
+local oidn = nil
+local Use_default = nil
+
+FuRegisterClass("OidnDenoiser", CT_Tool, {
+    REGS_Name = "Oidn Denoiser",
+    REGS_OpIconString = "O2",
+    REGS_Category = "Color",
+    REGS_OpDescription = "Denoise raytraced 3D renders",
+    REGS_Company = "Ember Light",
+    REG_Version = version,
+    REG_Fuse_NoEdit = false,
+    REG_NoPreCalcProcess = true,
+    REG_Fuse_NoReload = false,
+    REG_SupportsDoD = false,
+})
+
+function Create()
+    InDevice = self:AddInput("Device", "Device", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "ComboControl",
+        INP_Default = 0,
+        INP_InitialNotify = true,
+        INP_DoNotifyChanged = true,
+        INP_Integer = false, -- We use this to check if we should use Default or not if wrong GPU is selected
+        { CCS_AddString = "Default" },
+        { CCS_AddString = "CPU" },
+        { CCS_AddString = "SYCL (Intel)" },
+        { CCS_AddString = "CUDA (Nvidia)" },
+        { CCS_AddString = "HIP (AMD)" },
+    })
+
+    InQuality = self:AddInput("Quality", "RenderQuality", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "ComboControl",
+        INP_Default = 2,
+        { CCS_AddString = "Default" },
+        { CCS_AddString = "Balanced" },
+        { CCS_AddString = "High" },
+    })
+
+    InCleanAux = self:AddInput("Clean Aux (For noisy aux channels)", "CleanAux", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "CheckboxControl",
+        INP_Integer = true,
+        INP_Default = 0,
+    })
+
+    self:AddInput(" ", "sep", {
+        INPID_InputControl = "SeparatorControl",
+    })
+
+    Author = self:AddInput(authorText, "Author", {
+        LINKID_DataType = "Text",
+        INPID_InputControl = "LabelControl",
+        INP_External = false,
+        INP_Passive = true,
+    })
+
+    OidnInfo = self:AddInput("OIDN v" .. oidnVersion, "OidnVersion", {
+        LINKID_DataType = "Text",
+        INPID_InputControl = "LabelControl",
+        INP_External = false,
+        INP_Passive = true,
+    })
+
+    InColor = self:AddInput("Color", "Color", {
+        LINKID_DataType = "Image",
+        LINK_Main = 1,
+        INP_Required = true,
+    })
+
+    InAlbedo = self:AddInput("Albedo", "Albedo", {
+        LINKID_DataType = "Image",
+        LINK_Main = 2,
+        INP_Required = false,
+    })
+
+    InNormal = self:AddInput("Normal", "Normal", {
+        LINKID_DataType = "Image",
+        LINK_Main = 3,
+        INP_Required = false,
+    })
+
+    OutImage = self:AddOutput("Output", "Output", {
+        LINKID_DataType = "Image",
+        LINK_Main = 1,
+    })
+end
+
+OIDNDeviceType = {
+    DEFAULT = 0, -- select device automatically
+    CPU     = 1, -- CPU device
+    SYCL    = 2, -- SYCL device
+    CUDA    = 3, -- CUDA device
+    HIP     = 4, -- HIP device
+}
+
+OIDNFormat = {
+    UNDEFINED = 0,
+
+    -- 32-bit single-precision floating-point scalar and vector formats
+    FLOAT     = 1,
+    FLOAT2    = 2,
+    FLOAT3    = 3,
+    FLOAT4    = 4,
+
+    -- 16-bit half-precision floating-point scalar and vector formats
+    HALF      = 257,
+    HALF2     = 258,
+    HALF3     = 259,
+    HALF4     = 260,
+}
+
+function PathJoin(...)
+    local parts = { ... }
+    return table.concat(parts, package.config:sub(1, 1))
+end
+
+function FileExists(name)
+    local f = io.open(name, "r")
+    if f == nil and print_debug == true then
+        print("--------")
+        print("OIDN error: " .. name .. " - File note found")
+        print("--------")
+    end
+    io.close(f)
+    return name
+end
+
+function OIDNLoader()
+    local info = debug.getinfo(1, "S")
+    local scriptPath
+    local scriptFolder
+    if info.source then
+        -- 'info.source' contains the path to the Lua script
+        scriptPath = info.source:sub(2) -- Removing the "@" character at the beginning
+        scriptFolder = scriptPath:gsub("\\", "/")
+        scriptFolder = scriptPath:match("(.*/)")
+        if scriptFolder:sub(-1) == '/' then
+            scriptFolder = scriptFolder:sub(1, -2)
+        end
+    else
+        print("Unable to determine the script's path.")
+    end
+
+    local success
+    local result
+    if ffi.os == "Windows" then
+        success, result = pcall(function()
+            return ffi.load(FileExists(PathJoin(scriptFolder, "win", "tbbbind_2_5.dll")))
+        end)
+        success, result = pcall(function()
+            return ffi.load(FileExists(PathJoin(scriptFolder, "win", "tbbbind_2_0.dll")))
+        end)
+        success, result = pcall(function()
+            return ffi.load(FileExists(PathJoin(scriptFolder, "win", "tbbbind.dll")))
+        end)
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "win", "OpenImageDenoise_core.dll")))
+        end)
+        success, result = pcall(function()
+            return ffi.load(FileExists(PathJoin(scriptFolder, "win", "tbb12.dll")))
+        end)
+        success, result = pcall(function()
+            return ffi.load(FileExists(PathJoin(scriptFolder, "win", "sycl6.dll")))
+        end)
+        success, result = pcall(function()
+            return ffi.load(FileExists(PathJoin(scriptFolder, "win", "pi_level_zero.dll")))
+        end)
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "win", "OpenImageDenoise_device_sycl_xelp.dll")))
+        end)
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "win", "OpenImageDenoise_device_sycl.dll")))
+        end)
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "win", "OpenImageDenoise_device_hip.dll")))
+        end)
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "win", "OpenImageDenoise_device_cuda.dll")))
+        end)
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "win", "OpenImageDenoise_device_cpu.dll")))
+        end)
+        success, result = pcall(function()
+            return ffi.load(FileExists(PathJoin(scriptFolder, "win", "OpenImageDenoise.dll")))
+        end)
+        return result
+    elseif ffi.os == "OSX" then
+        success, result = pcall(function()
+            return ffi.load(FileExists(PathJoin(scriptFolder, "mac", "libtbb.dylib")))
+        end)
+        success, result = pcall(function()
+            return ffi.load(FileExists(PathJoin(scriptFolder, "mac",
+                "libOpenImageDenoise_core." .. oidnVersion .. ".dylib")))
+        end)
+        success, result = pcall(function()
+            return ffi.load(FileExists(PathJoin(scriptFolder, "mac",
+                "libOpenImageDenoise_device_cpu." .. oidnVersion .. ".dylib")))
+        end)
+        success, result = pcall(function()
+            return ffi.load(FileExists(PathJoin(scriptFolder, "mac", "libOpenImageDenoise.dylib")))
+        end)
+        return result
+    elseif ffi.os == "Linux" then
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "lin", "libsycl.so.7")))
+        end)
+
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "lin", "libtbb.so")))
+        end)
+
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "lin", "libtbbbind.so.3")))
+        end)
+
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "lin", "libtbbbind_2_0.so.3")))
+        end)
+
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "lin", "libtbbbind_2_5.so.3")))
+        end)
+
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "lin", "libpi_level_zero.so")))
+        end)
+
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "lin", "libOpenImageDenoise_core.so." .. version)))
+        end)
+
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "lin", "libOpenImageDenoise_device_cpu.so." .. version)))
+        end)
+
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "lin", "libOpenImageDenoise_device_cuda.so." .. version)))
+        end)
+
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "lin", "libOpenImageDenoise_device_hip.so." .. version)))
+        end)
+
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "lin", "libOpenImageDenoise_device_sycl_xehpg.so." .. version)))
+        end)
+
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "lin", "libOpenImageDenoise_device_sycl_xelp.so." .. version)))
+        end)
+
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "lin", "libOpenImageDenoise_device_sycl_xehpc.so." .. version)))
+        end)
+
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "lin", "libOpenImageDenoise_device_sycl.so." .. version)))
+        end)
+
+        success, result = pcall(function()
+            return ffi.load(
+                FileExists(PathJoin(scriptFolder, "lin", "libOpenImageDenoise.so")))
+        end)
+        return result
+    end
+end
+
+function CreateOidn()
+    -- Load the OIDN library
+    ffi.cdef([[
+        typedef void* OIDNDevice;
+        typedef void* OIDNBuffer;
+        typedef void* OIDNFilter;
+        typedef int OIDNDeviceType;
+        typedef int OIDNFormat;
+        typedef int OIDNError;
+
+        OIDNDevice oidnNewDevice(OIDNDeviceType inType);
+        void oidnCommitDevice(OIDNDevice device);
+        OIDNBuffer oidnNewBuffer(OIDNDevice device, size_t byteSize);
+        OIDNFilter oidnNewFilter(OIDNDevice device, const char* type);
+        void oidnSetFilterImage(OIDNFilter filter, const char* name, OIDNBuffer buffer, OIDNFormat format, size_t width, size_t height, size_t byteOffset, size_t pixelByteStride, size_t rowByteStride);
+        void oidnSetFilterBool(OIDNFilter filter, const char* name, bool value);
+        void oidnSetFilterInt(OIDNFilter filter, const char* name, int value);
+        void oidnSetFilterFloat(OIDNFilter filter, const char* name, float value);
+        void oidnCommitFilter(OIDNFilter filter);
+        void oidnExecuteFilter(OIDNFilter filter);
+        int oidnGetDeviceError(OIDNDevice device, const char** outMessage);
+        void oidnReleaseBuffer(OIDNBuffer buffer);
+        void oidnReleaseFilter(OIDNFilter filter);
+        void oidnReleaseDevice(OIDNDevice device);
+        void* oidnGetBufferData(OIDNBuffer buffer);
+        int oidnGetNumPhysicalDevices();
+        const char* oidnGetPhysicalDeviceString(int physicalDeviceID, const char* name);
+        int oidnGetPhysicalDeviceInt(int physicalDeviceID, const char* name);
+    ]])
+
+    local oidn = OIDNLoader()
+    if oidn == nil or oidn == false then
+        print("FFI ERROR")
+        print(ffi.C.GetLastError())
+    end
+
+    -- Return the OIDN table
+    return oidn
+end
+
+function DeviceType(value)
+    if value == 0 or InDevice:GetAttr("INP_Integer") then
+        return OIDNDeviceType.DEFAULT
+    elseif value == 1 then
+        return OIDNDeviceType.CPU
+    elseif value == 2 then
+        return OIDNDeviceType.SYCL
+    elseif value == 3 then
+        return OIDNDeviceType.CUDA
+    elseif value == 4 then
+        return OIDNDeviceType.HIP
+    end
+end
+
+function DeviceTypeCheck(val)
+    -- Create oidn object
+    if oidn == nil then
+        oidn = CreateOidn()
+    end
+    local found = false
+    for i = 0, oidn.oidnGetNumPhysicalDevices() - 1 do
+        if val == oidn.oidnGetPhysicalDeviceInt(i, "type") then
+            found = true
+        end
+    end
+    return not found
+end
+
+function NotifyChanged(inp, param, time)
+    if inp ~= nil and param ~= nil then
+        if inp == InDevice then
+            -- Set undo here
+            if param.Value > 1 then
+                Use_default = DeviceTypeCheck(param.Value)
+                InDevice:SetAttrs({ INP_Integer = Use_default })
+                if Use_default then
+                    print("OIDN: The selected device isn't supported on this system. Will use Default instead.")
+                end
+            end
+        end
+    end
+end
+
+function Process(req)
+    local color = InColor:GetValue(req)
+    local output = Image({ IMG_Like = color })
+    if color.Depth <= 6 then
+        -- If the image isn't float 16 or 32bit, print out a red frame
+        local p = Pixel({ R = 1.0, G = 0.0, B = 0.0, A = 1.0 })
+        output:Fill(p)
+    elseif not req:IsPreCalc() then
+        local albedo = InAlbedo:GetValue(req)
+        local normal = InNormal:GetValue(req)
+        -- Add 4 to quality to match OIDNQuality enum
+        -- https://github.com/OpenImageDenoise/oidn/blob/5579cd99edfa0839f87ec6960d16dcafcfe0eb31/include/OpenImageDenoise/oidn.h#L341
+        local quality
+        if req:IsQuick() or InQuality:GetValue(req).Value == 0 then
+            quality = 0
+        else
+            quality = InQuality:GetValue(req).Value + 4
+        end
+        -- Get image resolution
+        local height = color.DataWindow:Height()
+        local width = color.DataWindow:Width()
+
+        -- Create oidn object
+        if oidn == nil then
+            oidn = CreateOidn()
+        end
+
+        -- Create an Open Image Denoise device
+        local device = oidn.oidnNewDevice(DeviceType(InDevice:GetValue(req).Value))
+        oidn.oidnCommitDevice(device)
+
+        -- Calculations
+        ---- color.Depth, 7 = 16bit, 8 = 32bit
+        local numChannels = 4
+        local colorBytePerChannel = color.Depth == 8 and 4 or 2
+        local colorNumBytes = width * height * numChannels * colorBytePerChannel
+        local colorPixelByteStride = colorBytePerChannel * numChannels
+        local colorRowByteStride = width * colorPixelByteStride
+
+        -- Create a buffer for the input/output image accessible by both host (CPU) and device (CPU/GPU)
+        local colorBuf = oidn.oidnNewBuffer(device, colorNumBytes)
+
+        -- Create a filter for denoising a color (color) image using optional auxiliary images too
+        -- This can be an expensive operation, so try not to create a new filter for every image!
+        local filter = oidn.oidnNewFilter(device, "RT") -- generic ray tracing filter
+        oidn.oidnSetFilterImage(
+            filter,
+            "color",
+            colorBuf,
+            color.Depth == 8 and OIDNFormat.FLOAT3 or OIDNFormat.HALF3,
+            width,
+            height,
+            0,
+            colorPixelByteStride,
+            colorRowByteStride
+        )
+
+        -- Fill the input image buffers
+        local colorPtr = ffi.cast("float*", oidn.oidnGetBufferData(colorBuf))
+        local colorScanlines = ffi.cast("float**", color:GetScanLine())
+        ffi.copy(colorPtr, colorScanlines[0], colorNumBytes)
+
+        -- Do the same for Albedo and Normal
+        local albedoBuf
+        if albedo then
+            local albedoBytePerChannel = albedo.Depth == 8 and 4 or 2
+            local albedoNumBytes = width * height * numChannels * albedoBytePerChannel
+            local albedoPixelByteStride = albedoBytePerChannel * numChannels
+            local albedoRowByteStride = width * albedoPixelByteStride
+            albedoBuf = oidn.oidnNewBuffer(device, albedoNumBytes)
+            oidn.oidnSetFilterImage(
+                filter,
+                "albedo",
+                albedoBuf,
+                albedo.Depth == 8 and OIDNFormat.FLOAT3 or OIDNFormat.HALF3,
+                width,
+                height,
+                0,
+                albedoPixelByteStride,
+                albedoRowByteStride
+            )
+            -- Fill the input image buffers
+            local albedoPtr = ffi.cast("float*", oidn.oidnGetBufferData(albedoBuf))
+            local albedoScanlines = ffi.cast("float**", albedo:GetScanLine())
+            ffi.copy(albedoPtr, albedoScanlines[0], albedoNumBytes)
+        end
+
+        local normalBuf
+        if normal then
+            local normalBytePerChannel = normal.Depth == 8 and 4 or 2
+            local normalNumBytes = width * height * numChannels * normalBytePerChannel
+            local normalPixelByteStride = normalBytePerChannel * numChannels
+            local normalRowByteStride = width * normalPixelByteStride
+            normalBuf = oidn.oidnNewBuffer(device, normalNumBytes)
+            oidn.oidnSetFilterImage(
+                filter,
+                "normal",
+                normalBuf,
+                normal.Depth == 8 and OIDNFormat.FLOAT3 or OIDNFormat.HALF3,
+                width,
+                height,
+                0,
+                normalPixelByteStride,
+                normalRowByteStride
+            )
+            -- Fill the input image buffers
+            local normalPtr = ffi.cast("float*", oidn.oidnGetBufferData(normalBuf))
+            local normalScanlines = ffi.cast("float**", normal:GetScanLine())
+            ffi.copy(normalPtr, normalScanlines[0], normalNumBytes)
+        end
+
+        -- Output
+        oidn.oidnSetFilterImage(
+            filter,
+            "output",
+            colorBuf,
+            color.Depth == 8 and OIDNFormat.FLOAT3 or OIDNFormat.HALF3,
+            width,
+            height,
+            0,
+            colorPixelByteStride,
+            colorRowByteStride
+        )
+
+        --Commit filters
+        oidn.oidnSetFilterInt(filter, "quality", quality)
+        oidn.oidnSetFilterBool(filter, "cleanAux", InCleanAux:GetValue(req).Value)
+        oidn.oidnSetFilterBool(filter, "hdr", true)
+        oidn.oidnCommitFilter(filter)
+
+        -- Filter the color image
+        oidn.oidnExecuteFilter(filter)
+
+        -- Check for errors
+        local errorMessage = ffi.new("const char*[1]")
+        if oidn.oidnGetDeviceError(device, errorMessage) ~= 0 then
+            print("Error: " .. ffi.string(errorMessage[0]))
+        end
+
+        -- Extract the denoised data to the output image
+        local outputScanlines = ffi.cast("float**", output:GetScanLine())
+        ffi.copy(outputScanlines[0], colorPtr, colorNumBytes)
+
+        -- Cleanup
+        oidn.oidnReleaseBuffer(colorBuf)
+        if albedo then
+            oidn.oidnReleaseBuffer(albedoBuf)
+        end
+        if normal then
+            oidn.oidnReleaseBuffer(normalBuf)
+        end
+        oidn.oidnReleaseFilter(filter)
+        oidn.oidnReleaseDevice(device)
+    end
+
+    OutImage:Set(req, output)
+    collectgarbage()
+end
