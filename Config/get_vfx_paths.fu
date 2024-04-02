@@ -1,0 +1,7 @@
+{
+    Hotkeys
+    {
+      Target = "FlowView",
+      ALT_Y = "RunScript{filename = 'Scripts:Comp/DEV/WeHeart/vfx_connect_data.py'}",
+    }
+}

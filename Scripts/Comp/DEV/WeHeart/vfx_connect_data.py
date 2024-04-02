@@ -44,12 +44,17 @@ class ShowUI(BaseUI):
         self.win.On.CopyLoaderPath.Clicked = self.copy_loader_path
         self.win.On.CopyNukePath.Clicked = self.copy_nuke_path
         self.win.On.CancelButton.Clicked = self.close
+        self.win.On.RefreshButton.Clicked = self.refresh_comp
         self.win.On.VFXSetup.Close = self.close
 
     def get_comp_attributes(self):
         return comp.GetAttrs()
 
-    def get_loader_clip(self):
+    def refresh_comp(self, ev):
+        comp = fu.GetCurrentComp()
+        self.itm["CompNameLabel"].Text = comp.GetAttrs()["COMPS_Name"]
+
+    def get_loader_clip(self, comp):
         loaders = comp.GetToolList(False, "Loader")
         loader_clips = []
         for loader in loaders.values():
@@ -59,18 +64,21 @@ class ShowUI(BaseUI):
         return loader_clips
 
     def copy_comp_path(self, ev):
-        comp_attrs = self.get_comp_attributes()
+        comp = fu.GetCurrentComp()
+        comp_attrs = comp.GetAttrs()
         output = Path(comp_attrs["COMPS_FileName"])
         print(f"{output.as_posix()}\n")
         comp.Execute(f"bmd.setclipboard('{output.as_posix()}')")
 
     def copy_loader_path(self, ev):
-        clips = self.get_loader_clip()
-        output = ("\n").join(clips)
+        comp = fu.GetCurrentComp()
+        clips = self.get_loader_clip(comp)
+        output = ("    ").join(clips)
         print(f"{output}\n")
         comp.Execute(f"bmd.setclipboard('{output}')")
 
     def copy_nuke_path(self, ev):
+        comp = fu.GetCurrentComp()
         saver = comp.GetToolList(False, "Saver")[1]
         clip = saver.Clip[1]
         clip = Path(clip.replace("00000000", r"%08d")).as_posix()
@@ -112,6 +120,7 @@ class ShowUI(BaseUI):
                     ),
                     ui.HGroup(
                         [
+                            ui.Button({"ID": "RefreshButton", "Text": "Refresh"}),
                             ui.Button({"ID": "CancelButton", "Text": "Cancel"}),
                         ],
                     ),
