@@ -224,6 +224,53 @@ class ConfirmationDialog(BaseUI):
         ]
 
 
+class WarningDialog(BaseUI):
+
+    def __init__(self, fusion, message):
+        geometry = [800, 700, 400, 80]
+        window_title = "Warning message"
+        self.message = message
+        super().__init__(fusion, window_title, geometry, id="WarningDialog")
+        self.itm = self.win.GetItems()
+        self.setup_callbacks()
+
+    def setup_callbacks(self):
+        self.win.On.OkButton.Clicked = self.close
+
+    def layout(self):
+        return [
+            self.ui.VGroup(
+                [
+                    self.ui.Label(
+                        {
+                            "ID": "TitleLabel",
+                            "Text": f"<H2>{self.message}</H2>",
+                            "Weight": 0.5,
+                            "Alignment": {
+                                "AlignHCenter": True,
+                                "AlignVCenter": True,
+                            },
+                        }
+                    ),
+                    self.ui.HGroup(
+                        {"Alignment": {"AlignHRight": True}, "Weight": 0},
+                        [
+                            self.ui.Button(
+                                {
+                                    "ID": "OkButton",
+                                    "Text": "Ok",
+                                }
+                            ),
+                        ],
+                    ),
+                ]
+            )
+        ]
+
+    def run(self):
+        self.show()
+
+
 class BaseRequestDialog(BaseUI):
     def __init__(self, fusion, title=None, target=None):
         self.title = "Choose Directory" if title is None else title
@@ -254,7 +301,7 @@ class BaseRequestDialog(BaseUI):
                 self.ui.Button(
                     {"Weight": 0.2, "ID": "RequestButton", "Text": "Browse..."}
                 ),
-                self.ui.Button({"Weight": 0.1, "ID": "SaveButton", "Text": "Save"}),
+                self.ui.Button({"Weight": 0.1, "ID": "SaveButton", "Text": "Select"}),
             ]
         )
 
@@ -281,8 +328,3 @@ class RequestFile(BaseRequestDialog):
 
     def get_request_action(self):
         return self.fusion.RequestFile()
-
-
-if __name__ == "__main__":
-    fusion = get_fusion_module()
-    RequestDir(fusion).run()
