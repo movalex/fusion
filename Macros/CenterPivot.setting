@@ -1,0 +1,350 @@
+{
+	Tools = ordered() {
+		CenterPivot = MacroOperator {
+			Inputs = ordered() {
+                CenterPivot = InstanceInput {
+                    SourceOp = "CP_Crop",
+                    Source = "AutoCropAndPosition",
+                    Page = "Controls",
+                },
+                ResetAll = InstanceInput {
+                    SourceOp = "CP_Crop",
+                    Source = "ResetAll",
+                    Page = "Controls",
+                },
+                ToggleCropView = InstanceInput {
+					SourceOp = "CP_Crop",
+					Source = "ToggleCropView",
+					Page = "Controls",
+				},
+                AutoCrop = InstanceInput {
+                    SourceOp = "CP_Crop",
+                    Source = "AutoCrop",
+					Page = "Crop",
+                },
+				Separator1 = InstanceInput {
+					SourceOp = "CP_Canvas",
+					Source = "Blank6",
+					Page = "Controls",
+				},
+				XOffset = InstanceInput {
+					SourceOp = "CP_Crop",
+					Source = "XOffset",
+				},
+				YOffset = InstanceInput {
+					SourceOp = "CP_Crop",
+					Source = "YOffset",
+				},
+				XSize = InstanceInput {
+					SourceOp = "CP_Crop",
+					Source = "XSize",
+                    Default = 1920,
+				},
+				YSize = InstanceInput {
+					SourceOp = "CP_Crop",
+					Source = "YSize",
+                    Default = 1080,
+				},
+				Separator2 = InstanceInput {
+					SourceOp = "CP_Canvas",
+					Source = "Blank6",
+					Page = "Controls",
+				},
+				Center = InstanceInput {
+					SourceOp = "CP_Center",
+					Source = "Center",
+				},
+				Pivot = InstanceInput {
+					SourceOp = "CP_Center",
+					Source = "Pivot",
+				},
+                Separator21 = InstanceInput {
+					SourceOp = "CP_Center",
+					Source = "Blank6",
+					Page = "Controls",
+				},
+                UseSizeAndAspect = InstanceInput {
+					SourceOp = "CP_Center",
+					Source = "UseSizeAndAspect",
+					Default = 1,
+				},
+				Size = InstanceInput {
+					SourceOp = "CP_Center",
+					Source = "Size",
+					Default = 1,
+				},
+				Aspect = InstanceInput {
+					SourceOp = "CP_Center",
+					Source = "Aspect",
+					Default = 1,
+				},
+				SizeX = InstanceInput {
+					SourceOp = "CP_Center",
+					Source = "XSize",
+					Default = 1,
+				},
+				SizeY = InstanceInput {
+					SourceOp = "CP_Center",
+					Source = "YSize",
+					Default = 1,
+				},
+				Angle = InstanceInput {
+					SourceOp = "CP_Center",
+					Source = "Angle",
+					Default = 0,
+				},
+				FlipHoriz = InstanceInput {
+					SourceOp = "CP_Center",
+					Source = "FlipHoriz",
+					ControlGroup = 5,
+					Default = 0,
+				},
+				FlipVert = InstanceInput {
+					SourceOp = "CP_Center",
+					Source = "FlipVert",
+					ControlGroup = 5,
+					Default = 0,
+				},
+				InvertTransform = InstanceInput {
+					SourceOp = "CP_Center",
+					Source = "InvertTransform",
+				},
+				FlattenTransform = InstanceInput {
+					SourceOp = "CP_Center",
+					Source = "FlattenTransform",
+				},
+				Separator3 = InstanceInput {
+					SourceOp = "CP_Canvas",
+					Source = "Blank6",
+					Page = "Controls",
+				},
+				MacroVersion = InstanceInput {
+					SourceOp = "CP_Crop",
+					Source = "MacroVersion",
+					Name = "Center Crop v1.1 - 21 april 2024",
+					Page = "Controls",
+				},
+				Credits = InstanceInput {
+					SourceOp = "CP_Crop",
+					Source = "Credits",
+					Name = "- The Intelligent Machine -",
+					Page = "Controls",
+				},
+				Input = InstanceInput {
+					SourceOp = "CP_In",
+					Source = "Input",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "CP_Center",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Pos = { 1217.07, 459.595 },
+				Flags = {
+					Expanded = true,
+					AllowPan = false,
+					ConnectedSnap = true,
+					AutoSnap = true,
+					RemoveRouters = true
+				},
+				Size = { 375, 353.787, 55.5, 48.4848 },
+				Direction = "Vertical",
+				PipeStyle = "Direct",
+				Scale = 1,
+				Offset = { 0, 0 }
+			},
+			Tools = ordered() {
+				CP_In = PipeRouter {
+					NameSet = true,
+					ViewInfo = PipeRouterInfo { Pos = { 141.666, 2.40908 } },
+				},
+				CP_Crop = Crop {
+					NameSet = true,
+					Inputs = {
+						OW = Input { Expression = "self.Input.OriginalWidth", },
+						OH = Input { Expression = "self.Input.OriginalHeight", },
+						XSize = Input { Value = 1920, },
+						YSize = Input { Value = 1080, },
+						Input = Input {
+							SourceOp = "CP_In",
+							Source = "Output",
+						},
+                        AutoCrop = Input { Value = 0, },
+                        ResetSize = Input { Expression = "ResetAll", },
+                        ResetOffset = Input { Expression = "ResetAll", },
+					},
+					ViewInfo = OperatorInfo { Pos = { 141.666, 49.6818 } },
+					UserControls = ordered() {
+						MacroVersion = {
+							INP_External = false,
+							LINKID_DataType = "Text",
+							ICS_ControlPage = "Controls",
+							INP_Passive = true,
+							INPID_InputControl = "LabelControl",
+							LBLC_Align = 0,
+						},
+						Credits = {
+							INP_External = false,
+							LINKID_DataType = "Text",
+							ICS_ControlPage = "Controls",
+							INP_Passive = true,
+							INPID_InputControl = "LabelControl",
+							LBLC_Align = 0,
+						},
+						AutoCropAndPosition = {
+							ICD_Width = 0.5,
+							INP_Integer = false,
+							INP_External = false,
+							LINKID_DataType = "Number",
+							BTNCS_Execute = [[
+toolName = tool:GetAttrs('TOOLS_Name')
+print('Macro: \t\t\t\t' .. toolName)
+
+print('1. Getting input image Dimensions')
+
+connectedTool = tool.Input:GetConnectedOutput():GetTool():GetAttrs()
+if not connectedTool then
+    print("Connect the input and load the image to the viewer")
+    return
+end
+cToolName = connectedTool['TOOLS_Name']
+print('cToolName: \t\t\t' .. cToolName)
+
+cToolWidth = connectedTool['TOOLI_ImageWidth']
+print('cToolWidth: \t\t' .. cToolWidth)
+cToolHeight = connectedTool['TOOLI_ImageHeight']
+print('cToolHeight: \t\t' .. cToolHeight)
+
+
+print('2. Invert diimensions')
+
+pixX = 1 / cToolWidth
+print('X Pixel %: \t\t\t' .. pixX)
+pixY = 1 / cToolHeight
+print('Y Pixel %: \t\t\t' .. pixY)
+
+
+print('3. Cropping the image')
+tool.AutoCrop = 1
+if tool.AutoCrop then
+	print('AutoCrop complete...')
+end
+
+print('5. Setting the image center')
+
+wait(0.1) -- necessary on fast CPU's to insure crop values are updated
+
+XO = tool.XOffset[comp.CurrentTime]
+print('XOffset: \t\t\t' .. XO)
+YO = tool.YOffset[comp.CurrentTime]
+print('YOffset: \t\t\t' .. YO)
+print('')
+XS = tool.XSize[comp.CurrentTime]
+print('XSise: \t\t\t\t' .. XS)
+YS = tool.YSize[comp.CurrentTime]
+print('YSize: \t\t\t\t' .. YS)
+
+CenterX = ((pixX * XO) + (pixX * XS / 2))
+print('CenterX: \t\t\t' .. CenterX)
+CenterY = ((pixY * YO) + (pixY * YS / 2))
+print('CenterY: \t\t\t' .. CenterY)
+
+print('- - - - - - - - - - - - - - - - - - - -')
+
+tool.Center = {CenterX, CenterY}
+print('Center: \t\t\t' .. CenterX .. ', ' .. CenterY)
+
+print('- - - - - - - - - - - - - - - - - - - -')
+
+							]],
+							ICS_ControlPage = "Controls",
+							INPID_InputControl = "ButtonControl",
+							LINKS_Name = "Center Pivot",
+						},
+						ResetAll = {
+							ICD_Width = 0.5,
+							INP_MaxAllowed = 1000000,
+							INP_Integer = true,
+							INP_MinAllowed = -1000000,
+							INPID_InputControl = "ButtonControl",
+                            BTNCS_Execute = [[
+                            tool.Center = {0.5, 0.5}
+                            ]],
+							INP_MinScale = 0,
+							LINKID_DataType = "Number",
+							INP_MaxScale = 1,
+							LINKS_Name = "Reset",
+						},
+                        AutoCrop = {
+							INP_Integer = false,
+							INP_External = false,
+							LINKID_DataType = "Number",
+							LINKS_Name = "Auto Crop",
+							IC_Visible = true,
+						},
+					}
+				},
+				CP_Canvas = Background {
+					NameSet = true,
+					Inputs = {
+						GlobalOut = Input { Value = 1500, },
+						Width = Input {
+							Value = 1920,
+							Expression = "CP_Crop.Input.OriginalWidth",
+						},
+						Height = Input {
+							Value = 1080,
+							Expression = "CP_Crop.Input.OriginalHeight",
+						},
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftAlpha = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 135.921, 147.115 } },
+				},
+				CP_Merge = Merge {
+					NameSet = true,
+					Inputs = {
+						Background = Input {
+							SourceOp = "CP_Canvas",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "PipeRouter",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 135.921, 182.54 } },
+					Colors = {
+						TileColor = { R = 0.886274509803922, G = 0.662745098039216, B = 0.109803921568627 },
+						TextColor = { R = 0.725490196078431, G = 0.690196078431373, B = 0.592156862745098 },
+					}
+				},
+				CP_Center = Transform {
+					NameSet = true,
+					Inputs = {
+						Center = Input { Value = { 0.5, 0.5 }, },
+						Input = Input {
+							SourceOp = "CP_Merge",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 135.921, 214.6 } },
+				},
+				PipeRouter = PipeRouter {
+					NameSet = true,
+					Inputs = {
+						Input = Input {
+							SourceOp = "CP_Crop",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { 6.93037, 82.0064 } },
+				},
+			},
+		}
+	},
+}

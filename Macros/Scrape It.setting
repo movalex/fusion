@@ -1,0 +1,838 @@
+{
+	Tools = ordered() {
+		ScrapeIt = MacroOperator {
+			CtrlWZoom = false,
+			NameSet = true,
+			Inputs = ordered() {
+
+--Main input                
+
+				Input = InstanceInput {
+					SourceOp = "Scr_IN",
+					Source = "Input",
+				},
+
+--Main settings
+
+				Center = InstanceInput {
+					SourceOp = "ScrCTRL",
+					Source = "Center",
+					Page = "Controls",
+				},
+				Angle = InstanceInput {
+					SourceOp = "ScrCTRL",
+					Source = "Angle",
+					Page = "Controls",
+					Default = 0,
+				},
+				AngleOffset = InstanceInput {
+					SourceOp = "ScrCTRL",
+					Source = "AngleOffset",
+					Page = "Controls",
+					Default = 0,
+				},
+				ApplyBlank1 = InstanceInput {
+					SourceOp = "ScrMrg_A",
+					Source = "ApplyBlank1",
+				},
+
+--Secondary settings
+
+				Transition = InstanceInput {
+					SourceOp = "ScrCTRL",
+					Source = "Transition",
+					Page = "Controls",
+					Default = 0,
+				},
+				Offset = InstanceInput {
+					SourceOp = "ScrCTRL",
+					Source = "Offset",
+					Page = "Controls",
+					Default = 0,
+				},
+				Amount = InstanceInput {
+					SourceOp = "ScrCTRL",
+					Source = "Amount",
+					Page = "Controls",
+					Default = 1,
+				},
+				ApplyBlank2 = InstanceInput {
+					SourceOp = "ScrMrg_A",
+					Source = "ApplyBlank1",
+				},
+                ReferenceOpacity = InstanceInput {
+					SourceOp = "ScrCTRL",
+					Source = "Opacity",
+					Page = "Controls",
+                    Name = "Reference Opacity",
+				},
+
+--Amount mask	
+		
+                ApplyBlank3 = InstanceInput {
+					SourceOp = "ScrMrg_A",
+					Source = "ApplyBlank1",
+				},
+				AmountNest = InstanceInput {
+					SourceOp = "ScrAmt_Msk_BG",
+					Source = "AmountNest",
+					Page = "Controls",
+				},
+				ApplyAmountMaskInverted = InstanceInput {
+					SourceOp = "ScrAmt_Msk_BG",
+					Source = "ApplyMaskInverted",
+					Name = "Apply Amount Mask Inverted",
+					Default = 0,
+				},
+				FitAmountMask = InstanceInput {
+					SourceOp = "ScrAmt_Msk_BG",
+					Source = "FitMask",
+				},
+				Blank1 = InstanceInput {
+					SourceOp = "ScrAmt_Msk_BG",
+					Source = "Blank2",
+				},
+				AmountMaskChannel = InstanceInput {
+					SourceOp = "ScrAmt_Msk_BG",
+					Source = "MaskChannel",
+					Default = 3,
+				},
+				AmountMaskLow = InstanceInput {
+					SourceOp = "ScrAmt_Msk_BG",
+					Source = "MaskLow",
+					ControlGroup = 12,
+					Default = 0,
+				},
+				AmountMaskHigh = InstanceInput {
+					SourceOp = "ScrAmt_Msk_BG",
+					Source = "MaskHigh",
+					ControlGroup = 12,
+					Default = 1,
+				},
+				AmountMaskClipBlack = InstanceInput {
+					SourceOp = "ScrAmt_Msk_BG",
+					Source = "MaskClipBlack",
+					Name = "Black",
+					Width = 0.5,
+					Default = 1,
+				},
+				AmountMaskClipWhite = InstanceInput {
+					SourceOp = "ScrAmt_Msk_BG",
+					Source = "MaskClipWhite",
+					Name = "White",
+					Width = 0.5,
+					Default = 1,
+				},
+
+--Motion blur
+
+				MotionBlurNest = InstanceInput {
+					SourceOp = "ScrMM_Dplc",
+					Source = "MotionBlurNest",
+					Page = "Controls",
+				},
+				MotionBlur = InstanceInput {
+					SourceOp = "ScrMM_Dplc",
+					Source = "MotionBlur",
+					Default = 0,
+				},
+				Quality = InstanceInput {
+					SourceOp = "ScrMM_Dplc",
+					Source = "Quality",
+					Default = 5,
+				},
+				ShutterAngle = InstanceInput {
+					SourceOp = "ScrMM_Dplc",
+					Source = "ShutterAngle",
+					Default = 180,
+				},
+				CenterBias = InstanceInput {
+					SourceOp = "ScrMM_Dplc",
+					Source = "CenterBias",
+					Default = 0,
+				},
+				SampleSpread = InstanceInput {
+					SourceOp = "ScrMM_Dplc",
+					Source = "SampleSpread",
+					Default = 1,
+				},
+
+--Mask
+
+				MaskNest = InstanceInput {
+					SourceOp = "ScrMrg_B",
+					Source = "MaskNest",
+					Page = "Controls",
+				},
+				ApplyMaskInverted = InstanceInput {
+					SourceOp = "ScrMrg_B",
+					Source = "ApplyMaskInverted",
+					Default = 0,
+				},
+				MultiplyByMask = InstanceInput {
+					SourceOp = "ScrMrg_B",
+					Source = "MultiplyByMask",
+					Default = 0,
+				},
+				FitMask = InstanceInput {
+					SourceOp = "ScrMrg_B",
+					Source = "FitMask",
+				},
+				Blank4 = InstanceInput {
+					SourceOp = "ScrMrg_B",
+					Source = "Blank2",
+				},
+				MaskChannel = InstanceInput {
+					SourceOp = "ScrMrg_B",
+					Source = "MaskChannel",
+					Default = 3,
+				},
+				MaskLow = InstanceInput {
+					SourceOp = "ScrMrg_B",
+					Source = "MaskLow",
+					ControlGroup = 30,
+					Default = 0,
+				},
+				MaskHigh = InstanceInput {
+					SourceOp = "ScrMrg_B",
+					Source = "MaskHigh",
+					ControlGroup = 30,
+					Default = 1,
+				},
+				MaskClipBlack = InstanceInput {
+					SourceOp = "ScrMrg_B",
+					Source = "MaskClipBlack",
+					Name = "Black",
+					Width = 0.5,
+					Default = 1,
+				},
+				MaskClipWhite = InstanceInput {
+					SourceOp = "ScrMrg_B",
+					Source = "MaskClipWhite",
+					Name = "White",
+					Width = 0.5,
+					Default = 1,
+				},
+
+--Version
+
+                Version = InstanceInput {
+					SourceOp = "ScrCTRL",
+					Source = "Version",
+					Page = "Controls",
+                    Name = "Scrape It βeta 0.3",
+				},
+
+--Secondary inputs
+
+				EffectMask = InstanceInput {
+					SourceOp = "ScrMsk_IN",
+					Source = "Input",
+					Name = "Effect Mask",
+				},
+                AmountMask = InstanceInput {
+					SourceOp = "ScrAmt_Msk_IN",
+					Source = "Input",
+                    Name = "Amount Mask",
+				},
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Scr_OUT",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Pos = { -5225, -280.5 },
+				Flags = {
+					AllowPan = false,
+					GridSnap = true,
+					ConnectedSnap = true,
+					AutoSnap = true,
+					RemoveRouters = true
+				},
+				Size = { 681.86, 683.627, 314.601, 121.206 },
+				Direction = "Vertical",
+				PipeStyle = "Direct",
+				Scale = 1,
+				Offset = { 0, 0 }
+			},
+			Tools = ordered() {
+				ScrDsp_Grd_127 = Background {
+					CtrlWShown = false,
+					NameSet = true,
+					CustomData = { Settings = {
+						} },
+					Inputs = {
+						Quality = Input { Value = 5, },
+						ShutterAngle = Input { Value = 720, },
+						GlobalOut = Input { Value = 78, },
+						Width = Input {
+							Value = 2048,
+							Expression = ":\nFoWi=ScrMrg_A.Foreground.OriginalWidth;\nFoHe=ScrMrg_A.Foreground.OriginalHeight;\nreturn\nFoWi<=FoHe and FoHe or FoWi",
+						},
+						Height = Input {
+							Value = 2048,
+							Expression = "Width",
+						},
+						Depth = Input { Value = 4, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Type = Input { Value = FuID { "Gradient" }, },
+						Start = Input {
+							SourceOp = "Vector1_127",
+							Source = "Position",
+						},
+						End = Input {
+							Value = { 0.545827018465158, 0.480452009148829 },
+							Expression = ":\nFoWi = ScrMrg_A.Foreground.OriginalWidth;\nFoHe = ScrMrg_A.Foreground.OriginalHeight;\nCeX = ScrCTRL.Center.X;\nCeY = ScrCTRL.Center.Y;\nreturn\nFoWi<FoHe and Point(((CeX-0.5)*(FoWi/FoHe))+0.5, CeY) or Point(CeX, ((CeY-0.5)*(FoHe/FoWi))+0.5)",
+						},
+						Offset = Input {
+							Value = 0.002,
+							Expression = "0.002+ScrCTRL.Offset*0.1",
+						},
+						StretchRegion = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, 16.5 } },
+					UserControls = ordered() { StretchRegion = { INP_Integer = false, LBLC_DropDownButton = true, LINKID_DataType = "Number", LBLC_NumInputs = 3, INP_External = false, INPID_InputControl = "LabelControl", LINKS_Name = "Stretch Region", } }
+				},
+				Vector1_127 = Vector {
+					CtrlWZoom = false,
+					Inputs = {
+						Origin = Input { Expression = "ScrDsp_Grd_127.End", },
+						Distance = Input { Value = 10, },
+						Angle = Input {
+							Value = -180,
+							Expression = ": AO=ScrCTRL.AngleOffset; A=ScrCTRL.Angle-180; return AO==0 and A or AO==1 and A-90 or AO==2 and A-180 or A-270",
+						},
+					},
+				},
+				ScrCTRL = Custom {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						LUTIn1 = Input {
+							SourceOp = "ScrCTRLLUTIn1_119",
+							Source = "Value",
+						},
+						LUTIn2 = Input {
+							SourceOp = "ScrCTRLLUTIn2_119",
+							Source = "Value",
+						},
+						LUTIn3 = Input {
+							SourceOp = "ScrCTRLLUTIn3_119",
+							Source = "Value",
+						},
+						LUTIn4 = Input {
+							SourceOp = "ScrCTRLLUTIn4_119",
+							Source = "Value",
+						},
+						ShowNumber1 = Input { Value = 0, },
+						ShowNumber2 = Input { Value = 0, },
+						ShowNumber3 = Input { Value = 0, },
+						ShowNumber4 = Input { Value = 0, },
+						ShowNumber5 = Input { Value = 0, },
+						ShowNumber6 = Input { Value = 0, },
+						ShowNumber7 = Input { Value = 0, },
+						ShowNumber8 = Input { Value = 0, },
+						ShowPoint1 = Input { Value = 0, },
+						ShowPoint2 = Input { Value = 0, },
+						ShowPoint3 = Input { Value = 0, },
+						ShowPoint4 = Input { Value = 0, },
+						ShowLUT1 = Input { Value = 0, },
+						ShowLUT2 = Input { Value = 0, },
+						ShowLUT3 = Input { Value = 0, },
+						ShowLUT4 = Input { Value = 0, },
+						CommentsNest = Input { Value = 0, },
+						FrameRenderScriptNest = Input { Value = 0, },
+						Transition = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 165, 16.5 } },
+					Colors = { TileColor = { R = 0.584313725490196, G = 0.294117647058824, B = 0.803921568627451 }, },
+					UserControls = ordered() { 
+                        Center = { 
+                            INP_DefaultX = 0.5, INPID_PreviewControl = "CrosshairControl", INP_DefaultY = 0.5, LINKID_DataType = "Point", ICS_ControlPage = "Controls", INPID_InputControl = "OffsetControl", CHC_Style = "NormalCross", LINKS_Name = "Center", 
+                        }, 
+                        Angle = { 
+                            INP_MaxAllowed = 1000000, INP_Integer = false, INPID_InputControl = "ScrewControl", INP_MaxScale = 360, INP_Default = 0, INPID_PreviewControl = "AngleControl", INP_MinAllowed = -1000000, LINKID_DataType = "Number", ICS_ControlPage = "Controls", INP_MinScale = -360, ACID_Center = "Center", LINKS_Name = "Angle" 
+                        }, 
+                        AngleOffset = { 
+                            { MBTNC_AddButton = "0°" }, { MBTNC_AddButton = "90°" }, { MBTNC_AddButton = "180°" }, { MBTNC_AddButton = "270°" }, INP_MaxAllowed = 1000000, INP_Integer = false, INPID_InputControl = "MultiButtonControl", MBTNC_ShowBasicButton = true, INP_MaxScale = 1, INP_Default = 0, ICS_ControlPage = "Controls", INP_MinScale = 0, INP_MinAllowed = -1000000, LINKID_DataType = "Number", MBTNC_ShowName = true, MBTNC_StretchToFit = true, MBTNC_ShowToolTip = false, LINKS_Name = "Angle Offset" 
+                        }, 
+                        Transition = { 
+                            INP_MaxAllowed = 500, INP_Integer = false, INPID_InputControl = "SliderControl", INP_MaxScale = 100, INP_Default = 20, INP_MinScale = 0, INP_MinAllowed = 0, LINKID_DataType = "Number", ICS_ControlPage = "Controls", LINKS_Name = "Transition" 
+                        }, 
+                        Offset = { 
+                            INP_Default = 0, INP_Integer = false, ICS_ControlPage = "Controls", LINKID_DataType = "Number",INP_MinScale = -1, INPID_InputControl = "SliderControl", INP_MaxScale = 1, LINKS_Name = "Offset", 
+                        }, 
+                        Amount = { 
+                            INP_MaxAllowed = 1, INP_Integer = false, INPID_InputControl = "SliderControl", INP_MaxScale = 1, INP_Default = 1, INP_MinScale = 0, INP_MinAllowed = -100, LINKID_DataType = "Number", ICS_ControlPage = "Controls", LINKS_Name = "Amount" 
+                        }, 
+                        Opacity = { 
+                            INP_MaxAllowed = 1, INP_Integer = false, INPID_InputControl = "SliderControl", INP_MaxScale = 1, INP_Default = 0, INP_MinScale = 0, INP_MinAllowed = -100, LINKID_DataType = "Number", ICS_ControlPage = "Controls", LINKS_Name = "Opacity" 
+                        }, 
+                        Version = {
+                            INPID_InputControl = "LabelControl",
+                            IC_ControlPage = 0,
+                            LINKS_Name = "Version βeta 0.3",
+                            INP_External = false,
+					        INP_Passive = true,
+                        },
+                    }
+				},
+				ScrCTRLLUTIn1_119 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 0, Blue = 0 },
+					CtrlWZoom = false,
+				},
+				ScrCTRLLUTIn2_119 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 204, Blue = 0 },
+					CtrlWZoom = false,
+				},
+				ScrCTRLLUTIn3_119 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 0, Green = 0, Blue = 204 },
+					CtrlWZoom = false,
+				},
+				ScrCTRLLUTIn4_119 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333 }, Flags = { Linear = true } },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667 }, Flags = { Linear = true } }
+						}
+					},
+					SplineColor = { Red = 204, Green = 204, Blue = 204 },
+					CtrlWZoom = false,
+				},
+				ScrTrns_Mrg = Blur {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "ScrTrns_Msk",
+							Source = "Mask",
+						},
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						XBlurSize = Input {
+							Value = 0,
+							Expression = "ScrCTRL.Transition",
+						},
+						Input = Input {
+							SourceOp = "ScrDsp_Grd_127",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, 82.5 } },
+				},
+				ScrTrns_Msk = RectangleMask {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						SoftEdge = Input { Expression = "ScrapeIt.Transition*0.0001", },
+						MaskWidth = Input { Value = 1080, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input {
+							Value = { 0.545827018465158, 0.462931217348891 },
+							Expression = "ScrCTRL.Center",
+						},
+						Height = Input { Value = 20, },
+						Angle = Input { Expression = ": AO=ScrCTRL.AngleOffset; A=ScrCTRL.Angle; return AO==0 and A or AO==1 and A-90 or AO==2 and A-180 or A-270", },
+					},
+					ViewInfo = OperatorInfo { Pos = { 110, 82.5 } },
+				},
+				ScrAmt_Msk_BG = Background {
+					NameSet = true,
+					CustomData = { Settings = {
+						} },
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "ScrAmt_Msk_IN",
+							Source = "Output",
+						},
+						GlobalOut = Input { Value = 78, },
+						Width = Input {
+							Value = 2048,
+							Expression = "ScrMrg_A.Foreground.OriginalWidth<=ScrMrg_A.Foreground.OriginalHeight and ScrMrg_A.Foreground.OriginalHeight or ScrMrg_A.Foreground.OriginalWidth",
+						},
+						Height = Input {
+							Value = 2048,
+							Expression = "Width",
+						},
+						Depth = Input { Value = 4, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+						BottomLeftRed = Input { Value = 1, },
+						BottomLeftGreen = Input { Value = 0.5, },
+						BottomRightGreen = Input { Value = 0.5, },
+						BottomRightBlue = Input { Value = 1, },
+						Start = Input { Value = { 0.5, 0.5 }, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 1, 1, 1, 1 },
+									[1] = { 0, 0, 0, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -165, 82.5 } },
+					UserControls = ordered() { AmountNest = { INP_Integer = false, LBLC_DropDownButton = true, INPID_InputControl = "LabelControl", LBLC_NumInputs = 8, INP_Default = 0, IC_Visible = true, LINKID_DataType = "Number", ICS_ControlPage = "Controls", INP_Passive = true, LBLC_NestLevel = 1, LINKS_Name = "Amount Mask Settings", } }
+				},
+				ScrAmt_Mrg = Merge {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "ScrAmt_Msk",
+							Source = "Mask",
+						},
+						Background = Input {
+							SourceOp = "ScrAmt_BG",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "ScrTrns_Mrg",
+							Source = "Output",
+						},
+						ApplyMode = Input { Value = FuID { "Multiply" }, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -54.5, 148.5 } },
+				},
+				ScrAmt_Msk = BitmapMask {
+					NameSet = true,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						OutputSize = Input { Value = FuID { "Default" }, },
+						MaskWidth = Input { Value = 1080, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Image = Input {
+							SourceOp = "ScrAmt_Msk_BG",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -165, 148.5 } },
+				},
+				ScrAmt_BG = Background {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						GlobalOut = Input { Value = 78, },
+						Width = Input {
+							Value = 2048,
+							Expression = "ScrMrg_A.Foreground.OriginalWidth<=ScrMrg_A.Foreground.OriginalHeight and ScrMrg_A.Foreground.OriginalHeight or ScrMrg_A.Foreground.OriginalWidth",
+						},
+						Height = Input {
+							Value = 2048,
+							Expression = "Width",
+						},
+						Depth = Input { Value = 4, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 1, },
+						TopLeftGreen = Input { Value = 1, },
+						TopLeftBlue = Input { Value = 1, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+						BottomLeftRed = Input { Value = 1, },
+						BottomLeftGreen = Input { Value = 0.5, },
+						BottomRightGreen = Input { Value = 0.5, },
+						BottomRightBlue = Input { Value = 1, },
+						Start = Input { Value = { 0.5, 0.5 }, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 1, 1, 1, 1 },
+									[1] = { 0, 0, 0, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 148.5 } },
+				},
+				ScrMM_Dplc = Displace {
+					CtrlWShown = false,
+					NameSet = true,
+					CustomData = { Settings = {
+						} },
+					Inputs = {
+						Quality = Input { Value = 5, },
+						Type = Input { Value = 1, },
+						XChannel = Input { Value = 4, },
+						XOffset = Input { Value = -1, },
+						XRefraction = Input {
+							Value = -10,
+							Expression = "(ScrDsp_Grd_127.Start.X-ScrDsp_Grd_127.End.X)/(self.Input.Width/self.Input.Height)*ScrCTRL.Amount",
+						},
+						YChannel = Input { Value = 4, },
+						YOffset = Input { Value = -1, },
+						YRefraction = Input {
+							Value = -1.22124532708767e-15,
+							Expression = "(ScrDsp_Grd_127.Start.Y-ScrDsp_Grd_127.End.Y)/(self.Input.Width/self.Input.Height)*ScrCTRL.Amount",
+						},
+						Input = Input {
+							SourceOp = "ScrMrg_A",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "ScrAmt_Mrg",
+							Source = "Output",
+						},
+						CommentsNest = Input { Value = 0, },
+						FrameRenderScriptNest = Input { Value = 0, },
+						Follow = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -55, 214.5 } },
+					UserControls = ordered() { Follow = { INP_Integer = false, LBLC_DropDownButton = true, LINKID_DataType = "Number", LBLC_NumInputs = 8, INP_External = false, INPID_InputControl = "LabelControl", LINKS_Name = "Follow Animation", }, MotionBlurNest = { INP_Integer = false, LBLC_DropDownButton = true, INPID_InputControl = "LabelControl", LBLC_NumInputs = 5, INP_Default = 0, IC_Visible = true, LINKID_DataType = "Number", ICS_ControlPage = "Controls", INP_Passive = true, LBLC_NestLevel = 1, LINKS_Name = "Motion Blur Settings", } }
+				},
+				ScrMrg_A = Merge {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Background = Input {
+							SourceOp = "ScrBG",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "ScrSD",
+							Source = "Output",
+						},
+						Edges = Input { Value = 2, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 214.5 } },
+				},
+				ScrBG = Background {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						GlobalOut = Input { Value = 78, },
+						Width = Input {
+							Value = 2048,
+							Expression = "ScrMrg_A.Foreground.OriginalWidth<=ScrMrg_A.Foreground.OriginalHeight and ScrMrg_A.Foreground.OriginalHeight or ScrMrg_A.Foreground.OriginalWidth",
+						},
+						Height = Input {
+							Value = 2048,
+							Expression = "Width",
+						},
+						Depth = Input { Value = 4, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftAlpha = Input { Value = 0, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+						BottomLeftRed = Input { Value = 1, },
+						BottomLeftGreen = Input { Value = 0.5, },
+						BottomRightGreen = Input { Value = 0.5, },
+						BottomRightBlue = Input { Value = 1, },
+						Start = Input { Value = { 0.5, 0.5 }, },
+						Gradient = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 1, 1, 1, 1 },
+									[1] = { 0, 0, 0, 1 }
+								}
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 247.5 } },
+				},
+				Scr_IN = PipeRouter {
+					CtrlWShown = false,
+					NameSet = true,
+					ViewInfo = PipeRouterInfo { Pos = { 275, 181.5 } },
+				},
+				ScrCrp = Crop {
+					NameSet = true,
+					Inputs = {
+						YOffset = Input { Value = 484, },
+						XSize = Input {
+							Value = 2048,
+							Expression = "ScrMrg_A.Foreground.OriginalWidth",
+						},
+						YSize = Input {
+							Value = 1080,
+							Expression = "ScrMrg_A.Foreground.OriginalHeight",
+						},
+						KeepCentered = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "ScrMM_Dplc",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -55, 280.5 } },
+				},
+				ScrMrg_B = Merge {
+					NameSet = true,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge43",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "ScrAM",
+							Source = "Output",
+						},
+                        Blend = Input { Expression = "1-ScrapeIt.ReferenceOpacity",},
+						Operator = Input { Value = FuID { "Disjoint" }, },
+						PerformDepthMerge = Input { Value = 0, },
+						MaskNest = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 445.5 } },
+					UserControls = ordered() { MaskNest = { INP_Integer = false, LBLC_DropDownButton = true, INPID_InputControl = "LabelControl", LBLC_NumInputs = 9, INP_Default = 0, IC_Visible = true, LINKID_DataType = "Number", ICS_ControlPage = "Controls", INP_Passive = true, LBLC_NestLevel = 1, LINKS_Name = "Mask Settings", } }
+				},
+				ScrCB_A = ChannelBoolean {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "ScrMsk_IN",
+							Source = "Output",
+						},
+						ApplyMaskInverted = Input { Expression = "ScrapeIt.ApplyMaskInverted", },
+						MultiplyByMask = Input { Expression = "ScrapeIt.MultiplyByMask", },
+						Operation = Input { Value = 12, },
+						Background = Input {
+							SourceOp = "ScrSD",
+							Source = "Output",
+						},
+						CommentsNest = Input { Value = 0, },
+						FrameRenderScriptNest = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 313.5 } },
+				},
+				ScrMsk_IN = PipeRouter {
+					CtrlWShown = false,
+					NameSet = true,
+					ViewInfo = PipeRouterInfo { Pos = { -220, 346.5 } },
+				},
+				ScrAM = AlphaMultiply {
+					NameSet = true,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "ScrMsk_IN",
+							Source = "Output",
+						},
+						ApplyMaskInverted = Input { Expression = "ScrapeIt.ApplyMaskInverted", },
+						MultiplyByMask = Input { Value = 1, },
+						MaskChannel = Input { Value = 5, },
+						Input = Input {
+							SourceOp = "ScrAD",
+							Source = "Output",
+						},
+						CommentsNest = Input { Value = 0, },
+						FrameRenderScriptNest = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -55, 412.5 } },
+				},
+				ScrSD = SetDomain {
+					NameSet = true,
+					Inputs = {
+						Mode = Input { Value = FuID { "Set" }, },
+						Input = Input {
+							SourceOp = "Scr_IN",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 165, 181.5 } },
+				},
+				Scr_OUT = PipeRouter {
+					NameSet = true,
+					Inputs = {
+						Input = Input {
+							SourceOp = "ScrMrg_B",
+							Source = "Output",
+						},
+					},
+					ViewInfo = PipeRouterInfo { Pos = { 55, 511.5 } },
+				},
+				ScrAmt_Msk_IN = PipeRouter {
+					CtrlWShown = false,
+					NameSet = true,
+					ViewInfo = PipeRouterInfo { Pos = { 0, -49.5 } },
+				},
+				ScrCB_B = ChannelBoolean {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "ScrMsk_IN",
+							Source = "Output",
+						},
+						Blend = Input { Value = 0, },
+						ApplyMaskInverted = Input {
+							Value = 1,
+							Expression = "1-ScrapeIt.ApplyMaskInverted",
+						},
+						Operation = Input { Value = 12, },
+						Background = Input {
+							SourceOp = "ScrSD",
+							Source = "Output",
+						},
+						CommentsNest = Input { Value = 0, },
+						FrameRenderScriptNest = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 165, 346.5 } },
+				},
+				Merge43 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Blend = Input {
+							Value = 0,
+							Expression = "ScrapeIt.ReferenceOpacity",
+						},
+						Background = Input {
+							SourceOp = "ScrCB_A",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "ScrCB_B",
+							Source = "Output",
+						},
+						Operator = Input { Value = FuID { "Disjoint" }, },
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 379.5 } },
+				},
+				ScrAD = AlphaDivide {
+					NameSet = true,
+					Inputs = {
+						MultiplyByMask = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "ScrCrp",
+							Source = "Output",
+						},
+						CommentsNest = Input { Value = 0, },
+						FrameRenderScriptNest = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -55, 379.5 } },
+				}
+			},
+			Colors = { TileColor = { R = 0.549019607843137, G = 0.352941176470588, B = 0.247058823529412 }, },
+		}
+	},
+	ActiveTool = "ScrapeIt"
+}

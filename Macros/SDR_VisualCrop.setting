@@ -1,0 +1,898 @@
+{
+	Tools = ordered() {
+		SdR_VisualCrop = MacroOperator {
+			CtrlWZoom = false,
+			CustomData = {
+				HelpPage = "https://www.steakunderwater.com/wesuckless/viewtopic.php?t=6299",
+			},
+			Inputs = ordered() {
+				Input2 = InstanceInput {
+					SourceOp = "LeftLine",
+					Source = "Point1",
+					Expression = "Point(self.Point2.X,1)",
+				},
+				Input3 = InstanceInput {
+					SourceOp = "LeftLine",
+					Source = "Point3",
+					Expression = "Point(self.Point2.X,0)",
+				},
+				Input4 = InstanceInput {
+					SourceOp = "LeftLine",
+					Source = "Point2",
+				},
+				Input6 = InstanceInput {
+					SourceOp = "RightLine",
+					Source = "Point1",
+					Expression = "Point(self.Point2.X,1)",
+				},
+				Input7 = InstanceInput {
+					SourceOp = "RightLine",
+					Source = "Point3",
+					Expression = "Point(self.Point2.X,0)",
+				},
+				Input8 = InstanceInput {
+					SourceOp = "RightLine",
+					Source = "Point2",
+				},
+				Input10 = InstanceInput {
+					SourceOp = "TopLine",
+					Source = "Point1",
+					Expression = "Point(0,self.Point2.Y)",
+				},
+				Input11 = InstanceInput {
+					SourceOp = "TopLine",
+					Source = "Point3",
+					Expression = "Point(1,self.Point2.Y)",
+				},
+				Input12 = InstanceInput {
+					SourceOp = "TopLine",
+					Source = "Point2",
+				},
+				Input14 = InstanceInput {
+					SourceOp = "BottomLine",
+					Source = "Point1",
+					Expression = "Point(0,self.Point2.Y)",
+				},
+				Input15 = InstanceInput {
+					SourceOp = "BottomLine",
+					Source = "Point3",
+					Expression = "Point(1,self.Point2.Y)",
+				},
+				Input16 = InstanceInput {
+					SourceOp = "BottomLine",
+					Source = "Point2",
+				},
+				ShowViewControls = InstanceInput {
+					SourceOp = "LeftLine",
+					Source = "ShowViewControls",
+					Page = "Visual Crop",
+				},
+				ShowResult = InstanceInput {
+					SourceOp = "Switcher",
+					Source = "Mix",
+					Page = "Visual Crop",
+				},
+				Blank1 = InstanceInput {
+					SourceOp = "VisualCrop",
+					Source = "Blank1",
+					Page = "Visual Crop",
+				},
+				CropLeft = InstanceInput {
+					SourceOp = "CropLeft",
+					Source = "Value",
+					Page = "Visual Crop",
+					Default = 0.25,
+				},
+				CropRight = InstanceInput {
+					SourceOp = "CropRight",
+					Source = "Value",
+					Page = "Visual Crop",
+					Default = 0.75,
+				},
+				CropTop = InstanceInput {
+					SourceOp = "CropTop",
+					Source = "Value",
+					Page = "Visual Crop",
+					Default = 0.75,
+				},
+				CropBottom = InstanceInput {
+					SourceOp = "CropBottom",
+					Source = "Value",
+					Page = "Visual Crop",
+					Default = 0.25,
+				},
+				SoftEdge = InstanceInput {
+					SourceOp = "Rectangle1",
+					Source = "SoftEdge",
+				},
+				CornerRadius = InstanceInput {
+					SourceOp = "Rectangle1",
+					Source = "CornerRadius",
+				},
+				Blank2 = InstanceInput {
+					SourceOp = "VisualCrop",
+					Source = "Blank1",
+					Page = "Visual Crop",
+				},
+				MainInput1 = InstanceInput {
+					SourceOp = "PipeRouter",
+					Source = "Input",
+				},
+				AutoCrop = InstanceInput {
+					SourceOp = "Autocropper",
+					Source = "AutoCrop",
+				},
+				ResetAll = InstanceInput {
+					SourceOp = "Autocropper",
+					Source = "ResetAll",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Switcher",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo {
+				Pos = { -330, -478.5 },
+				Flags = {
+					Expanded = true,
+					AllowPan = false,
+					GridSnap = true,
+					ShowGrid = false,
+					AutoSnap = true,
+					RemoveRouters = false
+				},
+				Size = { 414.667, 316.553, 173, 24.2424 },
+				Direction = "Horizontal",
+				PipeStyle = "Direct",
+				Scale = 1,
+				Offset = { 0, 0 }
+			},
+			Tools = ordered() {
+				LeftLine = TriangleMask {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						Solid = Input { Value = 0, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Point1 = Input {
+							Value = { 0.25, 1 },
+							Expression = "Point(self.Point2.X,1)",
+						},
+						Point3 = Input {
+							Value = { 0.25, 0 },
+							Expression = "Point(self.Point2.X,0)",
+						},
+						Point2 = Input {
+							SourceOp = "XYPath1",
+							Source = "Value",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -55, 32.902 } },
+					UserControls = ordered() {
+						Point2 = {
+							INP_DefaultX = 0.25,
+							INPID_PreviewControl = "CrosshairControl",
+							INP_DefaultY = 0.5,
+							LINKID_DataType = "Point",
+							ICS_ControlPage = "Controls",
+							INPID_InputControl = "OffsetControl",
+							CHC_Style = "NormalCross",
+							LINKS_Name = "Left",
+						}
+					}
+				},
+				XYPath1 = XYPath {
+					ShowKeyPoints = false,
+					DrawMode = "ModifyOnly",
+					CtrlWZoom = false,
+					Inputs = {
+						X = Input {
+							SourceOp = "CropLeft",
+							Source = "Value",
+						},
+						Y = Input {
+							SourceOp = "Publish2",
+							Source = "Value",
+						},
+						PlotPathInView = Input { Value = 0, },
+					},
+					UserControls = ordered() {
+						Center = {
+							INPID_PreviewControl = { Name = "none" },
+							LINKID_DataType = "Point",
+							INPID_InputControl = "OffsetControl",
+							CHC_Style = "Rectangle",
+							LINKS_Name = "Center",
+						},
+						Angle = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = false,
+							INPID_InputControl = "ScrewControl",
+							IC_Steps = 3601,
+							INP_MaxScale = 360,
+							INP_Default = 0,
+							INPID_PreviewControl = { Name = "none" },
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							INP_MinScale = 0,
+							LINKS_Name = "Angle",
+						}
+					}
+				},
+				CropLeft = PublishNumber {
+					CtrlWZoom = false,
+					NameSet = true,
+					Inputs = {
+						Value = Input { Value = 0.25 }
+					},
+					UserControls = ordered() {
+						Value = {
+							INP_MaxAllowed = 1,
+							INP_Integer = false,
+							INPID_InputControl = "ScrewControl",
+							INP_MaxScale = 1,
+							INP_Default = 0.25,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							ICD_Center = 0.5,
+							LINKS_Name = "Crop Left"
+						}
+					}
+				},
+				Publish2 = PublishNumber {
+					CtrlWZoom = false,
+					UserControls = ordered() {
+						Value = {
+							INP_MaxAllowed = 0.5,
+							INP_Integer = false,
+							INPID_InputControl = "ScrewControl",
+							INP_MaxScale = 0.5,
+							INP_Default = 0.5,
+							INP_MinScale = 0.5,
+							INP_MinAllowed = 0.5,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							ICD_Center = 0.5,
+							LINKS_Name = "FixedValuePointcontrols"
+						}
+					}
+				},
+				RightLine = TriangleMask {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "LeftLine",
+							Source = "Mask",
+						},
+						ShowViewControls = Input { Expression = "LeftLine.ShowViewControls", },
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						Solid = Input { Value = 0, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Point1 = Input {
+							Value = { 0.75, 1 },
+							Expression = "Point(self.Point2.X,1)",
+						},
+						Point3 = Input {
+							Value = { 0.75, 0 },
+							Expression = "Point(self.Point2.X,0)",
+						},
+						Point2 = Input {
+							SourceOp = "XYPath2",
+							Source = "Value",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { -55, 49.5006 } },
+					UserControls = ordered() {
+						Point2 = {
+							INP_DefaultX = 0.75,
+							INPID_PreviewControl = "CrosshairControl",
+							INP_DefaultY = 0.5,
+							LINKID_DataType = "Point",
+							ICS_ControlPage = "Controls",
+							INPID_InputControl = "OffsetControl",
+							CHC_Style = "NormalCross",
+							LINKS_Name = "Right",
+						}
+					}
+				},
+				XYPath2 = XYPath {
+					ShowKeyPoints = false,
+					DrawMode = "ModifyOnly",
+					CtrlWZoom = false,
+					Inputs = {
+						X = Input {
+							SourceOp = "CropRight",
+							Source = "Value",
+						},
+						Y = Input {
+							SourceOp = "Publish2_1",
+							Source = "Value",
+						},
+						PlotPathInView = Input { Value = 0, },
+					},
+					UserControls = ordered() {
+						Center = {
+							INPID_PreviewControl = { Name = "none" },
+							LINKID_DataType = "Point",
+							INPID_InputControl = "OffsetControl",
+							CHC_Style = "Rectangle",
+							LINKS_Name = "Center",
+						},
+						Angle = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = false,
+							INPID_InputControl = "ScrewControl",
+							IC_Steps = 3601,
+							INP_MaxScale = 360,
+							INP_Default = 0,
+							INPID_PreviewControl = { Name = "none" },
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							INP_MinScale = 0,
+							LINKS_Name = "Angle",
+						}
+					}
+				},
+				CropRight = PublishNumber {
+					CtrlWZoom = false,
+					NameSet = true,
+					Inputs = {
+						Value = Input { Value = 0.75 }
+					},
+					UserControls = ordered() {
+						Value = {
+							INP_MaxAllowed = 1,
+							INP_Integer = false,
+							INPID_InputControl = "ScrewControl",
+							INP_MaxScale = 1,
+							INP_Default = 0.75,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							ICD_Center = 0.5,
+							LINKS_Name = "Crop Right"
+						}
+					}
+				},
+				Publish2_1 = PublishNumber {
+					CtrlWZoom = false,
+					UserControls = ordered() {
+						Value = {
+							INP_MaxAllowed = 0.5,
+							INP_Integer = false,
+							INPID_InputControl = "ScrewControl",
+							INP_MaxScale = 0.5,
+							INP_Default = 0.5,
+							INP_MinScale = 0.5,
+							INP_MinAllowed = 0.5,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							ICD_Center = 0.5,
+							LINKS_Name = "FixedValuePointcontrols"
+						}
+					}
+				},
+				TopLine = TriangleMask {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "RightLine",
+							Source = "Mask",
+						},
+						ShowViewControls = Input { Expression = "LeftLine.ShowViewControls", },
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						Solid = Input { Value = 0, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Point1 = Input {
+							Value = { 0, 0.75 },
+							Expression = "Point(0,self.Point2.Y)",
+						},
+						Point3 = Input {
+							Value = { 1, 0.75 },
+							Expression = "Point(1,self.Point2.Y)",
+						},
+						Point2 = Input {
+							SourceOp = "XYPath3",
+							Source = "Value",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { -55, 82.5005 } },
+					UserControls = ordered() {
+						Point2 = {
+							INP_DefaultX = 0.5,
+							INPID_PreviewControl = "CrosshairControl",
+							INP_DefaultY = 0.75,
+							LINKID_DataType = "Point",
+							ICS_ControlPage = "Controls",
+							INPID_InputControl = "OffsetControl",
+							CHC_Style = "NormalCross",
+							LINKS_Name = "Top",
+						}
+					}
+				},
+				XYPath3 = XYPath {
+					ShowKeyPoints = false,
+					DrawMode = "ModifyOnly",
+					CtrlWZoom = false,
+					Inputs = {
+						X = Input {
+							SourceOp = "Fix1",
+							Source = "Value",
+						},
+						Y = Input {
+							SourceOp = "CropTop",
+							Source = "Value",
+						},
+						PlotPathInView = Input { Value = 0, },
+					},
+					UserControls = ordered() {
+						Center = {
+							INPID_PreviewControl = { Name = "none" },
+							LINKID_DataType = "Point",
+							INPID_InputControl = { Name = "none" },
+							CHC_Style = "Rectangle",
+							LINKS_Name = "Center",
+						},
+						Angle = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = false,
+							INPID_InputControl = "ScrewControl",
+							IC_Steps = 3601,
+							INP_MaxScale = 360,
+							INP_Default = 0,
+							INPID_PreviewControl = { Name = "none" },
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							INP_MinScale = 0,
+							LINKS_Name = "Angle",
+						}
+					}
+				},
+				Fix1 = PublishNumber {
+					CtrlWZoom = false,
+					NameSet = true,
+					UserControls = ordered() {
+						Value = {
+							INP_MaxAllowed = 0.5,
+							INP_Integer = false,
+							-- INPID_InputControl = "ScrewControl",
+							INPID_InputControl = { Name = "none" },
+							INP_MaxScale = 0.5,
+							INP_Default = 0.5,
+							INP_MinScale = 0.5,
+							INP_MinAllowed = 0.5,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							ICD_Center = 0.5,
+							LINKS_Name = "FixedValuePointcontrols"
+						}
+					}
+				},
+				CropTop = PublishNumber {
+					CtrlWZoom = false,
+					NameSet = true,
+					Inputs = {
+						Value = Input { Value = 0.75 }
+					},
+					UserControls = ordered() {
+						Value = {
+							INP_MaxAllowed = 1,
+							INP_Integer = false,
+							INPID_InputControl = "ScrewControl",
+							INP_MaxScale = 1,
+							INP_Default = 0.75,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							ICD_Center = 0.5,
+							LINKS_Name = "Crop Top"
+						}
+					}
+				},
+				BottomLine = TriangleMask {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "TopLine",
+							Source = "Mask",
+						},
+						ShowViewControls = Input { Expression = "LeftLine.ShowViewControls", },
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						Solid = Input { Value = 0, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Point1 = Input {
+							Value = { 0, 0.25 },
+							Expression = "Point(0,self.Point2.Y)",
+						},
+						Point3 = Input {
+							Value = { 1, 0.25 },
+							Expression = "Point(1,self.Point2.Y)",
+						},
+						Point2 = Input {
+							SourceOp = "XYPath4",
+							Source = "Value",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { -55, 122.66 } },
+					UserControls = ordered() {
+						Point2 = {
+							INP_DefaultX = 0.5,
+							INPID_PreviewControl = "CrosshairControl",
+							INP_DefaultY = 0.25,
+							LINKID_DataType = "Point",
+							ICS_ControlPage = "Controls",
+							INPID_InputControl = "OffsetControl",
+							CHC_Style = "NormalCross",
+							LINKS_Name = "Bottom",
+						}
+					}
+				},
+				XYPath4 = XYPath {
+					ShowKeyPoints = false,
+					DrawMode = "ModifyOnly",
+					CtrlWZoom = false,
+					Inputs = {
+						X = Input {
+							SourceOp = "Fix2",
+							Source = "Value",
+						},
+						Y = Input {
+							SourceOp = "CropBottom",
+							Source = "Value",
+						},
+						PlotPathInView = Input { Value = 0, },
+					},
+					UserControls = ordered() {
+						Center = {
+							INPID_PreviewControl = { Name = "none" },
+							LINKID_DataType = "Point",
+							INPID_InputControl = "OffsetControl",
+							CHC_Style = "Rectangle",
+							LINKS_Name = "Center",
+						},
+						Angle = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = false,
+							INPID_InputControl = "ScrewControl",
+							IC_Steps = 3601,
+							INP_MaxScale = 360,
+							INP_Default = 0,
+							INPID_PreviewControl = { Name = "none" },
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							INP_MinScale = 0,
+							LINKS_Name = "Angle",
+						}
+					}
+				},
+				Fix2 = PublishNumber {
+					CtrlWZoom = false,
+					NameSet = true,
+					UserControls = ordered() {
+						Value = {
+							INP_MaxAllowed = 0.5,
+							INP_Integer = false,
+							INPID_InputControl = "ScrewControl",
+							INP_MaxScale = 0.5,
+							INP_Default = 0.5,
+							INP_MinScale = 0.5,
+							INP_MinAllowed = 0.5,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							ICD_Center = 0.5,
+							LINKS_Name = "FixedValuePointcontrols"
+						}
+					}
+				},
+				CropBottom = PublishNumber {
+					CtrlWZoom = false,
+					NameSet = true,
+					Inputs = {
+						Value = Input { Value = 0.25 }
+					},
+					UserControls = ordered() {
+						Value = {
+							INP_MaxAllowed = 1,
+							INP_Integer = false,
+							INPID_InputControl = "ScrewControl",
+							INP_MaxScale = 1,
+							INP_Default = 0.25,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							ICD_Center = 0.5,
+							LINKS_Name = "Crop Bottom"
+						}
+					}
+				},
+				Rectangle1 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "BottomLine",
+							Source = "Mask",
+						},
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						Invert = Input { Value = 1, },
+						BorderWidth = Input { Expression = "-SoftEdge", },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Expression = "Point(((LeftLine.Point2.X+RightLine.Point2.X)/2),((BottomLine.Point2.Y+TopLine.Point2.Y)/2))", },
+						Width = Input { Expression = "(RightLine.Point2.X-LeftLine.Point2.X)", },
+						Height = Input { Expression = "(TopLine.Point2.Y-BottomLine.Point2.Y)", },
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, 181.5 } },
+				},
+				Autocropper = Crop {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						XSize = Input { Value = 1920, },
+						YSize = Input { Value = 1080, },
+						ResetSize = Input { Expression = "ResetAll", },
+						ResetOffset = Input { Expression = "ResetAll", },
+						Input = Input {
+							SourceOp = "VisualCrop",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 247.5 } },
+					UserControls = ordered() {
+						AutoCrop = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = true,
+							INPID_InputControl = "ButtonControl",
+							INP_MaxScale = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = -1000000,
+							LINKID_DataType = "Number",
+							INP_Passive = true,
+							INP_External = false,
+							LINKS_Name = "Autocrop",
+						},
+						ResetAll = {
+							INP_MaxAllowed = 1000000,
+							INP_Integer = true,
+							INP_MinAllowed = -1000000,
+							INPID_InputControl = "ButtonControl",
+							INP_MinScale = 0,
+							LINKID_DataType = "Number",
+							INP_MaxScale = 1,
+							LINKS_Name = "Reset Size and Offset",
+						}
+					}
+				},
+				VisualCrop = BrightnessContrast {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle1",
+							Source = "Mask",
+						},
+						Alpha = Input { Value = 1, },
+						Gain = Input { Value = 0, },
+						PreDividePostMultiply = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "PipeRouter",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -55, 247.5 } },
+				},
+				Switcher = Dissolve {
+					Transitions = {
+						[0] = "DFTDissolve"
+					},
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Background = Input {
+							SourceOp = "PipeRouter",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Autocropper",
+							Source = "Output",
+						},
+						Mix = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 165, 247.5 } },
+					UserControls = ordered() {
+						Mix = {
+							INP_MaxAllowed = 1,
+							INP_Integer = true,
+							INPID_InputControl = "CheckboxControl",
+							INP_MaxScale = 1,
+							INP_Default = 1,
+							INP_MinScale = 0,
+							INP_MinAllowed = 0,
+							LINKID_DataType = "Number",
+							ICS_ControlPage = "Controls",
+							CBC_TriState = false,
+							LINKS_Name = "Show Result"
+						}
+					}
+				},
+				PipeRouter = PipeRouter {
+					CtrlWShown = false,
+					NameSet = true,
+					ViewInfo = PipeRouterInfo { Pos = { -128.667, 110.591 } },
+				}
+			},
+			--UserControls = ordered() {
+            UserControls = ordered() { --[[CONTROL PAGES]]
+                Common = ControlPage {
+                    CT_Priority = 0,
+                    CTID_DIB_ID = "Icons.Tools.Tabs.Solve",
+                    CT_Visible = false,
+                },	
+	            Controls = ControlPage {
+                    CT_Priority = 0,
+                    CTID_DIB_ID = "Icons.Tools.Tabs.Solve",
+                    CT_Visible = false,
+                },
+				
+				Input2 = {
+					INP_DefaultX = 0.25,
+					INPID_PreviewControl = "PointControl",
+					INP_DefaultY = 1,
+					LINKID_DataType = "Point",
+					PCID_PrevPoint = "Input4",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Point 1",
+				},
+				Input3 = {
+					INP_DefaultX = 0.25,
+					INPID_PreviewControl = "PointControl",
+					INP_DefaultY = 0,
+					LINKID_DataType = "Point",
+					PCID_PrevPoint = "Input2",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Point 3",
+				},
+				Input4 = {
+					INP_DefaultX = 0.25,
+					INPID_PreviewControl = "CrosshairControl",
+					INP_DefaultY = 0.5,
+					LINKID_DataType = "Point",
+					ICS_ControlPage = "Controls",
+					CHC_Style = "NormalCross",
+					LINKS_Name = "Left",
+				},
+				Input6 = {
+					INP_DefaultX = 0.75,
+					INPID_PreviewControl = "PointControl",
+					INP_DefaultY = 1,
+					LINKID_DataType = "Point",
+					PCID_PrevPoint = "Input8",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Point 1",
+				},
+				Input7 = {
+					INP_DefaultX = 0.75,
+					INPID_PreviewControl = "PointControl",
+					INP_DefaultY = 0,
+					LINKID_DataType = "Point",
+					PCID_PrevPoint = "Input8",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Point 3",
+				},
+				Input8 = {
+					INP_DefaultX = 0.75,
+					INPID_PreviewControl = "CrosshairControl",
+					INP_DefaultY = 0.5,
+					LINKID_DataType = "Point",
+					ICS_ControlPage = "Controls",
+					CHC_Style = "NormalCross",
+					LINKS_Name = "Right",
+				},
+				Input10 = {
+					INP_DefaultX = 0,
+					INPID_PreviewControl = "PointControl",
+					INP_DefaultY = 0.75,
+					LINKID_DataType = "Point",
+					PCID_PrevPoint = "Input12",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Point 1",
+				},
+				Input11 = {
+					INP_DefaultX = 1,
+					INPID_PreviewControl = "PointControl",
+					INP_DefaultY = 0.75,
+					LINKID_DataType = "Point",
+					PCID_PrevPoint = "Input12",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Point 3",
+				},
+				Input12 = {
+					INP_DefaultX = 0.5,
+					INPID_PreviewControl = "CrosshairControl",
+					INP_DefaultY = 0.75,
+					LINKID_DataType = "Point",
+					ICS_ControlPage = "Controls",
+					CHC_Style = "NormalCross",
+					LINKS_Name = "Top",
+				},
+				Input14 = {
+					INP_DefaultX = 0,
+					INPID_PreviewControl = "PointControl",
+					INP_DefaultY = 0.25,
+					LINKID_DataType = "Point",
+					PCID_PrevPoint = "Input16",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Point 1",
+				},
+				Input15 = {
+					INP_DefaultX = 1,
+					INPID_PreviewControl = "PointControl",
+					INP_DefaultY = 0.25,
+					LINKID_DataType = "Point",
+					PCID_PrevPoint = "Input16",
+					ICS_ControlPage = "Controls",
+					LINKS_Name = "Point 3",
+				},
+				Input16 = {
+					INP_DefaultX = 0.5,
+					INPID_PreviewControl = "CrosshairControl",
+					INP_DefaultY = 0.25,
+					LINKID_DataType = "Point",
+					ICS_ControlPage = "Controls",
+					CHC_Style = "NormalCross",
+					LINKS_Name = "Bottom",
+				},
+				ShowResult = {
+					LINKS_Name = "Show Result",
+					LINKID_DataType = "Number",
+					INPID_InputControl = "MultiButtonControl",
+					INP_Integer = true,
+					INP_MinScale = 0,
+					INP_MaxScale = 1,
+					INP_MinAllowed = 0,
+					INP_MaxAllowed = 1,
+					{ MBTNC_AddButton = "Show Source" },
+					{ MBTNC_AddButton = "Show Result" },
+					MBTNC_ForceButtons = true,
+					MBTNC_ShowBasicButton = true,
+					MBTNC_ShowToolTip = true,
+					MBTNC_ShowName = false,
+					MBTNC_StretchToFit = true,
+					ICS_ControlPage = "Visual Crop"
+				},
+				VCrop = ControlPage {
+                    CT_Priority = 1,
+					CTS_Name = "Visual Crop",
+                    CTS_FullName = "Use the sliders to set the area of interest",
+                    CTID_DIB_ID = "Icons.Tools.Tabs.Crop",
+                    CT_Visible = true,
+                }
+			}
+		}
+	},
+	ActiveTool = "SdR_VisualCrop"
+}

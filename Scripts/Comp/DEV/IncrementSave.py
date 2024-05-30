@@ -28,6 +28,7 @@ from pathlib import Path
 
 comp = fu.GetCurrentComp()
 PATH_ENV = comp.MapPath(os.getenv("INCREMENT_SAVE_PATH"))
+ROOT_SAVE_FOLDER = "IncrementSave"
 comp_attrs = comp.GetAttrs()
 
 
@@ -35,13 +36,12 @@ def get_save_path(path_env=None):
     if path_env:
         path_env = Path(path_env)
         comp_path = Path(comp_attrs["COMPS_FileName"])
-        print(f"environment path found: {path_env}")
+        print(f"Environment path found: {path_env}")
         if not path_env.exists():
             path_env.mkdir(parents=True, exist_ok=True)
         return path_env / comp_path.stem
-    root_save_folder = "IncrementSave"
     comp_path = Path(comp.MapPath(comp_attrs["COMPS_FileName"]))
-    return comp_path.parent / root_save_folder / comp_path.stem
+    return comp_path.parent / ROOT_SAVE_FOLDER / comp_path.stem
 
 
 def get_increment_number(path):
@@ -68,7 +68,7 @@ def get_increment_number(path):
 
 def increment_comp():
     if not (sys.version_info.major == 3 and sys.version_info.minor >= 6):
-        print("this script requires Python version >= 3.6")
+        print("This script requires Python version >= 3.6")
         return
     source_file = Path(comp_attrs["COMPS_FileName"])
     comp_name = Path(comp_attrs["COMPS_Name"])
@@ -83,11 +83,11 @@ def increment_comp():
         )
         return
     destination_file = save_path / comp_name.with_suffix(f".{number:04}.comp")
-    print(f"saved comp version: {destination_file.name}")
+    print(f"Saved comp version: {destination_file.name}")
     try:
         source_file.rename(str(destination_file))
     except OSError:
-        print("source file name is empty")
+        print("Source file name is empty")
     comp.Save(source_file)
 
 
