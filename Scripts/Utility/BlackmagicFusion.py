@@ -1,5 +1,6 @@
 """
 Import Fusion scripting module using importlib
+Helps finding scripting fusion module for Fusion versions from 8 to 19
 
 Copyright © 2024 Alexey Bogomolov
 
@@ -28,20 +29,20 @@ import os
 
 
 def load_module(module_name, file_path):
-    try:
+    if sys.version_info[0] >= 3 and sys.version_info[1] >= 5:
         import importlib.util
-        import importlib.machinery
-
-        loader = importlib.machinery.ExtensionFileLoader(module_name, file_path)
-        spec = importlib.util.spec_from_loader(module_name, loader)
-        module = importlib.util.module_from_spec(spec)
-        loader.exec_module(module)
+        module = None
+        spec = importlib.util.spec_from_file_location(module_name, file_path)
+        if spec:
+            module = importlib.util.module_from_spec(spec)
+        if module:
+            sys.modules[module_name] = module
+            spec.loader.exec_module(module)
         return module
-    except ImportError:
+    else:
         # Fallback to imp if importlib is not available
         import imp
-
-        return imp.load_dynamic(module_name, file_path)
+        return imp.load_source(module_name, file_path)
 
 
 def get_platform_paths():
@@ -51,6 +52,8 @@ def get_platform_paths():
             [
                 "./",
                 "/Applications/DaVinci Resolve/DaVinci Resolve.app/Contents/Libraries/Fusion/",
+                "/Applications/Blackmagic Fusion 19/Fusion.app/Contents/MacOS/",
+                "/Applications/Blackmagic Fusion 19 Render Node/Fusion.app/Contents/MacOS/",
                 "/Applications/Blackmagic Fusion 18/Fusion.app/Contents/MacOS/",
                 "/Applications/Blackmagic Fusion 18 Render Node/Fusion.app/Contents/MacOS/",
                 "/Applications/Blackmagic Fusion 17/Fusion.app/Contents/MacOS/",
@@ -68,6 +71,8 @@ def get_platform_paths():
             [
                 ".\\",
                 "C:\\Program Files\\Blackmagic Design\\DaVinci Resolve\\",
+                "C:\\Program Files\\Blackmagic Design\\Fusion 19\\",
+                "C:\\Program Files\\Blackmagic Design\\Fusion Render Node 19\\"
                 "C:\\Program Files\\Blackmagic Design\\Fusion 18\\",
                 "C:\\Program Files\\Blackmagic Design\\Fusion Render Node 18\\",
                 "C:\\Program Files\\Blackmagic Design\\Fusion 17\\",
@@ -85,6 +90,8 @@ def get_platform_paths():
             [
                 "./",
                 "/opt/resolve/libs/Fusion/",
+                "/opt/BlackmagicDesign/Fusion19/",
+                "/opt/BlackmagicDesign/FusionRenderNode19/",
                 "/opt/BlackmagicDesign/Fusion18/",
                 "/opt/BlackmagicDesign/FusionRenderNode18/",
                 "/opt/BlackmagicDesign/Fusion17/",
@@ -100,7 +107,10 @@ def get_platform_paths():
     }
 
     # Default to an empty list for unsupported platforms
-    return platform_paths.get(sys.platform, ("", []))
+    paths = platform_paths.get(sys.platform, ("", []))
+    if not paths[1]:
+        print("Fusion paths not found for your platform. Please ensure that the module fuscript is discoverable by Python")
+    return paths
 
 
 def find_and_load_module(module_name):
