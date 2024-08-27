@@ -29,15 +29,17 @@ from fusion_utils import BaseUI
 from pathlib import Path
 
 comp = fu.GetCurrentComp()
+TITLE = 'FX Setup'
 
 
 class ShowUI(BaseUI):
-    def __init__(self, fusion, title=None):
-        self.title = "Main Window" if title is None else title
+    def __init__(self, title=None):
+        self.title = TITLE if title is None else title
         geometry = [800, 600, 440, 130]
-        super().__init__(fusion, self.title, geometry, id="VFXSetup")
+        super().__init__(self.title, geometry, id="VFXSetup")
         self.setup_callbacks()
         self.itm = self.win.GetItems()
+        self.show()
 
     def setup_callbacks(self):
         self.win.On.CopyCompPath.Clicked = self.copy_comp_path
@@ -129,4 +131,4 @@ class ShowUI(BaseUI):
         ]
 
 
-ShowUI(fu, "VFX Setup").show()
+ShowUI()
