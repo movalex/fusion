@@ -1,1 +1,0 @@
-../../Comp/DEV/ftrack/install_package.py
