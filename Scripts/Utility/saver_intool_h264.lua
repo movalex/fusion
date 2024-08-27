@@ -28,6 +28,7 @@
 -- (On Mac/Linux you can find the active ffmpeg path out using: "which ffmpeg")
 
 -- Step 4. Render a short test sequence in Fusion. You should have a new .mp4 movie and a log .txt file saved in the same folder as your rendered image sequence. If you have a saver node based Sound Filename entered it will be added automatically as an audio track to the encoded movie file.
+
 print('[FFMPEG Encoding Intool Script]')
 
 fusion = fu or Fusion()
@@ -63,83 +64,77 @@ audioOffset = self.SoundOffset
 -- -------------------------------------------------------
 
 -- Find out the current operating system platform. The platform local variable should be set to either "Windows", "Mac", or "Linux".
-osPlatform = ' '
-ffmpegProgramPath = ' '
--- Check if the OS is Windows by searching for the Program Files folder
-if string.find(fusion:MapPath('Fusion:/'), 'Program Files', 1) then
-  osPlatform = 'Windows'
+local function getPlatformAndFFmpegPath()
+    -- Function to get the operating system platform and FFmpeg path
+    local osPlatform = ''
+    local ffmpegProgramPath = ''
+    local fusionPath = fusion:MapPath('Fusion:/')
 
-ffmpegProgramPath = 'C:\\ffmpeg\\bin\\ffmpeg'
--- Check if the OS is Windows by searching for the Program Files folder
-elseif string.find(fusion:MapPath('Fusion:/'), 'PROGRA~1', 1) then
-  osPlatform = 'Windows'
+    if string.find(fusionPath, 'Program Files', 1) or string.find(fusionPath, 'PROGRA~1', 1) then
+        osPlatform = 'Windows'
+        ffmpegProgramPath = 'C:\\ffmpeg\\bin\\ffmpeg'
+    elseif string.find(fusionPath, 'Applications', 1) then
+        osPlatform = 'Mac'
+        ffmpegProgramPath = '/usr/local/bin/ffmpeg'
+    else
+        osPlatform = 'Linux'
+        ffmpegProgramPath = '/usr/bin/ffmpeg'
+    end
 
-ffmpegProgramPath = 'C:\\ffmpeg\\bin\\ffmpeg'
--- Check if the OS is Mac by searching for the Applications folder
-elseif string.find(fusion:MapPath('Fusion:/'), 'Applications', 1) then
-  osPlatform = 'Mac'
-  ffmpegProgramPath = '/usr/local/bin/ffmpeg'
-
-else
-  osPlatform = 'Linux'
-  ffmpegProgramPath = '/usr/bin/ffmpeg'
+    return osPlatform, ffmpegProgramPath
 end
 
+-- Get the platform and FFmpeg path
+local osPlatform, ffmpegProgramPath = getPlatformAndFFmpegPath()
+
+-- Print the results
 print('[OS] ' .. osPlatform)
 print('[FFMPEG Path] ' .. ffmpegProgramPath)
-
 -- -------------------------------------------------------
--- Helper functions copied from the scriptlib.lua file
+-- Helper function for file parsing
 -- -------------------------------------------------------
 
-function parseFilename(filename)
-print('parsing filename...')
-local seq = {}
-seq.FullPath = filename
+local function parseFilename(filename)
+    print('Parsing filename...')
+    
+    local seq = {
+        FullPath = filename,
+        Path = '',
+        FullName = '',
+        Name = '',
+        Extension = '',
+        SNum = '0000',
+        Number = 0,
+        Padding = 4,
+        CleanName = ''
+    }
 
-print('full path ' .. seq.FullPath)
+    print('Full path: ' .. seq.FullPath)
 
-string.gsub(seq.FullPath, "^(.+[/\\])(.+)", 
-function(path, name)
-    seq.Path = path
-    print('folder path: ' .. seq.Path)
-    seq.FullName = name
-    print('file name: ' .. seq.FullName)
-end)
+    -- Extract path and full name
+    seq.Path, seq.FullName = string.match(seq.FullPath, "^(.-[/\\]?)([^/\\]+)$")
+    seq.Path = seq.Path or ''
+    seq.FullName = seq.FullName or ''
+    print('Folder path: ' .. (seq.Path ~= '' and seq.Path or '(none)'))
+    print('File name: ' .. (seq.FullName ~= '' and seq.FullName or '(none)'))
 
-string.gsub(seq.FullName, "^(.+)(%..+)$", 
-function(name, ext)
-    seq.Name = name
-    print('name: ' .. seq.Name)
-    seq.Extension = ext
-    print('extension: ' .. seq.Extension)
-end)
+    -- Extract name and extension
+    seq.Name, seq.Extension = string.match(seq.FullName, "^(.-)(%..+)$")
+    seq.Name = seq.Name or seq.FullName
+    seq.Extension = seq.Extension or ''
+    print('Name: ' .. seq.Name)
+    print('Extension: ' .. (seq.Extension ~= '' and seq.Extension or '(none)'))
 
-if not seq.Name then -- no extension?
-seq.Name = seq.FullName
-end
+    -- Extract sequence number
+    seq.SNum = string.match(seq.Name, "%d+$") or '0000'
+    seq.Number = tonumber(seq.SNum) or 0
+    seq.Padding = string.len(seq.SNum)
+    seq.CleanName = string.match(seq.Name, "^(.-)%d+$") or seq.Name
 
-seq.SNum = string.match(seq.Name, "%d+$")
+    print('Start number: ' .. seq.SNum)
+    print('Clean Name: ' .. seq.CleanName)
 
-if seq.SNum then 
-    seq.Number = tonumber( seq.SNum ) 
-    seq.Padding = string.len( seq.SNum )
-    seq.CleanName = string.match(seq.Name,"^(.-)%d+$" )
-else
-    seq.SNum = "0000"
-    seq.Number = 0
-    seq.Padding = 4
-    seq.CleanName = seq.Name
-end
-
-print('Start number: ' .. seq.SNum)    
-print('Clean Name: ' .. seq.CleanName)
-
-if seq.Extension == nil then 
-seq.Extension = ""
-end
-
-return seq
+    return seq
 end
 
 -- -------------------------------------------------------
@@ -200,10 +195,13 @@ print('[FFMPEG Exported Movie] ' .. ffmpegMovieFilename)
 ffmpegLogFilename = seq.Path .. seq.CleanName .. '.txt'
 print('[FFMPEG Logfile] ' .. ffmpegLogFilename)
 
--- A gamma 1 to 2.2 adjustment should be applied for exr output
+-- A gamma 1 to 2.2 adjustment should be applied for EXR output
 -- Note: Your copy of FFMPEG has to support the "-apply_trc" option or you will get an "Unrecognized option 'apply_trc'." error message in the log file.
 
+-- Initialize gamma correction command
 ffmpegApplyGammaCorrection = ' '
+
+-- Check if the file extension is .exr and apply gamma correction
 if seq.Extension == '.exr' then
     print('[FFMPEG EXR Gammma 1.0 to 2.2 Transform Active] [Image Format]' .. seq.Extension)
     -- Convert a linear exr to REC 709
@@ -214,18 +212,41 @@ if seq.Extension == '.exr' then
 end
 
 -- Set the frame rate for the encoded movie
-frameRate = comp:GetPrefs("Comp.FrameFormat.Rate")
+local frameRate = comp:GetPrefs("Comp.FrameFormat.Rate")
 if frameRate == nil then
     frameRate = 25
+    print('[Framerate data not found, fallback to] ' .. frameRate .. "fps")
+else
+    print('[FFMPEG Frame Rate] ' .. frameRate.. "fps")
 end
 
-print('[FFMPEG Frame Rate] ' .. frameRate)
-
 -- -------------------------------------------------------
--- Encode the image sequence into a movie using ffmpeg
+-- Encode the image sequence into a movie using FFMPEG
 -- -------------------------------------------------------
 
-command = ffmpegProgramPath .. ' ' .. ffmpegAudioPrefixCommands .. ' ' .. ffmpegApplyGammaCorrection .. ' -framerate ' .. frameRate .. ' -f image2 -start_number ' .. comp.RenderStart .. ' -i "' .. ffmpegImageSequenceFilename .. '" -r ' .. frameRate .. ' -y -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -f mp4 -vcodec libx264 -crf 18 -pix_fmt yuv420p -acodec aac ' .. ffmpegAudioPostfixCommands .. ' -strict -2  "' .. ffmpegMovieFilename .. '" >> "' .. ffmpegLogFilename .. '" 2>&1'
+-- Construct the FFMPEG command
+local command = table.concat({
+    ffmpegProgramPath,
+    ffmpegAudioPrefixCommands,
+    ffmpegApplyGammaCorrection,
+    '-framerate', frameRate,
+    '-f image2',
+    '-start_number', comp.RenderStart,
+    '-i "' .. ffmpegImageSequenceFilename .. '"',
+    '-r', frameRate,
+    '-y',
+    '-vf "scale=trunc(iw/2)*2:trunc(ih/2)*2"',
+    '-f mp4',
+    '-vcodec libx264',
+    '-crf 18',
+    '-pix_fmt yuv420p',
+    '-acodec aac',
+    ffmpegAudioPostfixCommands,
+    '-strict -2',
+    '"' .. ffmpegMovieFilename .. '" >> "' .. ffmpegLogFilename .. '" 2>&1'
+}, ' ')
+
+-- Print and execute the command
 print('[Launch Command] ' .. command)
 os.execute(command)
 
