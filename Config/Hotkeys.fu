@@ -136,7 +136,7 @@
         R = "AddTool{ id = 'Loader' }",
         W = "AddTool{ id = 'Saver' }",
         U = "AddTool{ id = 'Underlay' }",
-        F10 = "RunScript{filename = 'Scripts:/Comp/reveal_in_finder.py'}",
+        F10 = "RunScript{filename = 'Scripts:/Utility/reveal_in_finder.py'}",
         SHIFT_M = "RunScript{filename = 'Scripts:/Utility/stx_merge3DConnect.lua'}",
         SHIFT_C = "AddTool{ id = 'Camera3D' }",
         SHIFT_R = "AddTool{ id = 'Renderer3D' }",
