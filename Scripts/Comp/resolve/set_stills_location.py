@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-from resolve_utils import RequestDir
+from UI_utils import RequestDir
+from pathlib import Path
 
 """
     This is a Davinci Resolve script to set stills saving location
@@ -29,14 +30,19 @@ from resolve_utils import RequestDir
     
 """
 
-STILL_FRAME_REF = 2
+def set_stills_folder():
+    target_data = fu.GetData("ResolveSaveStills.Folder")
+    target_folder = RequestDir.selected_directory(title="Set stills location", target=target_data)
+    if not target_folder or target_folder == " ":
+        print("Stills folder not set.")
+        return
+    if not Path(target_folder).exists():
+        print(f"Folder {target_folder} does not exist")
+        return
+    fu.SetData("ResolveSaveStills.Folder", target_folder)
+    print(f"Stills export directory is set to {target_folder}")
+
 
 
 if __name__ == "__main__":
-    target_data = fu.GetData("ResolveSaveStills.Folder")
-    target_folder = RequestDir(fusion, title="Set stills location", target=target_data).run()
-    if not target_folder or target_folder == " ":
-        print("Stills folder not set.")
-    else:
-        fu.SetData("ResolveSaveStills.Folder", target_folder)
-        print(f"Stills export directory is set to {target_folder}")
+    set_stills_folder()
