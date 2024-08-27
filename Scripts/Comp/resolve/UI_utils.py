@@ -216,9 +216,6 @@ class WarningDialog(BaseUI):
 
 
 class BaseRequestDialog(BaseUI, ABC):
-    @abstractmethod
-    def get_request_action(self):
-        pass
 
     def __init__(self, title=None, target=None):
         self.title = "Choose Directory" if title is None else title
@@ -227,6 +224,10 @@ class BaseRequestDialog(BaseUI, ABC):
         super().__init__(self.title, geometry, id="RequestDialog")
         self.itm = self.win.GetItems()
         self.setup_callbacks()
+
+    @abstractmethod
+    def get_request_action(self):
+        pass
 
     def setup_callbacks(self):
         self.win.On.RequestButton.Clicked = self.request_action
