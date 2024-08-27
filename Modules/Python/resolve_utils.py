@@ -28,11 +28,13 @@
 import sys
 from pathlib import Path
 from typing import Any
-from abc import ABC, abstractmethod
+from get_resolve import GetResolve
+
+resolve = GetResolve()
 
 
 class ResolveUtility:
-    def __init__(self, resolve: Any):
+    def __init__(self):
         """
         Initialize the ResolveUtility with a resolve object.
         """
@@ -64,41 +66,45 @@ class ResolveUtility:
             raise
         
     def get_current_project(self):
-        return self.project_manager.GetCurrentProject()
+        project = self.project_manager.GetCurrentProject()
+        if project is None:
+            raise RuntimeError("No current project found.")
+        return project
 
     def get_current_timeline(self):
         project = self.get_current_project()
-        if project is None:
-            raise RuntimeError("No current project found.")
         return project.GetCurrentTimeline()
 
     def get_gallery(self):
         project = self.get_current_project()
-        if project is None:
-            raise RuntimeError("No current project found.")
         return project.GetGallery()
 
     def get_mediapool(self):
         project = self.get_current_project()
-        if project is None:
-            raise RuntimeError("No current project found.")
         return project.GetMediaPool()
 
+    def get_timelines(self):
+        project = self.get_current_project()
+        timelines = {}
+        timeline_count = self.project.GetTimelineCount()
+        for i in range(1, timeline_count + 1):
+            timeline = self.project.GetTimelineByIndex(float(i))
+            timelines[timeline.GetName()] = float(i)
+        return timelines
+
     def add_to_mediapool(self, file: list, subfolder_name=None):
-        print(f"importing {file}")
+        print(f"Importing {file}")
         pool = self.get_mediapool()
         if pool is None:
             raise RuntimeError("No media pool found.")
         root = pool.GetRootFolder()  
         if subfolder_name:
             folders = {folder.GetName(): folder for folder in root.GetSubFolderList()}
-            print(folders)
             if not subfolder_name in folders.keys():
                 folder = pool.AddSubFolder(root, subfolder_name)
             else:
                 folder = folders[subfolder_name]
         else:
             folder = root
-        print(folder)
         pool.SetCurrentFolder(folder)
         pool.ImportMedia(file)
