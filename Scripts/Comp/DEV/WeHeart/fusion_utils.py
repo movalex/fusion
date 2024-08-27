@@ -244,4 +244,4 @@ class RequestFile(BaseRequestDialog):
 
 if __name__ == "__main__":
     fusion = get_fusion_module()
-    RequestDir(fusion).run()
+    RequestDir()
