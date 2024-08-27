@@ -142,8 +142,6 @@ class BBCodeRenderer(BaseRenderer):
     def list(self, body, ordered, **attrs):
         return self.parse_element_to_bbcode(body)
 
-    # Add more methods as needed to cover the Markdown features you use
-
 
 def request_file_names(init_dir: str) -> list:
     root = Tk()
@@ -179,7 +177,7 @@ def write_file(file_name, text, suffix):
         print(f"[md2Reactor] created {out.name}")
 
 
-def main(file_path):
+def main(file_path: Path):
     if not file_path or not file_path.exists() or not file_path.suffix.lower() == ".md":
         print("no markdown file_path selected")
         return
