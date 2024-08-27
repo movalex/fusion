@@ -1,5 +1,5 @@
 """
-    Utility script for basic Scripting API operations in Davinci Resolve
+    Utility script for basic Scripting API UI operations in Davinci Resolve and Fusion
 
     License: MIT
     Copyright © 2024 Alexey Bogomolov
