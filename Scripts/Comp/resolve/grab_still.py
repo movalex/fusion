@@ -26,22 +26,26 @@
 """
 
 import os
+import DaVinciResolveScript as dvr_script
 from datetime import datetime
 from pathlib import Path
-from resolve_utils import (
+from resolve_utils import ResolveUtility
+
+from UI_utils import (
     RequestDir,
-    get_gallery,
-    get_current_timeline,
-    create_folder,
-    cleanup_drx,
+    ConfirmationDialog,
 )
 from typing import TypeVar
 
-STILL_FRAME_REF = 1  # 1 - First frame, 2 - Middle frame
-STILL_ALBUM = "Export"
+
+resolve = dvr_script.scriptapp("Resolve")
+utils = ResolveUtility(resolve)
+
+STILL_ALBUM = "STILLS"
 DELETE_STILLS = True
-OPEN_EDIT_PAGE_AFTER_EXPORT = False
+OPEN_EDIT_PAGE_AFTER_EXPORT = True
 CLEANUP_DRX = True
+STILL_FORMAT = "png"
 galleryStillAlbum = TypeVar("galleryStillAlbum")
 
 
@@ -52,12 +56,30 @@ def get_target_folder(app) -> str:
     """
     target_folder_data = app.GetData("ResolveSaveStills.Folder")
     if not target_folder_data or target_folder_data == "":
-        target_folder = RequestDir(
-            "The stills will be saved to: ", target=target_folder_data
-        ).run()
+        target_folder = RequestDir("The stills will be saved to: ", target_folder_data)
         return target_folder
 
     return target_folder_data
+
+
+def get_drx_file(folder, still_filename: Path) -> Path:
+    for file in folder.iterdir():
+        if file.suffix == ".drx" and file.name.startswith(still_filename.stem):
+            return file
+
+
+def remove_drx_file(still_filepath: Path):
+    print("CLEANUP_DRX is enabled")
+
+    answer = ConfirmationDialog(
+        title="DRX files deletion!",
+        request=f"Do you wish to delete this files\n'{still_filepath.name}'?",
+    )
+    if answer:
+        try:
+            still_filepath.unlink()
+        except Exception:
+            raise
 
 
 def get_still_album(gallery, album_name: str) -> galleryStillAlbum:
@@ -69,9 +91,11 @@ def get_still_album(gallery, album_name: str) -> galleryStillAlbum:
             still_album = gallery.GetCurrentStillAlbum()
     if not still_album:
         print(
-            f"Stills album '{album_name}' not found. Currently I'm unable to can create the still albums for you. Would you do this manually, please?"
+            f"Default still album '{album_name}' is not found. Please create this album if you want to store screenshots in specific album"
         )
-        print("The stills will be saved to the currently selected album")
+        print(
+            "The stills will be saved to the currently selected album or the first available"
+        )
 
         still_album = gallery.GetCurrentStillAlbum()
     return still_album
@@ -84,13 +108,24 @@ def get_file_prefix(clip_name, timeline_name):
     return file_prefix
 
 
-def post_processing(still, still_album, target_folder):
-    if DELETE_STILLS:
-        print("DELETE_STILLS is enabled, latest still will is deleted")
-        still_album.DeleteStills(still)
+def post_processing(still, still_album, target_folder, file_prefix):
+
+    still_label = Path(still_album.GetLabel(still))
+    still_filename = f"{file_prefix}.{STILL_FORMAT}"
+    file_path = Path(target_folder) / still_filename
+    drx_file = get_drx_file(target_folder, Path(still_filename))
+    utils.add_to_mediapool(
+        [drx_file.with_suffix(f".{STILL_FORMAT}").as_posix()],
+        subfolder_name=STILL_ALBUM,
+    )
 
     if CLEANUP_DRX:
-        cleanup_drx(target_folder)
+        # print(f"Cleaning the drx file for {still_label}")
+        remove_drx_file(drx_file)
+
+    if DELETE_STILLS:
+        print("DELETE_STILLS is enabled, latest still is deleted from the still album")
+        still_album.DeleteStills(still)
 
     if OPEN_EDIT_PAGE_AFTER_EXPORT:
         resolve.OpenPage("edit")
@@ -104,12 +139,12 @@ def grab_still(album_name: str):
     if not fu.GetResolve():
         print("This is a script for Davinci Resolve")
         return
-    current_timeline = get_current_timeline(resolve)
+    current_timeline = utils.get_current_timeline()
     current_clip_name = current_timeline.GetCurrentVideoItem().GetName()
     timeline_name = current_timeline.GetName()
 
     file_prefix = get_file_prefix(current_clip_name, timeline_name)
-    gallery = get_gallery(resolve)
+    gallery = utils.get_gallery()
 
     still_album = get_still_album(gallery, STILL_ALBUM)
 
@@ -122,12 +157,15 @@ def grab_still(album_name: str):
         return
     target_folder = Path(target_folder, still_album_name)
     if not target_folder.exists():
-        create_folder(target_folder)
-    still = current_timeline.GrabStill(STILL_FRAME_REF)
+        utils.create_folder(target_folder)
+    still = current_timeline.GrabStill()
     still_album.SetLabel(still, current_clip_name)
-    still_album.ExportStills([still], target_folder.as_posix(), file_prefix, "png")
+    print(f"Exporting:\ntarget_folder:{target_folder}\nfile_prefix:{file_prefix}")
+    still_album.ExportStills(
+        [still], target_folder.as_posix(), file_prefix, STILL_FORMAT
+    )
     print(f"Still is saved to {target_folder}")
-    post_processing(still, still_album, target_folder)
+    post_processing(still, still_album, target_folder, file_prefix)
 
 
 if __name__ == "__main__":
