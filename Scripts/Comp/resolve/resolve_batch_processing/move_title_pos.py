@@ -26,7 +26,7 @@ def process():
     clips = timeline.GetItemListInTrack("Video", 3)
 
     if len(clips) == 0:
-        print("no stills saved")
+        print("No clips found")
         return
     answer = ConfirmationDialog("Move Position", "Do you want to move positions?")
     if answer:
