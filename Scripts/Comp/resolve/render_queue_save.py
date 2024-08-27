@@ -29,16 +29,17 @@
 import DaVinciResolveScript as dvr_script
 import json
 from pathlib import Path
-from resolve_utils import RequestDir
+from UI_utils import RequestDir
+from resolve_utils import ResolveUtility
 from datetime import datetime
 
 
 resolve = dvr_script.scriptapp("Resolve")
-projectManager = resolve.GetProjectManager()
-project = projectManager.GetCurrentProject()
+utils = ResolveUtility(resolve)
 
 
 def save_render_queue(folder_path):
+    project = utils.get_current_project()
     queue_file = Path(folder_path, f"render_queue_{project.GetName()}_{datetime.now().date()}.json")
     render_job_list = project.GetRenderJobList()
     if not render_job_list:
@@ -50,5 +51,5 @@ def save_render_queue(folder_path):
 
 
 if __name__ == "__main__":
-    output_folder = RequestDir(fu, title="Choose folder to export queue").run()
+    output_folder = RequestDir(title="Choose folder to export queue")
     save_render_queue(folder_path=output_folder)

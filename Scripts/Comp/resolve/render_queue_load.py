@@ -26,9 +26,11 @@
 """
 
 import json
+import time
 import DaVinciResolveScript as dvr_script
 from pathlib import Path
-from resolve_utils import BaseUI, ConfirmationDialog
+from UI_utils import BaseUI, ConfirmationDialog
+from pprint import pprint
 
 
 resolve = dvr_script.scriptapp("Resolve")
@@ -82,18 +84,19 @@ def build_queue(preset_name, timeline_name, timeline_name_override, job_list):
         render_settings["MarkOut"] = job["MarkOut"]
         render_settings["CustomName"] = file_stem
         project.SetRenderSettings(render_settings)
+        time.sleep(.2)
 
 
 class LoadQueueUI(BaseUI):
-    def __init__(self, fusion, timeline_name, title=None):
+    def __init__(self, timeline_name, title=None):
         self.title = "Main Window" if title is None else title
         geometry = [800, 600, 450, 180]
-        self.queue_path = fusion.GetData("RenderQueueFilePath")
-        super().__init__(fusion, title, geometry, id="LoadQueueWindow")
         self.timeline_name = timeline_name
+        super().__init__(title, geometry, id="LoadQueueWindow")
         self.itm = self.win.GetItems()
         self.fill_timelines()
         self.fill_custom_presets()
+        self.queue_path = self.fusion.GetData("RenderQueueFilePath")
         self.setup_callbacks()
 
     def setup_callbacks(self):
@@ -219,23 +222,23 @@ class LoadQueueUI(BaseUI):
         preset_name = self.itm["PresetsCombo"].CurrentText
         timeline_name = self.itm["TimelinesCombo"].CurrentText
         render_job_list = get_render_list()
+        # pprint(render_job_list)
 
-        dialog = ConfirmationDialog(
-            fusion=fu,
+        confirmed = ConfirmationDialog(
             title="Do you want to import the render queue?",
             info=[
                 f"Preset selected: {preset_name}",
                 f"Total Jobs to be loaded: {len(render_job_list)}",
             ],
         )
-        confirmed = dialog.run()
         if not confirmed:
             print("Cancelled!")
             return
         build_queue(preset_name, timeline_name, override_timeline, render_job_list)
-        disp.ExitLoop()
+        print("Done!")
+        self.disp.ExitLoop()
 
 
 timelines = get_timelines()
 timeline_name = project.GetCurrentTimeline().GetName()
-LoadQueueUI(fu, timeline_name, title="Restore Render Queue").show()
+LoadQueueUI(timeline_name, title="Restore Render Queue")
