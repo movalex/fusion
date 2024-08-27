@@ -27,7 +27,6 @@
 
 import sys
 from pathlib import Path
-from abc import ABC, abstractmethod
 
 
 def get_fusion_module():
@@ -72,7 +71,15 @@ class BaseUI:
         self.disp.ExitLoop()
 
 
-class ConfirmationDialog(BaseUI):
+class ConfirmationDialogMeta(type):
+    def __call__(cls, *args, **kwargs):
+        # Create the instance
+        instance = super().__call__(*args, **kwargs)
+        # Automatically run the dialog and return the result
+        return instance.run()
+
+
+class ConfirmationDialog(BaseUI, metaclass=ConfirmationDialogMeta):
     def __init__(self, title=None, request=None, info=[]):
         self.title = "Confirmation Dialog" if title is None else title
         self.request = request
@@ -95,7 +102,6 @@ class ConfirmationDialog(BaseUI):
         geometry = [base_width, base_height, win_x, adjusted_height]
         super().__init__(self.title, geometry, id="ConfirmationDialog")
         self.setup_callbacks()
-        self.run()
 
     def setup_callbacks(self):
         self.win.On.OkButton.Clicked = self.request_confirmed
@@ -215,22 +221,26 @@ class WarningDialog(BaseUI):
         ]
 
 
-class BaseRequestDialog(BaseUI, ABC):
+class RequestDialogMeta(type):
+    def __call__(cls, *args, **kwargs):
+        # Create the instance of the class and automatically run the dialog
+        instance = super().__call__(*args, **kwargs)
+        return instance.run()
 
-    def __init__(self, title=None, target=None):
+
+class BaseRequestDialog(BaseUI, metaclass=RequestDialogMeta):
+
+    def __init__(self, title=None, target=None, request_type=None):
         self.title = "Choose Directory" if title is None else title
         geometry = [800, 700, 630, 50]
         self.target = target or Path("~/Desktop").expanduser().absolute()
+        self.request_type = request_type  # Specify if it's a dir or file request
         super().__init__(self.title, geometry, id="RequestDialog")
         self.itm = self.win.GetItems()
         self.setup_callbacks()
 
-    @abstractmethod
-    def get_request_action(self):
-        pass
-
     def setup_callbacks(self):
-        self.win.On.RequestButton.Clicked = self.request_action
+        self.win.On.RequestButton.Clicked = self.request_action_callback
         self.win.On.RequestDialog.Close = self.close
         self.win.On.SaveButton.Clicked = self.close
 
@@ -254,32 +264,32 @@ class BaseRequestDialog(BaseUI, ABC):
             ]
         )
 
-    @classmethod
-    def get_selected(cls, title=None, target=None):
-        instance = cls(title, target)
-        return instance.run()
+    def request_action_callback(self, ev):
+        # Dynamically call self.fusion.RequestDir or self.fusion.RequestFile
+        if self.request_type == "dir":
+            target = self.fusion.RequestDir(self.target)
+        elif self.request_type == "file":
+            target = self.fusion.RequestFile(self.target)
 
-    def request_action(self, ev):
-        target = self.get_request_action()
-        self.itm["FolderLine"].Text = target
+        if target:
+            self.itm["FolderLine"].Text = target
 
     def run(self):
         self.show()
         return self.itm["FolderLine"].Text
 
+    @classmethod
+    def get_selected(cls, title=None, target=None, request_action=None):
+        instance = cls(title, target, request_action)
+        return instance.run()
+
 
 class RequestDir(BaseRequestDialog):
-    def get_request_action(self):
-        return self.fusion.RequestDir()
+    def __init__(self, title=None, target=None):
+        super().__init__(title, target, request_type="dir")  # Specify directory request
 
-    @classmethod
-    def selected_directory(cls, title=None, target=None):
-        return cls.get_selected(title, target)
 
 class RequestFile(BaseRequestDialog):
-    def get_request_action(self):
-        return self.fusion.RequestFile()
+    def __init__(self, title=None, target=None):
+        super().__init__(title, target, request_type="file")  # Specify file request
 
-    @classmethod
-    def selected_file(cls, title=None, target=None):
-        return cls.get_selected(title, target)
