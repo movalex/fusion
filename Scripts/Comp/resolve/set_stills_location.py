@@ -32,7 +32,7 @@ from pathlib import Path
 
 def set_stills_folder():
     target_data = fu.GetData("ResolveSaveStills.Folder")
-    target_folder = RequestDir.selected_directory(title="Set stills location", target=target_data)
+    target_folder = RequestDir(title="Set stills location", target=target_data)
     if not target_folder or target_folder == " ":
         print("Stills folder not set.")
         return
