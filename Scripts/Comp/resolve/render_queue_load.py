@@ -26,7 +26,6 @@
 """
 
 import json
-import time
 import DaVinciResolveScript as dvr_script
 from pathlib import Path
 from UI_utils import BaseUI, ConfirmationDialog
@@ -84,7 +83,6 @@ def build_queue(preset_name, timeline_name, timeline_name_override, job_list):
         render_settings["MarkOut"] = job["MarkOut"]
         render_settings["CustomName"] = file_stem
         project.SetRenderSettings(render_settings)
-        time.sleep(.2)
 
 
 class LoadQueueUI(BaseUI):
@@ -96,8 +94,8 @@ class LoadQueueUI(BaseUI):
         self.itm = self.win.GetItems()
         self.fill_timelines()
         self.fill_custom_presets()
-        self.queue_path = self.fusion.GetData("RenderQueueFilePath")
         self.setup_callbacks()
+        self.show()
 
     def setup_callbacks(self):
         self.win.On.CheckBox.Clicked = self.toggle_timelines
@@ -123,6 +121,7 @@ class LoadQueueUI(BaseUI):
 
     def layout(self):
         ui = self.ui
+        queue_path = self.fusion.GetData("RenderQueueFilePath")
 
         return [
             ui.VGroup(
@@ -181,7 +180,7 @@ class LoadQueueUI(BaseUI):
                             ui.Label(
                                 {
                                     "ID": "FileLabel",
-                                    "Text": Path(self.queue_path).name
+                                    "Text": Path(queue_path).name
                                     or "Queue File Not Loaded!",
                                     "AlignmentFlag": "AlignRight",
                                 }

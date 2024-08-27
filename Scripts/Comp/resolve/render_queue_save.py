@@ -25,8 +25,6 @@
     
 """
 
-
-import DaVinciResolveScript as dvr_script
 import json
 from pathlib import Path
 from UI_utils import RequestDir
@@ -34,13 +32,14 @@ from resolve_utils import ResolveUtility
 from datetime import datetime
 
 
-resolve = dvr_script.scriptapp("Resolve")
-utils = ResolveUtility(resolve)
+utils = ResolveUtility()
 
 
 def save_render_queue(folder_path):
     project = utils.get_current_project()
-    queue_file = Path(folder_path, f"render_queue_{project.GetName()}_{datetime.now().date()}.json")
+    queue_file = Path(
+        folder_path, f"render_queue_{project.GetName()}_{datetime.now().date()}.json"
+    )
     render_job_list = project.GetRenderJobList()
     if not render_job_list:
         print("Render Queue list is empty, cancelling")
