@@ -3,8 +3,7 @@
 # donate: https://www.paypal.com/paypalme/aabogomolov/
 # MIT License -- https://opensource.org/licenses/MIT
 #
-# Version history:
-# 09/17/2021
+# Version history from 09/17/2021:
 #   v1.0 -- Initial commit
 #   v1.1 -- bug fixing, add frames number concatenation
 #   v1.2 -- use file range instead of comp range
