@@ -25,7 +25,7 @@
     
 """
 
-from fusion_utils import BaseUI
+from UI_utils import BaseUI
 from pathlib import Path
 
 comp = fu.GetCurrentComp()
