@@ -36,7 +36,7 @@ def get_fusion_module():
 
 
 class BaseUI:
-    def __init__(self, window_title, geometry, id="DefaultID"):
+    def __init__(self, window_title, geometry=[800, 600, 440, 130], id="DefaultID"):
         self.fusion = get_fusion_module()
         self.ui = self.fusion.UIManager
         self.id = id
@@ -85,21 +85,25 @@ class ConfirmationDialog(BaseUI, metaclass=ConfirmationDialogMeta):
         self.request = request
         self.info = info
         self.confirmed = False
+        self.win_x = 500
+        self.win_y = 130
 
-        # Truncate the info list
-        if len(self.info) > 10:
-            self.info = self.info[:10]
-            print("Confirmation dialogue is truncated to first 10 elements")
-        # Convert info to HTML content
+        # Truncate the info list if too long, and notify
+        max_info_items = 5
+        if len(self.info) > max_info_items:
+            self.info = self.info[:max_info_items]
+            print(f"Confirmation dialog is truncated to the first {max_info_items} elements.")
+
+        # Convert info to HTML content, with line truncation and visual indicators for long lines
         self.info_html = self.info_to_html(self.info)
-        # Adjust the height based on the number of info
-        info_height_per_line = 20  # Estimated height per line
 
-        additional_height = len(self.info) * info_height_per_line
-        base_width, base_height, win_x, win_y = 800, 600, 450, 130
-        adjusted_height = win_y + additional_height  # Add some padding for aesthetics
+        # Adjust dialog height dynamically based on info length
+        info_height_per_line = 22  # Estimated height per line
+        additional_win_height = len(self.info) * info_height_per_line
+        screen_x, screen_y = 800, 600
+        adjusted_win_height = self.win_y + additional_win_height
 
-        geometry = [base_width, base_height, win_x, adjusted_height]
+        geometry = [screen_x, screen_y, self.win_x, adjusted_win_height]
         super().__init__(self.title, geometry, id="ConfirmationDialog")
         self.setup_callbacks()
 
@@ -117,15 +121,19 @@ class ConfirmationDialog(BaseUI, metaclass=ConfirmationDialogMeta):
         self.disp.ExitLoop()
 
     def info_to_html(self, info: list):
-        max_length = 80  # Maximum allowed length for a line
+        max_visible_length = self.win_x // 6  # Approximate characters fitting in window x (assuming ~8px/char)
+        truncated_suffix = "..."  # Suffix to indicate truncated text
         html_content = ""
+
         for line in info:
-            if len(line) > max_length:
-                # Notify developer if the text is too large
-                print(
-                    f"Warning: Subtitle length exceeds the maximum allowed ({max_length} characters): {line}"
-                )
-            html_content += f"<p>{line}</p>"
+            if len(line) > max_visible_length:
+                print(f"Warning: Line exceeds maximum width. Truncating: {line}")
+                # Truncate the line for display, show only part of it with an ellipsis
+                truncated_line = line[:max_visible_length - len(truncated_suffix)] + truncated_suffix
+                html_content += f"<p style='word-wrap: break-word;'>{truncated_line}</p>"
+            else:
+                html_content += f"<p style='word-wrap: break-word;'>{line}</p>"
+
         return html_content
 
     def layout(self):
@@ -135,7 +143,7 @@ class ConfirmationDialog(BaseUI, metaclass=ConfirmationDialogMeta):
                     self.ui.Label(
                         {
                             "ID": "TitleLabel",
-                            "Text": f"<H2>{self.title}</H2>{self.info_html}",
+                            "Text": f"<H3>{self.title}</H3>{self.info_html}",
                             "Weight": 0.5,
                             "Alignment": {
                                 "AlignHCenter": True,
@@ -280,6 +288,7 @@ class BaseRequestDialog(BaseUI, metaclass=RequestDialogMeta):
 
     @classmethod
     def get_selected(cls, title=None, target=None, request_action=None):
+        """deprecated"""
         instance = cls(title, target, request_action)
         return instance.run()
 
