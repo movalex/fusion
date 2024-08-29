@@ -1,38 +1,56 @@
 #!/usr/bin/env python
 
 """
-    This is a Davinci Resolve script switch text+ versions
-    Author: Alexey Bogomolov
-    Email: mail@abogomolov.com
-    License: MIT
-    Copyright: 2022
+    ╔════════════════════════════════════════════════════════════════════╗
+    ║                                                                    ║
+    ║    DaVinci Resolve Multi-Clip Font Switcher                        ║
+    ║                                                                    ║
+    ║    Description:                                                    ║
+    ║      This script automates the process of switching fonts across   ║
+    ║      multiple clips in DaVinci Resolve, allowing for batch changes ║
+    ║      in Fusion compositions and Text+ elements. Ideal for creating ║
+    ║      consistent typography across various versions of a timeline.  ║
+    ║                                                                    ║
+    ║    Author: Alexey Bogomolov                                        ║
+    ║    Contact: mail@abogomolov.com                                    ║
+    ║    License: MIT                                                    ║
+    ║    Copyright © 2022 Alexey Bogomolov                               ║
+    ║                                                                    ║
+    ║                                                                    ║
+    ╚════════════════════════════════════════════════════════════════════╝
 """
 
-FONT_STYLE = ["Mongoose"]
+from UI_utils import ConfirmationDialog
+from resolve_utils import ResolveUtility
+
+utils = ResolveUtility()
+FONT_STYLE = "Mongoose"
 
 
-def switch_font():
-    """create stills from all clips in a timeline
-    save the files to requested folder
+def switch_font(comp):
     """
-    if not fu.GetResolve():
-        print("This is a script for Davinci Resolve")
+    switch font im the credits
+    """
+
+    text = comp.FindTool("NSC_Credits")
+    if not text:
+        return
+    text.Input2[1] = FONT_STYLE
+
+
+def process_clips(move_x: float):
+    """Main function to process all clips in the timeline."""
+    clips = utils.get_clips_in_timeline("Video", 3)
+    if not clips:
         return
 
-    project = resolve.GetProjectManager().GetCurrentProject()
-    timeline = project.GetCurrentTimeline()
-    clips = timeline.GetItemListInTrack("Video", 10)
-
-    if len(clips) == 0:
-        print("no stills saved")
-        return
-
-    for clip in clips:
-        print(f"changing font of {clip.GetName()} to {FONT_STYLE[0]}")
-        comp = clip.GetFusionCompByName("Composition 1")
-        text = comp.FindTool("NSC_Credits")
-        text.Input2[1] = FONT_STYLE[0]
+    answer = ConfirmationDialog(
+        "Switching font", f"Do you want switch font to {FONT_STYLE}?"
+    )
+    if answer:
+        for clip in clips:
+            utils.process_fusion_comp(process_functions=[switch_font])
 
 
 if __name__ == "__main__":
-    switch_font()
+    process_clips()
