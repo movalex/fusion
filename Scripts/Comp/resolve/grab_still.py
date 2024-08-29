@@ -39,12 +39,13 @@ from typing import TypeVar
 
 
 resolve = dvr_script.scriptapp("Resolve")
-utils = ResolveUtility(resolve)
+utils = ResolveUtility()
 
 STILL_ALBUM = "STILLS"
 DELETE_STILLS = True
 OPEN_EDIT_PAGE_AFTER_EXPORT = True
 CLEANUP_DRX = True
+CONFIRM_DELETE = False
 STILL_FORMAT = "png"
 galleryStillAlbum = TypeVar("galleryStillAlbum")
 
@@ -70,11 +71,13 @@ def get_drx_file(folder, still_filename: Path) -> Path:
 
 def remove_drx_file(still_filepath: Path):
     print("CLEANUP_DRX is enabled")
-
-    answer = ConfirmationDialog(
-        title="DRX files deletion!",
-        request=f"Do you wish to delete this files\n'{still_filepath.name}'?",
-    )
+    if CONFIRM_DELETE:
+        answer = ConfirmationDialog(
+            title="DRX files deletion!",
+            request=f"Do you wish to delete the DRX file?",
+        )
+    else:
+        answer = True
     if answer:
         try:
             still_filepath.unlink()
