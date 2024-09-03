@@ -36,7 +36,7 @@ def get_fusion_module():
 
 
 class BaseUI:
-    def __init__(self, window_title, geometry=[800, 600, 440, 130], id="DefaultID"):
+    def __init__(self, window_title, geometry=[800, 600, 400, 200], id="DefaultID"):
         self.fusion = get_fusion_module()
         self.ui = self.fusion.UIManager
         self.id = id
@@ -45,8 +45,13 @@ class BaseUI:
         self.geometry = geometry
         self.itm = None
         self.win = self.create_window(self.geometry)
+        self.setup_close_event()
+
+    def setup_close_event(self):
+        self.win.On[self.id].Close = self.close
 
     def create_window(self, geometry):
+
         self.win = self.disp.AddWindow(
             {
                 "ID": self.id,
@@ -59,15 +64,15 @@ class BaseUI:
         return self.win
 
     def layout(self, *args):
-        # Placeholder for layout, should be overridden in subclasses
-        raise NotImplementedError
+        print("Layout not implemented in the subclass. Using Empty Layout")
+        return self.ui.VGroup([])
 
     def show(self):
         self.win.Show()
         self.disp.RunLoop()
         self.win.Hide()
 
-    def close(self, ev):
+    def close(self, ev=None):
         self.disp.ExitLoop()
 
 
@@ -82,7 +87,7 @@ class ConfirmationDialogMeta(type):
 class ConfirmationDialog(BaseUI, metaclass=ConfirmationDialogMeta):
     def __init__(self, title=None, request=None, info=[]):
         self.title = "Confirmation Dialog" if title is None else title
-        self.request = request
+        self.request = request or "Do you want to proceed?"
         self.info = info
         self.confirmed = False
         self.win_x = 500
@@ -92,7 +97,9 @@ class ConfirmationDialog(BaseUI, metaclass=ConfirmationDialogMeta):
         max_info_items = 5
         if len(self.info) > max_info_items:
             self.info = self.info[:max_info_items]
-            print(f"Confirmation dialog is truncated to the first {max_info_items} elements.")
+            print(
+                f"Confirmation dialog is truncated to the first {max_info_items} elements."
+            )
 
         # Convert info to HTML content, with line truncation and visual indicators for long lines
         self.info_html = self.info_to_html(self.info)
@@ -121,7 +128,9 @@ class ConfirmationDialog(BaseUI, metaclass=ConfirmationDialogMeta):
         self.disp.ExitLoop()
 
     def info_to_html(self, info: list):
-        max_visible_length = self.win_x // 6  # Approximate characters fitting in window x (assuming ~8px/char)
+        max_visible_length = (
+            self.win_x // 6
+        )  # Approximate characters fitting in window x (assuming ~8px/char)
         truncated_suffix = "..."  # Suffix to indicate truncated text
         html_content = ""
 
@@ -129,59 +138,62 @@ class ConfirmationDialog(BaseUI, metaclass=ConfirmationDialogMeta):
             if len(line) > max_visible_length:
                 print(f"Warning: Line exceeds maximum width. Truncating: {line}")
                 # Truncate the line for display, show only part of it with an ellipsis
-                truncated_line = line[:max_visible_length - len(truncated_suffix)] + truncated_suffix
-                html_content += f"<p style='word-wrap: break-word;'>{truncated_line}</p>"
+                truncated_line = (
+                    line[: max_visible_length - len(truncated_suffix)]
+                    + truncated_suffix
+                )
+                html_content += (
+                    f"<p style='word-wrap: break-word;'>{truncated_line}</p>"
+                )
             else:
                 html_content += f"<p style='word-wrap: break-word;'>{line}</p>"
 
         return html_content
 
     def layout(self):
-        return [
-            self.ui.VGroup(
-                [
-                    self.ui.Label(
-                        {
-                            "ID": "TitleLabel",
-                            "Text": f"<H3>{self.title}</H3>{self.info_html}",
-                            "Weight": 0.5,
-                            "Alignment": {
-                                "AlignHCenter": True,
-                                "AlignVCenter": True,
-                            },
-                        }
-                    ),
-                    self.ui.Label(
-                        {
-                            "ID": "RequestLabel",
-                            "Text": self.request,
-                            "Weight": 0.5,
-                            "Alignment": {
-                                "AlignHCenter": True,
-                                "AlignVCenter": True,
-                            },
-                        }
-                    ),
-                    self.ui.HGroup(
-                        {"Alignment": {"AlignHRight": True}, "Weight": 0},
-                        [
-                            self.ui.Button(
-                                {
-                                    "ID": "OkButton",
-                                    "Text": "Ok",
-                                }
-                            ),
-                            self.ui.Button(
-                                {
-                                    "ID": "CancelButton",
-                                    "Text": "Cancel",
-                                }
-                            ),
-                        ],
-                    ),
-                ]
-            ),
-        ]
+        return self.ui.VGroup(
+            [
+                self.ui.Label(
+                    {
+                        "ID": "TitleLabel",
+                        "Text": f"<H3>{self.title}</H3>{self.info_html}",
+                        "Weight": 0.5,
+                        "Alignment": {
+                            "AlignHCenter": True,
+                            "AlignVCenter": True,
+                        },
+                    }
+                ),
+                self.ui.Label(
+                    {
+                        "ID": "RequestLabel",
+                        "Text": self.request,
+                        "Weight": 0.5,
+                        "Alignment": {
+                            "AlignHCenter": True,
+                            "AlignVCenter": True,
+                        },
+                    }
+                ),
+                self.ui.HGroup(
+                    {"Alignment": {"AlignHRight": True}, "Weight": 0},
+                    [
+                        self.ui.Button(
+                            {
+                                "ID": "OkButton",
+                                "Text": "Ok",
+                            }
+                        ),
+                        self.ui.Button(
+                            {
+                                "ID": "CancelButton",
+                                "Text": "Cancel",
+                            }
+                        ),
+                    ],
+                ),
+            ]
+        )
 
 
 class WarningDialog(BaseUI):
@@ -199,34 +211,32 @@ class WarningDialog(BaseUI):
         self.win.On.OkButton.Clicked = self.close
 
     def layout(self):
-        return [
-            self.ui.VGroup(
-                [
-                    self.ui.Label(
-                        {
-                            "ID": "TitleLabel",
-                            "Text": f"<H2>{self.message}</H2>",
-                            "Weight": 0.5,
-                            "Alignment": {
-                                "AlignHCenter": True,
-                                "AlignVCenter": True,
-                            },
-                        }
-                    ),
-                    self.ui.HGroup(
-                        {"Alignment": {"AlignHRight": True}, "Weight": 0},
-                        [
-                            self.ui.Button(
-                                {
-                                    "ID": "OkButton",
-                                    "Text": "Ok",
-                                }
-                            ),
-                        ],
-                    ),
-                ]
-            )
-        ]
+        return self.ui.VGroup(
+            [
+                self.ui.Label(
+                    {
+                        "ID": "TitleLabel",
+                        "Text": f"<H2>{self.message}</H2>",
+                        "Weight": 0.5,
+                        "Alignment": {
+                            "AlignHCenter": True,
+                            "AlignVCenter": True,
+                        },
+                    }
+                ),
+                self.ui.HGroup(
+                    {"Alignment": {"AlignHRight": True}, "Weight": 0},
+                    [
+                        self.ui.Button(
+                            {
+                                "ID": "OkButton",
+                                "Text": "Ok",
+                            }
+                        ),
+                    ],
+                ),
+            ]
+        )
 
 
 class RequestDialogMeta(type):
@@ -240,6 +250,7 @@ class BaseRequestDialog(BaseUI, metaclass=RequestDialogMeta):
 
     def __init__(self, title=None, target=None, request_type=None):
         self.title = "Choose Directory" if title is None else title
+        self.result = None
         geometry = [800, 700, 630, 50]
         self.target = target or Path("~/Desktop").expanduser().absolute()
         self.request_type = request_type  # Specify if it's a dir or file request
@@ -249,7 +260,7 @@ class BaseRequestDialog(BaseUI, metaclass=RequestDialogMeta):
 
     def setup_callbacks(self):
         self.win.On.RequestButton.Clicked = self.request_action_callback
-        self.win.On.RequestDialog.Close = self.close
+        self.win.On.RequestDialog.Close = self.cancel
         self.win.On.SaveButton.Clicked = self.close
 
     def layout(self):
@@ -268,7 +279,7 @@ class BaseRequestDialog(BaseUI, metaclass=RequestDialogMeta):
                 self.ui.Button(
                     {"Weight": 0.2, "ID": "RequestButton", "Text": "Browse..."}
                 ),
-                self.ui.Button({"Weight": 0.1, "ID": "SaveButton", "Text": "Select"}),
+                self.ui.Button({"Weight": 0.1, "ID": "SaveButton", "Text": "Proceed"}),
             ]
         )
 
@@ -284,14 +295,13 @@ class BaseRequestDialog(BaseUI, metaclass=RequestDialogMeta):
 
     def run(self):
         self.show()
-        return self.itm["FolderLine"].Text
+        self.result = self.itm["FolderLine"].Text
+        return self.result
 
-    @classmethod
-    def get_selected(cls, title=None, target=None, request_action=None):
-        """deprecated"""
-        instance = cls(title, target, request_action)
-        return instance.run()
-
+    def cancel(self, ev=None):
+        self.result = None
+        self.close()
+        return self.result
 
 class RequestDir(BaseRequestDialog):
     def __init__(self, title=None, target=None):
@@ -301,4 +311,3 @@ class RequestDir(BaseRequestDialog):
 class RequestFile(BaseRequestDialog):
     def __init__(self, title=None, target=None):
         super().__init__(title, target, request_type="file")  # Specify file request
-
