@@ -22,8 +22,8 @@
 
 from UI_utils import ConfirmationDialog
 from resolve_utils import ResolveUtility
-utils = ResolveUtility()
 
+utils = ResolveUtility()
 
 
 def move_title_text(comp):
@@ -35,7 +35,7 @@ def move_title_text(comp):
     utils.modify_tool_parameters(comp, tool_name, modifications)
 
 
-def process_clips(move_x: float):
+def process_clips():
     """Main function to process all clips in the timeline."""
     clips = utils.get_clips_in_timeline("Video", 3)
     if not clips:
@@ -44,9 +44,7 @@ def process_clips(move_x: float):
     answer = ConfirmationDialog("Move Position", "Do you want to move titles?")
     if answer:
         for clip in clips:
-            utils.process_fusion_comp([
-                move_title_text
-            ])
+            utils.process_fusion_comp(clip, process_functions=[move_title_text])
 
 
 if __name__ == "__main__":
