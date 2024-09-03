@@ -152,7 +152,7 @@ class ResolveUtility:
         else:
             print("No processing functions provided.")
 
-    def modify_tool_parameters(self, comp, tool_name, modifications):
+    def modify_tool_parameters(self, comp, tool_name: str, modifications: dict):
         """
         Find a tool by its name in the composition and apply modifications.
         :param comp: The Fusion composition.
