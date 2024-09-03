@@ -28,7 +28,7 @@
 import json
 import DaVinciResolveScript as dvr_script
 from pathlib import Path
-from UI_utils import BaseUI, ConfirmationDialog
+from UI_utils import BaseUI, ConfirmationDialog, WarningDialog
 from pprint import pprint
 
 
@@ -38,9 +38,9 @@ project = projectManager.GetCurrentProject()
 
 
 def get_render_list():
-    queue_file = app.GetData("RenderQueueFilePath")
+    queue_file = app.GetData("RenderQueueData.QueuePath")
     if not Path(queue_file).exists():
-        print("Export the queue file!")
+        WarningDialog(message="Export the queue file!")
         return
     with open(queue_file, "r", encoding="utf-8") as file:
         return json.load(file)
@@ -102,7 +102,6 @@ class LoadQueueUI(BaseUI):
         self.win.On.RunButton.Clicked = self.process_queue
         self.win.On.LoadButton.Clicked = self.load_queue_file
         self.win.On.CancelButton.Clicked = self.close
-        self.win.On.LoadQueueWindow.Close = self.close
 
     def fill_timelines(self):
         timelines = get_timelines()
@@ -121,89 +120,85 @@ class LoadQueueUI(BaseUI):
 
     def layout(self):
         ui = self.ui
-        queue_path = self.fusion.GetData("RenderQueueFilePath")
+        queue_path = self.fusion.GetData("RenderQueueData.QueuePath") or "~/Desktop"
 
-        return [
-            ui.VGroup(
-                [
-                    ui.HGroup(
-                        {"Weight": 0},
-                        [
-                            ui.Label(
-                                {
-                                    "ID": "TimelinesLabel",
-                                    "Text": "Choose Timeline:",
-                                    "AlignmentFlag": "AlignCenter",
-                                }
-                            ),
-                            ui.Label(
-                                {
-                                    "ID": "PresetsLabel",
-                                    "Text": "Choose Preset:",
-                                    "AlignmentFlag": "AlignCenter",
-                                }
-                            ),
-                        ],
-                    ),
-                    ui.HGroup(
-                        {"Weight": 0},
-                        [
-                            ui.ComboBox(
-                                {
-                                    "ID": "TimelinesCombo",
-                                    "Text": "Choose Timeline:",
-                                    "Enabled": False,
-                                }
-                            ),
-                            ui.ComboBox(
-                                {
-                                    "ID": "PresetsCombo",
-                                    "Text": "Choose Preset:",
-                                }
-                            ),
-                        ],
-                    ),
-                    ui.HGroup(
-                        [
-                            ui.CheckBox(
-                                {
-                                    "Weight": 0,
-                                    "ID": "CheckBox",
-                                    "Text": "Override Timeline",
-                                    "AlignmentFlag": "AlignRight",
-                                }
-                            ),
-                        ]
-                    ),
-                    ui.HGroup(
-                        [
-                            ui.Label(
-                                {
-                                    "ID": "FileLabel",
-                                    "Text": Path(queue_path).name
-                                    or "Queue File Not Loaded!",
-                                    "AlignmentFlag": "AlignRight",
-                                }
-                            ),
-                        ]
-                    ),
-                    ui.HGroup(
-                        [
-                            ui.Button({"ID": "LoadButton", "Text": "Load Queue File"}),
-                        ]
-                    ),
-                    ui.HGroup(
-                        {"Alignment": {"AlignHRight": True}, "Weight": 0},
-                        [
-                            ui.Button(
-                                {"ID": "RunButton", "Text": "Build Render Queue"}
-                            ),
-                            ui.Button({"ID": "CancelButton", "Text": "Cancel"}),
-                        ],
-                    ),
-                ],
-            ),
-        ]
+        return ui.VGroup(
+            [
+                ui.HGroup(
+                    {"Weight": 0},
+                    [
+                        ui.Label(
+                            {
+                                "ID": "TimelinesLabel",
+                                "Text": "Choose Timeline:",
+                                "AlignmentFlag": "AlignCenter",
+                            }
+                        ),
+                        ui.Label(
+                            {
+                                "ID": "PresetsLabel",
+                                "Text": "Choose Preset:",
+                                "AlignmentFlag": "AlignCenter",
+                            }
+                        ),
+                    ],
+                ),
+                ui.HGroup(
+                    {"Weight": 0},
+                    [
+                        ui.ComboBox(
+                            {
+                                "ID": "TimelinesCombo",
+                                "Text": "Choose Timeline:",
+                                "Enabled": False,
+                            }
+                        ),
+                        ui.ComboBox(
+                            {
+                                "ID": "PresetsCombo",
+                                "Text": "Choose Preset:",
+                            }
+                        ),
+                    ],
+                ),
+                ui.HGroup(
+                    [
+                        ui.CheckBox(
+                            {
+                                "Weight": 0,
+                                "ID": "CheckBox",
+                                "Text": "Override Timeline",
+                                "AlignmentFlag": "AlignRight",
+                            }
+                        ),
+                    ]
+                ),
+                ui.HGroup(
+                    [
+                        ui.Label(
+                            {
+                                "ID": "FileLabel",
+                                "Text": Path(queue_path).name
+                                or "Queue File Not Loaded!",
+                                "AlignmentFlag": "AlignRight",
+                            }
+                        ),
+                    ]
+                ),
+                ui.HGroup(
+                    [
+                        ui.Button({"ID": "LoadButton", "Text": "Load Queue File"}),
+                    ]
+                ),
+                ui.HGroup(
+                    {"Alignment": {"AlignHRight": True}, "Weight": 0},
+                    [
+                        ui.Button({"ID": "RunButton", "Text": "Build Render Queue"}),
+                        ui.Button({"ID": "CancelButton", "Text": "Cancel"}),
+                    ],
+                ),
+            ],
+        )
 
     def toggle_timelines(self, ev):
         self.itm["TimelinesCombo"].Enabled = self.itm["CheckBox"].Checked
@@ -214,7 +209,7 @@ class LoadQueueUI(BaseUI):
             print("Queue File does not exist!")
             return
         self.itm["FileLabel"].Text = queue_file.name
-        app.SetData("RenderQueueFilePath", queue_file.as_posix())
+        app.SetData("RenderQueueData.QueuePath", queue_file.as_posix())
 
     def process_queue(self, ev):
         override_timeline = self.itm["CheckBox"].Checked
