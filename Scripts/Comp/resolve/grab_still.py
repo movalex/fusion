@@ -58,6 +58,7 @@ def get_target_folder(app) -> str:
     target_folder_data = app.GetData("ResolveSaveStills.Folder")
     if not target_folder_data or target_folder_data == "":
         target_folder = RequestDir("The stills will be saved to: ", target_folder_data)
+        app.SetData("ResolveSaveStills.Folder", target_folder)
         return target_folder
 
     return target_folder_data
