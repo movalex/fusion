@@ -1,40 +1,55 @@
 #!/usr/bin/env python
 
 """
-    This is a Davinci Resolve script will change each text+ tabs values
-    Author: Alexey Bogomolov
-    Email: mail@abogomolov.com
-    License: MIT
-    Copyright: 2022
+    ╔════════════════════════════════════════════════════════════════════╗
+    ║                                                                    ║
+    ║    DaVinci Resolve Batch Text+ Tabs switcher                       ║
+    ║                                                                    ║
+    ║    Description:                                                    ║
+    ║      This script automates the process of switching Text+ tabs     ║
+    ║      positions across a timeline in DaVinci Resolve. Ideal         ║
+    ║      for batch modifications, such as repositioning or parameter   ║
+    ║      changes, streamlining your workflow with precision and speed. ║
+    ║                                                                    ║
+    ║    Author: Alexey Bogomolov                                        ║
+    ║    Contact: mail@abogomolov.com                                    ║
+    ║    License: MIT                                                    ║
+    ║    Copyright © 2022 Alexey Bogomolov                               ║
+    ║                                                                    ║
+    ║                                                                    ║
+    ╚════════════════════════════════════════════════════════════════════╝
 """
+from UI_utils import ConfirmationDialog
+from resolve_utils import ResolveUtility
+utils = ResolveUtility()
 
-TABS_VALUES = [-0.01, 0.01]
 
-
-def switch_text_tabs():
+def switch_text_tabs(comp):
     """create stills from all clips in a timeline
     save the files to requested folder
     """
-    if not fu.GetResolve():
-        print("This is a script for Davinci Resolve")
+    tabs_values = [-0.01, 0.01]
+    tool_name = "Template"
+    modifications = {
+        "Tab1Position": tabs_values[0],
+        "Tab3Position": tabs_values[1],
+    }
+    utils.modify_tool_parameters(comp, tool_name, modifications)
+
+
+def process_clips():
+    """Main function to process all clips in the timeline."""
+    clips = utils.get_clips_in_timeline("Video", 3)
+    if not clips:
         return
 
-    project = resolve.GetProjectManager().GetCurrentProject()
-    timeline = project.GetCurrentTimeline()
-    clips = timeline.GetItemListInTrack("Video", 2)
-
-    if len(clips) == 0:
-        print("no stills saved")
-        return
-
-    for clip in clips:
-        if clip.GetName() == "Transition":
-            continue
-        comp = clip.GetFusionCompByName("Composition 1")
-        text = comp.FindTool("Template")
-        text.Tab1Position[1] = TABS_VALUES[0]
-        text.Tab3Position[1] = TABS_VALUES[1]
+    answer = ConfirmationDialog("Switch tabs", "Do you want to proceed?")
+    if answer:
+        for clip in clips:
+            # if clip.GetName() == "Transition":
+            #     continue
+            utils.process_fusion_comp(clip, process_functions=[switch_text_tabs])
 
 
 if __name__ == "__main__":
-    switch_text_tabs()
+    process_clips()
