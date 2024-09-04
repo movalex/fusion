@@ -81,9 +81,12 @@
             -- fix edit filtered entries
             -- fix always on top option
             -- fix QT deprecation warnings
-        2024/04
-        v0.3.3
+        v0.3.3 - 2024/04 
             -- Logging info to stdout
+        v0.4 - 2024/09
+            -- refactoring
+            -- use AI to add docstrings 
+            -- use UI utils instead of tkinter
 
     License:
         The authors hereby grant permission to use, copy, and distribute this
@@ -116,8 +119,9 @@ import sys
 import logging
 from pprint import pprint
 
-__VERSION__ = 3.3
-__beta__ = False
+from UI_utils import ConfirmationDialog, WarningDialog
+
+__VERSION__ = 0.4
 __license__ = "MIT"
 __copyright__ = """2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>
 2019-2024, Alexey Bogomolov <mail[AT]abogomolov.com>"""
@@ -127,6 +131,7 @@ PKG_REQUIRED = "PySide6"
 REMOTE_FUSION_ACCESS = False
 DEFAULT_HOST = "localhost"
 LOG_LEVEL = "debug"  # info, warning, debug
+SCRIPT_NAME = "Attribute Spreadsheet"
 
 # Do not auto-load the spreadsheet on startup
 # if more than given number of tools selected
@@ -136,39 +141,34 @@ LOAD_SELECTED_TOOLS_LIMIT = 10
 def compatible_python():
     """Only Python 3.6 or higher is supported"""
 
-    return sys.version_info.major == 3 and sys.version_info.minor >= 6
+    return sys.version_info >= (3, 6)
 
 
 def check_python_version():
+    """Check the Python version and alert the user if it's incompatible."""
     if not compatible_python():
-        log.info(f"current python version is {sys.version}")
-        msg = "Python >= 3.6 is required!"
+        log.info(f"Current Python version is {sys.version}")
+        msg = "Python version >= 3.6 is required!"
         sys.stderr.write(f"{msg}\n")
+
         log.info(
-            "Python 3.6 and later is required to run this script\n"
-            "Set Python interpreter in Fusion Preferences -> Global Settings -> Script -> Default Script Version"
+            "Python 3.6 or later is required to run this script.\n"
+            "Set the Python interpreter in Fusion Preferences -> Global Settings -> Script -> Default Script Version."
         )
-        dialog = {
-            1: {
-                1: "",
-                2: "Text",
-                "ReadOnly": True,
-                "Lines": 3,
-                "Default": msg + "\nOpen Preferences?",
-            }
-        }
-        dlg = comp.AskUser("Warning", dialog)
+
+        confirm_message = (f"{msg}\nOpen Preferences?",)
+        dlg = ConfirmationDialog("Open Preferences", confirm_message)
         if dlg:
             fu.ShowPrefs("PrefsScript")
-        sys.exit()
+        sys.exit(1)  # Explicitly indicate the script exited due to an error.
 
 
 check_python_version()
 
-print(f"_____________________\nAttribute Spreadsheet version 0.{__VERSION__}\n")
+print(f"_____________________\n{SCRIPT_NAME} version {__VERSION__}\n")
 
 
-def create_handler(stream, level, formatter, filter=None):
+def create_logging_handler(stream, level, formatter, filter=None):
     """
     Create and configure a logging handler.
 
@@ -191,7 +191,6 @@ def set_logging(level):
         "debug": logging.DEBUG,
         "info": logging.INFO,
         "warning": logging.WARNING,
-        "warn": logging.WARN,
         "error": logging.ERROR,
         "critical": logging.CRITICAL,
     }
@@ -199,10 +198,12 @@ def set_logging(level):
     logger.setLevel(logging.DEBUG)  # Set the logger to the lowest level
 
     # Common formatter for both handlers
-    formatter = logging.Formatter("%(levelname)s | [Attribute Spreadsheet] | %(message)s")
+    formatter = logging.Formatter(
+        f"%(levelname)s | [{SCRIPT_NAME}] | %(message)s"
+    )
 
     # Handler for stdout, with a filter for messages below WARNING level
-    stdout_handler = create_handler(
+    stdout_handler = create_logging_handler(
         stream=sys.stdout,
         level=logging.DEBUG,
         formatter=formatter,
@@ -210,13 +211,14 @@ def set_logging(level):
     )
 
     # Handler for stderr, for WARNING level and above
-    stderr_handler = create_handler(
+    stderr_handler = create_logging_handler(
         stream=sys.stderr,
         level=logging.WARNING,
         formatter=formatter,
     )
 
     # Reset the logger's handlers before adding new ones
+    logger.handlers.clear()  # Clear any existing handlers
     logger.handlers = [stdout_handler, stderr_handler]
 
     log_level = log_levels.get(level.lower(), logging.INFO)
@@ -234,24 +236,45 @@ def get_fusion(fusion_host):
 
         return bmd.scriptapp("Fusion", fusion_host)
     except ModuleNotFoundError:
-        log.warn("No BlackmagicFusion module found")
+        log.warning("No BlackmagicFusion module found")
+    except Exception as e:
+        log.error(f"Error connecting to Fusion: {e}")
+        return None
 
 
 def get_fusion_comp(fusion_object):
+    """
+    Retrieve the current composition from the Fusion instance.
+
+    :param fusion_object: A Fusion application object.
+    :return: The current composition, or None if no Fusion instance exists.
+    """
     if not fusion_object:
-        log.warn("No Fusion instance found or Fusion is not a Studio version")
-        sys.exit()
-    return fusion_object.GetCurrentComp()
+        log.warning("No Fusion instance found or Fusion is not a Studio version")
+        sys.exit(1)  # Exit with an error status
+
+    try:
+        return fusion_object.GetCurrentComp()
+    except AttributeError:
+        log.error
 
 
 def pip_install_dialogue():
-    script_path = comp.MapPath("Reactor:Deploy/Scripts/Utility")
-    sys.path.append(script_path)
-    from install_pip_package import pip_install
+    """
+    Display a dialogue for pip installation and install required packages.
+    """
+    try:
+        script_path = comp.MapPath("Reactor:Deploy/Scripts/Utility")
+        sys.path.append(script_path)
 
-    pip_install(PKG_REQUIRED)
+        from install_pip_package import pip_install
 
-    sys.exit()
+        pip_install(PKG_REQUIRED)
+
+        sys.exit(0)  # Exit successfully after installation
+    except Exception as e:
+        log.error(f"Failed to install pip package: {e}")
+        sys.exit(1)  # Exit with error if installation fails
 
 
 try:
@@ -308,26 +331,34 @@ class FUIDComboDelegate(QItemDelegate):
     """
 
     def __init__(self, parent):
-        QItemDelegate.__init__(self, parent)
-        self.items = ["None"]
+        super().__init__(parent)
+        self.items = ["None"]  # Default list of combo box items
 
     def createEditor(self, parent, option, index):
+        """Create a QComboBox editor for the table cell."""
         combo = QComboBox(parent)
         combo.addItems(self.items)
-        combo.currentIndexChanged.connect(lambda: self.commitData.emit(combo))
+        combo.currentIndexChanged.connect(lambda: self.commitData)
         return combo
 
     def setEditorData(self, editor, index):
+        """Set the current data in the combo box editor."""
         editor.blockSignals(True)
-        log.debug("Module data: ", index.model().data(index))
-        editor.setCurrentIndex(self.items.index(str(index.model().data(index))))
-        editor.setData("Domain")
-        editor.blockSignals(False)
+        try:
+            value = str(index.model().data(index))
+            log.debug(f"Setting ComboBox editor data: {value}")
+            editor.setCurrentIndex(self.items.index(value))
+        except (ValueError, IndexError):
+            log.warning(f"Failed to set ComboBox editor data for index: {index}")
+        finally:
+            editor.blockSignals(False)
 
     def setModelData(self, editor, model, index):
+        """Set the selected combo box data to the model."""
         model.setData(index, editor.currentIndex())
 
     def currentIndexChanged(self):
+        """Emit commitData signal when the combo box value changes."""
         self.commitData.emit(self.sender())
 
 
@@ -338,24 +369,26 @@ class LineEditDelegate(QItemDelegate):
     """
 
     def __init__(self, parent):
-        QItemDelegate.__init__(self, parent)
+        super().__init__(parent)
 
     def createEditor(self, parent, option, index):
+        """Create a QLineEdit editor for the table cell."""
         line_edit = QLineEdit(parent)
-        self.connect(
-            line_edit, SIGNAL("valueChanged(int)"), self, SLOT("valueChanged()")
-        )
+        line_edit.textChanged.connect(lambda: self.commitData)
         return line_edit
 
     def setEditorData(self, editor, index):
+        """Set the current data in the line edit editor."""
         editor.blockSignals(True)
-        editor.setText(index.model().data(index))
-        editor.blockSignals(False)
+        try:
+            editor.setText(str(index.model().data(index)))
+        except Exception as e:
+            log.warning(f"Failed to set LineEdit editor data for index: {index}, error: {e}")
+        finally:
+            editor.blockSignals(False)
 
     def setModelData(self, editor, model, index):
-        # We don't set the model data, the TableView does that for us.
-        # Rather, we set what the value from the editor is as the data that the FusionInput needs to use to process the
-        # actual values. This allows us to do things like compound assignments or setting/editing expressions.
+        """Set the data from the line edit to the model."""
         model.sourceModel().stored_edit_role_data = editor.text()
 
 
@@ -368,6 +401,7 @@ class PointDelegate(QItemDelegate):
         QItemDelegate.__init__(self, parent)
 
     def createEditor(self, parent, option, index):
+        """Create a small table editor for Point(x, y) data."""
         qtable_widget = QTableWidget(1, 2, parent)
         qtable_widget.verticalHeader().setVisible(False)
         qtable_widget.setMinimumHeight(40)
@@ -376,35 +410,37 @@ class PointDelegate(QItemDelegate):
         return qtable_widget
 
     def setEditorData(self, editor, index):
+        """Set point data into the table editor."""
         point_data = str(index.model().data(index))
         try:
-            # parsing string like '{1:0.5, 2:0.5, 3:0.0}'
-            # first remove curly braces and spaces to make it '1.0:0.1,2.0:0.5,3.0:0.0',
-            substring = re.sub("[{} ]", "", point_data)
-            # split by colon and convert to dictionary {'1.0': '0.5', '2.0': '0.5', '3.0': '0.0'}
-            dict_point = dict(ss.split(":") for ss in substring.split(","))
-            dict_point = {int(k): v for k, v in dict_point.items()}
-            x_value = QTableWidgetItem(dict_point[1])
-            y_value = QTableWidgetItem(dict_point[2])
+            # Parse point data like "{1:0.5, 2:0.5}" into x and y values
+            substring = re.sub(r"[{} ]", "", point_data)
+            dict_point = {
+                int(k): v for k, v in (ss.split(":") for ss in substring.split(","))
+            }
+
+            x_value = QTableWidgetItem(dict_point.get(1, "0.5"))
+            y_value = QTableWidgetItem(dict_point.get(2, "0.5"))
+
             editor.blockSignals(True)
             editor.setItem(0, 0, x_value)
             editor.setItem(0, 1, y_value)
             editor.blockSignals(False)
         except ValueError:
-            log.warn(
+            log.warning(
                 "error occurred while parsing the point data. Setting values to default"
             )
             for i in range(2):
                 editor.setItem(0, i, QTableWidgetItem("0.5"))
 
     def setModelData(self, editor, model, index):
+        """Extract point data from the table editor and store it."""
         try:
             x = editor.item(0, 0).text()
             y = editor.item(0, 1).text()
-            data = [x, y]
-            model.sourceModel().stored_edit_role_data = data
+            model.sourceModel().stored_edit_role_data = [x, y]
         except AttributeError:
-            log.warn("Point data not applicable here")
+            log.warning("Point data extraction failed for the current editor.")
 
 
 class TableView(QTableView):
@@ -426,120 +462,140 @@ class TableView(QTableView):
 
     def activate_tool(self, section):
         """
-        set active tool when vertical header clicked
+        Set the active tool when the vertical header is clicked.
+
+        :param section: The section (row index) clicked in the vertical header.
         """
-        comp = fu.GetCurrentComp()
-        tool_name = self.model().headerData(section, Qt.Vertical, Qt.DisplayRole)
-        tool = comp.FindTool(tool_name)
-        comp.SetActiveTool(tool)
+        try:
+            comp = fu.GetCurrentComp()
+            if not comp:
+                log.warning("No Fusion composition found.")
+                return
+
+            tool_name = self.model().headerData(section, Qt.Vertical, Qt.DisplayRole)
+            tool = comp.FindTool(tool_name)
+            if not tool:
+                log.warning(f"Tool '{tool_name}' not found.")
+                return
+
+            comp.SetActiveTool(tool)
+            log.debug(f"Activated tool: {tool_name}")
+        except Exception as e:
+            log.error(f"Error activating tool in section {section}: {e}")
 
     def paintEvent(self, event):
+        """Custom paint event to handle drawing on the table view."""
+        super().paintEvent(event)  # Always call the base class paint event
+
         if self.mouseIsDown:
             painter = QPainter(self.viewport())
             painter.drawLine(self.center, self.startCenter)
-        QTableView.paintEvent(self, event)
+            log.debug(f"Drawing line from {self.startCenter} to {self.center}")
 
     def mousePressEvent(self, event):
+        """Handle mouse press events, including middle button for drawing and left button for selection."""
         if event.buttons() == Qt.MiddleButton:
             self.mouseIsDown = True
             pos = event.position().toPoint()
-            self.center = self.startCenter = QPoint(pos.x(), pos.y())
-
+            self.center = self.startCenter = pos
+            log.debug(f"Middle mouse button pressed at {self.center}")
         elif event.buttons() == Qt.LeftButton:
             self.mouseIsDown = False
-            QTableView.mousePressEvent(self, event)
+            super().mousePressEvent(event)
 
     def create_value(self, source_model, index):
+        """Create a value string from the selected tool and input, then commit it."""
         try:
             target_tool = source_model.tool_dict[index.row() + 1].Name
-            target_input_id = (
-                source_model.tools_inputs[index.row()]
-                .get(source_model.attribute_name_keys[index.column()])
-                .ID
+            target_input = source_model.tools_inputs[index.row()].get(
+                source_model.attribute_name_keys[index.column()]
             )
-            value = "={}.{}".format(target_tool, target_input_id)
+
+            if target_input is None:
+                log.warning("No input found for the given tool and column.")
+                return
+
+            value = f"={target_tool}.{target_input.ID}"
             self.commitDataDo(value)
-        except KeyError:
-            pass
+            log.debug(f"Created value: {value}")
+        except KeyError as e:
+            log.error(f"Error creating value: {e}")
 
     def mouseReleaseEvent(self, event):
+        """Handle mouse release events, including linking tools and clearing selections."""
         table_model = self.model()
         if self.mouseIsDown:
             self.mouseIsDown = False
             index_source = table_model.mapToSource(self.indexAt(self.center))
             source_model = table_model.sourceModel()
+
             if len(self.selectionModel().selection().indexes()) <= 1:
                 index_target = table_model.mapToSource(self.indexAt(self.startCenter))
-                if (
-                    index_source.row() == index_target.row()
-                    and index_source.column() == index_target.column()
-                ):
-                    log.warn("cannot link the input to itself")
+
+                if index_source == index_target:
+                    log.warning("Cannot link input to itself.")
                     return
-                if (
-                    index_source.row() > -1
-                    and index_source.column() > -1
-                    and index_target.row() > -1
-                    and index_target.column() > -1
-                ):
-                    # Select the first cell by sampling the area under the first clicked mouse center
+
+                if index_source.isValid() and index_target.isValid():
+                    # Select the source index if not already selected
                     self.setSelection(
                         QRect(self.startCenter, self.startCenter),
                         QItemSelectionModel.SelectCurrent,
                     )
+
             self.create_value(source_model, index_source)
             self.viewport().repaint()
-        QTableView.mouseReleaseEvent(self, event)
+
+        super().mouseReleaseEvent(event)
 
     def mouseMoveEvent(self, event):
+        """Track mouse movements for drawing when the middle button is held down."""
         if self.mouseIsDown:
-            pos = event.position().toPoint()
-            self.center = QPoint(pos.x(), pos.y())
+            self.center = event.position().toPoint()
             self.viewport().repaint()
-        QTableView.mouseMoveEvent(self, event)
+            log.debug(f"Mouse moved to {self.center}")
+        super().mouseMoveEvent(event)
 
     def updateColumns(self):
         """
-        updateColumns sets the QItemDelegates for the columns
-        (this way we can make a distinction between various data types for Fusion)
-
-        The columns are grouped by their attribute/parameter names, so tools with attributes that have conflicting
-        parameter/input data types might (and probably will) error out.
-
-        There's also the added problem that expression are basically strings attached to inputs, which makes this an
-        even more troublesome task (we may have to forget per column item delegates all together and look for an
-        alternative.)
+        Update the column item delegates based on the filtered data types.
+        
+        The columns are grouped by attribute/parameter names. Tools with attributes that
+        have conflicting data types may encounter errors.
         """
         tm = self.model()
-        # filteredKeys contains the column data types with the indices sorted after filtering.
+
+        # Adjust filteredKeys after filtering
         if tm.is_filtered:
-            # hack to get correct index for filtered keys... eww
-            tm.filteredKeys = tm.filteredKeys[2:]
+            tm.filteredKeys = tm.filteredKeys[2:]  # Skip first two keys (hack)
+
         for k, v in enumerate(tm.filteredKeys):
             if v == "Point":
                 self.setItemDelegateForColumn(k, PointDelegate(self))
             elif v in ["Number", "Float", "Int", "Clip", "Text", "FuID"]:
                 self.setItemDelegateForColumn(k, LineEditDelegate(self))
-            # elif v == "FuID":
-            #     self.setItemDelegateForColumn(k, FUIDComboDelegate(self))
+            # Add other delegate conditions as needed
+        
+        # Resize rows and columns to fit the data
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
 
+
     def commitData(self, editor):
         """
-        commitData makes sure all multiselected cells
-        get the same values applied as the edited cell.
+        Commit data to all multi-selected cells, ensuring they get the same value
+        as the edited cell.
         """
-
-        super(TableView, self).commitData(editor)
+        super().commitData(editor)
         tm = self.model().sourceModel()
         value = tm.stored_edit_role_data
         self.commitDataDo(value)
 
+
     def commitDataDo(self, value):
         table_model = self.model()
         source_model = table_model.sourceModel()
-        comp.StartUndo("Attribute Spreadsheet")
+        comp.StartUndo(f"{SCRIPT_NAME}")
         try:
             for isr in self.selectionModel().selection():
                 for s in isr.indexes():
@@ -580,20 +636,27 @@ class TableSortFilterProxyModel(QSortFilterProxyModel):
     """
 
     def __init__(self, parent=None):
-        QSortFilterProxyModel.__init__(self, parent)
+        super().__init__(parent)
         self.filteredKeys = []
         self.is_filtered = False
 
     def filterAcceptsRow(self, source_row, source_parent):
+        """Override this method if we need custom row filtering."""
         return True
 
     def filterAcceptsColumn(self, source_column, source_parent):
+        """
+        Filter columns based on the regular expression pattern.
+        Update the filteredKeys list with the matching data types.
+        """
         pattern = self.filterRegularExpression().pattern()
-        if pattern == "":
+
+        if not pattern:
             self.filteredKeys = self.sourceModel().attribute_data_types
             return True
+
         self.is_filtered = True
-        keys = pattern.split(" ")
+        keys = pattern.split()
 
         index = self.sourceModel().createIndex(0, source_column)
         if index.isValid():
@@ -601,12 +664,10 @@ class TableSortFilterProxyModel(QSortFilterProxyModel):
             data_type = self.sourceModel().data(index, Qt.UserRole + 1)
 
             for key in keys:
-                if not key:
-                    return False
                 if key.lower() in attr_name.lower():
                     self.filteredKeys.append(data_type)
                     return True
-            return False
+        return False
 
 
 class FusionInput:
@@ -641,6 +702,7 @@ class FusionInput:
         return self.expression
 
     def set_expression(self, expression):
+        """Set an expression for this input and refresh the data."""
         self.expression = expression
         self.fusion_input.SetExpression(expression)
         self.Refresh()
@@ -654,17 +716,17 @@ class FusionInput:
             pprint(self.attributes)
             return
 
-        if value == "":
-            if self.attributes["INPS_DataType"] in ["Text", "Clip"]:
-                self.fusion_input[key] = value
+        if value == "" and self.attributes["INPS_DataType"] in ["Text", "Clip"]:
+            self.fusion_input[key] = value
             return
 
+        # Handle expressions
         if self.get_expression():
             if value == "-x" or "-x" in value:
                 log.debug("Expression cleared")
                 self.set_expression(None)
             else:
-                log.warn(
+                log.warning(
                     "This input is linked by expression. Use '-x' to clear expression"
                 )
             return
@@ -673,81 +735,76 @@ class FusionInput:
             self.set_expression(value.lstrip("="))
             return
 
-        if self.attributes["INPS_DataType"] == "Number":
-            if value[0:2] in ["+=", "-=", "*=", "/=", "%="] and len(value) >= 3:
-                # expecting an compound assignment
-                if self.is_number(value[2:]):
-                    operator = value[0]
-                    value = float(value[2:])
-                    if operator == "+":
-                        value = float(self.fusion_input[key] + value)
-                    elif operator == "-":
-                        value = float(self.fusion_input[key] - value)
-                    elif operator == "/":
-                        value = float(self.fusion_input[key] / value)
-                    elif operator == "*":
-                        value = float(self.fusion_input[key] * value)
-                    elif operator == "%":
-                        value = float(self.fusion_input[key] % value)
-            if self.attributes["INPID_InputControl"] == "MultiButtonIDControl":
-                if value.lower() in ["0", "no", "off", "false"]:
-                    value = 0
-                elif value.lower() in ["1", "yes", "on", "true"]:
-                    value = 1
-                elif self.is_number(value):
-                    value = round(min(1, max(0, float(value))))
-                else:
-                    value = self.fusion_input[key]
-            if self.is_number(value):
-                value = float(value)
-            else:
-                log.warn("this field requires number input")
-                value = self.fusion_input[key]
 
+        # Handle number inputs and compound assignments
+        if self.attributes["INPS_DataType"] == "Number":
+            value = self.process_number_input(key, value)
+
+        # Handle point inputs
         if self.attributes["INPS_DataType"] == "Point":
-            if value[0] == "p":
-                pprint(self.attributes)
-                return
-            math_ops = ["+=", "-=", "*=", "/=", "%="]
-            compute_values = []
-            for i, v in enumerate(value):
-                if any(op in v[:2] for op in math_ops) and len(v) >= 3:
-                    # expecting an compound assignment
-                    if self.is_number(v[2:]):
-                        operator = v[0]
-                        v = float(v[2:])
-                        if operator == "+":
-                            v = float(self.fusion_input[key][float(i + 1)] + v)
-                        elif operator == "-":
-                            v = float(self.fusion_input[key][float(i + 1)] - v)
-                        elif operator == "/":
-                            v = float(self.fusion_input[key][float(i + 1)] / v)
-                        elif operator == "*":
-                            v = float(self.fusion_input[key][float(i + 1)] * v)
-                        elif operator == "%":
-                            v = float(self.fusion_input[key][float(i + 1)] % v)
-                    else:
-                        v = self.fusion_input[key]
-                compute_values.append(v)
-            try:
-                value = [float(i) for i in compute_values]
-            except ValueError:
-                if isinstance(value, list):
-                    try:
-                        x, y = value
-                        if x[0] == "=" or y[0] == "=" and len(value) > 1:
-                            value = [v.lstrip("=") for v in value]
-                            self.set_expression(
-                                "Point({}, {})".format(value[0], value[1])
-                            )
-                        else:
-                            log.warn("Point data accepts only numbers and expressions")
-                    except Exception:
-                        log.warn("value should contain 2 elements")
-                return
+            value = self.process_point_input(key, value)
+       
         self.fusion_input[key] = value
         self.keyframes = self.fusion_input.GetKeyFrames()
-        self.value = self.fusion_input[key]
+
+    def process_number_input(self, key, value):
+        """Process numerical input, including compound assignments."""
+        if value[:2] in ["+=", "-=", "*=", "/=", "%="] and len(value) >= 3:
+            operator = value[0]
+            operand = float(value[2:])
+            current_value = float(self.fusion_input[key])
+            value = {
+                "+": current_value + operand,
+                "-": current_value - operand,
+                "*": current_value * operand,
+                "/": current_value / operand if operand != 0 else current_value,
+                "%": current_value % operand,
+            }.get(operator, current_value)
+
+        # Handle MultiButtonIDControl inputs
+        if self.attributes["INPID_InputControl"] == "MultiButtonIDControl":
+            value = self.process_multibutton_input(value)
+
+        if not self.is_number(value):
+            log.warning("This field requires a numerical input.")
+            value = self.fusion_input[key]
+
+        return float(value)
+
+    def process_multibutton_input(self, value):
+        """Process MultiButtonIDControl inputs."""
+        if value.lower() in ["0", "no", "off", "false"]:
+            return 0
+        elif value.lower() in ["1", "yes", "on", "true"]:
+            return 1
+        elif self.is_number(value):
+            return round(min(1, max(0, float(value))))
+        return value
+
+    def process_point_input(self, key, value):
+        """Process Point(x, y) input."""
+        if value[0] == "p":
+            pprint(self.attributes)
+            return self.fusion_input[key]
+
+        math_ops = ["+=", "-=", "*=", "/=", "%="]
+        compute_values = []
+
+        for i, v in enumerate(value):
+            if any(op in v[:2] for op in math_ops) and len(v) >= 3:
+                operator = v[0]
+                operand = float(v[2:])
+                current_value = float(self.fusion_input[key][float(i + 1)])
+                v = {
+                    "+": current_value + operand,
+                    "-": current_value - operand,
+                    "*": current_value * operand,
+                    "/": current_value / operand if operand != 0 else current_value,
+                    "%": current_value % operand,
+                }.get(operator, current_value)
+            compute_values.append(v)
+
+        return [float(i) for i in compute_values]
 
     @staticmethod
     def is_number(s):
@@ -759,13 +816,18 @@ class FusionInput:
 
 
 class Communicate(QObject):
+    """
+    A simple communication class that emits signals to broadcast messages.
+    """
     broadcast = Signal(object)
 
     def __init__(self):
-        QObject.__init__(self)
+        super().__init__()
 
     def send(self, value):
+        """Emit the broadcast signal with the given value."""
         self.broadcast.emit(value)
+
 
 
 class TableModel(QAbstractTableModel):
@@ -780,13 +842,13 @@ class TableModel(QAbstractTableModel):
         self.inputs_to_skip = {}
         self.data_types_to_skip = {}
         self.background_role_method = self.backgroundRole
-        self.tool_dict = dict()
+        self.tool_dict = dict()  # {row: tool}
         self.attribute_name_keys = []  # List of unique attribute name keys
         self.attribute_data_types = []  # this list is coupled to the key list
-        self.tools_inputs = []
-        self.tools_attributes = []
+        self.tools_inputs = []  # Inputs for each tool (row)
+        self.tools_attributes = []  # Attributes for each tool
 
-        # this stores the editrole data for multi commits (this way we get inline math to work)
+        # Stores edit data temporarily for multi-edit (this way we get inline math to work)
         self.stored_edit_role_data = None
 
     def load_fusion_data(self):
@@ -795,7 +857,7 @@ class TableModel(QAbstractTableModel):
         try:
             comp = fu.GetCurrentComp()
         except NameError:
-            comp = get_fusion_comp()
+            comp = get_fusion_comp(fusion)
         global current_comp_name
         comp_name = comp.GetAttrs()["COMPS_Name"]
         if comp_name and comp_name != current_comp_name:
@@ -926,60 +988,74 @@ class TableModel(QAbstractTableModel):
                     return b
 
     def headerData(self, section, orientation, role):
+        """Provide header data for table view."""
         if role == Qt.DisplayRole:
             if orientation == Qt.Horizontal:
-                return self.splitHeaderName(self.attribute_name_keys[section])
+                return self.split_header_name(self.attribute_name_keys[section])
             if orientation == Qt.Vertical:
                 return self.tool_dict[section + 1].Name
 
-    def setData(self, index, value, role=Qt.DisplayRole):
-        """
-        Set our data, we use the tool's attribute MinAllowed and MaxAllowed where possible (as Fusion sometimes allows
-        to set data outside legal values (on Booleans for example), resulting in 'buggy' behaviour.
+    def setData(self, index, value, role=Qt.EditRole):
+        """Update the data in the model."""
+        if not index.isValid() or role != Qt.EditRole:
+            return False
 
-        A good idea might be to move the sensitization to the fusionInput class.
-
-        Needs more work
-        """
-        if index.isValid() and role == Qt.EditRole:
-            fusion_input = self.tools_inputs[index.row()].get(
-                self.attribute_name_keys[index.column()], None
-            )
-            if not fusion_input:
-                return False
-            if not isinstance(value, list):
-                value = str(value)
+        fusion_input = self.tools_inputs[index.row()].get(self.attribute_name_keys[index.column()])
+        if fusion_input:
             fusion_input[comp.CurrentTime] = value
+            return True
+        return False
 
     def flags(self, index):
+        """
+        Override flags to mark specific cells as editable or not.
+        Strings like Tool ID should not be editable.
+        """
         if not index.isValid():
             return Qt.ItemIsEnabled
-        return Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled
+        # If it's Tool ID or other non-editable columns, make it non-editable
+        if self.attribute_name_keys[index.column()] in ["Tool ID"]:
+            return Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        return Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsSelectable
 
-    def splitHeaderName(self, key):
+    def split_header_name(self, key, max_chars=8):
         """
-        Helper method for QHeaderView labels
-        We split our horizontal headers to use 2 lines of text
+        Helper method for QHeaderView labels.
+        Splits horizontal headers into multiple lines based on a character limit per line.
+
+        :param key: The original header string.
+        :param max_chars: Maximum number of characters per line (default is 8).
+        :return: Header string split into multiple lines.
         """
-        header_name_list = key.split(" ")
-        header_name = ""
-        c = 0
-        if len(header_name_list) == 2:
-            header_name = "\n".join(header_name_list)
-        else:
-            for a in header_name_list:
-                if c < 8:
-                    header_name += " " + a if len(a) > 1 else "" + a
-                    c += len(a) + 1
-                else:
-                    header_name += "\n" + a
-                    c = 0
-        return header_name
+        words = key.split()
+        header_name = []
+        current_line = []
+
+        char_count = 0
+        for word in words:
+            if char_count + len(word) + len(current_line) > max_chars:  # Check if adding this word exceeds the limit
+                header_name.append(" ".join(current_line))  # Add the current line to the header
+                current_line = [word]  # Start a new line
+                char_count = len(word)  # Reset the character count for the new line
+            else:
+                current_line.append(word)  # Add word to the current line
+                char_count += len(word)
+
+        if current_line:  # Add the remaining words as the last line
+            header_name.append(" ".join(current_line))
+
+        return "\n".join(header_name)  # Join all lines with newlines
 
 
 class MainWindow(QMainWindow):
+    """
+    Main window class that manages the table view, buttons, and the status bar.
+    """
+
     def __init__(self, parent=None):
-        QMainWindow.__init__(self, parent)
+        super().__init__(parent)
+
+        # Tools and attributes to skip
         self.inputs_to_skip = {
             "SceneInput": 0,
             "MaterialInput": 1,
@@ -994,18 +1070,39 @@ class MainWindow(QMainWindow):
             "Gradient": 5,
             "MtlGraph3D": 6,
         }
+
+        # Set up model and table view
         self._tm = TableModel(self)
         self._tm.inputs_to_skip = self.inputs_to_skip
         self._tm.data_types_to_skip = self.data_types_to_skip
         self._tv = TableView(self)
+
+        # Set up UI elements
+        self.setup_ui()
+
+        # Set up proxy model for sorting/filtering
+        self.proxy_model = TableSortFilterProxyModel()
+        self.proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self.proxy_model.setSortCaseSensitivity(Qt.CaseInsensitive)
+        self.proxy_model.setDynamicSortFilter(True)
+        self._tv.setModel(self.proxy_model)
+        self._tv.setSortingEnabled(True)
+
+        # Load initial tool list
+        self.tool_list = comp.GetToolList(True)
+        self.handle_initial_tool_list()
+
+    def setup_ui(self):
+        """Set up UI elements such as buttons, layout, and progress bar."""
         self.always_on_top = QCheckBox("Always on top")
         self.always_on_top.setChecked(True)
-        self.clear_button = QPushButton()
-        self.clear_button.setText("Clear")
+
+        self.clear_button = QPushButton("Clear")
         self.clear_button.setFixedSize(QSize(70, 30))
-        self.refresh_button = QPushButton()
-        self.refresh_button.setText("Refresh")
+
+        self.refresh_button = QPushButton("Refresh")
         self.refresh_button.setFixedSize(QSize(140, 30))
+
         self.search_line = QLineEdit(self)
         self.search_line.setFixedHeight(30)
         self.search_line.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -1021,30 +1118,25 @@ class MainWindow(QMainWindow):
         v_box.addLayout(h_box)
         v_box.addWidget(self._tv)
 
-        # find the corner button
-        self.corner = self._tv.findChild(QAbstractButton)
-
-        v_box.setContentsMargins(2, 2, 2, 2)
-
         central_widget = QWidget()
         central_widget.setLayout(v_box)
         self.setCentralWidget(central_widget)
+
+        # Status bar and progress bar
         self.status_bar = self.statusBar()
-
-        self.proxy_model = TableSortFilterProxyModel()
-        self.proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        self.proxy_model.setSortCaseSensitivity(Qt.CaseInsensitive)
-        self.proxy_model.setDynamicSortFilter(True)
-        self._tv.setModel(self.proxy_model)
-        self._tv.setSortingEnabled(True)
-
-        # show the progressbar
         self.progress_bar = QProgressBar()
         self.status_bar.addPermanentWidget(self.progress_bar)
         self.progress_bar.setValue(0)
         self.progress_bar.setVisible(False)
 
-        # Connections
+        # Corner button in the table
+        self.corner = self._tv.findChild(QAbstractButton)
+
+        # Connect signals
+        self.setup_connections()
+
+    def setup_connections(self):
+        """Set up the signal connections for the UI elements."""
         self.always_on_top.stateChanged.connect(self.changeAlwaysOnTop)
         self.search_line.returnPressed.connect(self.reload_fusion_data)
         self.search_line.textChanged.connect(self.filterRegExpChanged)
@@ -1054,31 +1146,29 @@ class MainWindow(QMainWindow):
         self._tm.communicate.broadcast.connect(self.communication)
         self.corner.clicked.connect(self.reset_sorting)
 
-        self.setWindowFlags(
-            self.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint
-        )
-        self.tool_list = comp.GetToolList(True)
+    def handle_initial_tool_list(self):
+        """Handle the initial tool list after loading the composition."""
         if not self.tool_list:
             self.status_bar.showMessage("Select some tools and click Refresh button")
-        if len(self.tool_list.values()) >= LOAD_SELECTED_TOOLS_LIMIT:
+        elif len(self.tool_list.values()) >= LOAD_SELECTED_TOOLS_LIMIT:
             self.status_bar.showMessage("Click Refresh button to load selected tools")
         else:
             self.load_fusion_data()
 
     def reset_sorting(self):
-        """
-        reset tool sorting to initial state, do not select all
-        """
+        """Reset the sorting in the table and clear selection."""
         self.proxy_model.sort(-1)
         self._tv.clearSelection()
 
     def clear_search(self):
+        """Clear the search bar."""
         self.search_line.clear()
 
     def changeAlwaysOnTop(self):
+        """Toggle the 'Always on Top' window flag."""
         if self.always_on_top.isChecked():
             self.setWindowFlags(
-                self.windowFlags() | (Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint)
+                self.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint
             )
         else:
             self.setWindowFlags(
@@ -1087,32 +1177,37 @@ class MainWindow(QMainWindow):
         self.show()
 
     def communication(self, value):
-        if not value:
-            return
+        """Handle communication broadcasts from the TableModel."""
         if isinstance(value, float):
             self.progress_bar.setValue(value)
-        if isinstance(value, str):
+        elif isinstance(value, str):
             self.status_bar.showMessage(value)
-        self.progress_bar.setVisible(True)
-        if self.progress_bar.value() in [0, 100]:
-            self.progress_bar.setVisible(False)
+
+        self.progress_bar.setVisible(self.progress_bar.value() not in [0, 100])
 
     def load_fusion_data(self):
+        """Load Fusion data into the table view."""
+        # Disable the refresh button during the reload process
+        self.refresh_button.setEnabled(False)
+        self.refresh_button.setStyleSheet("color: rgb(128,128,128);")
+
+        # Load the Fusion data
         self._tm.load_fusion_data()
         self.proxy_model.setSourceModel(self._tm)
         self._tv.updateColumns()
 
+        # Re-enable the refresh button after loading completes
+        self.refresh_button.setEnabled(True)
+        self.refresh_button.setStyleSheet("color: rgb(192,192,192);")
+
     def reload_fusion_data(self):
+        """Reload the Fusion data, resetting any filters."""
         self.proxy_model.filteredKeys = []
         self.proxy_model.setSourceModel(None)
         self.load_fusion_data()
 
     def filterRegExpChanged(self):
-        """
-        This makes sure that the ItemDelegates for the TableView columns get updated, we have to do this as for some
-        reason Qt has TableView column delegates decoupled from the underlying ProxyModel and indices get out of sync
-        during sorting and filtering.
-        """
+        """Update the filter on the table view when the search text changes."""
         regExp = self.search_line.text()
         self.proxy_model.setFilterRegularExpression(regExp)
         self.proxy_model.filteredKeys = []
@@ -1179,7 +1274,9 @@ if __name__ == "__main__":
     try:
         comp = fu.GetCurrentComp()  # this works in most cases
     except Exception as e:
-        log.warn("Could not find Fusion comp. Attempt to connect in standalone mode...")
+        log.warning(
+            "Could not find Fusion comp. Attempt to connect in standalone mode..."
+        )
         REMOTE_FUSION_ACCESS = True
         LOAD_SELECTED_TOOLS_LIMIT = 3
         fusion_host = DEFAULT_HOST
@@ -1197,9 +1294,7 @@ if __name__ == "__main__":
         main_app = QApplication(sys.argv)
     main_app.setStyleSheet(css)
     main = MainWindow()
-    win_title = f"Attribute Spreadsheet 0.{__VERSION__}"
-    if __beta__:
-        win_title += "b"
+    win_title = f"{SCRIPT_NAME} v{__VERSION__}"
     main.setWindowTitle(win_title)
     main.setMinimumSize(QSize(740, 200))
     main.show()
