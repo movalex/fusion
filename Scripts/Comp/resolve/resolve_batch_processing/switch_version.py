@@ -53,7 +53,9 @@ def process_clips(move_x: float):
     if answer:
         for clip in clips:
             utils.process_fusion_comp(
-                comp_name="Composition 4", process_functions=[switch_version_and_adjust_spacing]
+                clip,
+                comp_name="Composition 4",
+                process_functions=[switch_version_and_adjust_spacing],
             )
 
 

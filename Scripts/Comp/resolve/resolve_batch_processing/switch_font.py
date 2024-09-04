@@ -49,7 +49,7 @@ def process_clips(move_x: float):
     )
     if answer:
         for clip in clips:
-            utils.process_fusion_comp(process_functions=[switch_font])
+            utils.process_fusion_comp(clip, process_functions=[switch_font])
 
 
 if __name__ == "__main__":
