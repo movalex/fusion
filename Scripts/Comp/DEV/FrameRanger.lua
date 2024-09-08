@@ -13,8 +13,8 @@ function getBounds()
 end
 
 function showUI()
-    frameOffset = comp:GetData("FrameRanger.offset") or 24
-    local windowPosX = 900
+    frameOffset = fu:GetData("FrameRanger.offset") or 24
+    local windowPosX = 920
     local windowPosY = 800
     local buttonSize = {45, 25}
 
@@ -30,7 +30,7 @@ function showUI()
         ID = "FrameRanger",
         TargetID = "FrameRanger",
         WindowTitle = "Frame Ranger",
-        Geometry = {windowPosX +20, windowPosY, width, height},
+        Geometry = {windowPosX, windowPosY, width, height},
         ui:VGroup {
             ui:VGroup{
                 Weight = 0,
@@ -52,22 +52,18 @@ function showUI()
             },
             ui:HGroup {
                 ui:Button{
-                    -- MaximumSize = buttonSize,
                     MinimumSize = buttonSize,
                     ID = 'minus', Text = '> <',
                 },
                 ui:Button{
-                    -- MaximumSize = buttonSize,
                     MinimumSize = buttonSize,
                     ID = 'plus', Text = '< >',
                 },
                 ui:Button{
-                    -- MaximumSize = buttonSize,
                     MinimumSize = buttonSize,
                     ID = 'left', Text = '< <',
                 },
                 ui:Button{
-                    -- MaximumSize = buttonSize,
                     MinimumSize = buttonSize,
                     ID = 'right', Text = '> >',
                 },
@@ -148,6 +144,7 @@ function showUI()
         if not data then
             return
         end
+        data["__flags"] = nil
 
         for num, range in pairs(data) do
             inPoint, outPoint = range[1], range[2]
@@ -170,6 +167,7 @@ function showUI()
 
     function win.On.SaveButton.Clicked(ev)
         local data = comp:GetData("FrameRanger.InOuts") or {}
+        data["__flags"] = nil
         renderIn = comp:GetAttrs().COMPN_RenderStart
         renderOut = comp:GetAttrs().COMPN_RenderEnd
         addData = {renderIn, renderOut}
@@ -252,11 +250,11 @@ function showUI()
     end
 
     function win.On.offset.ValueChanged(ev)
-        comp:SetData("FrameRanger.offset", itm.offset.Value)
+        fu:SetData("FrameRanger.offset", itm.offset.Value)
     end
 
     function win.On.offset.EditingFinished(ev)
-        comp:SetData("FrameRanger.offset", itm.offset.Value)
+        fu:SetData("FrameRanger.offset", itm.offset.Value)
     end
 
     function win.On.left.Clicked(ev)
