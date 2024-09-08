@@ -1,9 +1,9 @@
 """
     Utility script for basic Scripting API operations in Davinci Resolve
 
-    License: MIT
     Copyright © 2024 Alexey Bogomolov
     Email: mail@abogomolov.com
+    License: MIT
     
     Permission is hereby granted, free of charge, to any person obtaining
     a copy of this software and associated documentation files (the "Software"),
