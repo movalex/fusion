@@ -1,0 +1,1367 @@
+--[[--
+----------------------------------------------------------------------
+Copyright (c) 2022, Jacob Danell, Ember Light AB
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met: 
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer. 
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution. 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECILA, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+----------------------------------------------------------------------
+
+Changelog:
+v0.8 - 2022-06-28:
+* Rewritten luma mask kernel to use luma instead of red channel of the matte
+* Changed iterations to a RangeControl so you can select what iteration should be first
+
+v0.7 - 2022-06-27:
+* Added different blending modes for the merging
+* Fixed CheckRequest problem when expanding the DoD
+
+v0.6 - 2022-06-19:
+* Added functionality to set the amount of glow for each axis. Pick between X/Y, individual controllers or point controller!
+* Gradients now act more linearly
+* Slider to extend the DoD when clipped to frame
+* Fixed problem with random negative values showing up after the glow
+* Edges kind of works now
+* Fixed some pixel shifting
+* Rewritten DoD processing
+* Correct DoD in Glowmatte
+* Gradient colorspace defaults to RGB
+
+v0.5 - 2022-05-23:
+* Fixed some DoD calculation. The fuse will now render the whole DoD at once
+* RoI now works correctly
+
+v0.4 - 2022-05-23:
+* Fixed glow jumping 1 pixel in the blur kernel
+* Fixed resolution independence on the glow strength
+
+v0.3 - 2022-05-21:
+* Fixed glow jumping 1 pixel each itteration
+* Fixed dod-offset for dctlAdd
+
+v0.2 - 2022-05-16:
+* Fixed Range math
+* Force minimum 16bit float
+* Glow Matte with the possibility to invert it
+* View final glow or glow matte
+* Added info-text saying that alpha = saturation for the gradient
+
+v0.1 - 2022-05-13:
+* First release!
+
+DCTLs calculate as 0,0 of the images DoD size.
+
+ToDo:
+* Fix luma matte so it uses Luma instead of Red channel
+* [DONE] Fix new DoD calculation from new glow strength sliders
+* Create nice UI for the strength sliders
+* Check RoI width Edges options
+* [DONE] X/Y Aspect of the glow (Move division from inside the blur-creation to outside)
+* [DONE] Add range slider
+* [DONE] Resolution independent
+* [DONE] Make Spread float
+* [DONE] DoD
+* [DONE] Clipping mode
+* [DONE] Add glow matte
+    - [Done] Be able to invert glow matte
+* [DONE] Add different viewers (Glow matte, Final)
+* Speed optimization
+    - [DONE] Custom DoD clipping (to speed up the rendering)
+    - Calculate all the blur-iterations at the same time (Can only happen in the first BoxBlur function).
+    - Boxblur-iterations (1-3), to speed up the rendering
+    - Scale down the src for bigger blurs
+* [DONE] Add functionality to set the brightness of the glow forward and backward per pixel
+
+Bugs:
+* If clipping = None but Saver nodes clipping != None, render black frames
+* Edges doesn't work as intended
+* If clipping = None and image is completely outside DoD the image breaks
+
+--]]--
+
+local version = "0.7"
+local authorText = "v" .. version .. " - Created by Jacob Danell, Ember Light"
+local fib = { 1.0, 2.0, 3.0, 5.0, 8.0, 13.0, 21.0, 34.0, 55.0, 89.0}
+local resIndep = 2160 -- The resolution used for resolution independence
+local left, bottom, right, top = 0,0,0,0
+
+FuRegisterClass("FastGlow", CT_Tool, {
+    REGS_Name            = "Fast Glow",
+    REGS_Category        = "Fuses",
+    REGS_OpIconString    = "FG",
+    REGS_OpDescription   = "",
+    REGS_Company         = "Ember Light",
+    REGS_URL             = "",
+    REGS_HelpTopic       = "",
+
+    REG_Fuse_NoEdit      = false,
+    REG_Fuse_NoReload    = false,
+    REG_SupportsDoD      = true,
+    REG_NoPreCalcProcess = true,
+    REG_Version          = 007,
+
+    REG_NoMotionBlurCtrls   = true,
+    REG_NoObjMatCtrls       = false,
+    REG_NoBlendCtrls        = false,
+    })
+    
+function Create()
+    InViewMode = self:AddInput("View Mode", "ViewMode", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "ComboControl",
+        IC_ControlPage = -1,
+        INP_Default = 0,
+        { CCS_AddString = 'Final'},
+        { CCS_AddString = 'Glow Matte'},
+        });
+
+    InMode = self:AddInput("Mode", "Mode", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "MultiButtonControl",
+        { MBTNC_AddButton = "Fibonacci", },
+        { MBTNC_AddButton = "Custom", },
+        MBTNC_StretchToFit = true,
+        INP_Default = 0,
+        INP_DoNotifyChanged = true,
+        })
+
+    InDisplacement = self:AddInput("Displacement", "Displacement", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default    = 2.0,
+        INP_MinScale   = 1.0,
+        INP_MaxScale   = 2.0,
+        INP_MinAllowed = 1.0,
+        })
+
+    self:AddInput(" ", "sel1", {
+        INPID_InputControl = "SeparatorControl",
+        })
+
+
+    InLow = self:AddInput("Low", "Low", {
+        ICS_Label = "Luma Matte",
+        LINKID_DataType = "Number",
+        INPID_InputControl = "RangeControl",
+        INP_Default = 0.0,
+        IC_ControlGroup = 1,
+        IC_ControlID = 0,
+        INP_MinScale = 0,
+        INP_MaxScale = 1,
+        })
+
+    InHigh = self:AddInput("High", "High", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "RangeControl",
+        INP_Default = 1.0,
+        IC_ControlGroup = 1,
+        IC_ControlID = 1,
+        INP_MinScale = 0,
+        INP_MaxScale = 1,            
+        })
+    
+
+    InSpread = self:AddInput("Spread", "Spread", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default    = 5.0,
+        INP_MinScale   = 0.0,
+        INP_MaxScale   = 20.0,
+        INP_MinAllowed = 0.0,
+        INP_Integer    = false, 
+        })
+
+    InGain = self:AddInput("Gain", "Gain", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default    = 5.0,
+        INP_MinScale   = 0.0,
+        INP_MinAllowed = 0.0,
+        INP_MaxScale   = 10.0,
+        })
+
+    InRange = self:AddInput("Range", "Range", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default    = 1.0,
+        INP_MinScale   = 0.5,
+        INP_MinAllowed = 0.0,
+        INP_MaxScale   = 3.0,
+        })
+
+    InIterationsStart = self:AddInput("Start", "IterationsStart", {
+        ICS_Label = "Iterations",
+        LINKID_DataType = "Number",
+        INPID_InputControl = "RangeControl",
+        INP_Default = 1,
+        IC_ControlGroup = 2,
+        IC_ControlID = 0,
+        INP_MinScale = 1,
+        INP_MinScale = 1,
+        INP_MaxScale = 10,
+        INP_MaxAllowed = 10,
+        INP_Integer = true, 
+        })
+
+    InIterationsEnd = self:AddInput("End", "IterationsEnd", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "RangeControl",
+        INP_Default = 9,
+        IC_ControlGroup = 2,
+        IC_ControlID = 1,
+        INP_MinScale = 1,
+        INP_MinScale = 1,
+        INP_MaxScale = 10,
+        INP_MaxAllowed = 10,
+        INP_Integer = true,           
+        })
+
+    self:BeginControlNest("Gradient", "GradientNest", false, {})
+
+    InGradient = self:AddInput("Gradient", "Gradient", {
+        LINKS_Name = "Gradient",
+        LINKID_DataType = "Gradient",
+        INPID_InputControl = "GradientControl",
+        INP_MinAllowed = -100000.0,
+        INP_MaxAllowed = 100000.0,
+        INP_MinScale = 0.0,
+        INP_MaxScale = 1.0,
+        INPP_DefaultParam = Gradient("GP_SolidWhite"),
+        })
+
+    InInfo = self:AddInput("Alpha = Saturation", "Info", {
+        LINKID_DataType      = "Text",
+        INPID_InputControl   = "LabelControl",
+        INP_External         = false,
+        INP_Passive          = true,
+        IC_NoLabel           = false,
+        }) 
+    
+    InInterpolation = self:AddInput("Gradient Interpolation Method", "GradientInterpolationMethod", {
+        LINKID_DataType      = "FuID",
+        INPID_InputControl   = "MultiButtonIDControl",
+        { MBTNC_AddButton = "RGB", MBTNCID_AddID = "RGB", },
+        { MBTNC_AddButton = "HLS", MBTNCID_AddID = "HLS", },
+        { MBTNC_AddButton = "HSV", MBTNCID_AddID = "HSV", },
+        { MBTNC_AddButton = "LAB", MBTNCID_AddID = "LAB", },
+        MBTNC_StretchToFit   = true,
+        INPID_DefaultID      = "RGB",
+        })
+
+    self:EndControlNest()
+    self:BeginControlNest("Directional Controls", "DirectionalControlsNest", false, {})
+
+    InDirectionControl = self:AddInput("Control", "Control", {
+        LINKS_Name = "Type",
+        LINKID_DataType = "Number",
+        INPID_InputControl = "MultiButtonControl",
+        INP_Default = 0.0,
+        INP_Integer = true,
+        INP_DoNotifyChanged = true,
+        { MBTNC_AddButton = "X/Y"},
+        { MBTNC_AddButton = "Induvidual"},
+        { MBTNC_AddButton = "Point"},
+        })
+
+    InXY = self:AddInput("X/Y", "XY", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default    = 1.0,
+        INP_MinScale   = 0.0,
+        INP_MaxScale   = 2.0,
+        INP_MinAllowed = 0.0,
+        INP_MaxAllowed = 2.0,
+        INP_DoNotifyChanged = true,
+        INP_Integer    = false, 
+        })
+
+    InLeft = self:AddInput("Left", "Left", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default    = 1.0,
+        INP_MinScale   = 0.0,
+        INP_MaxScale   = 1.0,
+        INP_MinAllowed   = 0.0,
+        INP_MaxAllowed   = 1.0,
+        INP_Integer    = false, 
+        })
+
+    InRight = self:AddInput("Right", "Right", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default    = 1.0,
+        INP_MinScale   = 0.0,
+        INP_MaxScale   = 1.0,
+        INP_MinAllowed   = 0.0,
+        INP_MaxAllowed   = 1.0,
+        INP_Integer    = false, 
+        })
+
+    InTop = self:AddInput("Top", "Top", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default    = 1.0,
+        INP_MinScale   = 0.0,
+        INP_MaxScale   = 1.0,
+        INP_MinAllowed   = 0.0,
+        INP_MaxAllowed   = 1.0,
+        INP_Integer    = false, 
+        })
+
+    InBottom = self:AddInput("Bottom", "Bottom", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default    = 1.0,
+        INP_MinScale   = 0.0,
+        INP_MaxScale   = 1.0,
+        INP_MinAllowed   = 0.0,
+        INP_MaxAllowed   = 1.0,
+        INP_Integer    = false, 
+        })
+
+    InController = self:AddInput("Controller", "Controller", {
+        LINKID_DataType = "Point",
+        INPID_InputControl = "OffsetControl",
+        INPID_PreviewControl = "CrosshairControl",
+        INP_DoNotifyChanged = true,
+        })
+
+    InNarrow = self:AddInput("Narrow", "Narrow", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default    = 1.0,
+        INP_MinScale   = 0.0,
+        INP_MaxScale   = 1.0,
+        INP_MinAllowed   = 0.0,
+        INP_MaxAllowed   = 1.0,
+        INP_Integer    = false, 
+        })
+
+    self:EndControlNest()
+
+    InClipping = self:AddInput("Clipping Mode", "ClippingMode", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "MultiButtonControl",
+        INP_Default = 1,
+        INP_Integer = true,
+        INP_DoNotifyChanged = true,
+        { MBTNC_AddButton = "None"},
+        { MBTNC_AddButton = "Frame"},
+        })
+
+    InExpandDoD = self:AddInput("Expand DoD", "ExpandDoD", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default    = 0.0,
+        INP_MinScale   = 0.0,
+        INP_MaxScale   = 1.0,
+        INP_MinAllowed = -1.0,
+        })
+
+    InEdges = self:AddInput("Edges", "Edges", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "MultiButtonControl",
+        INP_Default = 0.0,
+        INP_Integer = true,
+        { MBTNC_AddButton = "Canvas"},
+        { MBTNC_AddButton = "Wrap"},
+        { MBTNC_AddButton = "Duplicate"},
+        { MBTNC_AddButton = "Mirror"}, 
+        })
+
+    InGlowBlendingModes = self:AddInput("Blending Modes", "BlendingModes", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "MultiButtonControl",
+        INP_Default = 0.0,
+        INP_Integer = true,
+        { MBTNC_AddButton = "Add"},
+        { MBTNC_AddButton = "Glow Only"},
+        { MBTNC_AddButton = "Lighten"},
+        { MBTNC_AddButton = "Screen"},
+        { MBTNC_AddButton = "Linear Dodge"},
+        { MBTNC_AddButton = "Linear color"},
+        { MBTNC_AddButton = "Difference"},
+        { MBTNC_AddButton = "Exclusion"},
+        })
+
+    InInvertMatte = self:AddInput("Invert Matte", "InvertMatte", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "CheckboxControl",
+        INP_Integer = true,
+        INP_Default = 0,
+        })
+
+    self:AddInput(" ", "sep2", {
+        INPID_InputControl = "SeparatorControl",
+        })
+
+    Author2 = self:AddInput(authorText, "Author2", {
+        LINKID_DataType = "Text",
+        INPID_InputControl = "LabelControl",
+        INP_External = false,
+        INP_Passive = true,
+        })
+
+    InImage = self:AddInput("Input", "Input", {
+        LINKID_DataType = "Image",
+        LINK_Main = 1,
+        INP_Priority = -1, -- fetch input image after everything else
+        })
+
+    InGlowMatte = self:AddInput("Glow Matte", "GlowMatte", {
+        LINKID_DataType = "Image",
+        LINK_Main = 5,
+        INP_Priority = -2,
+        INP_Required = false,
+        })
+
+    OutImage = self:AddOutput("Output", "Output", {
+       LINKID_DataType = "Image",
+       LINK_Main = 1,
+        })
+end
+
+function NotifyChanged(inp, param, time)
+    if inp ~= nil and param ~= nil then
+        if inp == InMode then
+            if param.Value == 0 then
+                InDisplacement:SetAttrs({IC_Visible = false})
+            else
+                InDisplacement:SetAttrs({IC_Visible = true})
+            end
+        elseif inp == InClipping then
+            if param.Value == 0 then
+                InExpandDoD:SetAttrs({IC_Visible = false})
+            else
+                InExpandDoD:SetAttrs({IC_Visible = true})
+            end
+        elseif inp == InDirectionControl then
+            if param.Value == 0 then
+                InXY:SetAttrs({IC_Visible = true})
+                InLeft:SetAttrs({IC_Visible = false})
+                InRight:SetAttrs({IC_Visible = false})
+                InTop:SetAttrs({IC_Visible = false})
+                InBottom:SetAttrs({IC_Visible = false})
+                InController:SetAttrs({IC_Visible = false})
+                InController:SetAttrs({PC_Visible = false})
+                InNarrow:SetAttrs({IC_Visible = false})
+            elseif param.Value == 1 then
+                InXY:SetAttrs({IC_Visible = false})
+                InLeft:SetAttrs({IC_Visible = true})
+                InRight:SetAttrs({IC_Visible = true})
+                InTop:SetAttrs({IC_Visible = true})
+                InBottom:SetAttrs({IC_Visible = true})
+                InController:SetAttrs({IC_Visible = false})
+                InController:SetAttrs({PC_Visible = false})
+                InNarrow:SetAttrs({IC_Visible = false})
+            else
+                InXY:SetAttrs({IC_Visible = false})
+                InLeft:SetAttrs({IC_Visible = false})
+                InRight:SetAttrs({IC_Visible = false})
+                InTop:SetAttrs({IC_Visible = false})
+                InBottom:SetAttrs({IC_Visible = false})
+                InController:SetAttrs({IC_Visible = true})
+                InController:SetAttrs({PC_Visible = true})
+                InNarrow:SetAttrs({IC_Visible = true})
+            end
+        end
+    end
+end
+
+
+-- request the whole DoD from upstream. Without overriding CheckRequest, Fusion would
+-- only request what it requested from this tool (the current RoI, that is)
+function CheckRequest(req)
+    if (req:GetPri() == -1) and (not req:IsFailed()) then
+        local inpdod, reqdod = req:GetInputDoD(InImage), req:GetDoD()
+        if (inpdod ~= nil) and (reqdod ~= nil) then
+            local reqroi = req:GetRoI()
+            if reqroi ~= nil then
+                local op = InClipping:GetValue(req).Value
+                local viewMode = InViewMode:GetValue(req).Value
+
+                local datawnd = reqroi.ValidWindow
+                if op == 0 then -- If show Glow Matte
+                    req:SetInputRoI(InImage, inpdod:Intersect(datawnd))
+                    return
+                end
+                datawnd = datawnd:Intersect(reqdod.ValidWindow)
+                if (InClipping:GetValue(req).Value == 1) then
+                    local glowwnd = ImgRectI(inpdod:Intersect(inpdod))
+                    local expand = InExpandDoD:GetValue(req).Value
+                    datawnd = datawnd:Inflate(expand*reqdod.ValidWindow.right, expand*reqdod.ValidWindow.top)
+                    if datawnd.left < glowwnd.left then
+                        datawnd.left = glowwnd.left
+                    end
+                    if datawnd.bottom < glowwnd.bottom then
+                        datawnd.bottom = glowwnd.bottom
+                    end
+                    if datawnd.right > glowwnd.right then
+                        datawnd.right = glowwnd.right
+                    end
+                    if datawnd.top > glowwnd.top then
+                        datawnd.top = glowwnd.top
+                    end
+                end
+
+
+                -- request new datawindow from upstream, limited by the input's DoD (for safety)
+                req:SetInputRoI(InImage, inpdod:Intersect(datawnd))
+            end
+        end
+    end
+end
+
+
+function calcDisplacement(req)
+    local displacement = InDisplacement:GetValue(req).Value
+    local iterations = InIterationsEnd:GetValue(req).Value
+    -- Calculate the displacement
+    local dispList = {}
+    if InMode:GetValue(req).Value == 0 then
+        dispList = fib
+    else
+        dispList[1] = 1
+        for i=2,iterations do
+            dispList[i] = dispList[i-1] * displacement
+        end
+    end
+    return dispList
+end
+
+
+function update_lbrt(req)
+    local directionControl = InDirectionControl:GetValue(req).Value
+    if directionControl == 0 then -- X/Y
+        local XY = InXY:GetValue(req).Value
+        local time = self.Comp.CurrentTime
+        if XY > 1 then
+            left = 1+(1-XY)
+            right = 1+(1-XY)
+            top = 1
+            bottom = 1
+        else
+            left = 1
+            right = 1
+            top = XY
+            bottom = XY
+        end
+    elseif directionControl == 1 then -- Induvidual Controlls
+        left = InLeft:GetValue(req).Value
+        right = InRight:GetValue(req).Value
+        top = InTop:GetValue(req).Value
+        bottom = InBottom:GetValue(req).Value
+    elseif directionControl == 2 then -- Point Controller
+        local x = InController:GetValue(req).X*2
+        local y = InController:GetValue(req).Y*2
+        local yForX = math.abs(y-1) * InNarrow:GetValue(req).Value
+        local xForY = math.abs(x-1) * InNarrow:GetValue(req).Value
+        
+        left = math.max(0, math.min(1, 2 - x - yForX))
+        right = math.max(0, math.min(1, x - yForX))
+        top = math.max(0, math.min(1, y - xForY))
+        bottom = math.max(0, math.min(1, 2 - y - xForY))
+    end
+end
+
+
+function Process(req)
+    local src = InImage:GetValue(req)
+
+    -- get input's DoD and request's RoI
+    local dod, roi = req:GetInputDoD(InImage), req:GetRoI()
+    -- data window, which is the area this Fuse has to process, starts out as input data window restricted to its DoD
+    local datawnd = dod:Intersect(src.DataWindow)
+    -- restrict further to region of interest (roi will be nil during precalc and thus datawnd won't be restricted)
+
+    if roi then
+        datawnd = roi:Intersect(datawnd)
+    end
+
+    update_lbrt(req)
+    local viewMode = InViewMode:GetValue(req).Value
+    local iterationsEnd, iterationsStart, spread, dispList
+    if viewMode == 0 then
+        iterationsEnd = InIterationsEnd:GetValue(req).Value
+        spread = InSpread:GetValue(req).Value * src.Width / resIndep-- To make it resolution independent
+        dispList = calcDisplacement(req)
+        box = boxesForGauss(spread * dispList[iterationsEnd], 3)
+        dSpread = ((box[1]+1) + (box[2]+1) + (box[3]+1))/2 -- Add all boxes together to get the gausian-size
+
+        local dLeft = math.floor((dSpread * left))
+        local dBottom = math.floor((dSpread * bottom))
+        local dRight = math.floor((dSpread * right))
+        local dTop = math.floor((dSpread * top))
+        local datawnd2 = ImgRectI(datawnd.left - dLeft, datawnd.bottom - dBottom, datawnd.right + dRight, datawnd.top + dTop)
+        datawnd = datawnd:Union(datawnd2)
+
+        if (InClipping:GetValue(req).Value == 1) then
+            local glowwnd = ImgRectI(datawnd)
+            datawnd = datawnd:Intersect({0, 0, src.Width, src.Height})
+            local expand = InExpandDoD:GetValue(req).Value
+            datawnd = datawnd:Inflate(expand*src.Width, expand*src.Height)
+            if datawnd.left < glowwnd.left then
+                datawnd.left = glowwnd.left
+            end
+            if datawnd.bottom < glowwnd.bottom then
+                datawnd.bottom = glowwnd.bottom
+            end
+            if datawnd.right > glowwnd.right then
+                datawnd.right = glowwnd.right
+            end
+            if datawnd.top > glowwnd.top then
+                datawnd.top = glowwnd.top
+            end
+        end
+    end
+
+    local depth = src.Depth < 7 and 7 or src.Depth
+    local output = Image({IMG_Like = src,
+                        IMG_NoData = req:IsPreCalc(),
+                        IMG_DataWindow = datawnd,
+                        IMG_Depth = depth,
+                    })
+
+
+    if not req:IsPreCalc() then
+        -- Preprocess glow source
+        local matte = InGlowMatte:GetValue(req)
+        if not matte then
+            matte = src
+        end
+        local luma_dest = lumaMask(req, src, matte)
+        local dest = nil
+
+        if viewMode == 1 then
+            output = luma_dest
+        else
+            local bxs = nil
+            local firstItteration = true
+            local iterationsStart = InIterationsStart:GetValue(req).Value
+            for i=iterationsStart, iterationsEnd do
+                bxs = boxesForGauss(spread * dispList[i], 3)
+                dest = boxBlur_4(req, luma_dest, output,(bxs[1]+1)/2)
+                dest = boxBlur_4(req, dest, output,(bxs[2]+1)/2)
+                dest = boxBlur_4(req, dest, output,(bxs[3]+1)/2)
+
+                --dest = gaussianBlur(req, luma_dest, output, spread)
+
+                local grad = InGradient:GetValue(req)
+                local gradspace = InInterpolation:GetValue(req).Value
+                local gradPos = dispList[i] / dispList[iterationsEnd]
+                local gradColor = grad:QuickEvaluate(gradPos, gradspace)
+                dest = postProcessBlur(req, dest, gradColor)
+
+                if firstItteration then
+                    firstItteration = false
+                    output = dest
+                else
+                    local range = 1/(InRange:GetValue(req).Value^(i-1))
+                    output = dctlAdd(req, output, dest, range)
+                end
+            end
+            output = dctlDivide(req, output, iterationsEnd-iterationsStart+1)
+
+            if InGlowBlendingModes:GetValue(req).Value ~= 1 then
+                output = dctlAdd(req, src, output, 1, InGlowBlendingModes:GetValue(req).Value)
+            end
+        end
+    end
+ 
+    collectgarbage()
+    OutImage:Set(req, output)
+end
+
+function lumaMask(req, src, matte)
+    local depth = src.Depth < 7 and 7 or src.Depth
+    local low = InLow:GetValue(req).Value
+    local high = InHigh:GetValue(req).Value
+    if high <= low then
+        high = low + 0.001
+    end
+
+    local dst = Image{ IMG_Like = src, IMG_Depth = depth}
+    local nodeLumaMask = DVIPComputeNode(req, "LumaMaskKernel", LumaMaskKernel, "LumaMaskParams", LumaMaskParams)
+ 
+    local params = nodeLumaMask:GetParamBlock(LumaMaskParams)
+    params.srcDoD[0] = src.DataWindow:Width()
+    params.srcDoD[1] = src.DataWindow:Height()
+    -- Normalize the masks size to the srcs size
+    params.maskScale[0] = src.DataWindow:Width()/(src.Width*(matte.DataWindow:Width()/matte.Width))
+    params.maskScale[1] = src.DataWindow:Height()/(src.Height*(matte.DataWindow:Height()/matte.Height))
+    params.maskOffset[0] = matte.DataWindow.left/matte.DataWindow:Width() - src.DataWindow.left/matte.DataWindow:Width()
+    params.maskOffset[1] = matte.DataWindow.bottom/matte.DataWindow:Height() - src.DataWindow.bottom/matte.DataWindow:Height()
+
+    params.low = low
+    params.high = high
+    params.addGain = InGain:GetValue(req).Value -- Add * 3 to match ml_FastExpoGlow
+    params.invert = InInvertMatte:GetValue(req).Value
+    --This gets the values of our sliders from the control panel.
+    params.srcCompOrder = src:IsMask() and 1 or 15
+    params.maskCompOrder = matte:IsMask() and 1 or 15
+ 
+    nodeLumaMask:SetParamBlock(params)
+
+    nodeLumaMask:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR,TEX_ADDRESS_MODE_BORDER, TEX_NORMALIZED_COORDS_TRUE)
+ 
+    nodeLumaMask:AddInput("src", src)
+    nodeLumaMask:AddInput("mask", matte)
+    nodeLumaMask:AddOutput("dst", dst)
+ 
+    local ok = nodeLumaMask:RunSession(req)
+ 
+    if not ok then
+        dst = nil
+        dump(nodeLumaMask:GetErrorLog())
+    end
+    collectgarbage()
+    return dst
+end
+
+
+function gaussianBlur(req, src, output, r)
+    local dst1 = Image{IMG_Like = output}
+
+    --== Horizontal ==--
+    local r1 = math.floor((r * left))
+    local r2 = math.floor((r * right))
+
+    --This calls on our kernel to process the image we created.
+    local nodeGaussian = DVIPComputeNode(req, "GaussianKernel", GaussianKernel, "GaussianParams", GaussianParams)
+     
+    local params = nodeGaussian:GetParamBlock(GaussianParams)
+    --This gets the values of our sliders from the control panel.
+    params.iarr = 1/(r1+r2+1)
+    params.dstSize[0] = dst1.DataWindow:Width()
+    params.dstSize[1] = dst1.DataWindow:Height()
+    params.srcDoD[0] = 1/src.DataWindow:Width()
+    params.srcDoD[1] = 1/src.DataWindow:Height()
+    -- The offset from the DoD's corner to the images corner
+    params.imgOffset[0] = dst1.DataWindow.left - src.DataWindow.left
+    params.imgOffset[1] = dst1.DataWindow.bottom - src.DataWindow.bottom
+
+    params.r1 = r1
+    params.r2 = r2
+    params.srcCompOrder = src:IsMask() and 1 or 15
+ 
+    nodeGaussian:SetParamBlock(params)
+ 
+    local edges = InEdges:GetValue(req).Value
+    --This gets the value of our input image for us to modify inside the kernel
+    if edges == 0 then
+        nodeGaussian:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR,TEX_ADDRESS_MODE_BORDER, TEX_NORMALIZED_COORDS_TRUE)
+    elseif edges == 1 then
+        nodeGaussian:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR,TEX_ADDRESS_MODE_WRAP, TEX_NORMALIZED_COORDS_TRUE)
+    elseif edges == 2 then
+        nodeGaussian:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR,TEX_ADDRESS_MODE_DUPLICATE, TEX_NORMALIZED_COORDS_TRUE)
+    elseif edges == 3 then
+        nodeGaussian:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR,TEX_ADDRESS_MODE_MIRROR, TEX_NORMALIZED_COORDS_TRUE)
+    end
+
+    nodeGaussian:AddInput("src", src)
+    nodeGaussian:AddOutput("dst", dst1)
+ 
+    local ok = nodeGaussian:RunSession(req)
+ 
+    if not ok then
+        dst1 = nil
+        dump(nodeGaussian:GetErrorLog())
+    end
+
+    collectgarbage()
+    return dst1
+end
+
+
+function boxesForGauss(sigma, n)  -- standard deviation, number of boxes
+    local wIdeal = math.sqrt((12*sigma*sigma/n)+1)  -- Ideal averaging filter width 
+    local wl = math.floor(wIdeal)
+    if (wl%2==0) then
+        wl = wl - 1
+    end
+
+    local wu = wl+2
+                
+    local mIdeal = (12*sigma*sigma - n*wl*wl - 4*n*wl - 3*n)/(-4*wl - 4)
+    local m = math.floor(mIdeal + 0.5)
+                
+    local sizes = {}
+
+    for i=1, n do
+        sizes[i] = i<m and wl or wu
+    end
+    collectgarbage()
+    return sizes
+end
+
+
+function boxBlur_4 (req, src, output, r)
+    local dst1 = Image{IMG_Like = output}
+    local dst2 = Image{IMG_Like = output}
+
+    --== Horizontal ==--
+    local r1 = math.floor((r * left))
+    local r2 = math.floor((r * right))
+
+    --This calls on our kernel to process the image we created.
+    local nodeHKernel = DVIPComputeNode(req, "ComputeWKernel", ComputeWKernel, "ComputeParams", ComputeParams)
+     
+    local params = nodeHKernel:GetParamBlock(ComputeParams)
+    --This gets the values of our sliders from the control panel.
+    params.iarr = 1/(r1+r2+1)
+    params.dstSize[0] = dst1.DataWindow:Width()
+    params.dstSize[1] = dst1.DataWindow:Height()
+    params.srcDoD[0] = 1/src.DataWindow:Width()
+    params.srcDoD[1] = 1/src.DataWindow:Height()
+    -- The offset from the DoD's corner to the images corner
+    params.imgOffset[0] = dst1.DataWindow.left - src.DataWindow.left
+    params.imgOffset[1] = dst1.DataWindow.bottom - src.DataWindow.bottom
+
+    params.r1 = r1
+    params.r2 = r2
+    params.srcCompOrder = src:IsMask() and 1 or 15
+ 
+    nodeHKernel:SetParamBlock(params)
+ 
+    local edges = InEdges:GetValue(req).Value
+    --This gets the value of our input image for us to modify inside the kernel
+    if edges == 0 then
+        nodeHKernel:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR,TEX_ADDRESS_MODE_BORDER, TEX_NORMALIZED_COORDS_TRUE)
+    elseif edges == 1 then
+        nodeHKernel:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR,TEX_ADDRESS_MODE_WRAP, TEX_NORMALIZED_COORDS_TRUE)
+    elseif edges == 2 then
+        nodeHKernel:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR,TEX_ADDRESS_MODE_DUPLICATE, TEX_NORMALIZED_COORDS_TRUE)
+    elseif edges == 3 then
+        nodeHKernel:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR,TEX_ADDRESS_MODE_MIRROR, TEX_NORMALIZED_COORDS_TRUE)
+    end
+
+    nodeHKernel:AddInput("src", src)
+    nodeHKernel:AddOutput("dst", dst1)
+ 
+    local ok = nodeHKernel:RunSession(req)
+ 
+    if not ok then
+        dst1 = nil
+        dump(nodeHKernel:GetErrorLog())
+    end
+
+    collectgarbage()
+
+    local r1 = math.floor((r * bottom))
+    local r2 = math.floor((r * top))
+
+    --This calls on our kernel to process the image we created.
+    local nodeVKernel = DVIPComputeNode(req, "ComputeHKernel", ComputeHKernel, "ComputeParams", ComputeParams)
+
+    params = nodeVKernel:GetParamBlock(ComputeParams)
+    --This gets the values of our sliders from the control panel.
+
+    params.iarr = 1/(r1+r2+1)
+    params.dstSize[0] = dst2.DataWindow:Width()
+    params.dstSize[1] = dst2.DataWindow:Height()
+    params.srcDoD[0] = 1/dst1.DataWindow:Width()
+    params.srcDoD[1] = 1/dst1.DataWindow:Height()
+    -- The offset from the DoD's corner to the images corner
+    params.imgOffset[0] = dst2.DataWindow.left - dst1.DataWindow.left
+    params.imgOffset[1] = dst2.DataWindow.bottom - dst1.DataWindow.bottom
+
+    params.r1 = r1
+    params.r2 = r2
+    params.srcCompOrder = dst1:IsMask() and 1 or 15
+ 
+    nodeVKernel:SetParamBlock(params)
+
+    --This gets the value of our input image for us to modify inside the kernel
+    if edges == 0 then
+        nodeVKernel:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR,TEX_ADDRESS_MODE_BORDER, TEX_NORMALIZED_COORDS_TRUE)
+    elseif edges == 1 then
+        nodeVKernel:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR,TEX_ADDRESS_MODE_WRAP, TEX_NORMALIZED_COORDS_TRUE)
+    elseif edges == 2 then
+        nodeVKernel:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR,TEX_ADDRESS_MODE_DUPLICATE, TEX_NORMALIZED_COORDS_TRUE)
+    elseif edges == 3 then
+        nodeVKernel:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR,TEX_ADDRESS_MODE_MIRROR, TEX_NORMALIZED_COORDS_TRUE)
+    end
+ 
+    nodeVKernel:AddInput("src", dst1)
+    nodeVKernel:AddOutput("dst", dst2)
+ 
+    local ok = nodeVKernel:RunSession(req)
+ 
+    if not ok then
+        dst2 = nil
+        dump(nodeVKernel:GetErrorLog())
+    end
+
+    collectgarbage()
+    return dst2
+
+end
+
+function postProcessBlur(req, src, color)
+    local dst = Image{ IMG_Like = src}
+    local nodePostProcessBlur = DVIPComputeNode(req, "PostProcessBlurKernel", PostProcessBlurKernel, "PostProcessBlurParams", PostProcessBlurParams)
+ 
+    local params = nodePostProcessBlur:GetParamBlock(PostProcessBlurParams)
+
+    params.srcDoD[0] = src.DataWindow:Width()
+    params.srcDoD[1] = src.DataWindow:Height()
+
+    params.colorGain[0] = color.R
+    params.colorGain[1] = color.G
+    params.colorGain[2] = color.B
+    params.colorGain[3] = color.A
+    --This gets the values of our sliders from the control panel.
+    params.srcCompOrder = src:IsMask() and 1 or 15
+ 
+    nodePostProcessBlur:SetParamBlock(params)
+ 
+    nodePostProcessBlur:AddInput("src", src)
+    nodePostProcessBlur:AddOutput("dst", dst)
+ 
+    local ok = nodePostProcessBlur:RunSession(req)
+ 
+    if not ok then
+        dst = nil
+        dump(nodePostProcessBlur:GetErrorLog())
+    end
+    collectgarbage()
+    return dst
+
+end
+
+function dctlAdd(req, bg, fg, range, glowBlendingMode)
+    local dst = Image{ IMG_Like = fg}
+    local nodeAdd = DVIPComputeNode(req, "AddKernel", AddKernel, "AddParams", AddParams)
+ 
+    local params = nodeAdd:GetParamBlock(AddParams)
+    params.srcDoD[0] = fg.DataWindow:Width()
+    params.srcDoD[1] = fg.DataWindow:Height()
+    -- The offset from the DoD's corner to the images corner
+    params.imgScale[0] = fg.DataWindow:Width()/bg.DataWindow:Width()
+    params.imgScale[1] = fg.DataWindow:Height()/bg.DataWindow:Height()
+    params.imgOffset[0] = (fg.DataWindow.left - bg.DataWindow.left)/bg.DataWindow:Width()
+    params.imgOffset[1] = (fg.DataWindow.bottom - bg.DataWindow.bottom)/bg.DataWindow:Height()
+    params.range = range
+    params.glowBlendingMode = glowBlendingMode ~= nil and glowBlendingMode or 0
+    --This gets the values of our sliders from the control panel.
+    params.srcCompOrder = bg:IsMask() and 1 or 15
+
+    nodeAdd:SetParamBlock(params)
+ 
+    nodeAdd:AddSampler("RowSampler", TEX_FILTER_MODE_LINEAR,TEX_ADDRESS_MODE_BORDER, TEX_NORMALIZED_COORDS_TRUE)
+
+    nodeAdd:AddInput("bg", bg)
+    nodeAdd:AddInput("fg", fg)
+    nodeAdd:AddOutput("dst", dst)
+ 
+    local ok = nodeAdd:RunSession(req)
+ 
+    if not ok then
+        dst = nil
+        dump(nodeAdd:GetErrorLog())
+    end
+    collectgarbage()
+    return dst
+end
+
+function dctlDivide(req, src, amount)
+    local dst = Image{ IMG_Like = src}
+    local nodeDivide = DVIPComputeNode(req, "DivideKernel", DivideKernel, "DivideParams", DivideParams)
+ 
+    local params = nodeDivide:GetParamBlock(DivideParams)
+    params.srcDoD[0] = src.DataWindow:Width()
+    params.srcDoD[1] = src.DataWindow:Height()
+
+    params.amount = amount
+    --This gets the values of our sliders from the control panel.
+    params.srcCompOrder = src:IsMask() and 1 or 15
+ 
+    nodeDivide:SetParamBlock(params)
+ 
+    nodeDivide:AddInput("src", src)
+    nodeDivide:AddOutput("dst", dst)
+ 
+    local ok = nodeDivide:RunSession(req)
+ 
+    if not ok then
+        dst = nil
+        dump(nodeDivide:GetErrorLog())
+    end
+    collectgarbage()
+    return dst
+end
+
+--These are the parameters that we need access to in our kernel.
+LumaMaskParams = [[
+    int srcDoD[2];
+    float maskOffset[2];
+    float maskScale[2];
+    float low;
+    float high;
+    float addGain;
+    bool invert;
+    int srcCompOrder;
+    int maskCompOrder;
+]]
+ 
+--This is the GPU kernel, all of the image algorithms happen here.
+LumaMaskKernel = [[
+    __DEVICE__ float remap(float value, float fromLow, float fromHigh, float toLow, float toHight) {return toLow + (value - fromLow) * (toHight - toLow) / (fromHigh - fromLow);}
+
+    __KERNEL__ void LumaMaskKernel(
+        __CONSTANTREF__ LumaMaskParams *params,
+        __TEXTURE2D__ src,
+        __TEXTURE2D__ mask,
+        __TEXTURE2D_WRITE__ dst
+    )
+    {
+        DEFINE_KERNEL_ITERATORS_XY(x, y);
+        if (x < params->srcDoD[0] && y < params->srcDoD[1])
+        {
+            //-----------------------
+            float2 fragCoord = to_float2(x,y) + to_float2_s(0.5f);
+            float2 iResolution = to_float2(params->srcDoD[0], params->srcDoD[1]);
+            float2 uv = fragCoord / iResolution;
+            float2 maskOffset = to_float2(params->maskOffset[0], params->maskOffset[1]);
+            //-----------------------
+
+            float4 Color = _tex2DVecN(src, uv.x, uv.y, params->srcCompOrder);
+            float4 maskMatte = _tex2DVecN(mask, uv.x*params->maskScale[0]-params->maskOffset[0], uv.y*params->maskScale[1]-params->maskOffset[1], params->maskCompOrder);
+            float matte = 1.0f;
+            if (params->maskCompOrder == 1) {
+                matte = maskMatte.x;
+                matte = matte*(1.0f - params->invert) + (1.0f - matte)*params->invert;
+            }
+
+            float colorMatte = 0.299f * Color.x + 0.587f * Color.y + 0.114f * Color.z;
+            matte *= colorMatte; 
+            float luminance = _clampf(remap(matte, params->low, params->high, 0.0f, 1.0f), 0.0f, 1.0f) * params->addGain;
+            Color *= to_float4(luminance, luminance, luminance, 0.0f);
+            Color.w = 0.0f;
+
+            _tex2DVec4Write(dst, x, y, Color);
+        }
+    }
+]]
+
+--These are the parameters that we need access to in our kernel.
+GaussianParams = [[
+    int dstSize[2];
+    float srcDoD[2];
+    float imgOffset[2];
+    int r1;
+    int r2;
+    float iarr;
+    int srcCompOrder;
+]]
+ 
+GaussianKernel = [[
+    __DEVICE__ float normpdf(float x, float sigma) {return 0.39894*_expf(-0.5f*x*x/(sigma*sigma))/sigma;}
+
+    __KERNEL__ void GaussianKernel(
+        __CONSTANTREF__ GaussianParams *params,
+        __TEXTURE2D__ src,
+        __TEXTURE2D_WRITE__ dst
+    )
+    {
+        DEFINE_KERNEL_ITERATORS_XY(x,y);
+        //-----------------------
+        int sC = params->srcCompOrder;
+        float2 fragCoord = to_float2(x,y) + to_float2_s(0.5f);
+        float2 iResolution = to_float2(params->srcDoD[0], params->srcDoD[1]);
+        float2 uv = fragCoord / iResolution;
+        int r1 = params->r1;
+        int r2 = params->r2;
+        float2 imgOffset = to_float2(params->imgOffset[0], params->imgOffset[1]);
+        //-----------------------
+
+        //declare stuff
+        const int mSize = 11; //r1
+        const int kSize = (mSize-1)/2;
+        float kernel[mSize];
+        float4 final_colour = to_float4_s(0.0f);
+
+        //create the 1-D kernel
+        float sigma = 7.0f;
+        float Z = 0.0f;
+        for (int j = 0; j <= kSize; ++j)
+        {
+            kernel[kSize+j] = kernel[kSize-j] = normpdf(float(j), sigma);
+        }
+
+        //get the normalization factor (as the gaussian has been clamped)
+        for (int j = 0; j < mSize; ++j)
+        {
+            Z += kernel[j];
+        }
+
+        //read out the texels
+        float readKernel = 0.0f;
+        float2 pos = to_float2(0.0f, 0.0f);
+        for (int i=-kSize; i <= kSize; ++i)
+        {
+            for (int j=-kSize; j <= kSize; ++j)
+            {
+                readKernel = kernel[kSize+j]*kernel[kSize+i];
+                pos = (fragCoord + to_float2(i, j)) / iResolution;
+                final_colour += _tex2DVecN( src, pos.x, pos.y, sC) * readKernel;
+            }
+        }
+
+        _tex2DVec4Write( dst, x, y, final_colour/(Z*Z)); //
+
+    }
+]]
+
+--These are the parameters that we need access to in our kernel.
+ComputeParams = [[
+    int dstSize[2];
+    float srcDoD[2];
+    float imgOffset[2];
+    int r1;
+    int r2;
+    float iarr;
+    int srcCompOrder;
+]]
+ 
+ComputeWKernel = [[
+    __DEVICE__ float4 max4f(float4 v, float i) {return to_float4(_fmaxf(v.x,i),_fmaxf(v.y,i),_fmaxf(v.z,i),_fmaxf(v.w,i));}
+
+    __KERNEL__ void ComputeWKernel(
+        __CONSTANTREF__ ComputeParams *params,
+        __TEXTURE2D__ src,
+        __TEXTURE2D_WRITE__ dst
+    )
+    {
+        DEFINE_KERNEL_ITERATORS_XY(x,y);
+        if(x==0){
+
+            //-----------------------
+            int sC = params->srcCompOrder;
+            int w = params->dstSize[0];
+            int r1 = params->r1;
+            int r2 = params->r2;
+            float iarr = params->iarr;
+            float2 iResolution = to_float2(params->srcDoD[0], params->srcDoD[1]); // pre-divided with 1 to allow multiplication
+            float2 imgOffset = to_float2(params->imgOffset[0], params->imgOffset[1]);
+            //-----------------------
+
+            float4 val = to_float4_s(0.0f);
+            float4 curP = to_float4_s(0.0f);
+            float yP = (y + imgOffset.y + 0.5) * iResolution.y;
+
+            // Loop through the radius (kernel) and fetch the first X pixels!
+            for(int j=-r1; j<r2; j++)
+            {
+                val += _tex2DVecN( src, (j + imgOffset.x) * iResolution.x, yP, sC);
+            }
+
+            for(int j=0; j<w; j++)
+            {
+                val += _tex2DVecN( src, (j + r1 + imgOffset.x) * iResolution.x, yP, sC);
+                val -= _tex2DVecN( src, (j - r2 + imgOffset.x) * iResolution.x, yP, sC);
+                val = max4f(val, 0.0f);
+                curP = _tex2DVecN( src, (j + imgOffset.x + 0.5f) * iResolution.x, yP , sC);
+                _tex2DVec4Write( dst, j, y, (val + curP)*iarr);
+            }
+        }
+    }
+]]
+
+ComputeHKernel = [[
+    __DEVICE__ float4 max4f(float4 v, float i) {return to_float4(_fmaxf(v.x,i),_fmaxf(v.y,i),_fmaxf(v.z,i),_fmaxf(v.w,i));}
+
+    __KERNEL__ void ComputeHKernel(
+        __CONSTANTREF__ ComputeParams *params,
+        __TEXTURE2D__ src,
+        __TEXTURE2D_WRITE__ dst
+    )
+    {
+        DEFINE_KERNEL_ITERATORS_XY(x,y);
+
+        if(y==0){
+
+            //-----------------------
+            int sC = params->srcCompOrder;
+            int h = params->dstSize[1];
+            int r1 = params->r1;
+            int r2 = params->r2;
+            float iarr = params->iarr;
+            float2 iResolution = to_float2(params->srcDoD[0], params->srcDoD[1]); // pre-divided with 1 to allow multiplication
+            float2 imgOffset = to_float2(params->imgOffset[0], params->imgOffset[1]);
+            //-----------------------
+
+            float4 val = to_float4_s(0.0f);
+            float4 curP = to_float4_s(0.0f);
+            float xP = (x + imgOffset.x + 0.5) * iResolution.x;
+
+            // Loop through the radius (kernel) and fetch the first Y pixels!
+            for(int j=-r2; j<r1; j++)
+            {
+                val += _tex2DVecN( src, xP, (j * iResolution.y) + imgOffset.y, sC);
+            }
+
+            for(int j=0; j<h; j++)
+            {
+                val += _tex2DVecN( src, xP, ((j + r1 + imgOffset.y) * iResolution.y) + imgOffset.y, sC);
+                float4 test = _tex2DVecN( src, xP, ((j + r1 + imgOffset.y) * iResolution.y) + imgOffset.y, sC);
+                val -= _tex2DVecN( src, xP, ((j - r2 + imgOffset.y) * iResolution.y) + imgOffset.y, sC);
+                val = max4f(val, 0.0f);
+                curP = _tex2DVecN( src, xP, ((j + imgOffset.y + 0.5f) * iResolution.y) + imgOffset.y, sC);
+                _tex2DVec4Write( dst, x, j, (val + curP)*iarr);
+            }
+        }
+    }
+]]
+
+--These are the parameters that we need access to in our kernel.
+PostProcessBlurParams = [[
+    int srcDoD[2];
+    float colorGain[4];
+    int srcCompOrder;
+]]
+ 
+--This is the GPU kernel, all of the image algorithms happen here.
+PostProcessBlurKernel = [[
+    __KERNEL__ void PostProcessBlurKernel(
+        __CONSTANTREF__ PostProcessBlurParams *params,
+        __TEXTURE2D__ src,
+        __TEXTURE2D_WRITE__ dst
+    )
+    {
+        DEFINE_KERNEL_ITERATORS_XY(x, y);
+        if (x < params->srcDoD[0] && y < params->srcDoD[1])
+        {
+            float4 Color = _tex2DVecN(src, x, y, params->srcCompOrder);
+            float4 colorGains = to_float4(params->colorGain[0], params->colorGain[1], params->colorGain[2], 1.0f);
+            float saturation = params->colorGain[3];
+
+            Color = Color * colorGains;
+
+            // Convert to YUV
+            float Y = 0.299f * Color.x + 0.587f * Color.y + 0.114f * Color.z;
+            float U = 0.492f * (Color.z-Y);
+            float V = 0.877f * (Color.x-Y);
+
+            //Change saturation
+            U = U * saturation;
+            V = V * saturation;
+
+            //Convert back to RGB
+            Color = to_float4(Y + 1.140*V, Y - 0.395*U - 0.581*V, Y + 2.032*U, Color.w);
+
+            _tex2DVec4Write(dst, x, y, Color);
+        }
+    }
+]]
+
+
+--These are the parameters that we need access to in our kernel.
+AddParams = [[
+    int srcDoD[2];
+    float range;
+    float imgScale[2];
+    float imgOffset[2];
+    int srcCompOrder;
+    int glowBlendingMode;
+]]
+ 
+--This is the GPU kernel, all of the image algorithms happen here.
+AddKernel = [[
+    __DEVICE__ float4 abs4f(float4 a){return to_float4(_fabs(a.x), _fabs(a.y),_fabs(a.z),_fabs(a.w));}  
+    __DEVICE__ float4 add( float4 s, float4 d ){return s+d;}
+    __DEVICE__ float4 lighten( float4 s, float4 d ){return _fmaxf(s,d);}
+    __DEVICE__ float4 screen( float4 s, float4 d ){return s + d - s * d;}
+    __DEVICE__ float4 linearDodge( float4 s, float4 d ){return s + d;}
+    __DEVICE__ float4 lighterColor( float4 s, float4 d ){return (s.x + s.y + s.z > d.x + d.y + d.z) ? s : d;}
+    __DEVICE__ float4 linearLight( float4 s, float4 d ){return 2.0f * s + d - 1.0f;}
+    __DEVICE__ float4 difference( float4 s, float4 d ){return abs4f(d - s);}
+    __DEVICE__ float4 exclusion( float4 s, float4 d ){return abs4f(s + d - 2.0f * s * d);}
+     
+    // ---------------- BLEND ----------------------
+     
+        __DEVICE__ float4 blend( float4 s, float4 d, int id )
+    {
+        if(id==0) return add(s, d);
+        if(id==1) return d;  // glow only
+        if(id==2) return lighten(s,d);
+        if(id==3) return screen(s,d);
+        if(id==4) return linearDodge(s,d);
+        if(id==5) return lighterColor(s,d);
+        if(id==6) return linearLight(s,d);
+        if(id==7) return difference(s,d);
+        if(id==8) return exclusion(s,d);
+     
+        return to_float4_s(0.0f);
+    }
+
+    __KERNEL__ void AddKernel(
+        __CONSTANTREF__ AddParams *params,
+        __TEXTURE2D__ bg,
+        __TEXTURE2D__ fg,
+        __TEXTURE2D_WRITE__ dst
+    )
+    {
+        DEFINE_KERNEL_ITERATORS_XY(x, y);
+        if (x < params->srcDoD[0] && y < params->srcDoD[1])
+        {
+            //-----------------------
+            float2 fragCoord = to_float2(x,y) + to_float2_s(0.5f);
+            float2 iResolution = to_float2(params->srcDoD[0], params->srcDoD[1]);
+            float2 uv = fragCoord / iResolution;
+            float2 imgScale = to_float2(params->imgScale[0],params->imgScale[1]);
+            float2 imgOffset = to_float2(params->imgOffset[0],params->imgOffset[1]);
+            //-----------------------
+
+            float4 Color1 = (_tex2DVecN(fg, uv.x, uv.y, params->srcCompOrder)* params->range);
+            float4 Color2 = _tex2DVecN(bg, (uv.x*imgScale.x)+imgOffset.x, (uv.y*imgScale.y)+imgOffset.y, params->srcCompOrder);
+            //Color1 += Color2;
+
+            Color1 = blend(Color1,Color2,params->glowBlendingMode);
+
+            _tex2DVec4Write(dst, x, y, Color1);
+        }
+    }
+]]
+
+--These are the parameters that we need access to in our kernel.
+DivideParams = [[
+    int srcDoD[2];
+    int amount;
+    int srcCompOrder;
+]]
+ 
+--This is the GPU kernel, all of the image algorithms happen here.
+DivideKernel = [[
+    __KERNEL__ void DivideKernel(
+        __CONSTANTREF__ DivideParams *params,
+        __TEXTURE2D__ src,
+        __TEXTURE2D_WRITE__ dst
+    )
+    {
+        DEFINE_KERNEL_ITERATORS_XY(x, y);
+        if (x < params->srcDoD[0] && y < params->srcDoD[1])
+        {
+            float4 Color = _tex2DVecN(src, x, y, params->srcCompOrder) / to_float4_s(params->amount);
+
+            _tex2DVec4Write(dst, x, y, Color);
+        }
+    }
+]]
