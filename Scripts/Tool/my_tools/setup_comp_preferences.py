@@ -1,31 +1,11 @@
 """
     Script for extracting frame rate and image dimensions from metadata 
-    and setting the composition's frame rate, width, and height in Blackmagic Fusion.
+    and setting the composition's frame rate, pixel aspect, width, and height in Blackmagic Fusion.
 
     Copyright © 2024 Alexey Bogomolov
     Email: mail@abogomolov.com
     License: MIT
-    
-    Permission is hereby granted, free of charge, to any person obtaining
-    a copy of this software and associated documentation files (the "Software"),
-    to deal in the Software without restriction, including without limitation
-    the rights to use, copy, modify, merge, publish, distribute, sublicense,
-    and/or sell copies of the Software, and to permit persons to whom the
-    Software is furnished to do so, subject to the following conditions:
-    
-    The above copyright notice and this permission notice shall be included
-    in all copies or substantial portions of the Software.
-    
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
-    OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-    
 """
-
 
 def convert_to_number(data: str, to_type):
     try:
@@ -33,7 +13,6 @@ def convert_to_number(data: str, to_type):
     except ValueError:
         print(f"The value {data} could not be converted to {to_type.__name__}")
         return None
-
 
 def set_comp_pref(key: str, value):
     comp.SetPrefs(key, value)
@@ -47,17 +26,15 @@ def process_metadata(metadata, key_fragment, comp_pref_key, convert_func, value_
             converted_value = convert_func(value, value_type)
             if converted_value is not None:
                 set_comp_pref(comp_pref_key, converted_value)
-                print(f"{key_string} set to {converted_value}")
+                print(f"{key_string} is set to {converted_value}")
                 return True
     return False
-
 
 def set_from_background(tool):
     width = tool.Width[fu.TIME_UNDEFINED]
     height = tool.Height[fu.TIME_UNDEFINED]
     aspect_x, aspect_y, _ = tool.PixelAspect[fu.TIME_UNDEFINED].values()
     return width, height, aspect_x, aspect_y
-
 
 def set_from_loader(tool):
     attrs = tool.GetAttrs()
@@ -71,17 +48,15 @@ def set_from_loader(tool):
         aspect_x = aspect_y = None
     return width, height, aspect_x, aspect_y
 
-
 def set_comp_size_and_aspect(width, height, aspect_x=None, aspect_y=None):
-    comp.SetPrefs({"Comp.FrameFormat.Width": width, "Comp.FrameFormat.Height": height})
+    set_comp_pref("Comp.FrameFormat.Width", width)
+    set_comp_pref("Comp.FrameFormat.Height", height)
     print("Comp size is set to {}x{}".format(int(width), int(height)))
     if aspect_x and aspect_y:
-        comp.SetPrefs(
-            {"Comp.FrameFormat.AspectX": aspect_x, "Comp.FrameFormat.AspectY": aspect_y}
-        )
+        set_comp_pref("Comp.FrameFormat.AspectX", aspect_x)
+        set_comp_pref("Comp.FrameFormat.AspectY", aspect_y)
         print("Comp pixel aspect is set to {}:{}".format(aspect_x, aspect_y))
-    comp.SetPrefs({"Comp.FrameFormat.Name": "Set by Script"})
-
+    set_comp_pref("Comp.FrameFormat.Name", "Set by Script")
 
 def main():
     tool = comp.ActiveTool
@@ -105,7 +80,6 @@ def main():
     )
     if not fps_found:
         print("No framerate information found in metadata")
-
 
 if __name__ == "__main__":
     main()
