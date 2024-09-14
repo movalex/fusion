@@ -26,7 +26,6 @@ def set_logging(level="debug", script_name=None):
     if script_name is None:
         script_name = Path(__file__).stem
 
-
     log_levels = {
         "debug": logging.DEBUG,
         "info": logging.INFO,
@@ -34,6 +33,11 @@ def set_logging(level="debug", script_name=None):
         "error": logging.ERROR,
         "critical": logging.CRITICAL,
     }
+
+    # Validate the level argument
+    if level.lower() not in log_levels:
+        raise ValueError(f"Invalid logging level: {level}")
+
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)  # Set the logger to the lowest level
 
