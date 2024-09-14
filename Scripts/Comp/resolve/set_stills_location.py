@@ -2,6 +2,7 @@
 
 from UI_utils import RequestDir
 from pathlib import Path
+from log_utils import set_logging
 
 """
     This is a Davinci Resolve script to set stills saving location
@@ -29,18 +30,20 @@ from pathlib import Path
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     
 """
+log = set_logging(script_name="Set Stills Location")
+
 
 def set_stills_folder():
     target_data = fu.GetData("ResolveSaveStills.Folder")
     target_folder = RequestDir(title="Set stills location", target=target_data)
     if not target_folder or target_folder == " ":
-        print("Stills folder not set.")
+        log.debug("Stills folder not set.")
         return
     if not Path(target_folder).exists():
-        print(f"Folder {target_folder} does not exist")
+        log.debug(f"Folder {target_folder} does not exist")
         return
     fu.SetData("ResolveSaveStills.Folder", target_folder)
-    print(f"Stills export directory is set to {target_folder}")
+    log.debug(f"Stills export directory is set to {target_folder}")
 
 
 

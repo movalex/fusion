@@ -29,6 +29,9 @@ import sys
 from pathlib import Path
 from typing import Any
 from get_resolve import GetResolve
+from log_utils import set_logging
+
+log = set_logging(script_name="Resolve Utils")
 
 
 class ResolveUtility:
@@ -52,8 +55,8 @@ class ResolveUtility:
             self.handle_error(e)
 
     def handle_error(self, error):
-        print(f"Error initializing DaVinci Resolve: {error}")
-        print(
+        log.debug(f"Error initializing DaVinci Resolve: {error}")
+        log.debug(
             "Please make sure DaVinci Resolve is running and the scripting module is available."
         )
         sys.exit(1)
@@ -68,7 +71,7 @@ class ResolveUtility:
         fusion = self.get_fusion_module()
         if not fusion:
             raise RuntimeError("Fusion module not found.")
-        print(f"Resetting data: [{data}]")
+        log.debug(f"Resetting data: [{data}]")
         fusion.SetData(data)
 
     def create_folder(self, folder_path: Path) -> None:
@@ -76,7 +79,7 @@ class ResolveUtility:
         try:
             folder_path.mkdir(exist_ok=True, parents=True)
         except (PermissionError, FileNotFoundError) as e:
-            print(f"Could not create folder at {folder_path}: {e}")
+            log.debug(f"Could not create folder at {folder_path}: {e}")
             raise
 
     def get_current_project(self):
@@ -112,11 +115,11 @@ class ResolveUtility:
         """Get all clips in the specified timeline track."""
         timeline = self.get_current_timeline()
         if not timeline:
-            print("No timeline found in the project.")
+            log.debug("No timeline found in the project.")
             return []
         clips = timeline.GetItemListInTrack(track_type, track_number)
         if not clips:
-            print(f"No clips found in {track_type} track {track_number}.")
+            log.debug(f"No clips found in {track_type} track {track_number}.")
         return clips
 
     def add_to_mediapool(self, file: list, subfolder_name=None):
@@ -124,7 +127,7 @@ class ResolveUtility:
         pool = self.get_mediapool()
         if not pool:
             raise RuntimeError("No media pool found.")
-        print(f"Importing {file} to mediapool")
+        log.debug(f"Importing {file} to mediapool")
         root = pool.GetRootFolder()
         folder = root
         if subfolder_name:
@@ -140,17 +143,17 @@ class ResolveUtility:
         self, clip, comp_name="Composition 1", process_functions=None
     ):
         """Process the fusion composition in a clip using provided functions."""
-        print(f"Processing clip: {clip.GetName()}")
+        log.debug(f"Processing clip: {clip.GetName()}")
         comp = self.get_fusion_composition(clip, comp_name)
         if not comp:
-            print(f"No fusion composition found for clip: {clip.GetName()}")
+            log.debug(f"No fusion composition found for clip: {clip.GetName()}")
             return
 
         if process_functions:
             for process_function in process_functions:
                 process_function(comp)
         else:
-            print("No processing functions provided.")
+            log.debug("No processing functions provided.")
 
     def modify_tool_parameters(self, comp, tool_name: str, modifications: dict):
         """
@@ -175,25 +178,25 @@ class ResolveUtility:
                         }
                         updated_center.update(value)  # Update with the new values
                         setattr(tool, attribute, updated_center)
-                        print(
+                        log.debug(
                             f"Modified {tool_name}: {attribute} set to {updated_center}"
                         )
                     else:
                         # Directly set the attribute if it's not a dictionary
                         setattr(tool, attribute, value)
-                        print(f"Modified {tool_name}: {attribute} set to {value}")
+                        log.debug(f"Modified {tool_name}: {attribute} set to {value}")
 
                 except AttributeError:
-                    print(
+                    log.debug(
                         f"Error: {tool_name} does not have the attribute '{attribute}'"
                     )
         else:
-            print(f"Tool '{tool_name}' not found in the composition.")
+            log.debug(f"Tool '{tool_name}' not found in the composition.")
 
 
 if __name__ == "__main__":
     resolve_util = ResolveUtility()
     if resolve_util.resolve:
-        print("Successfully connected to DaVinci Resolve.")
+        log.debug("Successfully connected to DaVinci Resolve.")
     else:
-        print("Could not connect to DaVinci Resolve.")
+        log.debug("Could not connect to DaVinci Resolve.")

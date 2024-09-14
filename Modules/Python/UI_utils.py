@@ -27,6 +27,9 @@
 
 import sys
 from pathlib import Path
+from log_utils import set_logging
+
+log = set_logging()
 
 
 def get_fusion_module():
@@ -64,7 +67,7 @@ class BaseUI:
         return self.win
 
     def layout(self, *args):
-        print("Layout not implemented in the subclass. Using Empty Layout")
+        log.debug("Layout not implemented in the subclass. Using Empty Layout")
         return self.ui.VGroup([])
 
     def show(self):
@@ -97,7 +100,7 @@ class ConfirmationDialog(BaseUI, metaclass=ConfirmationDialogMeta):
         max_info_items = 5
         if len(self.info) > max_info_items:
             self.info = self.info[:max_info_items]
-            print(
+            log.debug(
                 f"Confirmation dialog is truncated to the first {max_info_items} elements."
             )
 
@@ -136,7 +139,7 @@ class ConfirmationDialog(BaseUI, metaclass=ConfirmationDialogMeta):
 
         for line in info:
             if len(line) > max_visible_length:
-                print(f"Warning: Line exceeds maximum width. Truncating: {line}")
+                log.debug(f"Warning: Line exceeds maximum width. Truncating: {line}")
                 # Truncate the line for display, show only part of it with an ellipsis
                 truncated_line = (
                     line[: max_visible_length - len(truncated_suffix)]
@@ -261,7 +264,7 @@ class BaseRequestDialog(BaseUI, metaclass=RequestDialogMeta):
     def setup_callbacks(self):
         self.win.On.RequestButton.Clicked = self.request_action_callback
         self.win.On.RequestDialog.Close = self.cancel
-        self.win.On.SaveButton.Clicked = self.close
+        self.win.On.SetPathButton.Clicked = self.set_path
 
     def layout(self):
         return self.ui.HGroup(
@@ -271,7 +274,7 @@ class BaseRequestDialog(BaseUI, metaclass=RequestDialogMeta):
                     {
                         "Weight": 0.8,
                         "Text": str(self.target),
-                        "ID": "FolderLine",
+                        "ID": "PathTextLine",
                         "Events": {"ReturnPressed": True},
                         "Alignment": {"AlignHCenter": True, "AlignVCenter": True},
                     }
@@ -279,7 +282,7 @@ class BaseRequestDialog(BaseUI, metaclass=RequestDialogMeta):
                 self.ui.Button(
                     {"Weight": 0.2, "ID": "RequestButton", "Text": "Browse..."}
                 ),
-                self.ui.Button({"Weight": 0.1, "ID": "SaveButton", "Text": "Proceed"}),
+                self.ui.Button({"Weight": 0.1, "ID": "SetPathButton", "Text": "Set"}),
             ]
         )
 
@@ -291,17 +294,20 @@ class BaseRequestDialog(BaseUI, metaclass=RequestDialogMeta):
             target = self.fusion.RequestFile(self.target)
 
         if target:
-            self.itm["FolderLine"].Text = target
+            self.itm["PathTextLine"].Text = target
 
     def run(self):
         self.show()
-        self.result = self.itm["FolderLine"].Text
         return self.result
+
+    def set_path(self, ev):
+        self.result = self.itm["PathTextLine"].Text
+        self.close()
 
     def cancel(self, ev=None):
         self.result = None
         self.close()
-        return self.result
+
 
 class RequestDir(BaseRequestDialog):
     def __init__(self, title=None, target=None):

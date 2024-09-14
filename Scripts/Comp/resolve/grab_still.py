@@ -36,8 +36,9 @@ from UI_utils import (
     ConfirmationDialog,
 )
 from typing import TypeVar
+from log_utils import set_logging
 
-
+log = set_logging()
 resolve = dvr_script.scriptapp("Resolve")
 utils = ResolveUtility()
 
@@ -64,21 +65,20 @@ def get_target_folder(app) -> str:
     return target_folder_data
 
 
-def get_drx_file(folder, still_filename: Path) -> Path:
+def get_still_file(folder, still_filename: Path) -> Path:
     for file in folder.iterdir():
-        if file.suffix == ".drx" and file.name.startswith(still_filename.stem):
+        if file.suffix == f".{STILL_FORMAT}" and file.name.startswith(still_filename.stem):
             return file
 
 
 def remove_drx_file(still_filepath: Path):
-    print("CLEANUP_DRX is enabled")
+    log.debug("CLEANUP_DRX is enabled")
+    answer = True
     if CONFIRM_DELETE:
         answer = ConfirmationDialog(
             title="DRX files deletion!",
             request=f"Do you wish to delete the DRX file?",
         )
-    else:
-        answer = True
     if answer:
         try:
             still_filepath.unlink()
@@ -94,10 +94,10 @@ def get_still_album(gallery, album_name: str) -> galleryStillAlbum:
             gallery.SetCurrentStillAlbum(album)
             still_album = gallery.GetCurrentStillAlbum()
     if not still_album:
-        print(
+        log.debug(
             f"Default still album '{album_name}' is not found. Please create this album if you want to store screenshots in specific album"
         )
-        print(
+        log.debug(
             "The stills will be saved to the currently selected album or the first available"
         )
 
@@ -117,18 +117,21 @@ def post_processing(still, still_album, target_folder, file_prefix):
     still_label = Path(still_album.GetLabel(still))
     still_filename = f"{file_prefix}.{STILL_FORMAT}"
     file_path = Path(target_folder) / still_filename
-    drx_file = get_drx_file(target_folder, Path(still_filename))
-    utils.add_to_mediapool(
-        [drx_file.with_suffix(f".{STILL_FORMAT}").as_posix()],
-        subfolder_name=STILL_ALBUM,
-    )
+    still_file = get_still_file(target_folder, Path(still_filename))
+    if isinstance(still_file, Path):
+        log.debug(f"Found still file: {still_file.name}")
+        utils.add_to_mediapool(
+            [still_file.as_posix()],
+            subfolder_name=STILL_ALBUM,
+        )
 
     if CLEANUP_DRX:
-        # print(f"Cleaning the drx file for {still_label}")
+        # log.debug(f"Cleaning the drx file for {still_label}")
+        drx_file = still_file.with_suffix(".drx")
         remove_drx_file(drx_file)
 
     if DELETE_STILLS:
-        print("DELETE_STILLS is enabled, latest still is deleted from the still album")
+        log.debug("DELETE_STILLS is enabled, latest still is deleted from the still album")
         still_album.DeleteStills(still)
 
     if OPEN_EDIT_PAGE_AFTER_EXPORT:
@@ -141,7 +144,7 @@ def grab_still(album_name: str):
     save the files to the predefined folder
     """
     if not fu.GetResolve():
-        print("This is a script for Davinci Resolve")
+        log.debug("This is a script for Davinci Resolve")
         return
     current_timeline = utils.get_current_timeline()
     current_clip_name = current_timeline.GetCurrentVideoItem().GetName()
@@ -157,18 +160,18 @@ def grab_still(album_name: str):
     still_album_name = gallery.GetAlbumName(still_album)
     target_folder = get_target_folder(fusion)
     if not target_folder:
-        print("Target folder is not set, aborting script.")
+        log.debug("Target folder is not set, aborting script.")
         return
     target_folder = Path(target_folder, still_album_name)
     if not target_folder.exists():
         utils.create_folder(target_folder)
     still = current_timeline.GrabStill()
     still_album.SetLabel(still, current_clip_name)
-    print(f"Exporting:\ntarget_folder:{target_folder}\nfile_prefix:{file_prefix}")
+    log.debug(f"Exporting:\ntarget_folder:{target_folder}\nfile_prefix:{file_prefix}")
     still_album.ExportStills(
         [still], target_folder.as_posix(), file_prefix, STILL_FORMAT
     )
-    print(f"Still is saved to {target_folder}")
+    log.debug(f"Still is saved to {target_folder}")
     post_processing(still, still_album, target_folder, file_prefix)
 
 

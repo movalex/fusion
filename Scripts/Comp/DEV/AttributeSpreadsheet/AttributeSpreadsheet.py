@@ -116,10 +116,10 @@ import datetime
 import platform
 import re
 import sys
-import logging
 from pprint import pprint
 
 from UI_utils import ConfirmationDialog, WarningDialog
+from log_utils import set_logging
 
 __VERSION__ = 0.4
 __license__ = "MIT"
@@ -168,66 +168,7 @@ check_python_version()
 print(f"_____________________\n{SCRIPT_NAME} version {__VERSION__}\n")
 
 
-def create_logging_handler(stream, level, formatter, filter=None):
-    """
-    Create and configure a logging handler.
-
-    :param stream: The stream the handler will write to.
-    :param level: The minimum logging level of messages the handler will handle.
-    :param formatter: The formatter to use for log messages.
-    :param filter: An optional function to filter log messages.
-    :return: Configured logging.Handler object.
-    """
-    handler = logging.StreamHandler(stream=stream)
-    handler.setLevel(level)
-    handler.setFormatter(formatter)
-    if filter:
-        handler.addFilter(filter)
-    return handler
-
-
-def set_logging(level):
-    log_levels = {
-        "debug": logging.DEBUG,
-        "info": logging.INFO,
-        "warning": logging.WARNING,
-        "error": logging.ERROR,
-        "critical": logging.CRITICAL,
-    }
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)  # Set the logger to the lowest level
-
-    # Common formatter for both handlers
-    formatter = logging.Formatter(
-        f"%(levelname)s | [{SCRIPT_NAME}] | %(message)s"
-    )
-
-    # Handler for stdout, with a filter for messages below WARNING level
-    stdout_handler = create_logging_handler(
-        stream=sys.stdout,
-        level=logging.DEBUG,
-        formatter=formatter,
-        filter=lambda record: record.levelno < logging.WARNING,
-    )
-
-    # Handler for stderr, for WARNING level and above
-    stderr_handler = create_logging_handler(
-        stream=sys.stderr,
-        level=logging.WARNING,
-        formatter=formatter,
-    )
-
-    # Reset the logger's handlers before adding new ones
-    logger.handlers.clear()  # Clear any existing handlers
-    logger.handlers = [stdout_handler, stderr_handler]
-
-    log_level = log_levels.get(level.lower(), logging.INFO)
-    logger.setLevel(log_level)
-
-    return logger
-
-
-log = set_logging(LOG_LEVEL)
+log = set_logging(LOG_LEVEL, SCRIPT_NAME)
 
 
 def get_fusion(fusion_host):
