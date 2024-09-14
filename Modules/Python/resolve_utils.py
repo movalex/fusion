@@ -55,8 +55,8 @@ class ResolveUtility:
             self.handle_error(e)
 
     def handle_error(self, error):
-        log.debug(f"Error initializing DaVinci Resolve: {error}")
-        log.debug(
+        log.error(f"Error initializing DaVinci Resolve: {error}")
+        log.info(
             "Please make sure DaVinci Resolve is running and the scripting module is available."
         )
         sys.exit(1)
@@ -79,7 +79,7 @@ class ResolveUtility:
         try:
             folder_path.mkdir(exist_ok=True, parents=True)
         except (PermissionError, FileNotFoundError) as e:
-            log.debug(f"Could not create folder at {folder_path}: {e}")
+            log.warning(f"Could not create folder at {folder_path}: {e}")
             raise
 
     def get_current_project(self):
