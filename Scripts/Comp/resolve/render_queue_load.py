@@ -64,7 +64,7 @@ def build_queue(preset_name, timeline_name, timeline_name_override, job_list):
 
     current_timelines = get_timelines()
 
-    for n, job in enumerate(job_list):
+    for n, job in enumerate(job_list, 1):
         if not timeline_name_override:
             timeline_name = job["TimelineName"]
         timeline_idx = current_timelines.get(timeline_name)
