@@ -3,6 +3,7 @@
 .idea
 .ipynb_checkpoints
 .vscode
+.venv
 *_atom.html
 *_bbcode.txt
 desktop.ini
