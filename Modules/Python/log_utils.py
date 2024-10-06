@@ -39,7 +39,7 @@ def set_logging(level="debug", script_name=None):
         raise ValueError(f"Invalid logging level: {level}")
 
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)  # Set the logger to the lowest level
+    logger.setLevel(logging.DEBUG)  # Set the logger to the lowest level to catch all messages
 
     # Common formatter for both handlers
     formatter = logging.Formatter(
