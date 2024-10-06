@@ -35,6 +35,12 @@ log = set_logging()
 def get_fusion_module():
     """Get current Fusion instance"""
     fusion = getattr(sys.modules["__main__"], "fusion", None)
+    if not fusion:
+        try:
+            import DaVinciResolveScript as bmd 
+            fusion = bmd.scriptapp('Fusion')
+        except ModuleNotFoundError:
+            print("DaFusion module not found")
     return fusion
 
 
@@ -133,7 +139,7 @@ class ConfirmationDialog(BaseUI, metaclass=ConfirmationDialogMeta):
     def info_to_html(self, info: list):
         max_visible_length = (
             self.win_x // 6
-        )  # Approximate characters fitting in window x (assuming ~8px/char)
+        )  # Approximate characters fitting in window x (assuming ~6px/char)
         truncated_suffix = "..."  # Suffix to indicate truncated text
         html_content = ""
 
