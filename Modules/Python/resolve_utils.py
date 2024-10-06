@@ -35,6 +35,7 @@ log = set_logging(script_name="Resolve Utils")
 
 
 class ResolveUtility:
+
     def __init__(self):
         self.resolve = None
         self.project_manager = None
