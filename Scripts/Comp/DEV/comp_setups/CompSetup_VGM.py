@@ -31,6 +31,7 @@
 
 import re
 from pathlib import Path
+from comp_utils import set_range, get_loader
 
 comp = fu.GetCurrentComp()
 COMP_FOLDER = "FUSION"
@@ -123,18 +124,6 @@ def save_comp(folder, episode, shot) -> int:
     comp.Save(str(new_comp))
 
     return comp_version
-
-
-def set_range(loader) -> None:
-    """set GlobalIn and GlobalOut according to Loader clip length"""
-
-    comp.StartUndo("Set Range based on Loader")
-    clip_in = loader.GlobalIn[1]
-    clip_out = loader.GlobalOut[1]
-    comp.SetAttrs({"COMPN_GlobalStart": clip_in})
-    comp.SetAttrs({"COMPN_GlobalEnd": clip_out})
-    comp.EndUndo()
-    print(f"Comp length is adjusted to [ {clip_in} - {clip_out} ]")
 
 
 def main():
