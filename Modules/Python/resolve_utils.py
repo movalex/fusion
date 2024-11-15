@@ -192,7 +192,8 @@ class ResolveUtility:
                         f"Error: {tool_name} does not have the attribute '{attribute}'"
                     )
         else:
-            log.debug(f"Tool '{tool_name}' not found in the composition.")
+            log.debug(f"Tool '{tool_name}' not found in the composition. Cancelling")
+            sys.exit()
 
 
 if __name__ == "__main__":
