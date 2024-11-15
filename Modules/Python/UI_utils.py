@@ -34,22 +34,22 @@ log = set_logging()
 
 def get_fusion_module():
     """Get current Fusion instance"""
-    fusion = getattr(sys.modules["__main__"], "fusion", None)
-    if not fusion:
-        try:
-            import DaVinciResolveScript as bmd 
-            fusion = bmd.scriptapp('Fusion')
-        except ModuleNotFoundError:
-            print("DaFusion module not found")
-    return fusion
+    fusion = None
+    bmd = None
+    try:
+        import DaVinciResolveScript as bmd 
+        fusion = bmd.scriptapp('Fusion')
+    except ModuleNotFoundError:
+        print("DaFusion module not found")
+    return bmd, fusion
 
 
 class BaseUI:
     def __init__(self, window_title, geometry=[800, 600, 400, 200], id="DefaultID"):
-        self.fusion = get_fusion_module()
+        self.bmd, self.fusion = get_fusion_module()
         self.ui = self.fusion.UIManager
         self.id = id
-        self.disp = bmd.UIDispatcher(self.ui)
+        self.disp = self.bmd.UIDispatcher(self.ui)
         self.window_title = window_title
         self.geometry = geometry
         self.itm = None
@@ -257,11 +257,13 @@ class RequestDialogMeta(type):
 
 class BaseRequestDialog(BaseUI, metaclass=RequestDialogMeta):
 
-    def __init__(self, title=None, target=None, request_type=None):
+    def __init__(self, title=None, target=None, request_type=None, file_mask=None):
         self.title = "Choose Directory" if title is None else title
         self.result = None
         geometry = [800, 700, 630, 50]
         self.target = target or Path("~/Desktop").expanduser().absolute()
+        if isinstance(file_mask, dict):
+            self.file_mask = file_mask
         self.request_type = request_type  # Specify if it's a dir or file request
         super().__init__(self.title, geometry, id="RequestDialog")
         self.itm = self.win.GetItems()
@@ -295,12 +297,17 @@ class BaseRequestDialog(BaseUI, metaclass=RequestDialogMeta):
     def request_action_callback(self, ev):
         # Dynamically call self.fusion.RequestDir or self.fusion.RequestFile
         if self.request_type == "dir":
-            target = self.fusion.RequestDir(self.target)
+            out_path = self.fusion.RequestDir(self.target)
         elif self.request_type == "file":
-            target = self.fusion.RequestFile(self.target)
+            out_path = self.fusion.RequestFile(self.target, "", self.file_mask)
 
-        if target:
-            self.itm["PathTextLine"].Text = target
+        if out_path:
+            self.itm["PathTextLine"].Text = out_path
+        else:
+            message = "Could not open the script file"
+            WarningDialog(message)
+            log.debug(f"{message}\nRequest type: {self.request_type}")
+            self.close()
 
     def run(self):
         self.show()
@@ -321,5 +328,5 @@ class RequestDir(BaseRequestDialog):
 
 
 class RequestFile(BaseRequestDialog):
-    def __init__(self, title=None, target=None):
-        super().__init__(title, target, request_type="file")  # Specify file request
+    def __init__(self, title=None, target=None, file_mask=None):
+        super().__init__(title, target, request_type="file", file_mask=file_mask)  # Specify file request
