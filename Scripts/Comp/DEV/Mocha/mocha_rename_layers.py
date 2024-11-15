@@ -1,7 +1,7 @@
 from mocha.project import get_current_project
 proj = get_current_project()
 
-prepend = "roto_"
+prepend = "mask_"
 
 for layer in proj.layers:
     if layer.selected and not layer.name.startswith(prepend):
