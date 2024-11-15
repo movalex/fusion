@@ -1,8 +1,8 @@
-from resolve_utils import ResolveUtility
 import pyautogui
 import time
 
 
+from resolve_utils import ResolveUtility
 utils = ResolveUtility()
 
 
