@@ -28,7 +28,7 @@ comp_utils = CompUtils(comp)
 COMP_FOLDER = "FUSION"
 AUTHOR = "ab"
 COMP_VERSION = 1
-INCREMENT_COMP = False
+INCREMENT_COMP = True
 
 
 def get_date():
