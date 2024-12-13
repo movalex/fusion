@@ -24,7 +24,7 @@ def create_logging_handler(stream, level, formatter, filter=None):
 
 def set_logging(level="debug", script_name=None):
     if script_name is None:
-        script_name = Path(__file__).stem
+        script_name = "Untitled Script"
 
     log_levels = {
         "debug": logging.DEBUG,
