@@ -25,6 +25,10 @@ import os
 import re
 import sys
 from pathlib import Path
+from log_utils import set_logging
+from fusion_comp_utils import CompUtils
+
+utils = CompUtils(comp)
 
 comp = fu.GetCurrentComp()
 PATH_ENV = comp.MapPath(os.getenv("INCREMENT_SAVE_PATH"))
@@ -32,13 +36,14 @@ ROOT_SAVE_FOLDER = "IncrementSave"
 comp_attrs = comp.GetAttrs()
 
 
-def get_save_path(path_env=None):
+log = set_logging(script_name="Increment Save")
+
+
+def get_increment_path(path_env=None):
     if path_env:
+        log.info(f"Environment path found: {path_env}")
         path_env = Path(path_env)
         comp_path = Path(comp_attrs["COMPS_FileName"])
-        print(f"Environment path found: {path_env}")
-        if not path_env.exists():
-            path_env.mkdir(parents=True, exist_ok=True)
         return path_env / comp_path.stem
     comp_path = Path(comp.MapPath(comp_attrs["COMPS_FileName"]))
     return comp_path.parent / ROOT_SAVE_FOLDER / comp_path.stem
@@ -46,49 +51,43 @@ def get_save_path(path_env=None):
 
 def get_increment_number(path):
     comps = []
-    increment_number = 0
     for file in path.iterdir():
-        if file.suffix == ".comp":
+        if file.suffix == ".comp" and re.search(r"\.\d{4}\.comp$", file.name):
             comps.append(file)
-    if len(comps) > 0:
-        for file in comps:
-            try:
-                num = re.findall(r"(\d{4}).comp$", str(file))[0]
-                if int(num) > increment_number:
-                    increment_number = int(num)
-            except IndexError:
-                print("Found these incrementComp versions:")
-                for comp in comps:
-                    print(comp.name)
-                return
-            except Exception:
-                raise
-    return increment_number + 1
+    number = len(comps) + 1
+    return number
 
 
 def increment_comp():
     if not (sys.version_info.major == 3 and sys.version_info.minor >= 6):
-        print("This script requires Python version >= 3.6")
+        log.error("This script requires Python version >= 3.6")
         return
-    source_file = Path(comp_attrs["COMPS_FileName"])
-    comp_name = Path(comp_attrs["COMPS_Name"])
-    save_path = get_save_path(PATH_ENV)
-    if not save_path.exists():
-        save_path.mkdir(parents=True)
-    number = get_increment_number(save_path)
+    comp_path = utils.get_comp_name()
+    if not comp_path:
+        log.warning("Comp Name could not found. Save the comp!")
+        comp.SaveAs()
+    comp.Save(comp_path)
+    comp_name = comp_path.stem
+    increment_save_path = get_increment_path(PATH_ENV)
+    if not increment_save_path.exists():
+        try:
+            increment_save_path.mkdir(parents=True)
+        except Exception as e:
+            log.error(f"Error Creating Inc: {e}")
+            return
+    number = get_increment_number(increment_save_path)
     if not number:
-        print(
+        log.error(
             "Existing incrementSave folder found. \nHowever the script could not get the latest increment number"
             "\nPlease check if all incrementSave files for the current comp are named correctly, and there's no cloud sync renaming issues"
         )
         return
-    destination_file = save_path / comp_name.with_suffix(f".{number:04}.comp")
-    print(f"Saved comp version: {destination_file.name}")
+    destination_file = increment_save_path / f"{comp_name}.{number:04}.comp"
     try:
-        source_file.rename(str(destination_file))
-    except OSError:
-        print("Source file name is empty")
-    comp.Save(source_file)
+        comp_path.rename(str(destination_file))
+        log.info(f"Saved comp version: {destination_file.name}")
+    except OSError as e:
+        log.error(f"OSError raised:\n{e}")
 
 
 if __name__ == "__main__":
