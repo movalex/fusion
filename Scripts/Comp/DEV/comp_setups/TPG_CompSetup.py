@@ -14,12 +14,13 @@ from pathlib import Path
 from fusion_comp_utils import CompUtils
 from datetime import datetime
 from resolve_utils import set_logging
+from UI_utils import WarningDialog
 import DaVinciResolveScript as dsr
 
 
 LOG_LEVEL = "debug"
 
-log = set_logging(level=LOG_LEVEL)
+log = set_logging(level=LOG_LEVEL, script_name="TPG Comp Setup")
 
 fu = dsr.scriptapp("Fusion")
 comp = fu.GetCurrentComp()
@@ -65,7 +66,6 @@ def update_savers(comp_path: Path):
     # Find the parent of the "FOOTAGE" folder
     project_folder = None
     for parent_folder in comp_path.parents:
-        print(parent_folder)
         if parent_folder.name == "FUSION":
             project_folder = parent_folder.parent
             break
@@ -114,11 +114,11 @@ def save_comp(folder: Path, file_stem: str, author: str, comp_version=1) -> int:
         return version
 
     except Exception as e:
-        log.debug(f"An error occurred: {e}")
+        log.error(f"An error occurred: {e}")
         return -1
 
 
-def get_folder_path(path, comp_folder, folder_levels=3):
+def get_save_folder(path, comp_folder, folder_levels=3):
     # Ensure path is a Path object
     path = Path(path)
 
@@ -137,17 +137,22 @@ def main():
     if not loader:
         return
     comp_utils.set_range(loader)
-    path = comp_utils.parse_loader_path(loader)
-    stem = path.stem
+    loader_path = comp_utils.get_loader_path(loader)
+    if not loader_path.exists():
+        message = "The Loader path does not exist"
+        WarningDialog(message)
+        log.error(message)
+        return
+    loader_stem = loader_path.stem
 
-    comp_save_folder = get_folder_path(path, COMP_FOLDER)
-    log.debug(f"Comp folder: {comp_save_folder}")
+    comp_save_folder = get_save_folder(loader_path, COMP_FOLDER)
+    log.info(f"Comp folder: {comp_save_folder}")
 
     if not comp_save_folder:
-        log.debug("Comp not parsed")
+        log.warning("Could not get save folder")
         return
 
-    save_comp(comp_save_folder, stem, AUTHOR)
+    save_comp(comp_save_folder, loader_stem, AUTHOR)
 
 
 if __name__ == "__main__":
