@@ -4,6 +4,16 @@ class CompUtils:
     def __init__(self, comp):
         self.comp = comp
 
+    def get_comp_attribute(self, attr: str) -> Path:
+        comp_attributes = self.comp.GetAttrs()
+        return comp_attributes[attr]
+
+    def get_comp_name(self):
+        comp_name = Path(self.comp.MapPath(self.get_comp_attribute("COMPS_FileName")))
+        if not comp_name or comp_name == "Composition1":
+            return -1
+        return comp_name
+
     def get_loader(self):
         """Get selected loader."""
         try:
