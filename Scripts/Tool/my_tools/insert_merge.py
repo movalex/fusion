@@ -13,18 +13,17 @@ def main(tool):
     in_point = attrs["COMPN_RenderStart"]
     out_point = attrs["COMPN_RenderEnd"]
 
-    if in_point and out_point:
-        # Define the keyframe positions and values
-        frames = {
-            in_point - 1: 0.0,  # Blend = 0 just before the in-point
-            in_point: 1.0,  # Blend = 1 at the in-point
-            out_point: 1.0,  # Blend = 1 at the out-point
-            out_point + 1: 0.0,  # Blend = 0 just after the out-point
-        }
-        # Apply the keyframes
-        for frame, value in frames.items():
-            tool.Blend[frame] = value  # Set the Blend value
-            # tool.Blend.SetKeyFrame(frame)  # Add a keyframe
+    # Define the keyframe positions and values
+    frames = {
+        in_point - 1: 0.0,  # Blend = 0 just before the in-point
+        in_point: 1.0,  # Blend = 1 at the in-point
+        out_point: 1.0,  # Blend = 1 at the out-point
+        out_point + 1: 0.0,  # Blend = 0 just after the out-point
+    }
+    # Apply the keyframes
+    for frame, value in frames.items():
+        tool.Blend[frame] = value  # Set the Blend value
+        # tool.Blend.SetKeyFrame(frame)  # Add a keyframe
 
 
 if __name__ == "__main__":
