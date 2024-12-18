@@ -121,10 +121,11 @@ def save_comp(folder: Path, file_stem: str, author: str, comp_version=1) -> int:
 def get_save_folder(path, comp_folder, folder_levels=3):
     # Ensure path is a Path object
     path = Path(path)
-
+    if path.suffix in [".exr", ".dpx", ".png", ".jpg"]:
+        folder_levels += 1
     # Check if path has at least three parents
     if len(path.parents) >= folder_levels:
-        folder = path.parents[2] / comp_folder
+        folder = path.parents[folder_levels-1] / comp_folder
     else:
         raise ValueError("Path does not have enough parent directories.")
 
@@ -134,6 +135,10 @@ def get_save_folder(path, comp_folder, folder_levels=3):
 def main():
 
     loader = comp_utils.get_loader()
+    comp.Lock()
+    comp.SetActiveTool(loader)
+    comp.AddTool("Saver",  -32768, -32768)
+    comp.Unlock()
     if not loader:
         return
     comp_utils.set_range(loader)
