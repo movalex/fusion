@@ -9,7 +9,6 @@
 
 """
 
-import re
 from pathlib import Path
 from fusion_comp_utils import CompUtils
 from datetime import datetime
