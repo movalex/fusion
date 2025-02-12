@@ -14,14 +14,14 @@ from fusion_comp_utils import CompUtils
 from datetime import datetime
 from resolve_utils import set_logging
 from UI_utils import WarningDialog
-import DaVinciResolveScript as drs
+# import DaVinciResolveScript as drs
 
 
 LOG_LEVEL = "debug"
 
 log = set_logging(level=LOG_LEVEL, script_name="TPG Comp Setup")
 
-fu = drs.scriptapp("Fusion")
+# fu = drs.scriptapp("Fusion")
 comp = fu.GetCurrentComp()
 comp_utils = CompUtils(comp)
 
