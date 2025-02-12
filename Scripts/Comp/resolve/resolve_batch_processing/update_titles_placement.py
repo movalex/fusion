@@ -17,7 +17,6 @@ Usage:
     Run the script directly to prompt for a confirmation and process the clips accordingly.
 """
 
-
 from UI_utils import ConfirmationDialog
 from resolve_utils import ResolveUtility
 
@@ -29,7 +28,7 @@ def adjust_tools(comp):
     hd_file_tool = comp.FindTool("HD_File")
     hd_file_tool.PixelAspect[0] = 2
     hd_file_tool.CustomPixelAspect[0] = {1: 1, 2: 1, 3: 0}
-    
+
     sd_file_tool = comp.FindTool("SD")
     sd_file_tool.PixelAspect[0] = {1: 1.0667, 2: 1, 3: 0}
 
