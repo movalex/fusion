@@ -175,8 +175,8 @@ class ResolveUtility:
             for attribute, value in modifications.items():
                 try:
 
-                    # Special handling for the "Center" attribute if it's a dictionary
-                    if attribute == "Center" and isinstance(current_value, dict):
+                    # Special handling for dict based attributes
+                    if attribute in ["Center", "PixelAspect", "CustomPixelAspect"] and isinstance(current_value, dict):
                         current_value = getattr(tool, attribute)[0]
                         # Merge the existing Center values with the new ones
                         updated_center = {
