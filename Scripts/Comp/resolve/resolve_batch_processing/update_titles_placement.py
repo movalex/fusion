@@ -24,7 +24,7 @@ utils = ResolveUtility()
 
 
 def adjust_tools(comp):
-    """Toggle the HD switch in a fusion tool."""
+
     hd_file_tool = comp.FindTool("HD_File")
     hd_file_tool.PixelAspect[0] = 2
     hd_file_tool.CustomPixelAspect[0] = {1: 1, 2: 1, 3: 0}
