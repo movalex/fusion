@@ -51,7 +51,7 @@ def modify_template_and_merge(comp):
     utils.modify_tool_parameters(comp, "Template", template_modifications)
 
     # Modifications for Merge1 tool
-    utils.merge_modifications = {
+    merge_modifications = {
         "BlendClone": 0.65,
     }
     utils.modify_tool_parameters(comp, "Merge1", merge_modifications)
