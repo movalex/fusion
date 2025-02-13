@@ -16,17 +16,21 @@ def modify_tools(comp):
     switch font im the credits
     """
 
-    tool_name = "Template"
-
-    modifications = {
-        "Size": 0.08,
-        "Font": FONT_STYLE,
-        "Red3": FONT_COLOR,
-        "Green3": FONT_COLOR,
-        "Blue3": FONT_COLOR,
-        "ShadingMappingAspect1": 1.25,
+    tools = {
+        "Template": {
+            "Size": 0.08,
+            "Font": FONT_STYLE,
+            "Red3": FONT_COLOR,
+            "Green3": FONT_COLOR,
+            "Blue3": FONT_COLOR,
+            "ShadingMappingAspect1": 1.25,
+        },
+        # Add other tools with their modifications if needed
+        # e.g., "AnotherTool": { ... }
     }
-    utils.modify_tool_parameters(comp, tool_name, modifications)
+
+    for tool_name, modifications in tools.items():
+        utils.modify_tool_parameters(comp, tool_name, modifications)
 
 def main():
     """Main function to process all clips in the timeline."""
