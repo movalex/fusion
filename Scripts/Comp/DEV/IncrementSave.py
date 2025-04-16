@@ -24,6 +24,7 @@
 import os
 import re
 import sys
+import shutil
 from pathlib import Path
 from log_utils import set_logging
 from fusion_comp_utils import CompUtils
@@ -84,7 +85,8 @@ def increment_comp():
         return
     destination_file = increment_save_path / f"{comp_name}.{number:04}.comp"
     try:
-        comp_path.rename(str(destination_file))
+        shutil.copy(comp_path, destination_file)
+        # comp_path.rename(str(destination_file))
         log.info(f"Saved comp version: {destination_file.name}")
     except OSError as e:
         log.error(f"OSError raised:\n{e}")
