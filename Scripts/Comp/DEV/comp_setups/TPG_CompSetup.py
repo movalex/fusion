@@ -9,21 +9,23 @@
 
 """
 
+import sys
 from pathlib import Path
 from fusion_comp_utils import CompUtils
 from datetime import datetime
 from resolve_utils import set_logging
 from UI_utils import WarningDialog
-# import DaVinciResolveScript as drs
-
 
 LOG_LEVEL = "debug"
 
 log = set_logging(level=LOG_LEVEL, script_name="TPG Comp Setup")
 
-# fu = drs.scriptapp("Fusion")
-comp = fu.GetCurrentComp()
-comp_utils = CompUtils(comp)
+comp_utils = CompUtils()
+comp = comp_utils.comp
+if not comp:
+    log.error("No active composition found.")
+    sys.exit(1)
+    
 
 COMP_FOLDER = "FUSION"
 AUTHOR = "ab"
@@ -54,13 +56,12 @@ def create_comp_folder(folder):
 
 
 def update_savers(comp_path: Path):
-    savers = comp.GetToolList(False, "Saver").values()
+    savers = comp_utils.get_all_savers()
     if not savers:
         log.debug("No savers found in comp")
         return
     comp.StartUndo("Set Saver Paths")
     current_date = get_date()
-
 
     # Find the parent of the "FOOTAGE" folder
     project_folder = None
@@ -68,21 +69,27 @@ def update_savers(comp_path: Path):
         if parent_folder.name == "FUSION":
             project_folder = parent_folder.parent
             break
-        else:
-            log.error("Could not find the FOOTAGE folder. Check the Loader path")
-            comp.EndUndo()
-            return
+    
+    if not project_folder:
+        log.error("Could not find the FUSION folder. Check the Loader path")
+        comp.EndUndo()
+        return
+        
     comp_name = comp_path.stem
 
     for saver in savers:
-        path = Path(saver.Clip[1])
-        ext = Path(path).suffix or ".mov"
-        if ext == ".exr":
-            comp_path += "."
-        # we already have verion number in the comp_name
-        new_path = Path(f"{project_folder}/RENDERS/{current_date}/{comp_name}{ext}")
-        log.debug(f"New saver path: {new_path}")
-        saver.Clip[1] = str(new_path)
+        try:
+            path = Path(saver.Clip[1])
+            ext = path.suffix or ".mov"
+            if ext == ".exr":
+                comp_name += "."
+            # we already have verion number in the comp_name
+            new_path = Path(f"{project_folder}/RENDERS/{current_date}/{comp_name}{ext}")
+            log.debug(f"New saver path: {new_path}")
+            saver.Clip[1] = str(new_path)
+        except Exception as e:
+            log.error(f"Error updating saver path: {e}")
+    
     comp.EndUndo()
 
 
@@ -132,31 +139,46 @@ def get_save_folder(path, comp_folder, folder_levels=3):
 
 
 def main():
-
+    if not comp_utils.ensure_comp():
+        log.error("No active composition found.")
+        return
+        
     loader = comp_utils.get_loader()
+    if not loader:
+        log.error("No loader selected. Please select a loader.")
+        return
+        
     comp.Lock()
     comp.SetActiveTool(loader)
-    comp.AddTool("Saver",  -32768, -32768)
+    comp.AddTool("Saver", -32768, -32768)
     comp.Unlock()
-    if not loader:
-        return
+    
     comp_utils.set_range(loader)
     loader_path = comp_utils.get_loader_path(loader)
-    if not loader_path.exists():
+    
+    if not loader_path or not loader_path.exists():
         message = "The Loader path does not exist"
         WarningDialog(message)
         log.error(message)
         return
+        
     loader_stem = loader_path.stem
 
-    comp_save_folder = get_save_folder(loader_path, COMP_FOLDER)
-    log.info(f"Comp folder: {comp_save_folder}")
+    try:
+        comp_save_folder = get_save_folder(loader_path, COMP_FOLDER)
+        log.info(f"Comp folder: {comp_save_folder}")
 
-    if not comp_save_folder:
-        log.warning("Could not get save folder")
-        return
+        if not comp_save_folder:
+            log.warning("Could not get save folder")
+            return
 
-    save_comp(comp_save_folder, loader_stem, AUTHOR)
+        version = save_comp(comp_save_folder, loader_stem, AUTHOR)
+        if version > 0:
+            log.info(f"Comp saved as version {version}")
+        else:
+            log.warning("Failed to save comp")
+    except Exception as e:
+        log.error(f"Error in main: {e}")
 
 
 if __name__ == "__main__":
