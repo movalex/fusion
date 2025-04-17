@@ -19,12 +19,11 @@ from UI_utils import WarningDialog
 LOG_LEVEL = "debug"
 
 log = set_logging(level=LOG_LEVEL, script_name="TPG Comp Setup")
-
-comp_utils = CompUtils()
-comp = comp_utils.comp
+comp = fu.GetCurrentComp()
 if not comp:
     log.error("No active composition found.")
     sys.exit(1)
+comp_utils = CompUtils(comp)
     
 
 COMP_FOLDER = "FUSION"
