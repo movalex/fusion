@@ -17,10 +17,10 @@ class CompUtils:
             import BMDFusion as bmd
             # Print module representation and sys.path for clues
             print(f"BlackmagicFusion module object: {bmd}")
-            print(f"sys.path: {sys.path}")
+            # print(f"sys.path: {sys.path}")
             # You could also try printing dir(bmd) to see available attributes:
-            # print(f"Attributes of bmd: {dir(bmd)}")
-            fu = bmd.scriptapp("Fusion", fusion_host)
+            print(f"Attributes of bmd: {dir(bmd)}")
+            fu = bmd.scriptapp("Fusion")
             if not fu:
                 logging.error("Failed to get Fusion instance")
             return fu

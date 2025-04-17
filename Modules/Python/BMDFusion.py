@@ -28,8 +28,7 @@ import sys
 import os
 import platform # Import platform module
 import importlib.machinery # Import machinery
-from dotenv import load_dotenv  # type: ignore
-load_dotenv()
+
 
 # Print Python version and architecture
 print(f"Python Version: {sys.version}")
@@ -118,9 +117,10 @@ def get_platform_paths():
             ],
         ),
         "win32": (
-            ".dll",
+            ".pyd",
             [
                 ".\\",
+                "C:\\Users\\videopro\\Desktop",
                 "C:\\Program Files\\Blackmagic Design\\DaVinci Resolve\\",
                 "C:\\Program Files\\Blackmagic Design\\Fusion 19\\",
                 "C:\\Program Files\\Blackmagic Design\\Fusion Render Node 19\\",
