@@ -2,7 +2,7 @@
     This is a Davinci Resolve script to save single still in predefined folder
 
     License: MIT
-    Copyright © 2023 Alexey Bogomolov
+    Copyright © 2024 Alexey Bogomolov
     Email: mail@abogomolov.com
     
     Permission is hereby granted, free of charge, to any person obtaining
@@ -25,8 +25,6 @@
     
 """
 
-import os
-import DaVinciResolveScript as dvr_script
 from datetime import datetime
 from pathlib import Path
 from resolve_utils import ResolveUtility
@@ -35,12 +33,12 @@ from UI_utils import (
     RequestDir,
     ConfirmationDialog,
 )
-from typing import TypeVar
 from log_utils import set_logging
 
 log = set_logging()
-resolve = dvr_script.scriptapp("Resolve")
+
 utils = ResolveUtility()
+app = utils.resolve
 
 STILL_ALBUM = "STILLS"
 DELETE_STILLS = True
@@ -48,10 +46,9 @@ OPEN_EDIT_PAGE_AFTER_EXPORT = True
 CLEANUP_DRX = True
 CONFIRM_DELETE = False
 STILL_FORMAT = "png"
-galleryStillAlbum = TypeVar("galleryStillAlbum")
 
 
-def get_target_folder(app) -> str:
+def get_target_folder() -> str:
     """
     Checks for target folder Resolve data,
     Shows folder request dialogue if data not found
@@ -86,25 +83,6 @@ def remove_drx_file(still_filepath: Path):
             raise
 
 
-def get_still_album(gallery, album_name: str) -> galleryStillAlbum:
-    still_album = None
-    albums = gallery.GetGalleryStillAlbums()
-    for album in albums:
-        if gallery.GetAlbumName(album) == album_name:
-            gallery.SetCurrentStillAlbum(album)
-            still_album = gallery.GetCurrentStillAlbum()
-    if not still_album:
-        log.debug(
-            f"Default still album '{album_name}' is not found. Please create this album if you want to store screenshots in specific album"
-        )
-        log.debug(
-            "The stills will be saved to the currently selected album or the first available"
-        )
-
-        still_album = gallery.GetCurrentStillAlbum()
-    return still_album
-
-
 def get_file_prefix(clip_name, timeline_name):
     now = datetime.now()
     date_time = now.strftime("%m%d%Y")
@@ -135,7 +113,7 @@ def post_processing(still, still_album, target_folder, file_prefix):
         still_album.DeleteStills(still)
 
     if OPEN_EDIT_PAGE_AFTER_EXPORT:
-        resolve.OpenPage("edit")
+        utils.resolve.OpenPage("edit")
 
 
 def grab_still(album_name: str):
@@ -143,7 +121,8 @@ def grab_still(album_name: str):
     create still from current position on the timeline
     save the files to the predefined folder
     """
-    if not fu.GetResolve():
+
+    if not utils.resolve:
         log.debug("This is a script for Davinci Resolve")
         return
     current_timeline = utils.get_current_timeline()
@@ -153,12 +132,12 @@ def grab_still(album_name: str):
     file_prefix = get_file_prefix(current_clip_name, timeline_name)
     gallery = utils.get_gallery()
 
-    still_album = get_still_album(gallery, STILL_ALBUM)
+    still_album = utils.get_still_album(gallery, STILL_ALBUM)
 
     if not still_album:
         return
     still_album_name = gallery.GetAlbumName(still_album)
-    target_folder = get_target_folder(fusion)
+    target_folder = get_target_folder()
     if not target_folder:
         log.debug("Target folder is not set, aborting script.")
         return
