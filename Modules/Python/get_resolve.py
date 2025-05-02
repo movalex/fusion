@@ -4,6 +4,7 @@
 This file serves to return a DaVinci Resolve object
 """
 import sys
+import os
 from pathlib import Path
 import importlib.util
 
@@ -19,6 +20,8 @@ def load_source(module_name, file_path):
 
 
 def get_default_module_path():
+    if os.getenv("RESOLVE_SCRIPT_API"):
+        return Path(os.getenv("RESOLVE_SCRIPT_API"))
     if sys.platform.startswith("darwin"):
         return Path("/Library/Application Support/Blackmagic Design/DaVinci Resolve/Developer/Scripting/Modules/")
     elif sys.platform.startswith("win") or sys.platform.startswith("cygwin"):
