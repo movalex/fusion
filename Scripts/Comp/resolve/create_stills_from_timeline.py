@@ -1,6 +1,7 @@
 from pathlib import Path
 from grab_still import get_still_album, get_target_folder
 import DaVinciResolveScript as dvr_script
+from resolve_utils import ResolveUtility
 from UI_utils import (
     ConfirmationDialog,
 )
@@ -9,7 +10,7 @@ from UI_utils import (
     This is a Davinci Resolve script to save all timeline clips to images.
 
     License: MIT
-    Copyright © 2023 Alexey Bogomolov
+    Copyright © 2024 Alexey Bogomolov
     Email: mail@abogomolov.com
 """
 
@@ -20,12 +21,13 @@ DELETE_STILLS = True
 OPEN_EDIT_PAGE_AFTER_EXPORT = True
 CLEANUP_DRX = True
 
-
-resolve = dvr_script.scriptapp("Resolve")
-utils = ResolveUtility(resolve)
+utils = ResolveUtility()
 
 
 def cleanup_drx_from_folder(folder: Path):
+
+
+
     print(
         "CLEANUP DRX is enabled, all .drx files in the stills location will be erased"
     )
@@ -57,7 +59,7 @@ def post_processing(stills: list, still_album, gallery, target_folder=None):
         cleanup_drx_from_folder(target_folder)
 
     if OPEN_EDIT_PAGE_AFTER_EXPORT:
-        resolve.OpenPage("edit")
+        utils.resolve.OpenPage("edit")
 
 
 def grab_timeline_stills(delete_stills=False):
@@ -65,7 +67,7 @@ def grab_timeline_stills(delete_stills=False):
     save the files to requested folder. Currently GetGalleryStillAlbums() is used,
     so we are unable to add a label to each still.
     """
-    if not app.GetResolve():
+    if not utils.resolve:
         print("This is a script for Davinci Resolve")
         return
 
