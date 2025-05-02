@@ -620,7 +620,7 @@ end
 function NotifyChanged(inp, param, time)
 end
 
-local VERBOSE = false
+local VERBOSE = true
 
 -----------------------------------------------------------------------
 -- Debug Logging
@@ -774,6 +774,7 @@ local inalpha = InAlpha:GetValue(req).Value
 
 local img
 local err = {}
+local channelsFilled = false
 
 if bmd.fileexists(filename) then
 	logDebug('[ReadEXR] Found EXR file: ' .. tostring(filename), VERBOSE)
@@ -802,9 +803,9 @@ if bmd.fileexists(filename) then
 		logDebug('[ReadEXR] EXR Channels:\n', VERBOSE)
 		logDump(exrChannels, VERBOSE)
 
-		-- for channel = table.getn(channels), 1, -1 do
-		--  logDebug(channels[channel].Name, VERBOSE)
-		-- end
+		for channel = table.getn(channels), 1, -1 do
+		 logDebug(channels[channel].Name, VERBOSE)
+		end
 
 		-- If there are multiple parts, add them to the UI
 		-- The same applies to the corresponding channels
@@ -816,6 +817,7 @@ if bmd.fileexists(filename) then
 			end
 
 			AddChannels(channels)
+			channelsFilled = true
 		end
 
 		-- print(parts[partnum])
@@ -852,7 +854,7 @@ if bmd.fileexists(filename) then
 			-- Note: k results in numbers starting from zero rather than the index values from the table.
 			-- This currently works for the first 4 channels (RGBA) but higher ones crash Fusion, which means we still need to figure this out
 			for k, v in pairs(exrChannels) do
-				-- print(v .. ' - ' .. k)
+				print(v .. ' - ' .. k)
 				-- Note: This is just all kinds of weird to me right now...?
 				exr:Channel(v, ANY_TYPE, 1, k, 0.0)
 			end
