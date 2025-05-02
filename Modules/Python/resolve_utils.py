@@ -27,11 +27,18 @@
 
 import sys
 from pathlib import Path
-from typing import Any
+from typing import TypeVar
 from get_resolve import GetResolve
 from log_utils import set_logging
 
-log = set_logging(script_name="Resolve Utils")
+galleryStillAlbum = TypeVar("galleryStillAlbum")
+
+DEBUG = True
+if DEBUG:
+    logging_level = "debug"
+else:
+    logging_level = "info"
+log = set_logging(level=logging_level, script_name="Resolve Utils")
 
 
 class ResolveUtility:
@@ -60,6 +67,8 @@ class ResolveUtility:
         log.info(
             "Please make sure DaVinci Resolve is running and the scripting module is available."
         )
+        if DEBUG:
+            raise
         sys.exit(1)
 
     def get_fusion_module(self):
@@ -111,6 +120,25 @@ class ResolveUtility:
         """Retrieve a Fusion composition by name."""
         comp = clip.GetFusionCompByName(comp_name)
         return comp
+    
+    def get_still_album(self, gallery, album_name: str) -> galleryStillAlbum:
+        still_album = None
+        albums = gallery.GetGalleryStillAlbums()
+        for album in albums:
+            if gallery.GetAlbumName(album) == album_name:
+                gallery.SetCurrentStillAlbum(album)
+                still_album = gallery.GetCurrentStillAlbum()
+        if not still_album:
+            log.debug(
+                f"Default still album '{album_name}' is not found. Please create this album if you want to store screenshots in specific album"
+            )
+            log.debug(
+                "The stills will be saved to the currently selected album or the first available"
+            )
+
+            still_album = gallery.GetCurrentStillAlbum()
+        return still_album
+
 
     def get_clips_in_timeline(self, track_type="Video", track_number=3):
         """Get all clips in the specified timeline track."""
