@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
 """
-    Set new Comp from Loader
-    
-    License:
-    Copyright © 2024 Alexey Bogomolov (mail@abogomolov.com)
-    VESION: 1.0
+Set new Comp from Loader
+
+This script sets up a new Fusion composition based on the selected Loader node
+Copyright © 2025 Alexey Bogomolov
+VESION: 1.1
 
 """
 
@@ -14,6 +14,7 @@ from fusion_comp_utils import CompUtils
 from datetime import datetime
 from resolve_utils import set_logging
 from UI_utils import WarningDialog
+
 # import DaVinciResolveScript as drs
 
 
@@ -60,7 +61,6 @@ def update_savers(comp_path: Path):
         return
     comp.StartUndo("Set Saver Paths")
     current_date = get_date()
-
 
     # Find the parent of the "FOOTAGE" folder
     project_folder = None
@@ -124,22 +124,31 @@ def get_save_folder(path, comp_folder, folder_levels=3):
         folder_levels += 1
     # Check if path has at least three parents
     if len(path.parents) >= folder_levels:
-        folder = path.parents[folder_levels-1] / comp_folder
+        folder = path.parents[folder_levels - 1] / comp_folder
     else:
         raise ValueError("Path does not have enough parent directories.")
 
     return folder
 
 
+def add_saver(loader):
+    comp.Lock()
+    comp.SetActiveTool(loader)
+    comp.AddTool("Saver", -32768, -32768)
+    comp.Unlock()
+    flow = comp.CurrentFrame.FlowView
+    flow.Select()
+
+
 def main():
 
     loader = comp_utils.get_loader()
-    comp.Lock()
-    comp.SetActiveTool(loader)
-    comp.AddTool("Saver",  -32768, -32768)
-    comp.Unlock()
     if not loader:
+        message = "No Loader found in the current comp"
+        log.error(message)
+        WarningDialog(message)
         return
+    add_saver(loader)
     comp_utils.set_range(loader)
     loader_path = comp_utils.get_loader_path(loader)
     if not loader_path.exists():
