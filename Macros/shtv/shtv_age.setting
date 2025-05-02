@@ -1,0 +1,190 @@
+{
+	Tools = ordered() {
+		shtv_age = MacroOperator {
+			Inputs = ordered() {
+				Input1 = InstanceInput {
+					SourceOp = "Template",
+					Source = "StyledText",
+				},
+				Input2 = InstanceInput {
+					SourceOp = "Template",
+					Source = "Font",
+					ControlGroup = 2,
+				},
+				Input3 = InstanceInput {
+					SourceOp = "Template",
+					Source = "Size",
+					Default = 0.08,
+				},
+				Input4 = InstanceInput {
+					SourceOp = "Template",
+					Source = "Center",
+					Name = "Center",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "KeyframeStretcher1",
+					Source = "Result",
+				},
+				Output1 = InstanceOutput {
+					SourceOp = "Path1",
+					Source = "Heading",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			Tools = ordered() {
+				KeyframeStretcher1 = KeyStretcher {
+					Inputs = {
+						Keyframes = Input {
+							SourceOp = "Merge1",
+							Source = "Output",
+						},
+						SourceEnd = Input { Value = 100, },
+						StretchStart = Input { Value = 29, },
+						StretchEnd = Input { Value = 80, }
+					},
+					ViewInfo = OperatorInfo { Pos = { 289.529, 101.909 } },
+				},
+				Merge1 = Merge {
+					CurrentSettings = 2,
+					CustomData = { Settings = { [1] = { Tools = ordered() { Merge1 = Merge { Inputs = { PerformDepthMerge = Input { Value = 0 }, Foreground = Input { SourceOp = "MediaIn1", Source = "Output" }, Background = Input { SourceOp = "Merge5", Source = "Output" }, EffectMask = Input { SourceOp = "Rectangle2", Source = "Mask" }, Blend = Input { Value = 0.65 } }, CtrlWZoom = false, ViewInfo = OperatorInfo { Pos = { 93.3335, 101.909 } }, CustomData = {
+										} } } } } },
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle2",
+							Source = "Mask",
+						},
+						Background = Input {
+							SourceOp = "Background1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "BrightnessContrast1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, }
+					},
+					ViewInfo = OperatorInfo { Pos = { 93.3335, 101.909 } },
+				},
+				Rectangle2 = RectangleMask {
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.128012048192771, 0.827543549221919 }, },
+						Height = Input { Value = 0.0710138456933, }
+					},
+					ViewInfo = OperatorInfo { Pos = { 93.3335, 171.939 } },
+				},
+				BrightnessContrast1 = BrightnessContrast {
+					Inputs = {
+						Alpha = Input { Value = 1, },
+						Gain = Input { Value = 0.5, },
+						ClipBlack = Input { Value = 1, },
+						ClipWhite = Input { Value = 1, },
+						Input = Input {
+							SourceOp = "Transform1",
+							Source = "Output",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { 93.3335, 1.19321 } },
+				},
+				Transform1 = Transform {
+					Inputs = {
+						Center = Input {
+							SourceOp = "Path1",
+							Source = "Position",
+						},
+						Input = Input {
+							SourceOp = "Template",
+							Source = "Output",
+						}
+					},
+					ViewInfo = OperatorInfo { Pos = { 93.3335, -56.9938 } },
+				},
+				Path1 = PolyPath {
+					DrawMode = "InsertAndModify",
+					CtrlWZoom = false,
+					Inputs = {
+						Displacement = Input {
+							SourceOp = "Path1Displacement",
+							Source = "Value",
+						},
+						PolyLine = Input {
+							Value = Polyline {
+								Points = {
+									{ Linear = true, LockY = true, X = 0, Y = 0.084, RX = 0, RY = -0.028 },
+									{ Linear = true, LockY = true, X = 0, Y = 1.11022302462516e-16, LX = 0, LY = 0.028, RX = 0, RY = -3.70074341541719e-17 },
+									{ Linear = true, LockY = true, X = 0, Y = 0, LX = 0, LY = 3.70074341541719e-17, RX = 0, RY = -0.0286666666666667 },
+									{ Linear = true, LockY = true, X = 0, Y = -0.086, LX = 0, LY = 0.0286666666666667 }
+								}
+							},
+						}
+					},
+				},
+				Path1Displacement = BezierSpline {
+					SplineColor = { Red = 255, Green = 0, Blue = 255 },
+					CtrlWZoom = false,
+					KeyFrames = {
+						[7] = { 0, RH = { 7.73204184620144, 0.301405814395009 }, Flags = { Linear = true, LockedY = true } },
+						[29] = { 0.494117647058823, LH = { 16.5556020491195, 0.494117647058823 }, RH = { 46, 0.494117647058823 }, Flags = { LockedY = true } },
+						[80] = { 0.494117647058823, LH = { 63, 0.494117647058823 }, RH = { 93.7373737373745, 0.494117647058823 }, Flags = { LockedY = true } },
+						[100] = { 1, LH = { 95.2683806578612, 0.623883870676059 }, Flags = { LockedY = true } }
+					}
+				},
+				Template = TextPlus {
+					CtrlWZoom = false,
+					Inputs = {
+						Width = Input { Value = 720, },
+						Height = Input { Value = 576, },
+						PixelAspect = Input { Value = { 1.066, 1 }, },
+						Center = Input { Value = { 0.140500824807353, 0.830707372206963 }, },
+						LayoutRotation = Input { Value = 1, },
+						CharacterSpacing = Input { Value = 0.903, },
+						TransformSize = Input { Value = 1, },
+						CharacterSizeX = Input { Value = 0.874, },
+						Enabled3 = Input { Value = 1, },
+						Type1 = Input { Value = 2, },
+						ShadingGradient1 = Input {
+							Value = Gradient {
+								Colors = {
+									[0] = { 0, 0, 0, 1 },
+									[1] = { 1.3, 1.3, 1.3, 1 }
+								}
+							},
+						},
+						ShadingMappingAspect1 = Input { Value = 1.25, },
+						StyledText = Input { Value = "12+", },
+						Font = Input { Value = "Microsoft Sans Serif", },
+						Style = Input { Value = "Regular", },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						Red3 = Input { Value = 0.2117647058824, },
+						Green3 = Input { Value = 0.2117647058824, },
+						Blue3 = Input { Value = 0.2117647058824, },
+						Softness3 = Input { Value = 1, },
+						SoftnessX3 = Input { Value = 0.5, },
+						SoftnessY3 = Input { Value = 0.5, },
+						Offset3 = Input { Value = { 0.032, -0.014 }, }
+					},
+					ViewInfo = OperatorInfo { Pos = { 93.3335, -131.773 } },
+				},
+				Background1 = Background {
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						UseFrameFormatSettings = Input { Value = 1, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftAlpha = Input { Value = 0, }
+					},
+					ViewInfo = OperatorInfo { Pos = { -356.527, 101.909 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "shtv_age"
+}

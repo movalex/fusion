@@ -98,15 +98,6 @@ class ResolveUtility:
             raise RuntimeError("No current project found.")
         return project
 
-    def get_current_timeline(self):
-        return self.get_current_project().GetCurrentTimeline()
-
-    def get_gallery(self):
-        return self.get_current_project().GetGallery()
-
-    def get_mediapool(self):
-        return self.get_current_project().GetMediaPool()
-
     def get_timelines(self):
         """Retrieve all timelines in the current project."""
         project = self.get_current_project()
@@ -115,8 +106,24 @@ class ResolveUtility:
             timeline = project.GetTimelineByIndex(i)
             timelines[timeline.GetName()] = i
         return timelines
+    
+    def get_current_timeline(self):
+        return self.get_current_project().GetCurrentTimeline()
+    
+    def get_current_clip(self):
+        return self.get_current_timeline().GetCurrentVideoItem()
 
-    def get_fusion_composition(self, clip, comp_name):
+    def get_gallery(self):
+        return self.get_current_project().GetGallery()
+
+    def get_mediapool(self):
+        return self.get_current_project().GetMediaPool()
+    
+    def get_current_fusion_composition(self, comp_name="Composition 1"):
+        current_clip = self.get_current_clip()
+        return self.get_fusion_composition(current_clip, comp_name)
+    
+    def get_fusion_composition(self, clip, comp_name="Composition 1"):
         """Retrieve a Fusion composition by name."""
         comp = clip.GetFusionCompByName(comp_name)
         return comp
@@ -196,8 +203,8 @@ class ResolveUtility:
             for attribute, value in modifications.items():
                 try:
 
-                    # Special handling for the "Center" attribute if it's a dictionary
-                    if attribute == "Center" and isinstance(current_value, dict):
+                    # Special handling for dict based attributes
+                    if attribute in ["Center", "PixelAspect", "CustomPixelAspect"] and isinstance(current_value, dict):
                         current_value = getattr(tool, attribute)[0]
                         # Merge the existing Center values with the new ones
                         updated_center = {

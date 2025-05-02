@@ -47,8 +47,7 @@ def import_davinci_resolve_script():
         except Exception as ex:
             print("Unable to find module DaVinciResolveScript - please ensure that the module DaVinciResolveScript is discoverable by python")
             print(f"For a default DaVinci Resolve installation, the module is expected to be located in: {default_path}")
-            print(ex)
-            sys.exit()
+            raise ex
 
 
 def GetResolve():
