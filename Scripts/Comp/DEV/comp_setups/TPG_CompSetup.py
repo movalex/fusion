@@ -1,34 +1,32 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """
 Set new Comp from Loader
 
 This script sets up a new Fusion composition based on the selected Loader node
 Copyright © 2025 Alexey Bogomolov
-VESION: 1.1
-
+VERSION: 1.2
 """
 
 from pathlib import Path
+import sys
 from fusion_comp_utils import CompUtils
 from datetime import datetime
 from resolve_utils import set_logging
-from UI_utils import WarningDialog
-
-# import DaVinciResolveScript as drs
+from UI_utils import WarningDialog, RequestDir
+from itertools import count
 
 
 LOG_LEVEL = "debug"
 
 log = set_logging(level=LOG_LEVEL, script_name="TPG Comp Setup")
 
-# fu = drs.scriptapp("Fusion")
 comp = fu.GetCurrentComp()
 comp_utils = CompUtils(comp)
-
+script_name = "tpg_comp_setup"
 COMP_FOLDER = "FUSION"
 AUTHOR = "ab"
-COMP_VERSION = 1
 INCREMENT_COMP = True
 
 
@@ -54,35 +52,18 @@ def create_comp_folder(folder):
     return new_folder
 
 
-def update_savers(comp_path: Path):
-    savers = comp.GetToolList(False, "Saver").values()
-    if not savers:
+def update_saver(save_path: Path, comp_path: str, saver=None):
+    if not saver:
         log.debug("No savers found in comp")
         return
-    comp.StartUndo("Set Saver Paths")
+    comp.StartUndo("Set Saver Path")
     current_date = get_date()
-
-    # Find the parent of the "FOOTAGE" folder
-    project_folder = None
-    for parent_folder in comp_path.parents:
-        if parent_folder.name == "FUSION":
-            project_folder = parent_folder.parent
-            break
-        else:
-            log.error("Could not find the FOOTAGE folder. Check the Loader path")
-            comp.EndUndo()
-            return
-    comp_name = comp_path.stem
-
-    for saver in savers:
-        path = Path(saver.Clip[1])
-        ext = Path(path).suffix or ".mov"
-        if ext == ".exr":
-            comp_path += "."
-        # we already have verion number in the comp_name
-        new_path = Path(f"{project_folder}/RENDERS/{current_date}/{comp_name}{ext}")
-        log.debug(f"New saver path: {new_path}")
-        saver.Clip[1] = str(new_path)
+    file_name = comp_path.stem
+    ext = ".mov"
+    # we already have version number and author in the file_name
+    new_path = Path(f"{save_path}/{current_date}/{file_name}{ext}")
+    log.debug(f"New saver path: {new_path}")
+    saver.Clip[1] = str(new_path)
     comp.EndUndo()
 
 
@@ -91,82 +72,136 @@ def generate_comp_name(file_name: str, author: str, version: int) -> str:
     return f"{file_name}_{author}_v{version:02d}"
 
 
-def save_comp(folder: Path, file_stem: str, author: str, comp_version=1) -> int:
-    """Build comp name and path, and save the comp."""
-    try:
-        if not folder.exists():
-            folder.mkdir(parents=True, exist_ok=True)
+def get_next_available_comp_path(folder: Path, file_stem: str, author: str, start_version: int) -> tuple[Path, int]:
+    """
+    Find the next available comp path by incrementing version if needed.
 
-        version = comp_version
+    If INCREMENT_COMP is True, increments the version number until a non-existing file is found.
+    If INCREMENT_COMP is False, returns the path for start_version (default 1) regardless of file existence,
+    which may result in overwriting an existing file.
+    """
+    for version in count(start_version):
         comp_name = generate_comp_name(file_stem, author, version)
-        new_comp_path = folder / f"{comp_name}.comp"
+        comp_path = folder / f"{comp_name}.comp"
+        if not comp_path.exists() or not INCREMENT_COMP:
+            return comp_path, version
 
-        if INCREMENT_COMP:
-            while new_comp_path.exists():
-                version += 1
-                comp_name = generate_comp_name(file_stem, author, version)
-                new_comp_path = folder / f"{comp_name}.comp"
 
-        comp.Save(str(new_comp_path))
-        update_savers(new_comp_path)
+def save_comp(folder: Path, file_stem: str, author="ab", comp_version=1) -> Path:
+    """
+    Build comp name and path, and save the comp.
 
-        return version
+    Uses get_next_available_comp_path to determine the file path:
+    - If INCREMENT_COMP is True, will increment version to avoid overwriting.
+    - If INCREMENT_COMP is False, will use the initial version and may overwrite existing files.
 
+    Returns the saved comp path or None on error.
+    """
+    try:
+        folder.mkdir(parents=True, exist_ok=True)
+        comp_path, _ = get_next_available_comp_path(folder, file_stem, author, comp_version)
+        comp.Save(str(comp_path))
+        return comp_path
     except Exception as e:
-        log.error(f"An error occurred: {e}")
-        return -1
+        log.error(f"An comp save error occurred: {e}")
+        return None
 
 
-def get_save_folder(path, comp_folder, folder_levels=3):
+def request_saver_folder(path):
     # Ensure path is a Path object
-    path = Path(path)
-    if path.suffix in [".exr", ".dpx", ".png", ".jpg"]:
-        folder_levels += 1
-    # Check if path has at least three parents
-    if len(path.parents) >= folder_levels:
-        folder = path.parents[folder_levels - 1] / comp_folder
-    else:
-        raise ValueError("Path does not have enough parent directories.")
+    
+    save_folder = RequestDir("Choose Saver output folder", str(path))
+    return Path(save_folder) if save_folder else None
 
-    return folder
+def request_comp_folder(default_folder=None):
+    """
+    Prompt the user to select a folder to save the Fusion comp.
+    Returns a Path object or None if cancelled.
+    """
+    if default_folder is None:
+        default_folder = str(Path.home())
+    folder = RequestDir("Select folder to save Fusion comp", str(default_folder))
+    if folder:
+        return Path(folder)
+    return None
 
 
-def add_saver(loader):
+def create_empty_saver(loader):
     comp.Lock()
     comp.SetActiveTool(loader)
-    comp.AddTool("Saver", -32768, -32768)
+    saver_node = comp.AddTool("Saver", -32768, -32768)
     comp.Unlock()
     flow = comp.CurrentFrame.FlowView
     flow.Select()
+    return saver_node
 
 
 def main():
 
-    loader = comp_utils.get_loader()
+    loader = comp_utils.get_selected_loader()
     if not loader:
-        message = "No Loader found in the current comp"
+        message = "No Loader selected. Please select a Loader node."
         log.error(message)
         WarningDialog(message)
         return
-    add_saver(loader)
+
     comp_utils.set_range(loader)
+
     loader_path = comp_utils.get_loader_path(loader)
+
     if not loader_path.exists():
         message = "The Loader path does not exist"
         WarningDialog(message)
         log.error(message)
         return
+    log.info(f"Loader path: {loader_path}")
     loader_stem = loader_path.stem
 
-    comp_save_folder = get_save_folder(loader_path, COMP_FOLDER)
-    log.info(f"Comp folder: {comp_save_folder}")
+    # Recall last used folder from fu.GetData
+    last_comp_folder = fu.GetData(f"{script_name}.last_comp_save_folder")
+    last_output = fu.GetData(f"{script_name}.last_comp_output")
+    log.debug(f"Last used folder: {last_comp_folder}")
+    log.debug(f"Last used output: {last_output}")
+    if last_comp_folder:
+        if Path(last_comp_folder).exists():
+            suggest_comp_folder = Path(last_comp_folder)
+    else:
+        suggest_comp_folder = loader_path.parent
+    
+    if last_output:
+        if Path(last_output).exists():
+            suggest_output = Path(last_output)
+    else:
+        suggest_output = loader_path.parent
 
-    if not comp_save_folder:
-        log.warning("Could not get save folder")
+
+    # Prompt user for save folder, default to last used or suggested folder
+    saver_folder = request_saver_folder(suggest_output)
+    if not saver_folder:
+        log.warning("User cancelled saver folder selection")
         return
 
-    save_comp(comp_save_folder, loader_stem, AUTHOR)
+    # Use default_folder as argument
+    comp_save_folder = request_comp_folder(suggest_comp_folder)
+    if not comp_save_folder:
+        log.warning("User cancelled comp folder selection")
+        return
 
+    saver = create_empty_saver(loader)
+    # Save selected folder for next time
+    fu.SetData(f"{script_name}.last_comp_save_folder", str(comp_save_folder))
+    fu.SetData(f"{script_name}.last_comp_output", str(saver_folder))
+
+    log.info(f"Comp folder: {comp_save_folder}")
+
+    comp_path = save_comp(comp_save_folder, loader_stem)
+    update_saver(saver_folder, comp_path, saver)
+    log.info(f"Comp path: {comp_path}")
+    if not comp_path:
+        WarningDialog("Failed to save comp. See log for details.")
+        return
+
+    log.info(f"Comp saved: {comp_path}")
 
 if __name__ == "__main__":
     main()
