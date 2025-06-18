@@ -6,7 +6,10 @@
     Email: mail@abogomolov.com
     License: MIT
 """
-
+from pprint import pprint
+import BlackmagicFusion as bmd
+fu = bmd.scriptapp("Fusion")
+comp = fu.GetCurrentComp()
 
 def convert_to_number(data: str, to_type):
     try:
@@ -21,18 +24,22 @@ def set_comp_pref(key: str, value):
 
 
 def process_metadata(
-    metadata, key_fragment, comp_pref_key, key_string=None
+    metadata, key_fragments
 ):
-    if not key_string:
-        key_string = comp_pref_key.split(".")[-1]
+    """
+    Search for any of the key_fragments in the metadata keys (case-insensitive).
+    Return the first found value that can be converted to float.
+    """
+    # Ensure key_fragments is a set of lowercase strings for fast lookup
+    fragments = set(k.lower() for k in key_fragments)
     for key, value in metadata.items():
-        if key_fragment in key.lower():
-            converted_value = convert_to_number(value, float)
-            if converted_value is not None:
-                set_comp_pref(comp_pref_key, converted_value)
-                print(f"{key_string} is set to {converted_value}")
-                return True
-    return False
+        key_lower = key.lower()
+        for fragment in fragments:
+            if fragment in key_lower:
+                converted_value = convert_to_number(value, float)
+                if converted_value is not None:
+                    return converted_value
+    return None
 
 
 def set_from_background(tool):
@@ -75,11 +82,16 @@ def main():
         return
 
     if tool.ID == "Loader":
+        print("Processing Loader tool...")
         width, height, aspect_x, aspect_y = set_from_loader(tool)
+        print("Setting composition size and aspect ratio from Loader attributes...")
         set_comp_size_and_aspect(width, height, aspect_x, aspect_y)
+    
     elif tool.ID == "Background":
         width, height, aspect_x, aspect_y = set_from_background(tool)
         set_comp_size_and_aspect(width, height, aspect_x, aspect_y)
+
+    print("Processing tool metadata...")
     try:
         tool_metadata = tool.Output[comp.CurrentTime].Metadata
     except AttributeError:
@@ -89,13 +101,18 @@ def main():
     if not tool_metadata:
         print("No metadata found")
         return
-    fps_found = process_metadata(
+    print("Tool metadata:")
+    pprint(tool_metadata)
+    # Pass a list of possible FPS key fragments
+    fps_value = process_metadata(
         tool_metadata,
-        "fps",
-        "Comp.FrameFormat.Rate",
-        key_string="FrameRate",
+        ["fps", "framerate", "frame_rate", "frame rate"],
     )
-    if not fps_found:
+    print(f"Frame Rate value found: {fps_value}")
+    if fps_value is not None:
+        set_comp_pref("Comp.FrameFormat.Rate", fps_value)
+        print(f"FrameRate is set to {fps_value}")
+    else:
         print("No framerate information found in metadata")
 
 
