@@ -52,10 +52,7 @@ def create_comp_folder(folder):
     return new_folder
 
 
-def update_saver(save_path: Path, comp_path: str, saver=None):
-    if not saver:
-        log.debug("No savers found in comp")
-        return
+def update_saver(saver, save_path: Path, comp_path: str):
     comp.StartUndo("Set Saver Path")
     current_date = get_date()
     file_name = comp_path.stem
@@ -121,9 +118,9 @@ def request_comp_folder(default_folder=None):
     if default_folder is None:
         default_folder = str(Path.home())
     folder = RequestDir("Select folder to save Fusion comp", str(default_folder))
-    if folder:
-        return Path(folder)
-    return None
+    
+    return Path(folder) if folder else None
+
 
 
 def create_empty_saver(loader):
@@ -136,41 +133,39 @@ def create_empty_saver(loader):
     return saver_node
 
 
-def main():
-
+def process_loader(comp_utils):
     loader = comp_utils.get_selected_loader()
     if not loader:
         message = "No Loader selected. Please select a Loader node."
         log.error(message)
         WarningDialog(message)
-        return
-
+        return None, None, None
     comp_utils.set_range(loader)
-
     loader_path = comp_utils.get_loader_path(loader)
 
     if not loader_path.exists():
         message = "The Loader path does not exist"
         WarningDialog(message)
         log.error(message)
-        return
+        return None, None, None
     log.info(f"Loader path: {loader_path}")
     loader_stem = loader_path.stem
 
+    return loader, loader_path, loader_stem
+
+def choose_folders(loader_path):
     # Recall last used folder from fu.GetData
     last_comp_folder = fu.GetData(f"{script_name}.last_comp_save_folder")
     last_output = fu.GetData(f"{script_name}.last_comp_output")
     log.debug(f"Last used folder: {last_comp_folder}")
     log.debug(f"Last used output: {last_output}")
-    if last_comp_folder:
-        if Path(last_comp_folder).exists():
-            suggest_comp_folder = Path(last_comp_folder)
+    if last_comp_folder and Path(last_comp_folder).exists():
+        suggest_comp_folder = Path(last_comp_folder)
     else:
         suggest_comp_folder = loader_path.parent
     
-    if last_output:
-        if Path(last_output).exists():
-            suggest_output = Path(last_output)
+    if last_output and Path(last_output).exists():
+        suggest_output = Path(last_output)
     else:
         suggest_output = loader_path.parent
 
@@ -179,29 +174,39 @@ def main():
     saver_folder = request_saver_folder(suggest_output)
     if not saver_folder:
         log.warning("User cancelled saver folder selection")
-        return
-
+        return None, None
     # Use default_folder as argument
     comp_save_folder = request_comp_folder(suggest_comp_folder)
     if not comp_save_folder:
         log.warning("User cancelled comp folder selection")
-        return
+        return None, None
+    return saver_folder, comp_save_folder
 
+def run_saver_and_save_comp(loader, comp_save_folder, saver_folder, loader_stem):
     saver = create_empty_saver(loader)
-    # Save selected folder for next time
-    fu.SetData(f"{script_name}.last_comp_save_folder", str(comp_save_folder))
-    fu.SetData(f"{script_name}.last_comp_output", str(saver_folder))
-
-    log.info(f"Comp folder: {comp_save_folder}")
 
     comp_path = save_comp(comp_save_folder, loader_stem)
-    update_saver(saver_folder, comp_path, saver)
+    update_saver(saver, saver_folder, comp_path)
     log.info(f"Comp path: {comp_path}")
     if not comp_path:
         WarningDialog("Failed to save comp. See log for details.")
-        return
-
+        return None
     log.info(f"Comp saved: {comp_path}")
+    fu.SetData(f"{script_name}.last_comp_save_folder", str(comp_save_folder))
+    fu.SetData(f"{script_name}.last_comp_output", str(saver_folder))
+    return comp_path
+
+def main():
+    loader, loader_path, loader_stem = process_loader(comp_utils)
+    if not loader:
+        return
+    saver_folder, comp_save_folder = choose_folders(loader_path)
+    if not saver_folder or not comp_save_folder:
+        return
+    comp_path = run_saver_and_save_comp(loader, comp_save_folder, saver_folder, loader_stem)
+    if not comp_path:
+        WarningDialog("Failed to save comp. See log for details.")
+        return
 
 if __name__ == "__main__":
     main()
