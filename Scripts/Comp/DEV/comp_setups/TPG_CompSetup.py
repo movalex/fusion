@@ -10,19 +10,20 @@ VERSION: 1.2
 """
 
 from pathlib import Path
-import sys
 from fusion_comp_utils import CompUtils
 from datetime import datetime
 from resolve_utils import set_logging
 from UI_utils import WarningDialog, RequestDir
 from itertools import count
+import BlackmagicFusion as bmd
+fusion = bmd.scriptapp("Fusion")
 
 
 LOG_LEVEL = "debug"
 
 log = set_logging(level=LOG_LEVEL, script_name="TPG Comp Setup")
 
-comp = fu.GetCurrentComp()
+comp = fusion.GetCurrentComp()
 comp_utils = CompUtils(comp)
 script_name = "tpg_comp_setup"
 COMP_FOLDER = "FUSION"
@@ -154,9 +155,9 @@ def process_loader(comp_utils):
     return loader, loader_path, loader_stem
 
 def choose_folders(loader_path):
-    # Recall last used folder from fu.GetData
-    last_comp_folder = fu.GetData(f"{script_name}.last_comp_save_folder")
-    last_output = fu.GetData(f"{script_name}.last_comp_output")
+    # Recall last used folder from fusion.GetData
+    last_comp_folder = fusion.GetData(f"{script_name}.last_comp_save_folder")
+    last_output = fusion.GetData(f"{script_name}.last_comp_output")
     log.debug(f"Last used folder: {last_comp_folder}")
     log.debug(f"Last used output: {last_output}")
     if last_comp_folder and Path(last_comp_folder).exists():
@@ -192,8 +193,8 @@ def run_saver_and_save_comp(loader, comp_save_folder, saver_folder, loader_stem)
         WarningDialog("Failed to save comp. See log for details.")
         return None
     log.info(f"Comp saved: {comp_path}")
-    fu.SetData(f"{script_name}.last_comp_save_folder", str(comp_save_folder))
-    fu.SetData(f"{script_name}.last_comp_output", str(saver_folder))
+    fusion.SetData(f"{script_name}.last_comp_save_folder", str(comp_save_folder))
+    fusion.SetData(f"{script_name}.last_comp_output", str(saver_folder))
     return comp_path
 
 def main():
