@@ -258,9 +258,9 @@ class RequestDialogMeta(type):
 class BaseRequestDialog(BaseUI, metaclass=RequestDialogMeta):
 
     def __init__(self, title=None, target=None, request_type=None, file_mask=None):
-        self.title = "Choose Directory" if title is None else title
+        self.title = "Choose Output" if title is None else title
         self.result = None
-        geometry = [800, 700, 630, 50]
+        geometry = [800, 700, 660, 50]
         self.target = target or Path("~/Desktop").expanduser().absolute()
         if isinstance(file_mask, dict):
             self.file_mask = file_mask
@@ -301,13 +301,14 @@ class BaseRequestDialog(BaseUI, metaclass=RequestDialogMeta):
         elif self.request_type == "file":
             out_path = self.fusion.RequestFile(self.target, "", self.file_mask)
 
+        log.debug(f"Request type: {self.request_type}")
         if out_path:
             self.itm["PathTextLine"].Text = out_path
         else:
-            message = "Could not open the script file"
+            message = "Folder not chosen" if self.request_type == "dir" else "File not chosen"
             WarningDialog(message)
-            log.debug(f"{message}\nRequest type: {self.request_type}")
-            self.close()
+            # Instead of closing, show the dialog again
+            return
 
     def run(self):
         self.show()
