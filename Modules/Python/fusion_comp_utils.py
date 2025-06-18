@@ -14,7 +14,7 @@ class CompUtils:
             return -1
         return comp_name
 
-    def get_loader(self):
+    def get_selected_loader(self):
         """Get selected loader."""
         try:
             loader = self.comp.GetToolList(True, "Loader")[1]
