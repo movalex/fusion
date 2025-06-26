@@ -7,6 +7,11 @@
     License: MIT
     Copyright: 2023
 """
+from bmd_utils import get_bmd_object, get_resolve_fusion
+
+bmd = get_bmd_object("Resolve")
+resolve = bmd.scriptapp("Resolve")
+fu = get_resolve_fusion()
 
 
 def request_track_number():
@@ -81,6 +86,12 @@ def request_track_number():
     win.Hide()
 
 
+def get_markers(clip):
+    for marker_data in clip.GetMarkers().values():
+        name = marker_data["name"]
+        print("Marker name: ", name)
+
+
 def rename_clips(track_number: int):
     """batch rename clips
 
@@ -101,13 +112,8 @@ def rename_clips(track_number: int):
     print(f"Processing track #{track_number}")
 
     for clip in clips:
-        print(f"Changing name of {clip.GetName()}")
-        media_pool_item = clip.GetMediaPoolItem()
-        for marker_data in clip.GetMarkers().values():
-            name = marker_data["name"]
-            print("Marker name: ", name)
-            # print("PROP", media_pool_item.GetClipProperty())
-            # clip.SetProperty("Clip Name", name)
+        print(f"Getting clip name: {clip.GetName()}")
+
     print(dir(clip))
     print("PROP", clip.GetProperty())
 

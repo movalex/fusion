@@ -1,9 +1,7 @@
 from pathlib import Path
-from grab_still import get_still_album, get_target_folder
-import DaVinciResolveScript as dvr_script
-from resolve_utils import ResolveUtility
-from UI_utils import (
-    ConfirmationDialog,
+from resolve_utils import ResolveUtility, get_app
+from ui_utils import (
+    ConfirmationDialog, RequestDir
 )
 
 """
@@ -22,12 +20,25 @@ OPEN_EDIT_PAGE_AFTER_EXPORT = True
 CLEANUP_DRX = True
 
 utils = ResolveUtility()
+fusion = get_app("Fusion")
+
+
+def get_target_folder() -> str:
+    """
+    Checks for target folder Resolve data,
+    Shows folder request dialogue if data not found
+    """
+    target_folder_data = fusion.GetData("BatchResolveSaveStills.Folder")
+    if not target_folder_data or target_folder_data == "":
+        target_folder = RequestDir("The stills will be saved to: ", target_folder_data)
+        fusion.SetData("BatchResolveSaveStills.Folder", target_folder)
+        return target_folder
+
+    return target_folder_data
+
 
 
 def cleanup_drx_from_folder(folder: Path):
-
-
-
     print(
         "CLEANUP DRX is enabled, all .drx files in the stills location will be erased"
     )
@@ -79,7 +90,7 @@ def grab_timeline_stills(delete_stills=False):
 
     print(f"Found {video_track_count} tracks")
 
-    still_album = get_still_album(gallery, STILL_ALBUM)
+    still_album = utils.get_still_album(gallery, STILL_ALBUM)
     still_album_name = gallery.GetAlbumName(still_album)
     stills = current_timeline.GrabAllStills(STILL_FRAME_REF)
 
@@ -87,7 +98,7 @@ def grab_timeline_stills(delete_stills=False):
         print("No stills saved")
         return
 
-    target_folder = get_target_folder(fusion)
+    target_folder = get_target_folder()
     if not target_folder:
         print("Target folder is not set, aborting script.")
         return

@@ -7,9 +7,9 @@ from pathlib import Path
 DEFAULT_DIR = Path("~/Desktop").expanduser()
 PKG_REQUIRED = ["markdown", "mistune"]
 
+
 try:
     from markdown import markdown
-    import mistune
     from mistune import BaseRenderer, Markdown
     from tkinter import Tk, filedialog
 except ModuleNotFoundError:

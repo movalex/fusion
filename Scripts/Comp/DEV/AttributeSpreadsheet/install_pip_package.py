@@ -3,7 +3,7 @@ import sysconfig
 import platform
 import subprocess
 from pathlib import Path
-from UI_utils import ConfirmationDialog
+from ui_utils import ConfirmationDialog
 
 
 def get_python_home() -> Path:

@@ -4,7 +4,7 @@ Updates Fusion composition parameters for the "Template" tool used in credits.
 Retrieves clips, asks for user confirmation, and applies font/color modifications.
 """
 
-from UI_utils import ConfirmationDialog
+from ui_utils import ConfirmationDialog
 from resolve_utils import ResolveUtility
 utils = ResolveUtility()
 

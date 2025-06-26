@@ -28,8 +28,7 @@
 import json
 import DaVinciResolveScript as dvr_script
 from pathlib import Path
-from UI_utils import BaseUI, ConfirmationDialog, WarningDialog
-from pprint import pprint
+from ui_utils import BaseUI, ConfirmationDialog, WarningDialog
 
 
 resolve = dvr_script.scriptapp("Resolve")
@@ -38,7 +37,7 @@ project = projectManager.GetCurrentProject()
 
 
 def get_render_list():
-    queue_file = app.GetData("RenderQueueData.QueuePath")
+    queue_file = resolve.GetData("RenderQueueData.QueuePath")
     if not Path(queue_file).exists():
         WarningDialog(message="Export the queue file!")
         return
@@ -204,12 +203,12 @@ class LoadQueueUI(BaseUI):
         self.itm["TimelinesCombo"].Enabled = self.itm["CheckBox"].Checked
 
     def load_queue_file(self, ev):
-        queue_file = Path(app.RequestFile())
+        queue_file = Path(resolve.RequestFile())
         if not queue_file.exists():
             print("Queue File does not exist!")
             return
         self.itm["FileLabel"].Text = queue_file.name
-        app.SetData("RenderQueueData.QueuePath", queue_file.as_posix())
+        resolve.SetData("RenderQueueData.QueuePath", queue_file.as_posix())
 
     def process_queue(self, ev):
         override_timeline = self.itm["CheckBox"].Checked

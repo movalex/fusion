@@ -27,9 +27,9 @@
 
 from datetime import datetime
 from pathlib import Path
-from resolve_utils import ResolveUtility
+from resolve_utils import ResolveUtility, get_app
 
-from UI_utils import (
+from ui_utils import (
     RequestDir,
     ConfirmationDialog,
 )
@@ -38,7 +38,7 @@ from log_utils import set_logging
 log = set_logging()
 
 utils = ResolveUtility()
-app = utils.resolve
+fusion = get_app("Fusion")
 
 STILL_ALBUM = "STILLS"
 DELETE_STILLS = True
@@ -53,10 +53,10 @@ def get_target_folder() -> str:
     Checks for target folder Resolve data,
     Shows folder request dialogue if data not found
     """
-    target_folder_data = app.GetData("ResolveSaveStills.Folder")
+    target_folder_data = fusion.GetData("ResolveSaveStills.Folder")
     if not target_folder_data or target_folder_data == "":
         target_folder = RequestDir("The stills will be saved to: ", target_folder_data)
-        app.SetData("ResolveSaveStills.Folder", target_folder)
+        fusion.SetData("ResolveSaveStills.Folder", target_folder)
         return target_folder
 
     return target_folder_data
@@ -74,7 +74,7 @@ def remove_drx_file(still_filepath: Path):
     if CONFIRM_DELETE:
         answer = ConfirmationDialog(
             title="DRX files deletion!",
-            request=f"Do you wish to delete the DRX file?",
+            request="Do you wish to delete the DRX file?",
         )
     if answer:
         try:
@@ -92,15 +92,12 @@ def get_file_prefix(clip_name, timeline_name):
 
 def post_processing(still, still_album, target_folder, file_prefix):
 
-    still_label = Path(still_album.GetLabel(still))
     still_filename = f"{file_prefix}.{STILL_FORMAT}"
-    file_path = Path(target_folder) / still_filename
     still_file = get_still_file(target_folder, Path(still_filename))
     if isinstance(still_file, Path):
         log.debug(f"Found still file: {still_file.name}")
         utils.add_to_mediapool(
-            [still_file.as_posix()],
-            subfolder_name=STILL_ALBUM,
+            [still_file.as_posix()]
         )
 
     if CLEANUP_DRX:

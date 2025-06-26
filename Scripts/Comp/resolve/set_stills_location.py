@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from UI_utils import RequestDir
+from ui_utils import RequestDir
 from pathlib import Path
 from log_utils import set_logging
 

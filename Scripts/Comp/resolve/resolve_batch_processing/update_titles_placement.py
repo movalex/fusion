@@ -17,7 +17,7 @@ Usage:
     Run the script directly to prompt for a confirmation and process the clips accordingly.
 """
 
-from UI_utils import ConfirmationDialog
+from ui_utils import ConfirmationDialog
 from resolve_utils import ResolveUtility
 
 utils = ResolveUtility()

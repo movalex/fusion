@@ -19,7 +19,7 @@
     ║                                                                    ║
     ╚════════════════════════════════════════════════════════════════════╝
 """
-from UI_utils import ConfirmationDialog
+from ui_utils import ConfirmationDialog
 from resolve_utils import ResolveUtility
 
 utils = ResolveUtility()

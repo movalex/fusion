@@ -13,7 +13,7 @@ from pathlib import Path
 from fusion_comp_utils import CompUtils
 from datetime import datetime
 from resolve_utils import set_logging
-from UI_utils import WarningDialog, RequestDir
+from ui_utils import WarningDialog, RequestDir
 from itertools import count
 import BlackmagicFusion as bmd
 fusion = bmd.scriptapp("Fusion")

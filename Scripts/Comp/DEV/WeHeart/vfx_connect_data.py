@@ -25,8 +25,11 @@
     
 """
 
-from UI_utils import BaseUI
+from ui_utils import BaseUI
 from pathlib import Path
+from bmd_utils import get_app
+
+fu = fusion = get_app("Fusion")
 
 comp = fu.GetCurrentComp()
 TITLE = 'FX Setup'
