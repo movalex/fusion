@@ -28,7 +28,7 @@
 import sys
 from pathlib import Path
 from typing import TypeVar
-from get_resolve import GetResolve
+from bmd_utils import get_app
 from log_utils import set_logging
 
 galleryStillAlbum = TypeVar("galleryStillAlbum")
@@ -51,7 +51,7 @@ class ResolveUtility:
     def connect_to_resolve(self):
         """Initialize connection to DaVinci Resolve."""
         try:
-            self.resolve = GetResolve()
+            self.resolve = get_app()
             if not self.resolve:
                 raise RuntimeError("Could not connect to DaVinci Resolve.")
             self.project_manager = self.resolve.GetProjectManager()
@@ -167,11 +167,11 @@ class ResolveUtility:
         root = pool.GetRootFolder()
         folder = root
         if subfolder_name:
-            folders = {folder.GetName(): folder for folder in root.GetSubFolderList()}
-            if subfolder_name not in folders:
+            subfolders = {subfolder.GetName(): subfolder for subfolder in root.GetSubFolderList()}
+            if subfolder_name not in subfolders:
                 folder = pool.AddSubFolder(root, subfolder_name)
             else:
-                folder = folders[subfolder_name]
+                folder = subfolders[subfolder_name]
         pool.SetCurrentFolder(folder)
         pool.ImportMedia(file)
 
@@ -204,8 +204,8 @@ class ResolveUtility:
                 try:
 
                     # Special handling for dict based attributes
+                    current_value = getattr(tool, attribute)[0]
                     if attribute in ["Center", "PixelAspect", "CustomPixelAspect"] and isinstance(current_value, dict):
-                        current_value = getattr(tool, attribute)[0]
                         # Merge the existing Center values with the new ones
                         updated_center = {
                             1: current_value.get(1, 0),

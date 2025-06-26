@@ -25,7 +25,6 @@
     
 """
 
-import sys
 from pathlib import Path
 from log_utils import set_logging
 
@@ -37,8 +36,9 @@ def get_fusion_module():
     fusion = None
     bmd = None
     try:
-        import DaVinciResolveScript as bmd 
-        fusion = bmd.scriptapp('Fusion')
+        from get_resolve import get_bmd_object, get_resolve_fusion
+        bmd = get_bmd_object("Resolve") 
+        fusion = get_resolve_fusion()
     except ModuleNotFoundError:
         print("DaFusion module not found")
     return bmd, fusion
