@@ -26,117 +26,117 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import sys
 import os
+from pathlib import Path
+import logging
 
 
-def load_module(module_name, file_path):
-    if sys.version_info[0] >= 3 and sys.version_info[1] >= 5:
+LOG_LEVEL = logging.INFO
+# Supported Fusion versions in descending order (newest first)
+SUPPORTED_FUSION_VERSIONS = [20, 19, 18]
+
+if not logging.getLogger().hasHandlers():
+    logging.basicConfig(
+        level=LOG_LEVEL,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    )
+else:
+    for handler in logging.getLogger().handlers:
+        handler.setLevel(LOG_LEVEL)
+        handler.setFormatter(logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S"
+        ))
+
+logger = logging.getLogger("BlackmagicFusion")
+
+
+def load_dynamic(module_name, file_path):
+    if sys.version_info[0] >= 3 and sys.version_info[1] >= 8:
+        import importlib.machinery
         import importlib.util
+
         module = None
-        spec = importlib.util.spec_from_file_location(module_name, file_path)
+        spec = None
+        loader = importlib.machinery.ExtensionFileLoader(module_name, file_path)
+        if loader:
+            spec = importlib.util.spec_from_loader(module_name, loader)
         if spec:
             module = importlib.util.module_from_spec(spec)
         if module:
-            sys.modules[module_name] = module
-            spec.loader.exec_module(module)
+            loader.exec_module(module)
         return module
     else:
-        # Fallback to imp if importlib is not available
-        import imp
-        return imp.load_source(module_name, file_path)
+        print(f"Failed to load module {module_name} due to unsupported Python version: {sys.version_info}")
+        return None
 
 
-def get_platform_paths():
-    platform_paths = {
-        "darwin": (
-            ".so",
-            [
-                "./",
-                "/Applications/DaVinci Resolve/DaVinci Resolve.app/Contents/Libraries/Fusion/",
-                "/Applications/Blackmagic Fusion 19/Fusion.app/Contents/MacOS/",
-                "/Applications/Blackmagic Fusion 19 Render Node/Fusion.app/Contents/MacOS/",
-                "/Applications/Blackmagic Fusion 18/Fusion.app/Contents/MacOS/",
-                "/Applications/Blackmagic Fusion 18 Render Node/Fusion.app/Contents/MacOS/",
-                "/Applications/Blackmagic Fusion 17/Fusion.app/Contents/MacOS/",
-                "/Applications/Blackmagic Fusion 17 Render Node/Fusion.app/Contents/MacOS/",
-                "/Applications/Blackmagic Fusion 16/Fusion.app/Contents/MacOS/",
-                "/Applications/Blackmagic Fusion 16 Render Node/Fusion.app/Contents/MacOS/",
-                "/Applications/Blackmagic Fusion 9/Fusion.app/Contents/MacOS/",
-                "/Applications/Blackmagic Fusion 9 Render Node/Fusion.app/Contents/MacOS/",
-                "/Applications/Blackmagic Fusion 8/Fusion.app/Contents/MacOS/",
-                "/Applications/Blackmagic Fusion 8 Render Node/Fusion.app/Contents/MacOS/",
-            ],
-        ),
-        "win32": (
-            ".dll",
-            [
-                ".\\",
-                "C:\\Program Files\\Blackmagic Design\\DaVinci Resolve\\",
-                "C:\\Program Files\\Blackmagic Design\\Fusion 19\\",
-                "C:\\Program Files\\Blackmagic Design\\Fusion Render Node 19\\"
-                "C:\\Program Files\\Blackmagic Design\\Fusion 18\\",
-                "C:\\Program Files\\Blackmagic Design\\Fusion Render Node 18\\",
-                "C:\\Program Files\\Blackmagic Design\\Fusion 17\\",
-                "C:\\Program Files\\Blackmagic Design\\Fusion Render Node 17\\",
-                "C:\\Program Files\\Blackmagic Design\\Fusion 16\\",
-                "C:\\Program Files\\Blackmagic Design\\Fusion Render Node 16\\",
-                "C:\\Program Files\\Blackmagic Design\\Fusion 9\\",
-                "C:\\Program Files\\Blackmagic Design\\Fusion Render Node 9\\",
-                "C:\\Program Files\\Blackmagic Design\\Fusion 8\\",
-                "C:\\Program Files\\Blackmagic Design\\Fusion Render Node 8\\",
-            ],
-        ),
-        "linux": (
-            ".so",
-            [
-                "./",
-                "/opt/resolve/libs/Fusion/",
-                "/opt/BlackmagicDesign/Fusion19/",
-                "/opt/BlackmagicDesign/FusionRenderNode19/",
-                "/opt/BlackmagicDesign/Fusion18/",
-                "/opt/BlackmagicDesign/FusionRenderNode18/",
-                "/opt/BlackmagicDesign/Fusion17/",
-                "/opt/BlackmagicDesign/FusionRenderNode17/",
-                "/opt/BlackmagicDesign/Fusion16/",
-                "/opt/BlackmagicDesign/FusionRenderNode16/",
-                "/opt/BlackmagicDesign/Fusion9/",
-                "/opt/BlackmagicDesign/FusionRenderNode9/",
-                "/opt/BlackmagicDesign/Fusion8/",
-                "/opt/BlackmagicDesign/FusionRenderNode8/",
-            ],
-        ),
+def get_fusion_platform_paths(versions=SUPPORTED_FUSION_VERSIONS):
+    platform_templates = {
+        "darwin": {
+            "extension": ".so",
+            "fusion_template": "/Applications/Blackmagic Fusion {version}/Fusion.app/Contents/MacOS/",
+            "render_node_template": "/Applications/Blackmagic Fusion {version} Render Node/Fusion.app/Contents/MacOS/",
+        },
+        "win32": {
+            "extension": ".dll",
+            "fusion_template": "C:\\Program Files\\Blackmagic Design\\Fusion {version}\\",
+            "render_node_template": "C:\\Program Files\\Blackmagic Design\\Fusion Render Node {version}\\",
+        },
+        "linux": {
+            "extension": ".so",
+            "fusion_template": "/opt/BlackmagicDesign/Fusion{version}/",
+            "render_node_template": "/opt/BlackmagicDesign/FusionRenderNode{version}/",
+        },
     }
+    
+    platform_config = platform_templates.get(sys.platform)
+    logger.debug(f"Detected platform: {sys.platform}")
+    if not platform_config:
+        logger.error("Fusion paths not found for your platform. Please ensure that the module fuscript is discoverable by Python")
+        return ("", [])
+    
+    paths = []
+    for version in versions:
+        fusion_path = platform_config["fusion_template"].replace("{version}", str(version))
+        render_node_path = platform_config["render_node_template"].replace("{version}", str(version))
+        logger.debug(f"Adding Fusion path: {fusion_path}")
+        logger.debug(f"Adding Render Node path: {render_node_path}")
+        paths.append(fusion_path)
+        paths.append(render_node_path)
+    logger.debug(f"Extension: {platform_config['extension']}, Paths: {paths}")
+    return (platform_config["extension"], paths)
 
-    # Default to an empty list for unsupported platforms
-    paths = platform_paths.get(sys.platform, ("", []))
-    if not paths[1]:
-        print("Fusion paths not found for your platform. Please ensure that the module fuscript is discoverable by Python")
-    return paths
 
-
-def find_and_load_module(module_name):
-    ext, paths = get_platform_paths()
+def find_fusion_studio_module(module_name):
+    ext, paths = get_fusion_platform_paths()
+    logger.debug(f"Looking for module '{module_name}' with extension '{ext}' in paths: {paths}")
 
     # Optionally prepend a custom path from an environment variable
     modpath = os.getenv("FUSION_MODULE_PATH")
     if modpath:
+        logger.debug(f"Prepending custom FUSION_MODULE_PATH: {modpath}")
         paths.insert(0, modpath)
 
     for path in paths:
-        try:
-            full_path = os.path.join(path, module_name + ext)
-            module = load_module(module_name, full_path)
-            if module:
-                return module
-        except ImportError:
-            continue
+        module_path = Path(path, module_name + ext)
+        logger.debug(f"Checking path: {module_path}")
+        if module_path.exists():
+            logger.debug(f"Found module at: {module_path}")
+            return module_path
+
+    logger.warning(f"Module '{module_name}' not found in any known paths.")
     return None
 
 
+module_name = "fusionscript"
+full_module_path = find_fusion_studio_module(module_name)
+module = load_dynamic(module_name, str(full_module_path))
 
-fu_mod = find_and_load_module("fusionscript")
 
-if fu_mod:
-    sys.modules[__name__] = fu_mod
-    print("Module loaded successfully.")
+if module:
+    sys.modules[__name__] = module
+    logger.info("Module loaded successfully.")
 else:
+    logger.critical("Could not locate module dependencies")
     raise ImportError("Could not locate module dependencies")
