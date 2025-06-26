@@ -1,9 +1,11 @@
 import BlackmagicFusion as bmd
+from get_resolve import get_app
+
 
 class RequestDirCustom:
-    def __init__(self, fusion):
-        self.fusion = fusion
-        self.ui = fusion.UIManager
+    def __init__(self):
+        self.fusion = get_app("Fusion")
+        self.ui = self.fusion.UIManager
         self.disp = bmd.UIDispatcher(self.ui)
         
     def create_dialog(self):
