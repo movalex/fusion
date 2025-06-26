@@ -113,19 +113,26 @@
 """
 
 import datetime
-import platform
 import re
 import sys
 from pprint import pprint
 
-from UI_utils import ConfirmationDialog, WarningDialog
+from ui_utils import ConfirmationDialog
 from log_utils import set_logging
 
-__VERSION__ = 0.4
+__VERSION__ = "0.4.1"
 __license__ = "MIT"
 __copyright__ = """2011-2013, Sven Neve <sven[AT]houseofsecrets[DOT]nl>
 2019-2024, Alexey Bogomolov <mail[AT]abogomolov.com>"""
 
+try:
+    comp = fu.GetCurrentComp()
+except NameError:
+    from bmd_utils import get_app
+
+    print("Fusion is not defined, trying to import it...")
+    fu = get_app("Fusion")
+    comp = fu.GetCurrentComp()
 
 PKG_REQUIRED = "PySide6"
 REMOTE_FUSION_ACCESS = False
@@ -171,33 +178,25 @@ print(f"_____________________\n{SCRIPT_NAME} version {__VERSION__}\n")
 log = set_logging(LOG_LEVEL, SCRIPT_NAME)
 
 
-def get_fusion(fusion_host):
-    try:
-        import BlackmagicFusion as bmd
-
-        return bmd.scriptapp("Fusion", fusion_host)
-    except ModuleNotFoundError:
-        log.warning("No BlackmagicFusion module found")
-    except Exception as e:
-        log.error(f"Error connecting to Fusion: {e}")
-        return None
+def get_fusion_module():
+    """Get current Fusion instance"""
+    fusion = getattr(sys.modules["__main__"], "fusion", None)
+    return fusion
 
 
-def get_fusion_comp(fusion_object):
-    """
-    Retrieve the current composition from the Fusion instance.
+def get_bmd_library():
+    """Get bmd library"""
+    bmd = getattr(sys.modules["__main__"], "bmd", None)
+    return bmd
 
-    :param fusion_object: A Fusion application object.
-    :return: The current composition, or None if no Fusion instance exists.
-    """
-    if not fusion_object:
-        log.warning("No Fusion instance found or Fusion is not a Studio version")
-        sys.exit(1)  # Exit with an error status
 
-    try:
-        return fusion_object.GetCurrentComp()
-    except AttributeError:
-        log.error
+def get_current_comp():
+    """Get current comp in this session"""
+    fusion = get_fusion_module()
+    if fusion is not None:
+        comp = fusion.CurrentComp
+        return comp
+
 
 
 def pip_install_dialogue():
@@ -798,7 +797,7 @@ class TableModel(QAbstractTableModel):
         try:
             comp = fu.GetCurrentComp()
         except NameError:
-            comp = get_fusion_comp(fusion)
+            comp = get_current_comp()
         global current_comp_name
         comp_name = comp.GetAttrs()["COMPS_Name"]
         if comp_name and comp_name != current_comp_name:
@@ -1223,10 +1222,6 @@ if __name__ == "__main__":
         fusion_host = DEFAULT_HOST
         if len(sys.argv) == 2:
             fusion_host = sys.argv[1]
-        fusion = get_fusion(fusion_host)
-        comp = get_fusion_comp(fusion)
-        if not comp:
-            raise Exception("Comp not found")
 
     current_comp_name = comp.GetAttrs()["COMPS_Name"]
 
