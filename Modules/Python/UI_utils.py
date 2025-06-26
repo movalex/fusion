@@ -31,16 +31,16 @@ from log_utils import set_logging
 log = set_logging()
 
 
-def get_fusion_module():
+def get_fusion_module(app_name="Fusion"):
     """Get current Fusion instance"""
-    fusion = None
     bmd = None
+    fusion = None
     try:
-        from get_resolve import get_bmd_object, get_resolve_fusion
-        bmd = get_bmd_object("Resolve") 
-        fusion = get_resolve_fusion()
+        from bmd_utils import get_bmd_object, get_app
+        bmd = get_bmd_object(app_name)
+        fusion = get_app(app_name)
     except ModuleNotFoundError:
-        print("DaFusion module not found")
+        print(f"Fusion module not found for the app {app_name}")
     return bmd, fusion
 
 
