@@ -25,27 +25,29 @@ def load_source(module_name, file_path):
 
 
 def _get_fusion_script_path():
+    """Try load BlackmagicFusion.py module from default locations."""
     if os.getenv("FUSION_SCRIPT_API"):
         return Path(os.getenv("FUSION_SCRIPT_API"))
+    if sys.platform.startswith("darwin"):
+        return Path("~/Library/Application Support/Blackmagic Design/Fusion/Modules/Python")
+    elif sys.platform.startswith("win") or sys.platform.startswith("cygwin"):
+        return Path(os.getenv("APPDATA")) / "Blackmagic Design" / "Fusion" / "Modules" / "Python"
+    elif sys.platform.startswith("linux"):
+        return Path("/opt/fusion/Modules/Python")
+    else:
+        raise RuntimeError("Unsupported platform")
+
+
+def _get_resolve_script_path():
+    """Try load DaVinciResolveScript.py module from default locations."""
+    if os.getenv("RESOLVE_SCRIPT_API"):
+        return Path(os.getenv("RESOLVE_SCRIPT_API"))
     if sys.platform.startswith("darwin"):
         return Path("/Library/Application Support/Blackmagic Design/DaVinci Resolve/Developer/Scripting/Modules/")
     elif sys.platform.startswith("win") or sys.platform.startswith("cygwin"):
         return Path(os.getenv("PROGRAMDATA")) / "Blackmagic Design" / "DaVinci Resolve" / "Support" / "Developer" / "Scripting" / "Modules"
     elif sys.platform.startswith("linux"):
         return Path("/opt/resolve/Developer/Scripting/Modules/")
-    else:
-        raise RuntimeError("Unsupported platform")
-
-
-def _get_resolve_script_path():
-    if os.getenv("RESOLVE_SCRIPT_API"):
-        return Path(os.getenv("RESOLVE_SCRIPT_API"))
-    if sys.platform.startswith("darwin"):
-        return Path("~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Developer/Scripting/Modules/")
-    elif sys.platform.startswith("win") or sys.platform.startswith("cygwin"):
-        return Path(os.getenv("APPDATA")) / "Blackmagic Design" / "Fusion" / "Modules" / "Python"
-    elif sys.platform.startswith("linux"):
-        return Path("/opt/fusion/Modules/Python")
     else:
         raise RuntimeError("Unsupported platform")
 
@@ -93,7 +95,7 @@ def get_bmd_object(app_name="Resolve"):
     :return: The Blackmagic Design object for the specified application.
     """
     if app_name == "Fusion":
-        bmd = _import_fusion_bmd()
+        bmd = _import_fusion_bmd() # Fusion Studio
     else:
         bmd = _import_davinci_resolve_bmd()
     
