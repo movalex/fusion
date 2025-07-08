@@ -158,13 +158,11 @@ class ResolveUtility:
                 still_album = gallery.GetCurrentStillAlbum()
         if not still_album:
             log.debug(
-                f"Default still album '{album_name}' is not found. Please create this album if you want to store screenshots in specific album"
-            )
-            log.debug(
-                "The stills will be saved to the currently selected album or the first available"
+                f"Default still album '{album_name}' is not found. New still album will be created."
             )
 
-            still_album = gallery.GetCurrentStillAlbum()
+            still_album = gallery.CreateGalleryStillAlbum()
+            gallery.SetAlbumName(still_album, album_name)
         return still_album
 
 
