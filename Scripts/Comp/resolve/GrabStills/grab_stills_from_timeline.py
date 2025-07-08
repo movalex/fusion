@@ -1,5 +1,6 @@
 from pathlib import Path
-from resolve_utils import ResolveUtility, get_app
+import time
+from resolve_utils import ResolveUtility
 from ui_utils import (
     ConfirmationDialog, RequestDir
 )
@@ -14,7 +15,7 @@ from ui_utils import (
 
 STILL_FRAME_REF = 2  # 1 - First frame, 2 - Middle frame
 STILL_ALBUM = "STILLS"
-STILL_FORMAT = "png"
+STILL_FORMAT = "jpg"
 DELETE_STILLS = True
 OPEN_EDIT_PAGE_AFTER_EXPORT = True
 CLEANUP_DRX = True
@@ -84,12 +85,15 @@ def grab_stills_from_markers(current_timeline, still_album):
     
     stills = []
     for frame_id, marker_data in markers.items():
-        current_timeline.SetCurrentTimecode(current_timeline.GetTimecode(frame_id))
+        current_timeline.SetCurrentTimecode(utils.frame_to_timecode(frame_id))
+        print(f"Processing marker at timecode: {current_timeline.GetCurrentTimecode()}")
+        time.sleep(1)  # Adding a small delay to ensure the still is captured correctly
         still = current_timeline.GrabStill()
+        marker_name = marker_data.get('name', 'Unnamed')
         if still:
             stills.append(still)
-            print(f"Grabbed still from marker at frame {frame_id}: {marker_data.get('name', 'Unnamed')}")
-    
+            print(f"Grabbed still from marker at frame {frame_id}: {marker_name}")
+
     return stills
 
 def grab_timeline_stills(delete_stills=False):
