@@ -18,9 +18,11 @@ STILL_FORMAT = "png"
 DELETE_STILLS = True
 OPEN_EDIT_PAGE_AFTER_EXPORT = True
 CLEANUP_DRX = True
+SAVE_PER_MARKER = True  # True - save per marker, False - save per clip
 
 utils = ResolveUtility()
-fusion = get_app("Fusion")
+resolve = utils.resolve
+fusion = resolve.Fusion()
 
 
 def get_target_folder() -> str:
@@ -73,8 +75,25 @@ def post_processing(stills: list, still_album, gallery, target_folder=None):
         utils.resolve.OpenPage("edit")
 
 
+def grab_stills_from_markers(current_timeline, still_album):
+    """Create stills from timeline markers"""
+    markers = current_timeline.GetMarkers()
+    if not markers:
+        print("No markers found in timeline")
+        return []
+    
+    stills = []
+    for frame_id, marker_data in markers.items():
+        current_timeline.SetCurrentTimecode(current_timeline.GetTimecode(frame_id))
+        still = current_timeline.GrabStill()
+        if still:
+            stills.append(still)
+            print(f"Grabbed still from marker at frame {frame_id}: {marker_data.get('name', 'Unnamed')}")
+    
+    return stills
+
 def grab_timeline_stills(delete_stills=False):
-    """create stills from all clips in a timeline
+    """create stills from all clips in a timeline or from markers
     save the files to requested folder. Currently GetGalleryStillAlbums() is used,
     so we are unable to add a label to each still.
     """
@@ -92,7 +111,13 @@ def grab_timeline_stills(delete_stills=False):
 
     still_album = utils.get_still_album(gallery, STILL_ALBUM)
     still_album_name = gallery.GetAlbumName(still_album)
-    stills = current_timeline.GrabAllStills(STILL_FRAME_REF)
+    
+    if SAVE_PER_MARKER:
+        print("Saving stills per marker")
+        stills = grab_stills_from_markers(current_timeline, still_album)
+    else:
+        print("Saving stills per clip")
+        stills = current_timeline.GrabAllStills(STILL_FRAME_REF)
 
     if len(stills) == 0:
         print("No stills saved")
