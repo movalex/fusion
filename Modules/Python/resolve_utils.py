@@ -119,6 +119,27 @@ class ResolveUtility:
     def get_mediapool(self):
         return self.get_current_project().GetMediaPool()
     
+    def frame_to_timecode(self, frame_number: int, project=None) -> str:
+        """Convert frame number to timecode string based on project frame rate."""
+        if project is None:
+            project = self.get_current_project()
+
+        # Get project frame rate
+        project_settings = project.GetSetting()
+        frame_rate = float(project_settings.get('timelineFrameRate', 24))
+        
+        # Convert frame to seconds
+        total_seconds = frame_number / frame_rate
+        
+        # Calculate hours, minutes, seconds, frames
+        hours = int(total_seconds // 3600)
+        minutes = int((total_seconds % 3600) // 60)
+        seconds = int(total_seconds % 60)
+        frames = int(frame_number % frame_rate)
+        
+        # Format as timecode string (HH:MM:SS:FF)
+        return f"{hours:02d}:{minutes:02d}:{seconds:02d}:{frames:02d}"
+    
     def get_current_fusion_composition(self, comp_name="Composition 1"):
         current_clip = self.get_current_clip()
         return self.get_fusion_composition(current_clip, comp_name)
