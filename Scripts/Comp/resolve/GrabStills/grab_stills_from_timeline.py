@@ -6,18 +6,29 @@ from typing import Dict, Any, List, Optional
 # Ensure shared Modules/Python is on sys.path so we don't need local copies
 def _bootstrap_modules_path():
     candidates = []
+    # Walk up several levels to find a Modules/Python folder
     try:
-        # repo root is 5 levels up from this script: GrabStills -> resolve -> Comp -> Scripts -> fusion
-        repo_root = Path(__file__).resolve().parents[5]
-        candidates.append(repo_root / "Modules" / "Python")
-    except Exception:
-        pass
+        here = Path(__file__).resolve()
+    except NameError:
+        # __file__ may be missing when run inside Resolve; fallback to argv or cwd
+        if sys.argv and sys.argv[0]:
+            try:
+                here = Path(sys.argv[0]).resolve()
+            except Exception:
+                here = Path.cwd()
+        else:
+            here = Path.cwd()
+    for parent in [here.parent] + list(here.parents):
+        mod_path = parent / "Modules" / "Python"
+        if mod_path.exists():
+            candidates.append(mod_path)
+            break
     # Fallback to user-provided absolute path
     candidates.append(Path(r"C:\Users\alexey.bogomolov\Documents\git\fusion\Modules\Python"))
 
     for p in candidates:
         try:
-            if p.exists():
+            if p and p.exists():
                 sp = str(p)
                 if sp not in sys.path:
                     sys.path.insert(0, sp)
@@ -115,10 +126,15 @@ class GrabStillsOptionsDialog(BaseUI):
         # preload persistent folder if available
         self.persist_key = "BatchResolveSaveStills.Folder"
         self.default_folder = fusion.GetData(self.persist_key) or ""
+        
         super().__init__(
             window_title="Grab Stills at Markers",
-            geometry=[800, 600, 600, 230],
+            geometry=[200, 200, 1200, 400],  # x, y, width, height
             id="GrabStillsOptionsDialog",
+            resizable=True,
+            min_size=[800, 350],
+            max_size=[1600, 600],
+            modal=True,
         )
         self.itm = self.win.GetItems()
         self._initialize_values()
@@ -132,6 +148,25 @@ class GrabStillsOptionsDialog(BaseUI):
 
     def _initialize_values(self):
         # Set defaults into UI
+        # Populate combos explicitly (more reliable than layout-time Items)
+        try:
+            self.itm["SaveModeCombo"].Clear()
+            for item in ["Per marker", "Per clip"]:
+                self.itm["SaveModeCombo"].AddItem(item)
+        except Exception:
+            pass
+        try:
+            self.itm["MarkersCombo"].Clear()
+            for c in MARKER_COLORS:
+                self.itm["MarkersCombo"].AddItem(c)
+        except Exception:
+            pass
+        try:
+            self.itm["FormatCombo"].Clear()
+            for k in STILL_FORMATS_ORDER:
+                self.itm["FormatCombo"].AddItem(STILL_FORMATS[k])
+        except Exception:
+            pass
         # Save mode
         save_per_marker = self.defaults.get("save_per_marker", True)
         self.itm["SaveModeCombo"].CurrentIndex = 0 if save_per_marker else 1
@@ -206,10 +241,14 @@ class GrabStillsOptionsDialog(BaseUI):
     def layout(self):
         ui = self.ui
         return ui.VGroup(
+            {
+                "MinimumSize": [780, 320],  # Force minimum layout size
+                "Spacing": 8,
+            },
             [
                 ui.HGroup(
                     [
-                        ui.Label({"Text": "Save mode", "MinimumSize": [100, 0], "MaximumSize": [120, 16777215]}),
+                        ui.Label({"Text": "Save mode", "MinimumSize": [120, 0]}),
                         ui.ComboBox({
                             "ID": "SaveModeCombo",
                             "Weight": 1,
@@ -221,7 +260,7 @@ class GrabStillsOptionsDialog(BaseUI):
                 ),
                 ui.HGroup(
                     [
-                        ui.Label({"Text": "Timeline markers", "MinimumSize": [100, 0], "MaximumSize": [120, 16777215]}),
+                        ui.Label({"Text": "Timeline markers", "MinimumSize": [120, 0]}),
                         ui.ComboBox({
                             "ID": "MarkersCombo",
                             "Weight": 1,
@@ -237,7 +276,7 @@ class GrabStillsOptionsDialog(BaseUI):
                 ui.HGap(0),
                 ui.HGroup(
                     [
-                        ui.Label({"Text": "", "MinimumSize": [100, 0], "MaximumSize": [120, 16777215]}),
+                        ui.Label({"Text": "", "MinimumSize": [120, 0]}),
                         ui.CheckBox({"ID": "ExportCheck", "Text": "Export grabbed stills", "Checked": True, "Events": {"Toggled": True}}),
                     ]
                 ),
@@ -249,14 +288,14 @@ class GrabStillsOptionsDialog(BaseUI):
                     [
                         ui.HGroup(
                             [
-                                ui.Label({"Text": "Export to", "MinimumSize": [100, 0], "MaximumSize": [120, 16777215]}),
+                                ui.Label({"Text": "Export to", "MinimumSize": [120, 0]}),
                                 ui.LineEdit({"ID": "ExportPath", "Weight": 1, "Text": self.default_folder or ""}),
                                 ui.Button({"ID": "BrowseBtn", "Text": "Browse"}),
                             ]
                         ),
                         ui.HGroup(
                             [
-                                ui.Label({"Text": "Format", "MinimumSize": [100, 0], "MaximumSize": [120, 16777215]}),
+                                ui.Label({"Text": "Format", "MinimumSize": [120, 0]}),
                                 ui.ComboBox({
                                     "ID": "FormatCombo",
                                     "Weight": 1,
@@ -267,7 +306,7 @@ class GrabStillsOptionsDialog(BaseUI):
                         ),
                         ui.HGroup(
                             [
-                                ui.Label({"Text": "Album name", "MinimumSize": [100, 0], "MaximumSize": [120, 16777215]}),
+                                ui.Label({"Text": "Album name", "MinimumSize": [120, 0]}),
                                 ui.LineEdit({"ID": "AlbumName", "Weight": 1, "Text": DEFAULT_STILL_ALBUM}),
                             ]
                         ),
@@ -275,19 +314,19 @@ class GrabStillsOptionsDialog(BaseUI):
                 ),
                 ui.HGroup(
                     [
-                        ui.Label({"Text": "", "MinimumSize": [100, 0], "MaximumSize": [120, 16777215]}),
+                        ui.Label({"Text": "", "MinimumSize": [120, 0]}),
                         ui.CheckBox({"ID": "DeleteStills", "Text": "Delete grabbed stills from album after export", "Checked": True}),
                     ]
                 ),
                 ui.HGroup(
                     [
-                        ui.Label({"Text": "", "MinimumSize": [100, 0], "MaximumSize": [120, 16777215]}),
+                        ui.Label({"Text": "", "MinimumSize": [120, 0]}),
                         ui.CheckBox({"ID": "CleanupDRX", "Text": "Cleanup .drx files in export folder", "Checked": True}),
                     ]
                 ),
                 ui.HGroup(
                     [
-                        ui.Label({"Text": "", "MinimumSize": [100, 0], "MaximumSize": [120, 16777215]}),
+                        ui.Label({"Text": "", "MinimumSize": [120, 0]}),
                         ui.CheckBox({"ID": "OpenEdit", "Text": "Open Edit page after export", "Checked": True}),
                     ]
                 ),
@@ -459,8 +498,9 @@ def grab_timeline_stills(options: Optional[Dict[str, Any]] = None):
         post_processing(stills, still_album, gallery, options, None)
 
 
-if __name__ == "__main__":
+def _run_script():
     # Show options dialog and run
+    print("Opening Grab Stills options dialog...")
     defaults = {
         "save_per_marker": True,
         "marker_color": "Any",
@@ -473,11 +513,21 @@ if __name__ == "__main__":
         "open_edit": True,
     }
     dlg = GrabStillsOptionsDialog(defaults)
-    options = dlg.run()  # BaseUI.run returns when window closes; our subclass returns None; adjust
-    # Since BaseUI.run doesn't return a result, use attribute
+    options = dlg.run()
     options = getattr(dlg, "result", None)
     if options is None:
-        # Cancelled
-        pass
-    else:
-        grab_timeline_stills(options)
+        print("Canceled. No stills were grabbed.")
+        return
+    print("Starting stills grabbing...")
+    grab_timeline_stills(options)
+    print("Done.")
+
+
+# In Resolve, __name__ might not be '__main__'. Run if Resolve is available.
+try:
+    if resolve:
+        _run_script()
+except Exception as _e:
+    # As a fallback, also run when invoked directly
+    if __name__ == "__main__":
+        _run_script()
