@@ -90,11 +90,14 @@ def grab_stills_from_markers(current_timeline, still_album):
         time.sleep(1)  # Adding a small delay to ensure the still is captured correctly
         still = current_timeline.GrabStill()
         marker_name = marker_data.get('name', 'Unnamed')
-        if still:
-            stills.append(still)
-            print(f"Grabbed still from marker at frame {frame_id}: {marker_name}")
+        still_album.SetLabel(still, marker_name)
+        print(f"Grabbed still from marker at frame {frame_id}: {marker_name}")
+        stills.append(still)
 
-    return stills
+    if stills:
+        updated_stills = still_album.GetStills()
+        return updated_stills
+    return []
 
 def grab_timeline_stills(delete_stills=False):
     """create stills from all clips in a timeline or from markers
