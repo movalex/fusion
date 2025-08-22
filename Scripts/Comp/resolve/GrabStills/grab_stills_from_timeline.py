@@ -1,9 +1,35 @@
 from pathlib import Path
+import sys
 import time
 from typing import Dict, Any, List, Optional
+
+# Ensure shared Modules/Python is on sys.path so we don't need local copies
+def _bootstrap_modules_path():
+    candidates = []
+    try:
+        # repo root is 5 levels up from this script: GrabStills -> resolve -> Comp -> Scripts -> fusion
+        repo_root = Path(__file__).resolve().parents[5]
+        candidates.append(repo_root / "Modules" / "Python")
+    except Exception:
+        pass
+    # Fallback to user-provided absolute path
+    candidates.append(Path(r"C:\Users\alexey.bogomolov\Documents\git\fusion\Modules\Python"))
+
+    for p in candidates:
+        try:
+            if p.exists():
+                sp = str(p)
+                if sp not in sys.path:
+                    sys.path.insert(0, sp)
+                break
+        except Exception:
+            continue
+
+_bootstrap_modules_path()
+
 from resolve_utils import ResolveUtility
 from ui_utils import (
-    BaseUI, ConfirmationDialog, RequestDir
+    BaseUI, ConfirmationDialog, RequestDir,
 )
 
 """
