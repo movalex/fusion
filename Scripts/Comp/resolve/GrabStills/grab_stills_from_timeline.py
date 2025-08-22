@@ -129,12 +129,12 @@ class GrabStillsOptionsDialog(BaseUI):
         
         super().__init__(
             window_title="Grab Stills at Markers",
-            geometry=[200, 200, 1200, 400],  # x, y, width, height
+            geometry=[200, 200, 900, 480],  # x, y, width, height - adjusted for better layout
             id="GrabStillsOptionsDialog",
             resizable=True,
-            min_size=[800, 350],
-            max_size=[1600, 600],
-            modal=True,
+            min_size=[800, 420],
+            max_size=[1200, 600],
+            modal=False,  # Change to non-modal to avoid conflicts
         )
         self.itm = self.win.GetItems()
         self._initialize_values()
@@ -145,6 +145,20 @@ class GrabStillsOptionsDialog(BaseUI):
         self.result = None
         self.show()
         return self.result
+
+    def close(self, ev=None):
+        """Override close to ensure proper cleanup."""
+        try:
+            self.result = None  # Ensure result is None when closing
+            super().close(ev)
+        except Exception as e:
+            print(f"Error closing dialog: {e}")
+            # Fallback: force exit the dispatcher loop
+            if hasattr(self, 'disp'):
+                try:
+                    self.disp.ExitLoop()
+                except Exception:
+                    pass
 
     def _initialize_values(self):
         # Set defaults into UI
@@ -204,12 +218,16 @@ class GrabStillsOptionsDialog(BaseUI):
         self._update_info()
 
     def _wire_events(self):
+        # Wire up all event handlers
         self.win.On.ExportCheck.Toggled = lambda ev: self._toggle_export(self.itm["ExportCheck"].Checked)
         self.win.On.BrowseBtn.Clicked = self._browse_folder
         self.win.On.CancelBtn.Clicked = self.close
         self.win.On.StartBtn.Clicked = self._confirm
         self.win.On.MarkersCombo.CurrentIndexChanged = lambda ev: self._update_info()
         self.win.On.SaveModeCombo.CurrentIndexChanged = lambda ev: self._update_info()
+        
+        # Ensure window close event is properly handled
+        self.win.On[self.id].Close = self.close
 
     def _toggle_export(self, enabled: bool):
         self.itm["ExportGroup"].Enabled = enabled
@@ -217,11 +235,20 @@ class GrabStillsOptionsDialog(BaseUI):
         self._update_start_enabled()
 
     def _browse_folder(self, ev):
-        out = RequestDir("Export to:", self.itm["ExportPath"].Text)
-        if out:
-            self.itm["ExportPath"].Text = out
-            fusion.SetData(self.persist_key, out)
-        self._update_start_enabled()
+        # Temporarily hide our window to avoid modal conflicts
+        self.win.Hide()
+        try:
+            # Use the fusion RequestDir instead of our custom RequestDir to avoid modal conflicts
+            out = fusion.RequestDir(self.itm["ExportPath"].Text or "")
+            if out:
+                self.itm["ExportPath"].Text = out
+                fusion.SetData(self.persist_key, out)
+            self._update_start_enabled()
+        except Exception as e:
+            print(f"Error browsing folder: {e}")
+        finally:
+            # Show our window again
+            self.win.Show()
 
     def _update_start_enabled(self):
         can_start = True
@@ -242,100 +269,281 @@ class GrabStillsOptionsDialog(BaseUI):
         ui = self.ui
         return ui.VGroup(
             {
-                "MinimumSize": [780, 320],  # Force minimum layout size
-                "Spacing": 8,
+                "MinimumSize": [780, 320],
+                "Spacing": 12,
             },
             [
-                ui.HGroup(
-                    [
-                        ui.Label({"Text": "Save mode", "MinimumSize": [120, 0]}),
-                        ui.ComboBox({
-                            "ID": "SaveModeCombo",
-                            "Weight": 1,
-                            "Editable": False,
-                            "Events": {"CurrentIndexChanged": True},
-                            "Items": ["Per marker", "Per clip"],
-                        }),
-                    ]
-                ),
-                ui.HGroup(
-                    [
-                        ui.Label({"Text": "Timeline markers", "MinimumSize": [120, 0]}),
-                        ui.ComboBox({
-                            "ID": "MarkersCombo",
-                            "Weight": 1,
-                            "Editable": False,
-                            "Items": MARKER_COLORS,
-                            "Events": {"CurrentIndexChanged": True},
-                        }),
-                    ]
-                ),
-                ui.HGroup([
-                    ui.Label({"ID": "InfoLabel", "Text": "", "Weight": 1})
-                ]),
-                ui.HGap(0),
-                ui.HGroup(
-                    [
-                        ui.Label({"Text": "", "MinimumSize": [120, 0]}),
-                        ui.CheckBox({"ID": "ExportCheck", "Text": "Export grabbed stills", "Checked": True, "Events": {"Toggled": True}}),
-                    ]
-                ),
+                # Header section with main options
                 ui.VGroup(
                     {
-                        "ID": "ExportGroup",
-                        "Enabled": True,
+                        "StyleSheet": """
+                            QGroupBox {
+                                font-weight: bold;
+                                border: 2px solid #555;
+                                border-radius: 5px;
+                                margin-top: 1ex;
+                                padding-top: 10px;
+                            }
+                            QGroupBox::title {
+                                subcontrol-origin: margin;
+                                left: 10px;
+                                padding: 0 5px 0 5px;
+                            }
+                        """,
+                        "Spacing": 8,
                     },
+                    [
+                        ui.Label({
+                            "Text": "<b>Capture Settings</b>",
+                            "StyleSheet": "font-size: 14px; font-weight: bold; color: #0078d4; margin-bottom: 8px;",
+                            "Alignment": {"AlignLeft": True}
+                        }),
+                        ui.HGroup(
+                            {"Spacing": 20},
+                            [
+                                ui.VGroup(
+                                    {"Weight": 1, "Spacing": 6},
+                                    [
+                                        ui.Label({"Text": "Save mode:", "StyleSheet": "font-weight: bold;"}),
+                                        ui.ComboBox({
+                                            "ID": "SaveModeCombo",
+                                            "Editable": False,
+                                            "Events": {"CurrentIndexChanged": True},
+                                            "Items": ["Per marker", "Per clip"],
+                                            "StyleSheet": "QComboBox { padding: 4px; }"
+                                        }),
+                                    ]
+                                ),
+                                ui.VGroup(
+                                    {"Weight": 1, "Spacing": 6},
+                                    [
+                                        ui.Label({"Text": "Timeline markers:", "StyleSheet": "font-weight: bold;"}),
+                                        ui.ComboBox({
+                                            "ID": "MarkersCombo",
+                                            "Editable": False,
+                                            "Items": MARKER_COLORS,
+                                            "Events": {"CurrentIndexChanged": True},
+                                            "StyleSheet": "QComboBox { padding: 4px; }"
+                                        }),
+                                    ]
+                                ),
+                            ]
+                        ),
+                        # Info label with better styling
+                        ui.Label({
+                            "ID": "InfoLabel", 
+                            "Text": "", 
+                            "StyleSheet": """
+                                QLabel {
+                                    background-color: #f0f0f0;
+                                    border: 1px solid #ccc;
+                                    border-radius: 3px;
+                                    padding: 6px;
+                                    font-style: italic;
+                                    color: #666;
+                                }
+                            """,
+                            "MinimumSize": [0, 24]
+                        }),
+                    ]
+                ),
+                
+                ui.VGap(8),
+                
+                # Export section
+                ui.VGroup(
+                    {"Spacing": 8},
                     [
                         ui.HGroup(
                             [
-                                ui.Label({"Text": "Export to", "MinimumSize": [120, 0]}),
-                                ui.LineEdit({"ID": "ExportPath", "Weight": 1, "Text": self.default_folder or ""}),
-                                ui.Button({"ID": "BrowseBtn", "Text": "Browse"}),
+                                ui.CheckBox({
+                                    "ID": "ExportCheck", 
+                                    "Text": "Export grabbed stills", 
+                                    "Checked": True, 
+                                    "Events": {"Toggled": True},
+                                    "StyleSheet": "QCheckBox { font-weight: bold; font-size: 13px; }"
+                                }),
+                                ui.HGap(0, 1),  # Push to left
                             ]
                         ),
-                        ui.HGroup(
+                        
+                        ui.VGroup(
+                            {
+                                "ID": "ExportGroup",
+                                "Enabled": True,
+                                "StyleSheet": """
+                                    QGroupBox {
+                                        border: 1px solid #ddd;
+                                        border-radius: 4px;
+                                        margin-top: 8px;
+                                        padding-top: 12px;
+                                        background-color: #fafafa;
+                                    }
+                                """,
+                                "Spacing": 10,
+                            },
                             [
-                                ui.Label({"Text": "Format", "MinimumSize": [120, 0]}),
-                                ui.ComboBox({
-                                    "ID": "FormatCombo",
-                                    "Weight": 1,
-                                    "Editable": False,
-                                    "Items": [STILL_FORMATS[k] for k in STILL_FORMATS_ORDER],
+                                ui.Label({
+                                    "Text": "<b>Export Settings</b>",
+                                    "StyleSheet": "font-size: 12px; font-weight: bold; color: #0078d4; margin-bottom: 4px;",
+                                }),
+                                
+                                # Export path row
+                                ui.HGroup(
+                                    {"Spacing": 8},
+                                    [
+                                        ui.Label({
+                                            "Text": "Export to:", 
+                                            "MinimumSize": [80, 0],
+                                            "StyleSheet": "font-weight: bold;"
+                                        }),
+                                        ui.LineEdit({
+                                            "ID": "ExportPath", 
+                                            "Weight": 1, 
+                                            "Text": self.default_folder or "",
+                                            "StyleSheet": "QLineEdit { padding: 4px; border: 1px solid #ccc; border-radius: 2px; }"
+                                        }),
+                                        ui.Button({
+                                            "ID": "BrowseBtn", 
+                                            "Text": "Browse...",
+                                            "StyleSheet": """
+                                                QPushButton {
+                                                    padding: 4px 12px;
+                                                    background-color: #e1e1e1;
+                                                    border: 1px solid #adadad;
+                                                    border-radius: 3px;
+                                                }
+                                                QPushButton:hover {
+                                                    background-color: #e5f1fb;
+                                                    border-color: #0078d4;
+                                                }
+                                            """
+                                        }),
+                                    ]
+                                ),
+                                
+                                # Format and Album in a row
+                                ui.HGroup(
+                                    {"Spacing": 16},
+                                    [
+                                        ui.VGroup(
+                                            {"Weight": 1, "Spacing": 4},
+                                            [
+                                                ui.Label({"Text": "Format:", "StyleSheet": "font-weight: bold;"}),
+                                                ui.ComboBox({
+                                                    "ID": "FormatCombo",
+                                                    "Editable": False,
+                                                    "Items": [STILL_FORMATS[k] for k in STILL_FORMATS_ORDER],
+                                                    "StyleSheet": "QComboBox { padding: 4px; }"
+                                                }),
+                                            ]
+                                        ),
+                                        ui.VGroup(
+                                            {"Weight": 1, "Spacing": 4},
+                                            [
+                                                ui.Label({"Text": "Album name:", "StyleSheet": "font-weight: bold;"}),
+                                                ui.LineEdit({
+                                                    "ID": "AlbumName", 
+                                                    "Text": DEFAULT_STILL_ALBUM,
+                                                    "StyleSheet": "QLineEdit { padding: 4px; border: 1px solid #ccc; border-radius: 2px; }"
+                                                }),
+                                            ]
+                                        ),
+                                    ]
+                                ),
+                            ],
+                        ),
+                    ]
+                ),
+                
+                ui.VGap(8),
+                
+                # Post-processing options
+                ui.VGroup(
+                    {"Spacing": 6},
+                    [
+                        ui.Label({
+                            "Text": "<b>Post-Processing Options</b>",
+                            "StyleSheet": "font-size: 12px; font-weight: bold; color: #0078d4; margin-bottom: 4px;",
+                        }),
+                        ui.VGroup(
+                            {
+                                "StyleSheet": """
+                                    QGroupBox {
+                                        border: 1px solid #ddd;
+                                        border-radius: 4px;
+                                        padding: 8px;
+                                        background-color: #fafafa;
+                                    }
+                                """,
+                                "Spacing": 6,
+                            },
+                            [
+                                ui.CheckBox({
+                                    "ID": "DeleteStills", 
+                                    "Text": "Delete grabbed stills from album after export", 
+                                    "Checked": True,
+                                    "StyleSheet": "QCheckBox { padding: 2px; }"
+                                }),
+                                ui.CheckBox({
+                                    "ID": "CleanupDRX", 
+                                    "Text": "Cleanup .drx files in export folder", 
+                                    "Checked": True,
+                                    "StyleSheet": "QCheckBox { padding: 2px; }"
+                                }),
+                                ui.CheckBox({
+                                    "ID": "OpenEdit", 
+                                    "Text": "Open Edit page after export", 
+                                    "Checked": True,
+                                    "StyleSheet": "QCheckBox { padding: 2px; }"
                                 }),
                             ]
                         ),
-                        ui.HGroup(
-                            [
-                                ui.Label({"Text": "Album name", "MinimumSize": [120, 0]}),
-                                ui.LineEdit({"ID": "AlbumName", "Weight": 1, "Text": DEFAULT_STILL_ALBUM}),
-                            ]
-                        ),
-                    ],
-                ),
-                ui.HGroup(
-                    [
-                        ui.Label({"Text": "", "MinimumSize": [120, 0]}),
-                        ui.CheckBox({"ID": "DeleteStills", "Text": "Delete grabbed stills from album after export", "Checked": True}),
                     ]
                 ),
-                ui.HGroup(
-                    [
-                        ui.Label({"Text": "", "MinimumSize": [120, 0]}),
-                        ui.CheckBox({"ID": "CleanupDRX", "Text": "Cleanup .drx files in export folder", "Checked": True}),
-                    ]
-                ),
-                ui.HGroup(
-                    [
-                        ui.Label({"Text": "", "MinimumSize": [120, 0]}),
-                        ui.CheckBox({"ID": "OpenEdit", "Text": "Open Edit page after export", "Checked": True}),
-                    ]
-                ),
+                
+                # Spacer to push buttons to bottom
+                ui.VGap(0, 1),
+                
+                # Action buttons
                 ui.HGroup(
                     {
-                        "StyleSheet": "QPushButton { min-height: 22px; max-height: 22px; min-width: 108px; max-width: 108px; }",
+                        "StyleSheet": """
+                            QPushButton {
+                                min-height: 28px;
+                                min-width: 100px;
+                                padding: 6px 20px;
+                                font-weight: bold;
+                                border-radius: 4px;
+                            }
+                            QPushButton#CancelBtn {
+                                background-color: #f3f2f1;
+                                border: 1px solid #8a8886;
+                                color: #323130;
+                            }
+                            QPushButton#CancelBtn:hover {
+                                background-color: #edebe9;
+                                border-color: #605e5c;
+                            }
+                            QPushButton#StartBtn {
+                                background-color: #0078d4;
+                                border: 1px solid #005a9e;
+                                color: white;
+                            }
+                            QPushButton#StartBtn:hover {
+                                background-color: #106ebe;
+                                border-color: #005a9e;
+                            }
+                            QPushButton:disabled {
+                                background-color: #f3f2f1;
+                                border-color: #c8c6c4;
+                                color: #a19f9d;
+                            }
+                        """,
+                        "Spacing": 12,
                     },
                     [
-                        ui.HGap(0, 1),
+                        ui.HGap(0, 1),  # Push buttons to right
                         ui.Button({"ID": "CancelBtn", "Text": "Cancel"}),
                         ui.Button({"ID": "StartBtn", "Text": "Start", "Default": True}),
                     ]
