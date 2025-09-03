@@ -133,20 +133,56 @@ class ResolveUtils:
         # Create new album if not found
         return gallery.CreateStillAlbum(album_name)
     
-    def frame_to_timecode(self, frame_number):
+    def frame_to_timecode_exact(self, frame_number, frame_rate, drop_frame):
         """Convert frame number to timecode."""
+        try:
+            # Convert frame rate to float
+            fps = float(frame_rate)
+            
+            # Calculate timecode components
+            hours = int(frame_number // (fps * 3600))
+            minutes = int((frame_number % (fps * 3600)) // (fps * 60))
+            seconds = int((frame_number % (fps * 60)) // fps)
+            frames = int(frame_number % fps)
+            
+            # Use semicolon for drop frame, colon for non-drop frame
+            separator = ";" if drop_frame else ":"
+            return f"{hours:02d}:{minutes:02d}:{seconds:02d}{separator}{frames:02d}"
+        except Exception:
+            # Fallback
+            return f"00:00:00:00"
+    
+    def frame_to_timecode(self, frame_number):
+        """Convert frame number to timecode using timeline settings."""
         timeline = self.get_current_timeline()
         if not timeline:
             return "00:00:00:00"
         
-        # Simple frame to timecode conversion (assuming 24fps)
-        fps = 24
-        hours = frame_number // (fps * 3600)
-        minutes = (frame_number % (fps * 3600)) // (fps * 60)
-        seconds = (frame_number % (fps * 60)) // fps
-        frames = frame_number % fps
-        
-        return f"{hours:02d}:{minutes:02d}:{seconds:02d}:{frames:02d}"
+        try:
+            # Get timeline settings
+            timeline_start = timeline.GetStartFrame()
+            frame_rate = float(timeline.GetSetting("timelineFrameRate"))
+            drop_frame = timeline.GetSetting("timelineDropFrameTimecode")
+            
+            # Adjust frame for timeline start
+            adjusted_frame = frame_number - timeline_start
+            
+            # Simple timecode calculation
+            hours = int(adjusted_frame // (frame_rate * 3600))
+            minutes = int((adjusted_frame % (frame_rate * 3600)) // (frame_rate * 60))
+            seconds = int((adjusted_frame % (frame_rate * 60)) // frame_rate)
+            frames = int(adjusted_frame % frame_rate)
+            
+            separator = ";" if drop_frame else ":"
+            return f"{hours:02d}:{minutes:02d}:{seconds:02d}{separator}{frames:02d}"
+        except Exception:
+            # Fallback to simple conversion
+            fps = 24
+            hours = frame_number // (fps * 3600)
+            minutes = (frame_number % (fps * 3600)) // (fps * 60)
+            seconds = (frame_number % (fps * 60)) // fps
+            frames = frame_number % fps
+            return f"{hours:02d}:{minutes:02d}:{seconds:02d}:{frames:02d}"
 
 
 class StillsWorker(QObject):
@@ -206,7 +242,14 @@ class StillsWorker(QObject):
                 stills = self.grab_stills_from_markers(timeline, still_album)
             else:  # per_clip
                 self.progress.emit("Grabbing stills from clips...")
-                stills = timeline.GrabAllStills(STILL_FRAME_REF)
+                stills = []
+                # Switch to Color page for clip grabbing too
+                current_page = resolve.GetCurrentPage()
+                resolve.OpenPage("color")
+                clip_stills = timeline.GrabAllStills(STILL_FRAME_REF)
+                resolve.OpenPage(current_page)
+                if clip_stills:
+                    stills = clip_stills
         
         if not stills:
             self.progress.emit("No stills to process")
@@ -230,29 +273,57 @@ class StillsWorker(QObject):
             self.progress.emit("No markers found in timeline")
             return []
         
-        color_filter = self.options.get("marker_color", "Any")
-        stills = []
+        # Switch to Color page
+        current_page = resolve.GetCurrentPage()
+        resolve.OpenPage("color")
         
-        for frame_id in sorted(markers.keys()):
-            marker_data = markers[frame_id]
-            if color_filter != "Any" and marker_data.get("color") != color_filter:
+        # Get timeline settings
+        timeline_start = timeline.GetStartFrame()
+        frame_rate = timeline.GetSetting("timelineFrameRate")
+        drop_frame = timeline.GetSetting("timelineDropFrameTimecode")
+        
+        color_filter = self.options.get("marker_color", "Any")
+        stills_to_export = []
+        
+        # Create ordered marker frames list
+        marker_frames = []
+        for marker_frame in markers.keys():
+            marker_frames.append(marker_frame)
+        
+        # Sort chronologically by frame number
+        marker_frames.sort()
+        
+        # Process markers in chronological order
+        for marker_frame in marker_frames:
+            marker_data = markers[marker_frame]
+            marker_color = marker_data.get("color", "")
+            marker_name = marker_data.get("name", "")
+            
+            # Filter by color
+            if color_filter != "Any" and marker_color != color_filter:
                 continue
             
-            # Navigate and grab
-            timeline.SetCurrentTimecode(self.utils.frame_to_timecode(frame_id))
-            self.progress.emit(f"Processing marker at frame {frame_id}")
-            time.sleep(0.2)  # Small delay for stability
+            # Calculate absolute frame number
+            frame = timeline_start + marker_frame
+            timecode = self.utils.frame_to_timecode_exact(frame, frame_rate, drop_frame)
+            
+            # Navigate to marker frame and grab still
+            result = timeline.SetCurrentTimecode(timecode)
+            if not result:
+                self.progress.emit(f"Could not navigate to marker at {timecode}")
+                continue
+                
+            self.progress.emit(f"Processing marker '{marker_name}' at frame {frame} ({timecode})")
+            time.sleep(0.1)  # Small delay for stability
             
             still = timeline.GrabStill()
-            marker_name = marker_data.get("name", "Unnamed")
-            try:
-                still_album.SetLabel(still, marker_name)
-            except Exception:
-                pass
-            
-            stills.append(still)
+            if still:
+                stills_to_export.append(still)
         
-        return still_album.GetStills() if stills else []
+        # Restore original page
+        resolve.OpenPage(current_page)
+        
+        return stills_to_export
     
     def export_stills(self, stills, still_album, gallery):
         """Export stills to files."""
@@ -276,9 +347,13 @@ class StillsWorker(QObject):
                 break
         gallery.SetCurrentStillAlbum(still_album)
         
-        # Export stills
+        # Export stills with empty prefix
         export_format = self.options.get("format", DEFAULT_STILL_FORMAT)
-        still_album.ExportStills(stills, str(target_folder), "", export_format)
+        result = still_album.ExportStills(stills, str(target_folder), "", export_format)
+        
+        if not result:
+            self.progress.emit("Export failed - check folder permissions and format")
+            return
         
         # Post-processing
         if self.options.get("delete_stills", False):
@@ -289,7 +364,7 @@ class StillsWorker(QObject):
             self.cleanup_drx_files(target_folder)
         
         if self.options.get("open_edit", False):
-            self.utils.resolve.OpenPage("edit")
+            resolve.OpenPage("edit")
     
     def cleanup_drx_files(self, folder):
         """Remove .drx files from export folder."""
