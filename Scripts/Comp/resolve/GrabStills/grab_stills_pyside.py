@@ -602,7 +602,7 @@ class GrabStillsDialog(QMainWindow):
         )
         if folder:
             self.export_path_edit.setText(folder)
-            self.save_setting("export_path", folder)
+            self.save_setting("ExportPath", folder)
             self.toggle_export(self.export_check.isChecked())
     
     def start_processing(self):
@@ -610,6 +610,9 @@ class GrabStillsDialog(QMainWindow):
         if not self.utils.resolve:
             QMessageBox.critical(self, "Error", "DaVinci Resolve not available!")
             return
+        
+        # Save all settings before processing
+        self.save_all_settings()
         
         options = self.collect_options()
         
@@ -682,19 +685,112 @@ class GrabStillsDialog(QMainWindow):
         """Load settings from Resolve storage."""
         settings = {}
         if fusion:
-            settings["export_path"] = fusion.GetData("BatchResolveSaveStills.Folder") or ""
+            # Load all persistent settings
+            settings["export_path"] = fusion.GetData("GrabStills.ExportPath") or ""
+            settings["save_mode"] = fusion.GetData("GrabStills.SaveMode") or "per_marker"
+            settings["marker_color"] = fusion.GetData("GrabStills.MarkerColor") or "Any"
+            settings["export_enabled"] = fusion.GetData("GrabStills.ExportEnabled")
+            if settings["export_enabled"] is None:
+                settings["export_enabled"] = True
+            settings["format"] = fusion.GetData("GrabStills.Format") or DEFAULT_STILL_FORMAT
+            settings["album"] = fusion.GetData("GrabStills.Album") or DEFAULT_STILL_ALBUM
+            settings["delete_stills"] = fusion.GetData("GrabStills.DeleteStills")
+            if settings["delete_stills"] is None:
+                settings["delete_stills"] = True
+            settings["cleanup_drx"] = fusion.GetData("GrabStills.CleanupDRX")
+            if settings["cleanup_drx"] is None:
+                settings["cleanup_drx"] = True
+            settings["open_edit"] = fusion.GetData("GrabStills.OpenEdit")
+            if settings["open_edit"] is None:
+                settings["open_edit"] = True
         return settings
     
-    def save_setting(self, key, value):
-        """Save a setting to Resolve storage."""
-        if fusion:
-            if key == "export_path":
-                fusion.SetData("BatchResolveSaveStills.Folder", value)
+    def save_all_settings(self):
+        """Save all current UI settings to Resolve storage."""
+        if not fusion:
+            return
+        
+        # Save all settings
+        fusion.SetData("GrabStills.ExportPath", self.export_path_edit.text())
+        fusion.SetData("GrabStills.SaveMode", self.get_save_mode())
+        fusion.SetData("GrabStills.MarkerColor", self.markers_combo.currentText())
+        fusion.SetData("GrabStills.ExportEnabled", self.export_check.isChecked())
+        
+        format_index = self.format_combo.currentIndex()
+        export_format = STILL_FORMATS_ORDER[format_index]
+        fusion.SetData("GrabStills.Format", export_format)
+        
+        fusion.SetData("GrabStills.Album", self.album_edit.text())
+        fusion.SetData("GrabStills.DeleteStills", self.delete_stills_check.isChecked())
+        fusion.SetData("GrabStills.CleanupDRX", self.cleanup_drx_check.isChecked())
+        fusion.SetData("GrabStills.OpenEdit", self.open_edit_check.isChecked())
     
+    def get_save_mode(self):
+        """Get current save mode as string."""
+        mode_index = self.save_mode_combo.currentIndex()
+        if mode_index == 0:
+            return "per_marker"
+        elif mode_index == 1:
+            return "per_clip"
+        else:
+            return "export_existing"
+    
+    def save_setting(self, key, value):
+        """Save a single setting to Resolve storage."""
+        if fusion:
+            fusion.SetData(f"GrabStills.{key}", value)
+    
+        # Load post-processing options
+        self.delete_stills_check.setChecked(self.settings.get("delete_stills", True))
+        self.cleanup_drx_check.setChecked(self.settings.get("cleanup_drx", True))
+        self.open_edit_check.setChecked(self.settings.get("open_edit", True))
+
     def load_values(self):
         """Load saved values into the UI."""
+        # Load export path
         export_path = self.settings.get("export_path", "")
         self.export_path_edit.setText(export_path)
+        
+        # Load save mode
+        save_mode = self.settings.get("save_mode", "per_marker")
+        if save_mode == "per_marker":
+            self.save_mode_combo.setCurrentIndex(0)
+        elif save_mode == "per_clip":
+            self.save_mode_combo.setCurrentIndex(1)
+        else:
+            self.save_mode_combo.setCurrentIndex(2)
+        
+        # Load marker color
+        marker_color = self.settings.get("marker_color", "Any")
+        try:
+            index = MARKER_COLORS.index(marker_color)
+            self.markers_combo.setCurrentIndex(index)
+        except ValueError:
+            self.markers_combo.setCurrentIndex(0)
+        
+        # Load export enabled
+        self.export_check.setChecked(self.settings.get("export_enabled", True))
+        
+        # Load format
+        format_name = self.settings.get("format", DEFAULT_STILL_FORMAT)
+        try:
+            index = STILL_FORMATS_ORDER.index(format_name)
+            self.format_combo.setCurrentIndex(index)
+        except ValueError:
+            self.format_combo.setCurrentIndex(STILL_FORMATS_ORDER.index(DEFAULT_STILL_FORMAT))
+        
+        # Load album name
+        self.album_edit.setText(self.settings.get("album", DEFAULT_STILL_ALBUM))
+        
+        # Load post-processing options
+        self.delete_stills_check.setChecked(self.settings.get("delete_stills", True))
+        self.cleanup_drx_check.setChecked(self.settings.get("cleanup_drx", True))
+        self.open_edit_check.setChecked(self.settings.get("open_edit", True))
+
+    def closeEvent(self, event):
+        """Handle window close event to save settings."""
+        self.save_all_settings()
+        super().closeEvent(event)
 
 
 def main():
