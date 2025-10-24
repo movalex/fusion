@@ -45,13 +45,18 @@ def get_fusion_module(app_name="Fusion"):
 
 
 class BaseUI:
-    def __init__(self, window_title, geometry=[800, 600, 400, 200], id="DefaultID"):
+    def __init__(self, window_title, geometry=[800, 600, 400, 200], id="DefaultID", 
+                 resizable=True, min_size=None, max_size=None, modal=False):
         self.bmd, self.fusion = get_fusion_module()
         self.ui = self.fusion.UIManager
         self.id = id
         self.disp = self.bmd.UIDispatcher(self.ui)
         self.window_title = window_title
         self.geometry = geometry
+        self.resizable = resizable
+        self.min_size = min_size
+        self.max_size = max_size
+        self.modal = modal
         self.itm = None
         self.win = self.create_window(self.geometry)
         self.setup_close_event()
@@ -60,16 +65,43 @@ class BaseUI:
         self.win.On[self.id].Close = self.close
 
     def create_window(self, geometry):
+        # Use standard window decorations to ensure the title bar/system menu are visible
+        window_flags = {
+            "Window": True,
+            "WindowTitleHint": True,
+            "WindowSystemMenuHint": True,
+            "WindowCloseButtonHint": True,
+            "WindowStaysOnTopHint": True,
+        }
 
-        self.win = self.disp.AddWindow(
-            {
-                "ID": self.id,
-                "TargetID": self.id,
-                "WindowTitle": self.window_title,
-                "Geometry": geometry,
-            },
-            self.layout(),  # This method should be implemented in subclasses to define the layout
-        )
+        window_props = {
+            "ID": self.id,
+            "TargetID": self.id,
+            "WindowTitle": self.window_title,
+            "WindowFlags": window_flags,
+            "Geometry": geometry,
+            "Resize": self.resizable,
+        }
+        
+        # Add modal behavior if requested
+        if self.modal:
+            window_props["WindowModality"] = "ApplicationModal"
+        
+        # Add size constraints if specified
+        if self.min_size:
+            window_props["MinimumSize"] = self.min_size
+        if self.max_size:
+            window_props["MaximumSize"] = self.max_size
+
+        self.win = self.disp.AddWindow(window_props, self.layout())
+        
+        # Force resize if geometry is significantly different from default
+        if self.resizable and geometry != [800, 600, 400, 200]:
+            try:
+                self.win.Resize(geometry[2], geometry[3])  # width, height
+            except Exception:
+                pass
+                
         return self.win
 
     def layout(self, *args):
