@@ -1,9 +1,59 @@
---[[  
-    Rename Plus script
+--[[
+    Rename Plus - Advanced Tool Renaming for Fusion
+    
 Description:
-    Rename any tool
+    A comprehensive tool renaming utility for Blackmagic Fusion that provides both
+    single and batch renaming capabilities with advanced enumeration options.
+    
+    The script opens a floating dialog near the cursor that allows users to:
+    - Rename individual selected tools or underlays
+    - Batch rename multiple tools with automatic sequential numbering (_01, _02, etc.)
+    - Fix tool name serialization issues (removes duplicate numbers like Tool1_1_1)
+    - Apply four enumeration modes:
+        * Strip Numbers: Removes all trailing numbers and underscores
+        * Enumerate: Adds sequential numbers to existing names
+        * Strip and Re-enumerate: Removes old numbers then adds new sequential numbers
+        * Add Tool ID: Appends the internal Fusion tool ID to the name
+    
+    The UI appears at the cursor position with smart boundary detection to stay on screen.
+    Automatically updates ToolManager metadata to maintain tag associations after renaming.
+    
 Author:
     Alexey Bogomolov
+    
+Email:
+    mail@abogomolov.com
+    
+Features:
+    * Single tool rename: Rename active tool or underlay
+    * Batch rename: Sequentially rename multiple selected tools with _01, _02, etc.
+    * Smart name validation: Prepends "_" if name starts with a number
+    * ToolManager integration: Preserves tool tags and metadata after renaming
+    * Enumeration modes: Strip, enumerate, or re-enumerate tool names
+    * Fusion auto-increment: Properly handles Fusion's automatic name incrementing
+    * UI positioning: Opens near cursor with screen boundary detection
+    * Keyboard shortcuts: ESC to cancel, Enter to confirm
+    * Single instance: Prevents multiple dialog windows
+    * Undo support: All operations wrapped in undo/redo
+    
+Usage:
+    - Select tool(s) and run script
+    - For single rename: Enter new name and press Enter or click OK
+    - For batch rename: Check "Batch Rename", enter base name, click OK
+    - For enumeration: Check "Batch Rename" and "Enumeration", select mode, click OK
+    - Press ESC or click Cancel to abort
+    
+Version History:
+    v1.93: Added batch rename options with four enumeration modes
+    v1.92: Added fix serialization to remove duplicate number suffixes
+    v1.91: Fixed Resolve 17 compatibility (omit __flags metadata)
+    v1.9:  Added ToolTagger metadata update on rename
+    v1.8:  Batch rename now properly closes UI after completion
+    v1.7:  Added proper loader renaming and batch rename function
+    v1.5:  Added UI boundary detection to prevent off-screen launch
+    v1.4:  Enabled launching on any Fusion window
+    v1.3:  Added UI positioning next to mouse pointer
+    
 License:
     The authors hereby grant permission to use, copy, and distribute this
     software and its documentation for any purpose, provided that existing
@@ -26,34 +76,23 @@ License:
     THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, AND THE AUTHORS AND
     DISTRIBUTORS HAVE NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT,
     UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+    
     Copyright 2024 Alexey Bogomolov
-Email:
-    mail@abogomolov.com
-Features:
-    * rename Underlays only
-    * apply existing tool name (will be autoincremented)
-    * tool name can start with a number ("_" is prepended)
-    * cancel renaming sequence with Cancel button
-    * batch rename tools (numbers _01, _02... appended)
-    * fix name serialization
-Version history:
-    v1.3: add start UI next to the mouse pointer
-    v1.4: launch on any Fusion window
-    v1.5: prevent multiple windows, set UI boundaries to prevent launch beyond screen
-    v1.7: rename loaders properly, add batch rename function
-    v1.8: batch rename will properly close the UI after rename
-    v1.9: update ToolTagger data on a tool rename
-    v1.91: fix Resolve 17 compatibility (omit __flags data)
-    v1.92: add fix serialization option to batch rename (replace ToolName1_1_1_2_3_4_5 with just ToolName for selected nodes)
-    v1.93: add batch rename options
 ]]
 --
 
+-- ============================================================================
+-- CONSTANTS AND INITIALIZATION
+-- ============================================================================
+
 local ui = fu.UIManager
 local disp = bmd.UIDispatcher(ui)
-local ui_width, ui_height = 400,100
+local UI_WIDTH, UI_HEIGHT = 400, 100
+local DEFAULT_SCREEN_WIDTH = 1920
+local DEFAULT_SCREEN_HEIGHT = 1100
+local MAX_VALID_WIDTH = 10000
 
-
+-- Configure keyboard shortcuts for the rename dialog
 app:AddConfig("renameplus", {
     Target {
         ID = "renameplus",
@@ -64,51 +103,112 @@ app:AddConfig("renameplus", {
         ESCAPE = "Execute{cmd = [[app.UIManager:QueueEvent(obj, 'Close', {})]]}",
     },
 })
-window_dimensions = fusion:GetPrefs("Global.Main.Window")
-if not fu:GetResolve() then
-    if not window_dimensions or window_dimensions.Width == -1 then
-        print("[Warning] The Window preference is undefined.\nPlease press 'Grab program layout' in the Layout Preference section")
-        window_dimensions.Width = 1920
-        window_dimensions.Height = 1100
+
+-- ============================================================================
+-- HELPER FUNCTIONS
+-- ============================================================================
+
+--- Get window dimensions with fallback to defaults
+--- @return table Window dimensions with Width and Height
+local function getWindowDimensions()
+    local window_dimensions = fusion:GetPrefs("Global.Main.Window")
+    
+    if not fu:GetResolve() then
+        if not window_dimensions or window_dimensions.Width == -1 then
+            print("[Warning] Window preference is undefined. Using default dimensions.")
+            print("Please press 'Grab program layout' in the Layout Preference section")
+            window_dimensions = {Width = DEFAULT_SCREEN_WIDTH, Height = DEFAULT_SCREEN_HEIGHT}
+        elseif window_dimensions.Width > MAX_VALID_WIDTH then
+            print("[Warning] Invalid window dimensions detected. Using defaults.")
+            print("Please press 'Grab program layout' in the Layout Preference section")
+            window_dimensions = {Width = DEFAULT_SCREEN_WIDTH, Height = DEFAULT_SCREEN_HEIGHT}
+        end
     end
-    if window_dimensions.Width > 10000 then
-        print("Apparently Fusion has incorrect window dimensions. Press 'Grab program layout' in the Layout Preference section")
-        window_dimensions.Width = 1920
-        window_dimensions.Height = 1100
+    
+    return window_dimensions
+end
+
+--- Calculate UI position near mouse with screen boundary detection
+--- @return number, number Mouse X and Y coordinates adjusted for screen boundaries
+local function calculateUIPosition()
+    local window_dimensions = getWindowDimensions()
+    local mouseX = fu:GetMousePos()[1]
+    local mouseY = fu:GetMousePos()[2]
+    
+    -- Adjust X position if too close to right edge
+    if window_dimensions.Width - mouseX < UI_WIDTH then
+        mouseX = mouseX - UI_WIDTH
     end
+    
+    -- Adjust Y position if too close to bottom edge
+    if window_dimensions.Height - mouseY < UI_HEIGHT then
+        mouseY = mouseY - UI_HEIGHT
+    end
+    
+    return mouseX, mouseY
 end
 
-mouseX = fu:GetMousePos()[1]
-mouseY = fu:GetMousePos()[2]
-
-if window_dimensions.Width - mouseX < ui_width then
-    mouseX = mouseX - ui_width
+--- Update ToolManager metadata when a tool is renamed
+--- @param toolName string Original tool name
+--- @param newName string New tool name
+local function updateToolManagerTags(toolName, newName)
+    local data = comp:GetData("ToolManager")
+    if not data then
+        return
+    end
+    
+    for tag, toolNames in pairs(data) do
+        if tag ~= "__flags" then
+            for index, dataToolName in pairs(toolNames) do
+                if dataToolName == toolName then
+                    data[tag][index] = newName
+                end
+            end
+        end
+    end
+    
+    comp:SetData("ToolManager", data)
 end
 
-if window_dimensions.Height - mouseY < ui_height then
-    mouseY = mouseY - ui_height
+--- Validate and fix tool name (prepend underscore if starts with number)
+--- @param name string Tool name to validate
+--- @return string Valid tool name
+local function validateToolName(name)
+    if tonumber(string.sub(name, 1, 1)) ~= nil then
+        print("Tool name cannot start with a number. Prepending '_'")
+        return '_' .. name
+    end
+    return name
 end
 
+-- ============================================================================
+-- UI CREATION AND EVENT HANDLERS
+-- ============================================================================
+
+--- Show the rename UI dialog
+--- @param tool table The Fusion tool to rename
+--- @param cur_name string Current name of the tool
 function showUI(tool, cur_name)
+    local mouseX, mouseY = calculateUIPosition()
+    
     win = disp:AddWindow({
         ID = 'renameplus',
         TargetID = "renameplus",
         WindowTitle = 'Rename+ Tool',
-        Geometry = {mouseX+20, mouseY, ui_width, ui_height},
-        -- Spacing = 50,
+        Geometry = {mouseX + 20, mouseY, UI_WIDTH, UI_HEIGHT},
         
         ui:VGroup{
-        ID = 'root',
+            ID = 'root',
             ui:HGroup{
                 ui:LineEdit {
-                    ID = 'mytext', Text = tostring(cur_name),
+                    ID = 'mytext',
+                    Text = tostring(cur_name),
                     Alignment = {AlignHCenter = true},
                     Events = {ReturnPressed = true},
                     Enabled = true,
                 }
             },
             ui:HGroup{
-                -- ui:VGap(20),
                 ui:CheckBox{
                     ID = 'batch',
                     Text = 'Batch Rename',
@@ -125,19 +225,18 @@ function showUI(tool, cur_name)
                     Text = 'Fix Mode',
                     Enabled = false,
                 },
-
             },
-
             ui:HGroup{
                 ui:VGap(20),
                 ui:Button{
-                    ID = 'cancel', Text = 'Cancel',
-                    Weight = .7,
+                    ID = 'cancel',
+                    Text = 'Cancel',
+                    Weight = 0.7,
                 },
-                    ui:Button{
-                    ID = 'ok', Text = 'Ok',
-                    Weight = .3,
-                    
+                ui:Button{
+                    ID = 'ok',
+                    Text = 'Ok',
+                    Weight = 0.3,
                 }
             },
         }
@@ -145,98 +244,111 @@ function showUI(tool, cur_name)
 
     itm = win:GetItems()
     itm.mytext:SelectAll()
+    
+    -- Populate enumeration mode dropdown
     itm.FixMode:AddItem('Strip Numbers')
     itm.FixMode:AddItem('Enumerate')
     itm.FixMode:AddItem('Strip and Re-enumerate')
     itm.FixMode:AddItem('Add Tool ID')
     
-
-    function fixToolManagerTags(toolName, newName)
-        local data = comp:GetData("ToolManager")
-        if data then
-            for tag, toolNames in pairs(data) do
-                if tag ~= "__flags" then
-                    for index, dataToolName in pairs(toolNames) do
-                        if dataToolName == toolName then
-                            data[tag][index] = newName
-                        end
-                    end
-                end
-            end
-            comp:SetData("ToolManager", data)
+    -- ------------------------------------------------------------------------
+    -- Rename Functions
+    -- ------------------------------------------------------------------------
+    
+    --- Rename a single tool
+    local function renameSingleTool()
+        local new_name = itm.mytext:GetText()
+        
+        if new_name == cur_name then
+            return -- Name unchanged
         end
+        
+        new_name = validateToolName(new_name)
+        local prevName = tool.Name
+        
+        tool:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = new_name})
+        
+        -- Update ToolManager tags if name was auto-incremented by Fusion
+        updateToolManagerTags(prevName, tool.Name)
     end
-
-    function batchRename(tools)
-        -- this script will rename selected nodes sequentially
-        if not tools then
+    
+    --- Batch rename multiple tools with sequential numbering
+    --- @param tools table Array of tools to rename
+    local function batchRenameTools(tools)
+        if not tools or #tools == 0 then
             return
         end
+        
         if #tools < 2 then
-            do_rename()
+            renameSingleTool()
             disp:ExitLoop()
-        else
-            comp:StartUndo("batch rename tools")
-            local count = 0
-            for num, t in ipairs(tools) do
-                newName = itm.mytext:GetText() .. '_' .. string.format("%02d",num)
-                fixToolManagerTags(t.Name, newName)
-                t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = newName })
-                count = count + 1
+            return
+        end
+        
+        comp:StartUndo("Batch Rename Tools")
+        local baseName = itm.mytext:GetText()
+        local count = 0
+        
+        for num, t in ipairs(tools) do
+            local newName = baseName .. '_' .. string.format("%02d", num)
+            updateToolManagerTags(t.Name, newName)
+            t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = newName})
+            count = count + 1
+        end
+        
+        print(string.format("Batch renamed %d tools", count))
+        comp:EndUndo()
+        disp:ExitLoop()
+        cancelled = true -- Break the UI loop
+    end
+    
+    --- Fix tool name serialization with various enumeration modes
+    --- @param tools table Array of tools to fix
+    local function fixToolSerialization(tools)
+        if #tools == 0 then
+            print("No tools selected")
+            return
+        end
+        
+        for i, t in ipairs(tools) do
+            local toolName
+            
+            if itm.FixMode.CurrentIndex == 0 then
+                -- Strip Numbers: Remove trailing numbers and underscores
+                toolName = string.gsub(t.Name, "[_%d]+$", "")
+                
+            elseif itm.FixMode.CurrentIndex == 1 then
+                -- Enumerate: Add sequential number to existing name
+                toolName = t.Name .. "_" .. string.format("%02d", i)
+                
+            elseif itm.FixMode.CurrentIndex == 2 then
+                -- Strip and Re-enumerate: Remove old numbers then add new
+                toolName = string.gsub(t.Name, "[_%d]+$", "") .. "_" .. string.format("%02d", i)
+                
+            elseif itm.FixMode.CurrentIndex == 3 then
+                -- Add Tool ID: Append internal Fusion tool ID
+                toolName = t.Name .. "_" .. t.ID
+            else
+                return
             end
-            print('batch renamed ' .. count .. ' tools')
-            comp:EndUndo()
-            disp:ExitLoop()
-            cancelled = true -- break the UI loop
+            
+            t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = toolName})
         end
     end
-
+    
+    -- ------------------------------------------------------------------------
+    -- Event Handlers
+    -- ------------------------------------------------------------------------
+    
     function win.On.cancel.Clicked(ev)
         cancelled = true
         disp:ExitLoop()
     end
     
     function win.On.renameplus.Close(ev)
-       disp:ExitLoop()
+        disp:ExitLoop()
     end
     
-    function do_rename()
-        local new_name = itm.mytext:GetText()
-        if new_name == cur_name then
-            -- name not changed
-            return
-        end
-        if tonumber(string.sub(new_name, 1, 1)) ~= nil then
-            print('tool\'s name can\'t start with a number, now prepending with "_"')
-            new_name = '_'.. new_name
-        end
-        local prevName = tool.Name
-        tool:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = new_name})
-        -- fix ToolManager tags after renaming if the same name was autoincremented by Fusion
-        fixToolManagerTags(prevName, tool.Name)
-    end
-   
-    function fixSerializing(tools)
-        if #tools == 0 then
-            print("no tools selected")
-            return
-        end
-        for i, t in ipairs(tools) do
-            if itm.FixMode.CurrentIndex == 0 then
-                toolName = string.gsub(t.Name, "[_%d]+$", "")
-            elseif itm.FixMode.CurrentIndex == 1 then
-                toolName = t.Name .. "_" .. string.format("%02d", tostring(i))
-            elseif itm.FixMode.CurrentIndex == 2 then
-                toolName = string.gsub(t.Name, "[_%d]+$", "") .. "_" .. string.format("%02d", tostring(i)) 
-            elseif itm.FixMode.CurrentIndex == 3 then
-                toolName = t.Name .. "_" .. t.ID
-            else
-                return
-            end
-            t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = toolName})
-        end
-    end
-
     function win.On.batch.Clicked(ev)
         itm.fix.Enabled = true
         itm.mytext:SelectAll()
@@ -248,27 +360,27 @@ function showUI(tool, cur_name)
         itm.mytext.Enabled = not itm.fix.Checked
         itm.FixMode.Enabled = itm.fix.Checked
     end
-
+    
     function win.On.ok.Clicked(ev)
-        if itm.batch.Checked == true then
+        if itm.batch.Checked then
             local selectedNodes = comp:GetToolList(true)
-            if itm.fix.Checked == true then
-                fixSerializing(selectedNodes)
+            if itm.fix.Checked then
+                fixToolSerialization(selectedNodes)
             else
-                batchRename(selectedNodes)
+                batchRenameTools(selectedNodes)
             end
         else
-            do_rename()
+            renameSingleTool()
         end
         disp:ExitLoop()
     end
     
     function win.On.mytext.ReturnPressed(ev)
-        if itm.batch.Checked == true then
+        if itm.batch.Checked then
             local selectedNodes = comp:GetToolList(true)
-            batchRename(selectedNodes)
+            batchRenameTools(selectedNodes)
         else
-            do_rename()
+            renameSingleTool()
             disp:ExitLoop()
         end
     end
@@ -278,28 +390,41 @@ function showUI(tool, cur_name)
     win:Hide()
 end
 
+-- ============================================================================
+-- MAIN EXECUTION
+-- ============================================================================
+
+-- Prevent multiple instances of the dialog
 local main_win = ui:FindWindow("renameplus")
 if main_win then
     main_win:Raise()
     main_win:ActivateWindow()
     return
+end
+
+comp:StartUndo("RenamePlus")
+
+local active = comp.ActiveTool
+
+-- Handle Underlay tools specifically
+if active and active.ID == 'Underlay' then
+    local current_name = active.Name
+    showUI(active, current_name)
 else
-    comp:StartUndo("RenamePlus:")
-    active = comp.ActiveTool
-    if active and active.ID == 'Underlay' then
-        current_name = active.Name
-        showUI(active, current_name)
-    else
-        selectedNodes = comp:GetToolList(true)
-        if #selectedNodes > 0 then
-            for i, tool in ipairs(selectedNodes) do
-                current_name = tool.Name
-                showUI(tool, current_name)
-                if cancelled or itm.fix.Enabled == true then
-                    break
-                end
+    -- Handle selected tools
+    local selectedNodes = comp:GetToolList(true)
+    
+    if #selectedNodes > 0 then
+        for i, tool in ipairs(selectedNodes) do
+            local current_name = tool.Name
+            showUI(tool, current_name)
+            
+            -- Break loop if cancelled or in batch mode
+            if cancelled or itm.fix.Enabled then
+                break
             end
         end
     end
-    comp:EndUndo(true)
 end
+
+comp:EndUndo(true)
