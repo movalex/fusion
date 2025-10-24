@@ -8,8 +8,10 @@
 """
 from pprint import pprint
 import BlackmagicFusion as bmd
+
 fu = bmd.scriptapp("Fusion")
 comp = fu.GetCurrentComp()
+
 
 def convert_to_number(data: str, to_type):
     try:
@@ -23,9 +25,7 @@ def set_comp_pref(key: str, value):
     comp.SetPrefs(key, value)
 
 
-def process_metadata(
-    metadata, key_fragments
-):
+def process_metadata(metadata, key_fragments):
     """
     Search for any of the key_fragments in the metadata keys (case-insensitive).
     Return the first found value that can be converted to float.
@@ -86,34 +86,36 @@ def main():
         width, height, aspect_x, aspect_y = set_from_loader(tool)
         print("Setting composition size and aspect ratio from Loader attributes...")
         set_comp_size_and_aspect(width, height, aspect_x, aspect_y)
-    
+
+        print("Processing tool metadata...")
+        try:
+            tool_metadata = tool.Output[comp.CurrentTime].Metadata
+        except AttributeError:
+            print(
+                "Could not read tool's metadata.\nAdd the tool to the viewer and try again"
+            )
+        if not tool_metadata:
+            print("No metadata found")
+            return
+        print("Tool metadata:")
+        pprint(tool_metadata)
+        # Pass a list of possible FPS key fragments
+        fps_value = process_metadata(
+            tool_metadata,
+            ["fps", "framerate", "frame_rate", "frame rate"],
+        )
+        print(f"Frame Rate value found: {fps_value}")
+        if fps_value is not None:
+            set_comp_pref("Comp.FrameFormat.Rate", fps_value)
+            print(f"FrameRate is set to {fps_value}")
+        else:
+            print("No framerate information found in metadata")
+
     elif tool.ID == "Background":
+        print("Processing Background tool...")
+
         width, height, aspect_x, aspect_y = set_from_background(tool)
         set_comp_size_and_aspect(width, height, aspect_x, aspect_y)
-
-    print("Processing tool metadata...")
-    try:
-        tool_metadata = tool.Output[comp.CurrentTime].Metadata
-    except AttributeError:
-        print(
-            "Could not read tool's metadata.\nAdd the tool to the viewer and try again"
-        )
-    if not tool_metadata:
-        print("No metadata found")
-        return
-    print("Tool metadata:")
-    pprint(tool_metadata)
-    # Pass a list of possible FPS key fragments
-    fps_value = process_metadata(
-        tool_metadata,
-        ["fps", "framerate", "frame_rate", "frame rate"],
-    )
-    print(f"Frame Rate value found: {fps_value}")
-    if fps_value is not None:
-        set_comp_pref("Comp.FrameFormat.Rate", fps_value)
-        print(f"FrameRate is set to {fps_value}")
-    else:
-        print("No framerate information found in metadata")
 
 
 if __name__ == "__main__":
