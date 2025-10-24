@@ -10,12 +10,12 @@ Description:
     - Batch rename multiple tools with automatic sequential numbering (_01, _02, etc.)
     - Fix tool name serialization issues (removes duplicate numbers like Tool1_1_1)
     - Apply five enumeration modes:
-        * Strip Numbers: Removes all trailing numbers and underscores
         * Enumerate: Adds sequential numbers to existing names
-        * Strip and Re-enumerate: Removes old numbers then adds new sequential numbers
-        * Strip and Enumerate by Type: Groups tools by type, removes old numbers, 
+        * Append ID: Appends the internal Fusion tool ID to the name
+        * Strip Numbers: Removes all trailing numbers and underscores
+        * Strip and Enumerate All: Removes old numbers then adds new sequential numbers
+        * Strip and Enumerate by ID: Groups tools by type, removes old numbers, 
           then enumerates within each type group (e.g., Blur_01, Blur_02, Merge_01, Merge_02)
-        * Add Tool ID: Appends the internal Fusion tool ID to the name
     
     The UI appears at the cursor position with smart boundary detection to stay on screen.
     Automatically updates ToolManager metadata to maintain tag associations after renaming.
