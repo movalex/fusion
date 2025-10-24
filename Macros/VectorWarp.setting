@@ -29,23 +29,64 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				File = Input { Value = "comp:VectorWarp\\render001.0000.exr", },
 				Guide = Input { Value = [[
 QUICK GUIDE:
-1. Connect the image to the VectorWarp input.
-2. Generate CleanPass STMaps. This process will create a series of clean STMap files for further processing.
-	- By default, the STMap will be rendered to the comp:VectorWarp folder.
-	- To specify a different STMap location, navigate to the file tab and set the Saver path accordingly.
-	There are two options for creating CleanPass STMap:
-		a. Generate CleanPass (fast): Renders one frame and copies the rest. This is usually the preferred option.
-		Note: For accurate and fast CleanPass generation, ensure the path to the STMaps does not contain non-Latin symbols.
-		If non-Latin words are required in your paths, either install the provided `win125x.lua` module in the `Modules:Lua` folder or consider the second option.
-		b. Render Cleanpass (safe): Renders all clean pass frames individually. Use this option if the first one is unsuccessful for any reason.
-	- When the CleanPass is generated, the Dialogue window will appears: "Do you want to reset your trimming..."
-	- Press Yes in that Dialogue to load the whole cleanpass sequence.
-3. Define a Reference Frame using the 'Set Reference Frame' button.
-4. Start the analysis with one of the dedicated buttons:
-	- Analyze Forward
-	- Analyze Backward
-	- Analyze Forward then Backward
-5. To apply the distortion, connect the VectorWarp to the Input (yellow) of the STMapper (available in Reactor) or a Texture node. Ensure that the image input matches the resolution of the rendered STMap sequence.
+VectorWarp is a motion tracking and stabilization tool that creates STMaps (spatial transformation maps)
+using optical flow analysis. These reusable distortion maps can stabilize footage, track motion, or create warping effects.
+
+SIMPLIFIED WORKFLOWS (NEW):
+• Auto Process: Complete workflow in one click (generates CleanPass, sets reference, analyzes motion)
+  Uses current frame as reference, ideal for general processing.
+
+• Quick Stabilize: Auto-stabilizes footage to remove camera shake
+  Automatically uses the MIDDLE frame as reference because:
+  - Minimizes maximum warp distance (half compared to using first/last frame)
+  - Reduces distortion artifacts on frames far from reference
+  - Industry standard approach for stabilization
+  - Provides most balanced motion compensation
+
+• Quick Track: Tracks forward motion from current frame
+  Uses current frame as reference, ideal for following an object.
+
+• Interactive Setup: Guided wizard for workflow selection
+  Helps choose between stabilization, tracking, or custom settings.
+
+MANUAL WORKFLOW:
+1. Connect your footage to the VectorWarp input.
+
+2. Generate CleanPass STMaps
+   This creates a sequence of STMap files that capture spatial transformations for each frame.
+   - Default location: comp:VectorWarp folder
+   - To change location: Go to File tab and set the Saver path
+
+   Two generation methods:
+   a. Generate CleanPass (fast) - RECOMMENDED
+      Renders one frame and copies it to create the sequence. Much faster.
+      NOTE: Paths must not contain non-Latin characters. If needed, install the win125x.lua
+      module in Modules:Lua folder, or use method b.
+
+   b. Render CleanPass (safe)
+      Renders each frame individually. Slower but works with any path.
+
+   - After generation, a dialog asks: "Do you want to reset your trimming..."
+   - Click Yes to load the complete CleanPass sequence.
+
+3. Set Reference Frame
+   Click 'Set Reference Frame' at the frame you want to use as the tracking reference point.
+   All motion will be analyzed relative to this frame.
+
+4. Analyze Motion Vectors
+   Choose an analysis direction based on your needs:
+   - Analyze Forward: Tracks motion from reference frame forward in time
+   - Analyze Backward: Tracks motion from reference frame backward in time
+   - Analyze Forward then Backward: Analyzes entire timeline in both directions
+
+   The tool uses optical flow to calculate motion vectors between frames.
+
+5. Apply the Distortion
+   Connect VectorWarp output to the Input (yellow) of an STMapper node (available in Reactor)
+   or a Texture node. The image input must match the STMap sequence resolution.
+
+ADVANCED: Use the Vectors page to adjust optical flow parameters (smoothness, warps, iterations)
+for better motion analysis quality.
 					]],
 	},
 				Method = InstanceInput {
@@ -755,14 +796,14 @@ QUICK GUIDE:
 					INP_Integer = false,
 					LINKID_DataType = "Number",
 					BTNCS_Execute = [[
-						
-						tool:SetInput('ReferenceFrame', comp.CurrentTime, fu.TIME_UNDEFINED)
-						
-						]],
-						ICS_ControlPage = "Controls",
-						INPID_InputControl = "ButtonControl",
-						LINKS_Name = "Set Reference Frame",
-					},
+						local vlib = require("vectorlib")
+						if not tool then tool = comp.ActiveTool end
+						vlib.set_reference_frame(tool, comp)
+					]],
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "ButtonControl",
+					LINKS_Name = "Set Reference Frame",
+				},
 				GoToFrame = {
 					INP_MaxAllowed = 1000000,
 					INP_Integer = false,
@@ -805,195 +846,9 @@ QUICK GUIDE:
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-						local function CopyFile(old_path, new_path)
-							print("copying CleanPass to file: " .. new_path)
-								
-							if utf_module_loaded then
-								old_path = utf8_to_win(old_path)
-								new_path = utf8_to_win(new_path)
-							end
-							local old_file = io.open(old_path, "rb")
-							local new_file = io.open(new_path, "wb")
-							local old_file_sz, new_file_sz = 0, 0
-							if not old_file or not new_file then
-								return false
-							end
-							while true do
-								local block = old_file:read(2^13)
-								if not block then 
-									old_file_sz = old_file:seek("end")
-									break
-								end
-								new_file:write(block)
-							end
-							old_file:close()
-							new_file_sz = new_file:seek("end")
-							new_file:close()
-							return new_file_sz == old_file_sz
-						end
-						
-						local function ParseFilename(filename)
-							local seq = {}
-							seq.FullPath = filename
-							string.gsub(seq.FullPath, "^(.+[/\\])(.+)", function(path, name)
-								seq.Path = path
-								seq.FullName = name
-							end)
-							string.gsub(seq.FullName, "^(.+)(%..+)$", function(name, ext)
-								seq.Name = name
-								seq.Extension = ext
-							end)
-							-- check if no extension
-							if not seq.Name then
-								seq.Name = seq.FullName
-							end
-							
-							string.gsub(seq.Name, "^(.-)(%d+)$", function(name, SNum)
-								seq.CleanName = name
-								seq.SNum = SNum
-							end)
-							
-							if seq.SNum then
-								seq.Number = tonumber(seq.SNum)
-								seq.Padding = string.len(seq.SNum)
-							else
-								seq.SNum = ""
-								seq.CleanName = seq.Name
-							end
-							
-							if seq.Extension == nil then
-								seq.Extension = ""
-							end
-							return seq 
-						end
-
-						function sleep (a) 
-							local sec = tonumber(os.clock() + a); 
-							while (os.clock() < sec) do 
-							end 
-						end
-						
-						local function CreateCleanPass(tool)
-							local renderStart = comp:GetAttrs().COMPN_RenderStart
-							local renderEnd = comp:GetAttrs().COMPN_RenderEnd
-							tool.Render = 0
-
-							comp.CurrentTime = renderStart
-							
-							comp:SetAttrs({COMPN_CurrentTime = renderStart}) 
-							comp:SetAttrs({COMPN_RenderEnd = renderStart + 1})
-							
-							fusion.CacheManager:Purge()
-							tool.SaveFrames = "HiQInteractive"
-							comp:Loop(false)
-							comp:Play()
-							sleep(2)
-							tool.SaveFrames = "Full"
-							comp:Stop()
-							print("Rendered a single clean plate file")
-							comp:SetAttrs({COMPN_RenderEnd = renderEnd})
-							
-							local svr = tool:GetChildrenList(false, "Saver")[1]
-							saverClip = svr.Clip[0]
-							seq = ParseFilename(saverClip)
-							
-							local ldr = tool:GetChildrenList(false, "Loader")[1]
-							
-							-- missing frames to color
-							ldr.MissingFrames[0] = 2
-							
-							padding = string.format("%04d", renderStart)
-							loaderClip = seq.Path .. seq.CleanName .. padding .. seq.Extension
-							print("Clip Parsed and Loaded: ".. loaderClip)
-							ldr.Loop[0] = 0
-							tool.Depth[0] = 5
-							
-							seq = ParseFilename(comp:MapPath(loaderClip))
-							
-							comp:Lock()
-							oldName = seq.FullPath
-							len = renderEnd - renderStart + 1 -- add extra frame
-							for i = 1, len do
-								padding = string.format("%04d", renderStart + i) 
-								newName = seq.Path .. seq.CleanName .. padding .. seq.Extension
-								if not bmd.fileexists(newName) then
-									CopyFile(oldName, newName)
-								end
-							end
-							comp:Unlock()
-							
-							-- Dialog "Do you want to reset your trimming..." should appear here
-							ldr.Clip[0] = loaderClip
-							
-							print("Clean Pass STMap files created: ".. loaderClip)
-							comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED] 
-							comp:Loop(true)
-						end
-						
-						local function check_comp()
-							if fu:GetResolve() then
-								print("This tool is currently tested with Fusion Studio.")
-								return true
-							elseif comp:GetAttrs('COMPS_FileName') == '' then
-								print('[VectorWarp] Please save the composition')
-								d = {}
-								d[1] = {"Warning", Name = "", "Text", ReadOnly = true, Lines = 2, Wrap = false, Default = "Please, save the comp to proceed"}
-								ask = comp:AskUser("Warning", d) 
-								if ask then
-									comp:SaveAs()
-								end
-								return ask
-							end
-							return true
-						end
-
-						local function MoveLoader(ldr)
-							if ldr.ID ~= "Loader" then
-								return nil
-							end
-							globalStart = comp:GetAttrs().COMPN_GlobalStart
-							inPoint = comp:GetAttrs().COMPN_RenderStart
-							comp:StartUndo('Move Loader')
-							
-							clipName = ldr.Clip[1]
-							
-							if inPoint == globalStart then
-								print("Render IN and Comp Global Start are the same. Trying to parse the loader filename to find the first frame")
-								if clipName == "" then
-									print("Clip Name is empty. Loader not moved")
-									return
-								end
-								local seq = ParseFilename(clipName)
-								inPoint = seq.Number
-							end
-							bmd.MoveClip(ldr, globalStart, tonumber(inPoint))
-							print("New Loader IN point: " .. inPoint)
-							comp:EndUndo()
-							ldr.HoldFirstFrame[0] = 0
-							ldr.HoldLastFrame[0] = 0
-						end
-
-						if not tool then
-							tool = comp.ActiveTool
-						end
-						
-						if check_comp() then
-							win_utf_module = "win-125x"
-							utf_module_loaded, module = pcall(require, win_utf_module)
-							if utf_module_loaded then
-								codepage_settings = module.codepage
-								print("Current codepage win-125x settings: " .. codepage_settings)
-								require("win-125x")
-								print('Module ' .. win_utf_module .. ' found and loaded')
-							end
-							CreateCleanPass(tool)
-							local ldr = tool:GetChildrenList(false, "Loader")[1]
-
-							MoveLoader(ldr)
-							print("[Done] Now press Analyze button")
-
-						end
-						
+						local vlib = require("vectorlib")
+						if not tool then tool = comp.ActiveTool end
+						vlib.generate_cleanpass_fast(tool, comp)
 					]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
@@ -1008,577 +863,214 @@ QUICK GUIDE:
 					INP_Integer = false,
 					LINKID_DataType = "Number",
 					BTNCS_Execute = [[
-						function sleep (a) 
-							local sec = tonumber(os.clock() + a); 
-							while (os.clock() < sec) do 
-							end 
-						end
-
-						local function ParseFilename(filename)
-							local seq = {}
-							seq.FullPath = filename
-							string.gsub(seq.FullPath, "^(.+[/\\])(.+)", function(path, name)
-								seq.Path = path
-								seq.FullName = name
-							end)
-							string.gsub(seq.FullName, "^(.+)(%..+)$", function(name, ext)
-								seq.Name = name
-								seq.Extension = ext
-							end)
-							-- check if no extension
-							if not seq.Name then
-								seq.Name = seq.FullName
-							end
-							
-							string.gsub(seq.Name, "^(.-)(%d+)$", function(name, SNum)
-								seq.CleanName = name
-								seq.SNum = SNum
-							end)
-							
-							if seq.SNum then
-								seq.Number = tonumber(seq.SNum)
-								seq.Padding = string.len(seq.SNum)
-							else
-								seq.SNum = ""
-								seq.CleanName = seq.Name
-							end
-							
-							if seq.Extension == nil then
-								seq.Extension = ""
-							end
-							return seq 
-						end
-
-						local function MoveLoader(ldr)
-							if ldr.ID ~= "Loader" then
-								return nil
-							end
-							globalStart = comp:GetAttrs().COMPN_GlobalStart
-							inPoint = comp:GetAttrs().COMPN_RenderStart
-							comp:StartUndo('Move Loader')
-							
-							clipName = ldr.Clip[1]
-							
-							if inPoint == globalStart then
-								print("Render IN and Comp Render Start are the same. Trying to parse the loader filename to find the first frame")
-								if clipName == "" then
-									print("Clip Name is empty. Loader not moved")
-									return
-								end
-								seq = ParseFilename(clipName)
-								inPoint = seq.Number
-							end
-							bmd.MoveClip(ldr, globalStart, tonumber(inPoint))
-							print("New Loader IN point: " .. inPoint)
-							comp:EndUndo()
-							ldr.HoldFirstFrame[0] = 0
-							ldr.HoldLastFrame[0] = 0
-						end
-
-						local function RenderCleanpass()
-							local ldr = tool:GetChildrenList(false, "Loader")[1]
-							local svr = tool:GetChildrenList(false, "Saver")[1]
-							saverClip = svr.Clip[0]
-							
-							renderStart = comp:GetAttrs().COMPN_RenderStart
-							renderEnd = comp:GetAttrs().COMPN_RenderEnd
-							
-							-- replace double dots in the saver path
-							padding = string.format("%04d", renderStart)
-							
-							local loaderClip = comp:MapPath(saverClip)
-							local pattern = "%.%.(%w+)$"
-							if string.match(loaderClip, pattern) then
-								loaderClip = loaderClip:gsub(pattern, "." .. padding .. ".%1")
-							else
-								local seq = ParseFilename(loaderClip)
-								dump(seq)
-								loaderClip = seq.Path .. seq.CleanName .. padding .. seq.Extension
-							end
-							
-							-- print("LOADER: " .. loaderClip)
-							tool.Render = 0
-							temp_time = comp.CurrentTime
-							comp.CurrentTime = renderStart
-							comp:Loop(false)
-							fusion.CacheManager:Purge()
-							tool.SaveFrames = "HiQInteractive"
-							comp:Play()
-							
-							while true do 
-								if temp_time < comp.CurrentTime then
-									temp_time = temp_time + 1
-									print(".")
-								end
-								if not comp:IsPlaying() then
-									sleep(2)
-									break
-								end
-							end
-							comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED] or temp_time
-							tool.SaveFrames = "Full"
-							ldr.Clip[0] = comp:MapPath(loaderClip)
-
-							MoveLoader(ldr)
-							print("[Done] Now press Analyze button")
-
-							fusion.CacheManager:Purge()
-						end
-
-						RenderCleanpass()
+						local vlib = require("vectorlib")
+						if not tool then tool = comp.ActiveTool end
+						vlib.render_cleanpass_safe(tool, comp)
 					]],
 					ICS_ControlPage = "Controls",
 					INPID_InputControl = "ButtonControl",
 					LINKS_Name = "Render CleanPass (safe)",
-					},
+				},
 				AnalyzeBackward = {
 					INP_MaxAllowed = 1000000,
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-						print("Running " .. self.Name)
-
-						local function WarningDialog(error)
-							print('[VectorWarp] ' .. error)
-							d = {}
-
-							d[1] = {"Warning", Name = "", "Text", ReadOnly = true, Lines = 3, Wrap = false, Default = error}
-							ask = comp:AskUser("Warning", d) 
-							return ask
-						end
-
-						function sleep (a) 
-							local sec = tonumber(os.clock() + a); 
-							while (os.clock() < sec) do 
-							end 
-						end
-						local function RenderBackward()
-							if not tool then
-								tool = comp.ActiveTool
-							end
-							local renderStart = comp:GetAttrs().COMPN_RenderStart
-							local renderEnd = comp:GetAttrs().COMPN_RenderEnd
-	
-							refFrame = tool.ReferenceFrame[fu.TIME_UNDEFINED] 
-							if refFrame < renderStart or refFrame > renderEnd then
-								warning = WarningDialog("Reference frame [" .. refFrame .. "] is out of the region!\nAnalyze process cancelled.")
-								return
-							end
-							
-							tool.Render = 1
-
-							-- set vectors destination
-							tool.Direction = 1
-
-							comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
-							comp:Loop(false)
-							fusion.CacheManager:Purge()
-							temp_time = comp.CurrentTime
-							tool.SaveFrames = "HiQInteractive"
-							
-							-- play backward 
-							comp:Play(true)
-
-							while true do
-								if temp_time > comp.CurrentTime then
-									temp_time = temp_time - 1
-									print("Analyzing backward frame " .. temp_time)
-								end
-								if not comp:IsPlaying() then
-									sleep(2)
-									break
-								end
-							end
-							comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
-							tool.SaveFrames = "Full"
-						end
-						
-						RenderBackward()
-						
-						]],
-						INP_MaxScale = 1,
-						INP_MinScale = 0,
-						INP_MinAllowed = -1000000,
-						LINKID_DataType = "Number",
-						ICS_ControlPage = "Controls",
-						ICD_Width = 0.5,
-						LINKS_Name = "Analyze Backward"
-						},
-					AnalyzeForward = {
-						INP_MaxAllowed = 1000000,
-						INP_Integer = false,
-						INPID_InputControl = "ButtonControl",
-						BTNCS_Execute = [[
-							print("Running " .. self.Name)
-
-							local function WarningDialog(error)
-								print('[VectorWarp] ' .. error)
-								d = {}
-	
-								d[1] = {"Warning", Name = "", "Text", ReadOnly = true, Lines = 3, Wrap = false, Default = error}
-								ask = comp:AskUser("Warning", d) 
-								return ask
-							end
-	
-							function sleep (a) 
-								local sec = tonumber(os.clock() + a); 
-								while (os.clock() < sec) do 
-								end 
-							end
-
-							local function RenderForward()
-								if not tool then
-									tool = comp.ActiveTool
-								end
-								local renderStart = comp:GetAttrs().COMPN_RenderStart
-								local renderEnd = comp:GetAttrs().COMPN_RenderEnd
-		
-								refFrame = tool.ReferenceFrame[fu.TIME_UNDEFINED] 
-								if refFrame < renderStart or refFrame > renderEnd then
-									warning = WarningDialog("Reference frame [" .. refFrame .. "] is out of the region!\nAnalyze process cancelled.")
-									return
-								end
-								
-								tool.Render = 1
-
-								-- set vectors destination
-								tool.Direction = 0
-
-								comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
-								comp:Loop(false)
-								fusion.CacheManager:Purge()
-								temp_time = comp.CurrentTime
-								tool.SaveFrames = "HiQInteractive"
-								
-								-- play forward 
-								comp:Play()
-								while true do
-									if temp_time < comp.CurrentTime then
-										temp_time = temp_time + 1
-										print("Analyzing forward frame " .. temp_time)
-									end
-									if not comp:IsPlaying() then
-										sleep(2)
-										break
-									end
-								end
-
-								comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
-								tool.SaveFrames = "Full"
-							end
-							
-							RenderForward()
-							
-						]],
-						INP_MaxScale = 1,
-						INP_MinScale = 0,
-						INP_MinAllowed = -1000000,
-						LINKID_DataType = "Number",
-						ICS_ControlPage = "Controls",
-						ICD_Width = 0.5,
-						LINKS_Name = "Analyze Forward"
-						},
+						local vlib = require("vectorlib")
+						if not tool then tool = comp.ActiveTool end
+						vlib.analyze_backward(tool, comp)
+					]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 0.5,
+					LINKS_Name = "Analyze Backward"
+				},
+				AnalyzeForward = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+						local vlib = require("vectorlib")
+						if not tool then tool = comp.ActiveTool end
+						vlib.analyze_forward(tool, comp)
+					]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 0.5,
+					LINKS_Name = "Analyze Forward"
+				},
 					
-					AnalyzeVectors = {
-						INP_MaxAllowed = 1000000,
-						INP_Integer = false,
-						INPID_InputControl = "ButtonControl",
-						BTNCS_Execute = [[
-							print("Running " .. self.Name)
+				AnalyzeVectors = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+						local vlib = require("vectorlib")
+						if not tool then tool = comp.ActiveTool end
+						vlib.analyze_both(tool, comp)
+					]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 1,
+					LINKS_Name = "Analyze Forward then Backward"
+				},
 
-							local function WarningDialog(error)
-								print('[VectorWarp] ' .. error)
-								d = {}
-	
-								d[1] = {"Warning", Name = "", "Text", ReadOnly = true, Lines = 3, Wrap = false, Default = error}
-								ask = comp:AskUser("Warning", d) 
-								return ask
-							end
-	
-							function sleep (a) 
-								local sec = tonumber(os.clock() + a); 
-								while (os.clock() < sec) do 
-								end 
-							end
-							local function AnalyzeVectors()
-								if not tool then
-									tool = comp.ActiveTool
-								end
+				MoveLoader = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+						local vlib = require("vectorlib")
+						if not tool then tool = comp.ActiveTool end
+						local ldr = tool:GetChildrenList(false, "Loader")[1]
+						vlib.move_loader(ldr, comp)
+					]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 0.5,
+					LINKS_Name = "Move Vectors to Render Start",
+				},
 
-								local renderStart = comp:GetAttrs().COMPN_RenderStart
-								local renderEnd = comp:GetAttrs().COMPN_RenderEnd
-		
-								refFrame = tool.ReferenceFrame[fu.TIME_UNDEFINED] 
-								if refFrame < renderStart or refFrame > renderEnd then
-									warning = WarningDialog("Reference frame [" .. refFrame .. "] is out of the region!\nAnalyze process cancelled.")
-									return
-								end
+				DeleteVectors = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+						local vlib = require("vectorlib")
+						if not tool then tool = comp.ActiveTool end
+						vlib.delete_vectors(tool, comp)
+					]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 0.5,
+					LINKS_Name = "Delete Vectors"
+				},
 
-								tool.Render = 1
-								tool.Direction = 0 
-								comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED] 
-								comp:Loop(false) 
-								fusion.CacheManager:Purge()
-								local renderEnd = comp:GetAttrs().COMPN_RenderEnd
-								local renderStart = comp:GetAttrs().COMPN_RenderStart
-								
-								temp_time = comp.CurrentTime
-								tool.SaveFrames = "HiQInteractive"
-								comp:Play()
-								while true do 
-									if temp_time < comp.CurrentTime then
-										temp_time = temp_time + 1
-										print("Analyzing forward frame " .. temp_time)
-									end
-									if not comp:IsPlaying() then
-										sleep(2)
-										break
-									end
-								end
-								comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
-								fusion.CacheManager:Purge()
-								tool.Direction = 1 
-								temp_time = comp.CurrentTime
-								comp:Play(true)
-								while true do
-									if temp_time > comp.CurrentTime then
-										temp_time = temp_time - 1
-										print("Analyzing backward frame " .. temp_time)
-									end
-									if not comp:IsPlaying() then
-										sleep(2)
-										break
-									end
-								end
-								tool.SaveFrames = "Full"
-								comp.CurrentTime = tool.ReferenceFrame[fu.TIME_UNDEFINED]
-								collectgarbage()
-							end
-							AnalyzeVectors()
-						]],
-						INP_MaxScale = 1,
-						INP_MinScale = 0,
-						INP_MinAllowed = -1000000,
-						LINKID_DataType = "Number",
-						ICS_ControlPage = "Controls",
-						ICD_Width = 1,
-						LINKS_Name = "Analyze Forward then Backward"
-					},
+				CreateLoader = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+						local vlib = require("vectorlib")
+						if not tool then tool = comp.ActiveTool end
+						vlib.create_loader(tool, comp)
+					]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 1,
+					LINKS_Name = "Create Loader",
+				},
 
-					MoveLoader = {
-						INP_MaxAllowed = 1000000,
-						INP_Integer = false,
-						INPID_InputControl = "ButtonControl",
-						BTNCS_Execute = [[
+				-- New Simplified Workflow Section
+				SimplifiedWorkflowLabel = {
+					INP_Integer = false,
+					LBLC_DropDownButton = true,
+					LINKID_DataType = "Number",
+					LBLC_NumInputs = 4,
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "LabelControl",
+					LINKS_Name = "Simplified Workflows"
+				},
 
-							local function ParseFilename(filename)
-								local seq = {}
-								seq.FullPath = filename
-								string.gsub(seq.FullPath, "^(.+[/\\])(.+)", function(path, name)
-									seq.Path = path
-									seq.FullName = name
-								end)
-								string.gsub(seq.FullName, "^(.+)(%..+)$", function(name, ext)
-									seq.Name = name
-									seq.Extension = ext
-																		end)
-								-- check if no extension
-								if not seq.Name then
-									seq.Name = seq.FullName
-								end
-								
-								string.gsub(seq.Name, "^(.-)(%d+)$", function(name, SNum)
-									seq.CleanName = name
-									seq.SNum = SNum
-								end)
-								
-								if seq.SNum then
-									seq.Number = tonumber(seq.SNum)
-									seq.Padding = string.len(seq.SNum)
-								else
-									seq.SNum = ""
-									seq.CleanName = seq.Name
-								end
-								
-								if seq.Extension == nil then
-									seq.Extension = ""
-								end
-								return seq 
-							end
+				AutoProcess = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+						local vwf = require("vectorwarp_workflows")
+						if not tool then tool = comp.ActiveTool end
+						vwf.auto_process(tool, comp, {
+							method = "fast",
+							direction = "both",
+							show_progress = true,
+							auto_reference = true
+						})
+					]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 1,
+					LINKS_Name = "Auto Process (All Steps)",
+				},
 
-							local function MoveLoader(ldr)
-								if ldr.ID ~= "Loader" then
-									return nil
-								end
-								globalStart = comp:GetAttrs().COMPN_GlobalStart
-								inPoint = comp:GetAttrs().COMPN_RenderStart
-								comp:StartUndo('Move Loader')
-								
-								clipName = ldr.Clip[1]
-								seq = ParseFilename(clipName)
-								
-								if inPoint == globalStart then
-									print("Render IN and Comp Render Start are the same. Trying to parse the loader filename to find the first frame")
-									if clipName == "" then
-										print("Clip Name is empty. Loader not moved")
-										return
-									end
-									inPoint = seq.Number
-								end
-								bmd.MoveClip(ldr, globalStart, tonumber(inPoint))
-								print("New Loader IN point: " .. inPoint)
-								comp:EndUndo()
-								ldr.HoldFirstFrame[0] = 0
-								ldr.HoldLastFrame[0] = 0
-							end
-							
-							local ldr = tool:GetChildrenList(false, "Loader")[1]
-							MoveLoader(ldr)
-							]],
-						INP_MaxScale = 1,
-						INP_MinScale = 0,
-						INP_MinAllowed = -1000000,
-						LINKID_DataType = "Number",
-						ICS_ControlPage = "Controls",
-						ICD_Width = 0.5,
-						LINKS_Name = "Move Vectors to Render Start",
-					},
+				QuickStabilize = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+						local vwf = require("vectorwarp_workflows")
+						if not tool then tool = comp.ActiveTool end
+						vwf.quick_stabilize(tool, comp)
+					]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 0.5,
+					LINKS_Name = "Quick Stabilize",
+				},
 
-					DeleteVectors = {
-						INP_MaxAllowed = 1000000,
-						INP_Integer = false,
-						INPID_InputControl = "ButtonControl",
-						BTNCS_Execute = [[
+				QuickTrack = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+						local vwf = require("vectorwarp_workflows")
+						if not tool then tool = comp.ActiveTool end
+						vwf.quick_track(tool, comp)
+					]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 0.5,
+					LINKS_Name = "Quick Track",
+				},
 
-							local function ParseFilename(filename)
-								local seq = {}
-								seq.FullPath = filename
-								string.gsub(seq.FullPath, "^(.+[/\\])(.+)", function(path, name)
-									seq.Path = path
-									seq.FullName = name
-								end)
-								string.gsub(seq.FullName, "^(.+)(%..+)$", function(name, ext)
-									seq.Name = name
-									seq.Extension = ext
-																		end)
-								-- check if no extension
-								if not seq.Name then
-									seq.Name = seq.FullName
-								end
-								
-								string.gsub(seq.Name, "^(.-)(%d+)$", function(name, SNum)
-									seq.CleanName = name
-									seq.SNum = SNum
-								end)
-								
-								if seq.SNum then
-									seq.Number = tonumber(seq.SNum)
-									seq.Padding = string.len(seq.SNum)
-								else
-									seq.SNum = ""
-									seq.CleanName = seq.Name
-								end
-								
-								if seq.Extension == nil then
-									seq.Extension = ""
-								end
-								return seq 
-							end
+				InteractiveSetup = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+						local vwf = require("vectorwarp_workflows")
+						if not tool then tool = comp.ActiveTool end
+						vwf.interactive_setup(tool, comp)
+					]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 1,
+					LINKS_Name = "Interactive Setup Wizard",
+				},
 
-							local function DeleteVectors(seq)
-								platform = (FuPLATFORM_WINDOWS and 'Windows') or (FuPLATFORM_MAC and 'Mac') or (FuPLATFORM_LINUX and 'Linux')
-								
-								-- Check if the OS is Windows by searching for the Program Files folder
-								if platform == "Windows" then
-									deleteCommand = "del "
-								elseif platform == "Mac" or platform == "Linux" then
-									deleteCommand = "rm "
-								else
-									print("OS Platform not detected")
-									return
-								end
-								imageSequenceFilename = seq.Path .. "*" .. seq.Extension
-								print('[Formatted Image Sequence] ' .. imageSequenceFilename)
-								
-								-- Load utf8-win
-								win_utf_module = "win-125x"
-								utf_module_loaded, module = pcall(require, win_utf_module)
-								if utf_module_loaded then
-									require("win-125x")
-								end
-								if utf_module_loaded then
-									imageSequenceFilename = utf8_to_win(imageSequenceFilename)
-								end
-
-								deleteRederedCommand = deleteCommand  .. imageSequenceFilename
-								print("Deleting file equence using command: " .. "[ "..deleteRederedCommand.." ]")
-								os.execute(deleteRederedCommand)
-								print('[Vector files Cleared]')
-							end
-
-							local function ConfirmDialog(message)
-								print('[VectorWarp] ' .. message)
-								d = {}
-								d[1] = {"Warning", Name = "", "Text", ReadOnly = true, Lines = 2, Wrap = false, Default = "Are you sure you want\nto remove all Vectors?"}
-								ask = comp:AskUser("Warning", d) 
-								return ask
-							end
-							process = ConfirmDialog("File removal confirmation dialogue")
-
-							if process then
-								local ldr = tool:GetChildrenList(false, "Loader")[1]
-								local clipPath = comp:MapPath(ldr.Clip[0])
-								local seq = ParseFilename(clipPath)
-								DeleteVectors(seq)
-							else
-								print("Cancelled")
-							end
-
-							]],
-						INP_MaxScale = 1,
-						INP_MinScale = 0,
-						INP_MinAllowed = -1000000,
-						LINKID_DataType = "Number",
-						ICS_ControlPage = "Controls",
-						ICD_Width = 0.5,
-						LINKS_Name = "Delete Vectors"
-					},
-
-					CreateLoader = {
-						INP_MaxAllowed = 1000000,
-						INP_Integer = false,
-						INPID_InputControl = "ButtonControl",
-						BTNCS_Execute = [[
-
-							function CreateLoader(path)
-								comp:Lock()
-								comp:StartUndo('Create Smart Vector Loader')
-								tool = comp.ActiveTool
-								local tool_ldr = tool:GetChildrenList(false, "Loader")[1]
-								local settings = comp:CopySettings(tool_ldr)
-								local flow = comp.CurrentFrame.FlowView
-								x, y = flow:GetPos(tool)
-								local loader = comp:AddTool("Loader")
-								loader:LoadSettings(settings)
-								flow:SetPos(loader, x, y+1)
-								inputs = tool.MainOutput:GetConnectedInputs()
-								for i, input in ipairs(inputs) do
-									input:ConnectTo(loader.Output)
-								end
-								comp:EndUndo()
-								comp:Unlock()
-							end
-							CreateLoader()
-							]],
-						INP_MaxScale = 1,
-						INP_MinScale = 0,
-						INP_MinAllowed = -1000000,
-						LINKID_DataType = "Number",
-						ICS_ControlPage = "Controls",
-						ICD_Width = 1,
-						LINKS_Name = "Create Loader",
-					},
-
+				sep2 = {
+					INPID_InputControl = "SeparatorControl",
+					ICS_ControlPage = "Controls",
+				},
 
 				QuickGuide = {
 					INP_Integer = false,
