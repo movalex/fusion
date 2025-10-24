@@ -92,6 +92,9 @@ local DEFAULT_SCREEN_WIDTH = 1920
 local DEFAULT_SCREEN_HEIGHT = 1100
 local MAX_VALID_WIDTH = 10000
 
+-- Configuration: Set to true to update ToolManager tags when renaming tools
+local UPDATE_TOOLMANAGER_TAGS = false
+
 -- Configure keyboard shortcuts for the rename dialog
 app:AddConfig("renameplus", {
     Target {
@@ -268,8 +271,10 @@ function showUI(tool, cur_name)
         
         tool:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = new_name})
         
-        -- Update ToolManager tags if name was auto-incremented by Fusion
-        updateToolManagerTags(prevName, tool.Name)
+        -- Update ToolManager tags if enabled
+        if UPDATE_TOOLMANAGER_TAGS then
+            updateToolManagerTags(prevName, tool.Name)
+        end
     end
     
     --- Batch rename multiple tools with sequential numbering
@@ -291,7 +296,9 @@ function showUI(tool, cur_name)
         
         for num, t in ipairs(tools) do
             local newName = baseName .. '_' .. string.format("%02d", num)
-            updateToolManagerTags(t.Name, newName)
+            if UPDATE_TOOLMANAGER_TAGS then
+                updateToolManagerTags(t.Name, newName)
+            end
             t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = newName})
             count = count + 1
         end
