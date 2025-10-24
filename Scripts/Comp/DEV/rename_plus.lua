@@ -9,10 +9,12 @@ Description:
     - Rename individual selected tools or underlays
     - Batch rename multiple tools with automatic sequential numbering (_01, _02, etc.)
     - Fix tool name serialization issues (removes duplicate numbers like Tool1_1_1)
-    - Apply four enumeration modes:
+    - Apply five enumeration modes:
         * Strip Numbers: Removes all trailing numbers and underscores
         * Enumerate: Adds sequential numbers to existing names
         * Strip and Re-enumerate: Removes old numbers then adds new sequential numbers
+        * Strip and Enumerate by Type: Groups tools by type, removes old numbers, 
+          then enumerates within each type group (e.g., Blur_01, Blur_02, Merge_01, Merge_02)
         * Add Tool ID: Appends the internal Fusion tool ID to the name
     
     The UI appears at the cursor position with smart boundary detection to stay on screen.
@@ -249,10 +251,11 @@ function showUI(tool, cur_name)
     itm.mytext:SelectAll()
     
     -- Populate enumeration mode dropdown
-    itm.FixMode:AddItem('Strip Numbers')
     itm.FixMode:AddItem('Enumerate')
-    itm.FixMode:AddItem('Strip and Re-enumerate')
-    itm.FixMode:AddItem('Add Tool ID')
+    itm.FixMode:AddItem('Append ID')
+    itm.FixMode:AddItem('Strip Numbers')
+    itm.FixMode:AddItem('Strip and Enumerate All')
+    itm.FixMode:AddItem('Strip and Enumerate by ID')
     
     -- ------------------------------------------------------------------------
     -- Rename Functions
@@ -317,29 +320,57 @@ function showUI(tool, cur_name)
             return
         end
         
-        for i, t in ipairs(tools) do
-            local toolName
-            
-            if itm.FixMode.CurrentIndex == 0 then
-                -- Strip Numbers: Remove trailing numbers and underscores
-                toolName = string.gsub(t.Name, "[_%d]+$", "")
-                
-            elseif itm.FixMode.CurrentIndex == 1 then
-                -- Enumerate: Add sequential number to existing name
-                toolName = t.Name .. "_" .. string.format("%02d", i)
-                
-            elseif itm.FixMode.CurrentIndex == 2 then
-                -- Strip and Re-enumerate: Remove old numbers then add new
-                toolName = string.gsub(t.Name, "[_%d]+$", "") .. "_" .. string.format("%02d", i)
-                
-            elseif itm.FixMode.CurrentIndex == 3 then
-                -- Add Tool ID: Append internal Fusion tool ID
-                toolName = t.Name .. "_" .. t.ID
-            else
-                return
+        local mode = itm.FixMode.CurrentIndex
+        
+        -- Mode 0: Enumerate - Add sequential number to existing name
+        if mode == 0 then
+            for i, t in ipairs(tools) do
+                local toolName = t.Name .. "_" .. string.format("%02d", i)
+                t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = toolName})
             end
             
-            t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = toolName})
+        -- Mode 1: Append ID - Append internal Fusion tool ID
+        elseif mode == 1 then
+            for _, t in ipairs(tools) do
+                local toolName = t.Name .. "_" .. t.ID
+                t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = toolName})
+            end
+            
+        -- Mode 2: Strip Numbers - Remove trailing numbers and underscores
+        elseif mode == 2 then
+            for _, t in ipairs(tools) do
+                local toolName = string.gsub(t.Name, "[_%d]+$", "")
+                t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = toolName})
+            end
+            
+        -- Mode 3: Strip and Enumerate All - Remove old numbers then add new sequential
+        elseif mode == 3 then
+            for i, t in ipairs(tools) do
+                local toolName = string.gsub(t.Name, "[_%d]+$", "") .. "_" .. string.format("%02d", i)
+                t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = toolName})
+            end
+            
+        -- Mode 4: Strip and Enumerate by ID - Group by type, then enumerate within groups
+        elseif mode == 4 then
+            local toolsByType = {}
+            
+            -- Group tools by their ID (type)
+            for _, t in ipairs(tools) do
+                local toolType = t.ID
+                if not toolsByType[toolType] then
+                    toolsByType[toolType] = {}
+                end
+                table.insert(toolsByType[toolType], t)
+            end
+            
+            -- Enumerate within each type group
+            for toolType, typeTools in pairs(toolsByType) do
+                for i, t in ipairs(typeTools) do
+                    local baseName = string.gsub(t.Name, "[_%d]+$", "")
+                    local toolName = baseName .. "_" .. string.format("%02d", i)
+                    t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = toolName})
+                end
+            end
         end
     end
     
