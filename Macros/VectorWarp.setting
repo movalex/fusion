@@ -46,9 +46,6 @@ SIMPLIFIED WORKFLOWS (NEW):
 • Quick Track: Tracks forward motion from current frame
   Uses current frame as reference, ideal for following an object.
 
-• Interactive Setup: Guided wizard for workflow selection
-  Helps choose between stabilization, tracking, or custom settings.
-
 MANUAL WORKFLOW:
 1. Connect your footage to the VectorWarp input.
 
@@ -748,6 +745,78 @@ for better motion analysis quality.
 					MBTNC_ShowToolTip = true,
 					LINKS_Name = "Direction",
 				},
+
+				-- New Simplified Workflow Section
+				SimplifiedWorkflowLabel = {
+					INP_Integer = false,
+					INP_Default = 1,
+					LBLC_DropDownButton = true,
+					LINKID_DataType = "Number",
+					LBLC_NumInputs = 3,
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "LabelControl",
+					LINKS_Name = "Simplified Workflows"
+				},
+
+				AutoProcess = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+						local vwf = require("vectorwarp_workflows")
+						if not tool then tool = comp.ActiveTool end
+						vwf.auto_process(tool, comp, {
+							method = "fast",
+							direction = "both",
+							show_progress = true,
+							auto_reference = true
+						})
+					]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 1,
+					LINKS_Name = "Auto Process (All Steps)",
+				},
+
+				QuickStabilize = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+						local vwf = require("vectorwarp_workflows")
+						if not tool then tool = comp.ActiveTool end
+						vwf.quick_stabilize(tool, comp)
+					]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 0.5,
+					LINKS_Name = "Quick Stabilize",
+				},
+
+				QuickTrack = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+						local vwf = require("vectorwarp_workflows")
+						if not tool then tool = comp.ActiveTool end
+						vwf.quick_track(tool, comp)
+					]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 0.5,
+					LINKS_Name = "Quick Track",
+				},
+
 				SetupLabel = {
 					INP_Integer = false,
 					INP_External = false,
@@ -824,7 +893,7 @@ for better motion analysis quality.
 					LBLC_NumInputs = 9,
 					ICS_ControlPage = "Controls",
 					INPID_InputControl = "LabelControl",
-					LINKS_Name = "Analysis"
+					LINKS_Name = "Advanced Controls"
 				},
 				Render = {
 					{ MBTNC_AddButton = "CleanPass" },
@@ -979,98 +1048,7 @@ for better motion analysis quality.
 					LINKS_Name = "Create Loader",
 				},
 
-				-- New Simplified Workflow Section
-				SimplifiedWorkflowLabel = {
-					INP_Integer = false,
-					LBLC_DropDownButton = true,
-					LINKID_DataType = "Number",
-					LBLC_NumInputs = 4,
-					ICS_ControlPage = "Controls",
-					INPID_InputControl = "LabelControl",
-					LINKS_Name = "Simplified Workflows"
-				},
 
-				AutoProcess = {
-					INP_MaxAllowed = 1000000,
-					INP_Integer = false,
-					INPID_InputControl = "ButtonControl",
-					BTNCS_Execute = [[
-						local vwf = require("vectorwarp_workflows")
-						if not tool then tool = comp.ActiveTool end
-						vwf.auto_process(tool, comp, {
-							method = "fast",
-							direction = "both",
-							show_progress = true,
-							auto_reference = true
-						})
-					]],
-					INP_MaxScale = 1,
-					INP_MinScale = 0,
-					INP_MinAllowed = -1000000,
-					LINKID_DataType = "Number",
-					ICS_ControlPage = "Controls",
-					ICD_Width = 1,
-					LINKS_Name = "Auto Process (All Steps)",
-				},
-
-				QuickStabilize = {
-					INP_MaxAllowed = 1000000,
-					INP_Integer = false,
-					INPID_InputControl = "ButtonControl",
-					BTNCS_Execute = [[
-						local vwf = require("vectorwarp_workflows")
-						if not tool then tool = comp.ActiveTool end
-						vwf.quick_stabilize(tool, comp)
-					]],
-					INP_MaxScale = 1,
-					INP_MinScale = 0,
-					INP_MinAllowed = -1000000,
-					LINKID_DataType = "Number",
-					ICS_ControlPage = "Controls",
-					ICD_Width = 0.5,
-					LINKS_Name = "Quick Stabilize",
-				},
-
-				QuickTrack = {
-					INP_MaxAllowed = 1000000,
-					INP_Integer = false,
-					INPID_InputControl = "ButtonControl",
-					BTNCS_Execute = [[
-						local vwf = require("vectorwarp_workflows")
-						if not tool then tool = comp.ActiveTool end
-						vwf.quick_track(tool, comp)
-					]],
-					INP_MaxScale = 1,
-					INP_MinScale = 0,
-					INP_MinAllowed = -1000000,
-					LINKID_DataType = "Number",
-					ICS_ControlPage = "Controls",
-					ICD_Width = 0.5,
-					LINKS_Name = "Quick Track",
-				},
-
-				InteractiveSetup = {
-					INP_MaxAllowed = 1000000,
-					INP_Integer = false,
-					INPID_InputControl = "ButtonControl",
-					BTNCS_Execute = [[
-						local vwf = require("vectorwarp_workflows")
-						if not tool then tool = comp.ActiveTool end
-						vwf.interactive_setup(tool, comp)
-					]],
-					INP_MaxScale = 1,
-					INP_MinScale = 0,
-					INP_MinAllowed = -1000000,
-					LINKID_DataType = "Number",
-					ICS_ControlPage = "Controls",
-					ICD_Width = 1,
-					LINKS_Name = "Interactive Setup Wizard",
-				},
-
-				sep2 = {
-					INPID_InputControl = "SeparatorControl",
-					ICS_ControlPage = "Controls",
-				},
 
 				QuickGuide = {
 					INP_Integer = false,
