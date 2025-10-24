@@ -1,8 +1,57 @@
+--[[
+VectorFill - Iterative Growth Propagation Tool
+===============================================
+
+Description:
+Creates organic growth/propagation effects where a source image expands from
+defined starting points, with growth speed controlled by various map sources.
+
+Workflow:
+  1. Connect Image and Growth Source inputs
+  2. Click "Auto Process" button in Controls
+  3. Wait for canvas generation and processing (displays progress in console)
+  4. Playback will start automatically showing growth effect
+  5. Switch output modes as needed via Switch_OutputMode control
+
+Inputs:
+  - Growth Source: Alpha mask defining where growth starts
+  - Image: Source image content revealed during growth
+  - Speed Map: Optional custom speed control map (alternative to generated maps)
+
+Output Modes:
+  - Render: Live calculation with full quality (slower playback)
+  - Age: Baked cached instance (faster playback, fixed result)
+  - Trail: Dynamic gradient-based coloring effect
+  - Growth Speed: Visualization of the active speed map
+
+Speed Source Options:
+  - Texture: Uses input image texture patterns for growth speed variation
+  - Shape: Uses alpha shape with adjustable edge repetitions and width
+  - Interior: Uses alpha channel interior only
+  - Combined: Weighted mix of texture, shape, and interior sources
+  - Custom: External speed map image input via Speed Map input
+
+Technical Notes:
+- Uses iterative frame-by-frame processing via Loader/Saver feedback loop
+- Saves intermediate frames to Comp:DistanceMap directory as EXR sequence
+- Requires sequential processing from start frame
+- Cache purge recommended when changing parameters
+- Re-run Auto Process after parameter changes to regenerate canvas
+
+Control Pages:
+  - Speed Map: Configure speed map generation parameters and source selection
+  - Render: Canvas generation, output settings, and trail parameters
+
+Version: 2.0 (Refactored 2025)
+Original Author: [Tool Author]
+Variable Refactoring & Automation: 2025
+]]
+
 {
 	Tools = ordered() {
-		["Re:FIll"] = GroupOperator {
+		["VectorFill"] = GroupOperator {
 			Tools = ordered() {
-				Note3_1_2_1 = Note {
+				Note_MakeBlank = Note {
 					ViewInfo = StickyNoteInfo {
 						Flags = {
 							Expanded = true
@@ -14,7 +63,7 @@
 						Comments = Input { Value = "make blank" }
 					}
 				},
-				Note3_1_3_1 = Note {
+				Note_SpeedMapCompositor = Note {
 					ViewInfo = StickyNoteInfo {
 						Flags = {
 							Expanded = true
@@ -26,7 +75,7 @@
 						Comments = Input { Value = "speed map compositor" }
 					}
 				},
-				Note3_1_3_2 = Note {
+				Note_BorderStrength = Note {
 					ViewInfo = StickyNoteInfo {
 						Flags = {
 							Expanded = true
@@ -38,7 +87,7 @@
 						Comments = Input { Value = "border strength (lift)" }
 					}
 				},
-				Note3_1_2 = Note {
+				Note_Loader = Note {
 					ViewInfo = StickyNoteInfo {
 						Flags = {
 							Expanded = true
@@ -50,7 +99,7 @@
 						Comments = Input { Value = "loader" }
 					}
 				},
-				Note3_1_3 = Note {
+				Note_Saver = Note {
 					ViewInfo = StickyNoteInfo {
 						Flags = {
 							Expanded = true
@@ -62,173 +111,173 @@
 						Comments = Input { Value = "saver" }
 					}
 				},
-				PipeRouter14 = PipeRouter {
+				PR_InputToMatte = PipeRouter {
 					ViewInfo = PipeRouterInfo { Pos = { 26.7972412109375, 25.854248046875 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "PipeRouter13",
+							SourceOp = "PR_InputToScale",
 							Source = "Output"
 						}
 					}
 				},
-				PipeRouter4 = PipeRouter {
+				PR_BorderToInvert = PipeRouter {
 					ViewInfo = PipeRouterInfo { Pos = { 2735.59716796875, -91.886962890625 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "ErodeDilate2_3_1_3",
+							SourceOp = "Erode_SpeedMapBorder",
 							Source = "Output"
 						}
 					}
 				},
-				PipeRouter24_1 = PipeRouter {
+				PR_MergedToTimeSpeed = PipeRouter {
 					ViewInfo = PipeRouterInfo { Pos = { 2735.59716796875, -738.179931640625 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "PipeRouter25",
+							SourceOp = "PR_MergedToVariblur",
 							Source = "Output"
 						}
 					}
 				},
-				TimeSpeed5_1 = TimeSpeed {
+				TimeSpeed_SpeedMapDelay = TimeSpeed {
 					ViewInfo = OperatorInfo { Pos = { 2735.59716796875, -573.281860351562 } },
 					Inputs = {
 						SampleSpread = Input { Disabled = true },
 						Input = Input {
-							SourceOp = "PipeRouter24_1",
+							SourceOp = "PR_MergedToTimeSpeed",
 							Source = "Output"
 						},
 						Delay = Input { Value = 1 },
 						InterpolateBetweenFrames = Input { Value = 0 }
 					}
 				},
-				ErodeDilate2_3_1_3 = ErodeDilate {
+				Erode_SpeedMapBorder = ErodeDilate {
 					ViewInfo = OperatorInfo { Pos = { 2735.59716796875, -433.77880859375 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "TimeSpeed5_1",
+							SourceOp = "TimeSpeed_SpeedMapDelay",
 							Source = "Output"
 						},
 						Filter = Input { Value = 1 },
 						XAmount = Input { Value = 0.005 }
 					}
 				},
-				PipeRouter16 = PipeRouter {
+				PR_CanvasToBoolean = PipeRouter {
 					ViewInfo = PipeRouterInfo { Pos = { 2504.14721679688, -1917.05297851562 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "PipeRouter18",
+							SourceOp = "PR_GrayscaleToProcessing",
 							Source = "Output"
 						}
 					}
 				},
-				TimeSpeed4 = TimeSpeed {
+				TimeSpeed_PreviousFrame = TimeSpeed {
 					ViewInfo = OperatorInfo { Pos = { 2730.43725585938, -1688.65698242188 } },
 					Inputs = {
 						SampleSpread = Input { Disabled = true },
 						Input = Input {
-							SourceOp = "PipeRouter7",
+							SourceOp = "PR_LoaderToTimeSpeed",
 							Source = "Output"
 						},
 						Delay = Input { Value = 1 },
 						InterpolateBetweenFrames = Input { Value = 0 }
 					}
 				},
-				ChannelBooleans6 = ChannelBoolean {
+				ChannelBool_PreviousCurrent = ChannelBoolean {
 					ViewInfo = OperatorInfo { Pos = { 2504.14721679688, -1688.65698242188 } },
 					Inputs = {
 						Background = Input {
-							SourceOp = "PipeRouter16",
+							SourceOp = "PR_CanvasToBoolean",
 							Source = "Output"
 						},
 						Foreground = Input {
-							SourceOp = "TimeSpeed4",
+							SourceOp = "TimeSpeed_PreviousFrame",
 							Source = "Output"
 						},
 						ClippingMode = Input { Value = FuID { "Frame" } }
 					}
 				},
-				PipeRouter23 = PipeRouter {
+				PR_GrowthSourceInput = PipeRouter {
 					ViewInfo = PipeRouterInfo { Pos = { 188.077514648438, -1721.19897460938 } }
 				},
-				ChannelBooleans7 = ChannelBoolean {
+				ChannelBool_ToAlpha = ChannelBoolean {
 					ViewInfo = OperatorInfo { Pos = { 469.527221679688, -1721.19897460938 } },
 					Inputs = {
 						Background = Input {
-							SourceOp = "ChannelBooleans4",
+							SourceOp = "ChannelBool_ToGrayscale",
 							Source = "Output"
 						},
 						ToAlpha = Input { Value = 16 },
 						EffectMask = Input {
-							SourceOp = "PipeRouter23",
+							SourceOp = "PR_GrowthSourceInput",
 							Source = "Output"
 						}
 					}
 				},
-				SetDomain2 = SetDomain {
+				SetDomain_GrowthSource = SetDomain {
 					ViewInfo = OperatorInfo { Pos = { 469.527221679688, -1575.80187988281 } },
 					Inputs = {
 						Mode = Input { Value = FuID { "Set" } },
 						Input = Input {
-							SourceOp = "ChannelBooleans7",
+							SourceOp = "ChannelBool_ToAlpha",
 							Source = "Output"
 						}
 					}
 				},
-				Merge1_2_1 = Merge {
+				Merge_CanvasWithGrowth = Merge {
 					Inputs = {
 						Background = Input {
-							SourceOp = "ChannelBooleans6",
+							SourceOp = "ChannelBool_PreviousCurrent",
 							Source = "Output"
 						},
 						PerformDepthMerge = Input { Value = 0 },
 						Foreground = Input {
-							SourceOp = "SetDomain2",
+							SourceOp = "SetDomain_GrowthSource",
 							Source = "Output"
 						}
 					},
 					ViewInfo = OperatorInfo { Pos = { 2504.14721679688, -1575.80187988281 } },
 					EnabledRegion = TimeRegion { { Start = 1001, End = 1252.9999 } }
 				},
-				PipeRouter25 = PipeRouter {
+				PR_MergedToVariblur = PipeRouter {
 					ViewInfo = PipeRouterInfo { Pos = { 2504.14721679688, -738.179931640625 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "Merge1_2_1",
+							SourceOp = "Merge_CanvasWithGrowth",
 							Source = "Output"
 						}
 					}
 				},
-				VariBlur2 = VariBlur {
+				VariBlur_GrowthPropagation = VariBlur {
 					ViewInfo = OperatorInfo { Pos = { 2504.14721679688, -415.779907226562 } },
 					Inputs = {
 						ApplyMaskInverted = Input { Value = 1 },
 						Quality = Input { Value = 1 },
 						EffectMask = Input {
-							SourceOp = "ErodeDilate2_3_1_3",
+							SourceOp = "Erode_SpeedMapBorder",
 							Source = "Output"
 						},
 						XBlurSize = Input { Value = 4 },
 						Input = Input {
-							SourceOp = "PipeRouter25",
+							SourceOp = "PR_MergedToVariblur",
 							Source = "Output"
 						},
 						BlurImage = Input {
-							SourceOp = "PipeRouter12",
+							SourceOp = "PR_SpeedMapToVariblur",
 							Source = "Output"
 						},
 						BlurChannel = Input { Value = 3 }
 					}
 				},
-				AlphaDivide3 = AlphaDivide {
+				AlphaDivide_BeforeBorder = AlphaDivide {
 					ViewInfo = OperatorInfo { Pos = { 2504.14721679688, -312.52490234375 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "VariBlur2",
+							SourceOp = "VariBlur_GrowthPropagation",
 							Source = "Output"
 						}
 					}
 				},
-				BrightnessContrast3 = BrightnessContrast {
+				BC_BorderLift = BrightnessContrast {
 					ViewInfo = OperatorInfo { Pos = { 2504.14721679688, -245.083984375 } },
 					Inputs = {
 						Alpha = Input { Value = 1 },
@@ -239,55 +288,55 @@
 						ClippingMode = Input { Value = FuID { "Frame" } },
 						Blue = Input { Value = 0 },
 						Input = Input {
-							SourceOp = "AlphaDivide3",
+							SourceOp = "AlphaDivide_BeforeBorder",
 							Source = "Output"
 						},
 						Green = Input { Value = 0 },
 						Red = Input { Value = 0 }
 					}
 				},
-				AlphaMultiply3 = AlphaMultiply {
+				AlphaMultiply_AfterBorder = AlphaMultiply {
 					ViewInfo = OperatorInfo { Pos = { 2504.14721679688, -174.948974609375 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "BrightnessContrast3",
+							SourceOp = "BC_BorderLift",
 							Source = "Output"
 						}
 					}
 				},
-				BrightnessContrast7 = BrightnessContrast {
+				BC_InvertedBorderLift = BrightnessContrast {
 					ViewInfo = OperatorInfo { Pos = { 2504.14721679688, -91.886962890625 } },
 					Inputs = {
 						ApplyMaskInverted = Input { Value = 1 },
 						EffectMask = Input {
-							SourceOp = "PipeRouter4",
+							SourceOp = "PR_BorderToInvert",
 							Source = "Output"
 						},
 						Input = Input {
-							SourceOp = "AlphaMultiply3",
+							SourceOp = "AlphaMultiply_AfterBorder",
 							Source = "Output"
 						},
 						PreDividePostMultiply = Input { Value = 1 },
 						Brightness = Input { Value = 0.01 }
 					}
 				},
-				MatteControl2_8 = MatteControl {
+				Matte_InvertedGarbage = MatteControl {
 					ViewInfo = OperatorInfo { Pos = { 2504.14721679688, 25.854248046875 } },
 					Inputs = {
 						["Garbage.MaskNest"] = Input { Value = 1 },
 						["Garbage.MaskInverted"] = Input { Value = 1 },
 						Background = Input {
-							SourceOp = "BrightnessContrast7",
+							SourceOp = "BC_InvertedBorderLift",
 							Source = "Output"
 						},
 						Filter = Input { Value = FuID { "Fast Gaussian" } },
 						["Garbage.Matte"] = Input {
-							SourceOp = "PipeRouter14",
+							SourceOp = "PR_InputToMatte",
 							Source = "Output"
 						}
 					}
 				},
-				ChannelBooleans4 = ChannelBoolean {
+				ChannelBool_ToGrayscale = ChannelBoolean {
 					ViewInfo = OperatorInfo { Pos = { 469.527221679688, -1917.05297851562 } },
 					Inputs = {
 						ToAlpha = Input { Value = 15 },
@@ -295,48 +344,49 @@
 						ToGreen = Input { Value = 15 },
 						ToBlue = Input { Value = 15 },
 						Background = Input {
-							SourceOp = "PipeRouter21",
+							SourceOp = "PR_ImageInput",
 							Source = "Output"
 						}
 					}
 				},
-				PipeRouter18 = PipeRouter {
+				PR_GrayscaleToProcessing = PipeRouter {
 					Colors = { TileColor = { B = 0.0823529411764706, R = 0.623529411764706, G = 0.776470588235294 } },
 					ViewInfo = PipeRouterInfo { Pos = { 783.397338867188, -1917.05297851562 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "ChannelBooleans4",
+							SourceOp = "ChannelBool_ToGrayscale",
 							Source = "Output"
 						}
 					}
 				},
-				PipeRouter19 = PipeRouter {
+				PR_CanvasOutput = PipeRouter {
 					Colors = { TileColor = { B = 0.815686274509804, R = 0.474509803921569, G = 0.658823529411765 } },
 					ViewInfo = PipeRouterInfo { Pos = { 783.397338867188, 181.93408203125 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "PipeRouter18",
+							SourceOp = "PR_GrayscaleToProcessing",
 							Source = "Output"
 						}
 					}
 				},
-				Switch1_1_1 = Switch {
+				Switch_BlankCanvas = Switch {
 					Colors = { TileColor = { B = 0.815686274509804, R = 0.474509803921569, G = 0.658823529411765 } },
 					ViewInfo = OperatorInfo { Pos = { 2504.14721679688, 181.93408203125 } },
 					Inputs = {
 						Name1 = Input { Value = "Canvas" },
 						Input0 = Input {
-							SourceOp = "MatteControl2_8",
+							SourceOp = "Matte_InvertedGarbage",
 							Source = "Output"
 						},
 						Input1 = Input {
-							SourceOp = "PipeRouter19",
+							SourceOp = "PR_CanvasOutput",
 							Source = "Output"
 						},
-						Name0 = Input { Value = "Output" }
+						Name0 = Input { Value = "Output" },
+						Source = Input { Value = 1 }
 					}
 				},
-				Saver1_1_1 = Saver {
+				Saver_DistanceMap = Saver {
 					ViewInfo = OperatorInfo { Pos = { 2504.14721679688, 288.39404296875 } },
 					Inputs = {
 						ProcessWhenBlendIs00 = Input { Value = 0 },
@@ -365,22 +415,22 @@
 						["OpenEXRFormat.Channels"] = Input { Value = 1 },
 						SaveFrames = Input { Value = FuID { "HiQInteractive" } },
 						Input = Input {
-							SourceOp = "Switch1_1_1",
+							SourceOp = "Switch_BlankCanvas",
 							Source = "Output"
 						}
 					}
 				},
-				PipeRouter20 = PipeRouter {
+				PR_AgeOutput = PipeRouter {
 					Colors = { TileColor = { B = 0.466666666666667, R = 0.776470588235294, G = 0.627450980392157 } },
 					ViewInfo = PipeRouterInfo { Pos = { 2911.12719726562, 449.124267578125 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "PipeRouter26",
+							SourceOp = "PR_LoaderToAge",
 							Source = "Output"
 						}
 					}
 				},
-				Loader1_1_2 = Loader {
+				Loader_PreviousFrame = Loader {
 					Clips = {
 						Clip {
 							ExtendFirst = 0,
@@ -412,45 +462,45 @@
 						LocalCache = Input { Value = FuID { "Off" } }
 					}
 				},
-				PipeRouter7 = PipeRouter {
+				PR_LoaderToTimeSpeed = PipeRouter {
 					Colors = { TileColor = { B = 0.815686274509804, R = 0.474509803921569, G = 0.658823529411765 } },
 					ViewInfo = PipeRouterInfo { Pos = { 2911.12719726562, -1688.65698242188 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "Loader1_1_2",
+							SourceOp = "Loader_PreviousFrame",
 							Source = "Output"
 						}
 					}
 				},
-				PipeRouter26 = PipeRouter {
+				PR_LoaderToAge = PipeRouter {
 					Colors = { TileColor = { B = 0.815686274509804, R = 0.474509803921569, G = 0.658823529411765 } },
 					ViewInfo = PipeRouterInfo { Pos = { 2911.12719726562, 106.533935546875 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "PipeRouter7",
+							SourceOp = "PR_LoaderToTimeSpeed",
 							Source = "Output"
 						}
 					}
 				},
-				PipeRouter28 = PipeRouter {
+				PR_LoaderToTrail = PipeRouter {
 					ViewInfo = PipeRouterInfo { Pos = { 3197.42724609375, 106.533935546875 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "PipeRouter26",
+							SourceOp = "PR_LoaderToAge",
 							Source = "Output"
 						}
 					}
 				},
-				AlphaDivide6 = AlphaDivide {
+				AlphaDivide_BeforeTrail = AlphaDivide {
 					ViewInfo = OperatorInfo { Pos = { 3197.42724609375, 211.593994140625 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "PipeRouter28",
+							SourceOp = "PR_LoaderToTrail",
 							Source = "Output"
 						}
 					}
 				},
-				CustomTool5_1_1_1 = Custom {
+				Custom_TrailGenerator = Custom {
 					UserControls = ordered() {
 						MapControls = {
 							LBLC_MultiLine = true,
@@ -482,7 +532,7 @@
 						ShowLUT3 = Input { Value = 0 },
 						ShowLUT4 = Input { Value = 0 },
 						Image1 = Input {
-							SourceOp = "AlphaDivide6",
+							SourceOp = "AlphaDivide_BeforeTrail",
 							Source = "Output"
 						},
 						NumberIn5 = Input { Value = 50 },
@@ -492,19 +542,19 @@
 							Expression = "((time/100)-((NumberIn7)/100))"
 						},
 						LUTIn1 = Input {
-							SourceOp = "CustomTool5_1_1_1LUTIn1",
+							SourceOp = "Custom_TrailGeneratorLUTIn1",
 							Source = "Value"
 						},
 						LUTIn2 = Input {
-							SourceOp = "CustomTool5_1_1_1LUTIn2",
+							SourceOp = "Custom_TrailGeneratorLUTIn2",
 							Source = "Value"
 						},
 						LUTIn3 = Input {
-							SourceOp = "CustomTool5_1_1_1LUTIn3",
+							SourceOp = "Custom_TrailGeneratorLUTIn3",
 							Source = "Value"
 						},
 						LUTIn4 = Input {
-							SourceOp = "CustomTool5_1_1_1LUTIn4",
+							SourceOp = "Custom_TrailGeneratorLUTIn4",
 							Source = "Value"
 						},
 						Intermediate1 = Input { Value = "(r1-n6)" },
@@ -523,7 +573,7 @@
 						NameforNumber2 = Input { Value = "Head Length" }
 					}
 				},
-				CustomTool5_1_1_1LUTIn1 = LUTBezier {
+				Custom_TrailGeneratorLUTIn1 = LUTBezier {
 					CtrlWZoom = false,
 					KeyColorSplines = {
 						[0] = {
@@ -533,7 +583,7 @@
 					},
 					SplineColor = { Blue = 0, Red = 0, Green = 0 }
 				},
-				CustomTool5_1_1_1LUTIn2 = LUTBezier {
+				Custom_TrailGeneratorLUTIn2 = LUTBezier {
 					CtrlWZoom = false,
 					KeyColorSplines = {
 						[0] = {
@@ -543,7 +593,7 @@
 					},
 					SplineColor = { Blue = 0, Red = 0, Green = 0 }
 				},
-				CustomTool5_1_1_1LUTIn3 = LUTBezier {
+				Custom_TrailGeneratorLUTIn3 = LUTBezier {
 					CtrlWZoom = false,
 					KeyColorSplines = {
 						[0] = {
@@ -553,7 +603,7 @@
 					},
 					SplineColor = { Blue = 0, Red = 0, Green = 0 }
 				},
-				CustomTool5_1_1_1LUTIn4 = LUTBezier {
+				Custom_TrailGeneratorLUTIn4 = LUTBezier {
 					CtrlWZoom = false,
 					KeyColorSplines = {
 						[0] = {
@@ -563,32 +613,32 @@
 					},
 					SplineColor = { Blue = 0, Red = 0, Green = 0 }
 				},
-				PipeRouter9 = PipeRouter {
+				PR_ShapeMask = PipeRouter {
 					Colors = { TileColor = { B = 0.0823529411764706, R = 0.623529411764706, G = 0.776470588235294 } },
 					ViewInfo = PipeRouterInfo { Pos = { 2073.26733398438, -611.788818359375 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "PipeRouter10",
+							SourceOp = "PR_ShapeToMix",
 							Source = "Output"
 						}
 					}
 				},
-				PipeRouter5 = PipeRouter {
+				PR_InteriorMask = PipeRouter {
 					Colors = { TileColor = { B = 0.0823529411764706, R = 0.623529411764706, G = 0.776470588235294 } },
 					ViewInfo = PipeRouterInfo { Pos = { 973.607299804688, -739.810913085938 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "ErodeDilate1",
+							SourceOp = "Erode_InteriorMask",
 							Source = "Output"
 						}
 					}
 				},
-				ErodeDilate1 = ErodeDilate {
+				Erode_InteriorMask = ErodeDilate {
 					ViewInfo = OperatorInfo { Pos = { 973.607299804688, -984.641479492188 } },
 					Inputs = {
 						Blue = Input { Value = 0 },
 						Input = Input {
-							SourceOp = "Scale2",
+							SourceOp = "Scale_HalfRes",
 							Source = "Output"
 						},
 						Green = Input { Value = 0 },
@@ -597,11 +647,11 @@
 						XAmount = Input { Value = -0.01 }
 					}
 				},
-				BrightnessContrast1 = BrightnessContrast {
+				BC_EdgeInfluence = BrightnessContrast {
 					ViewInfo = OperatorInfo { Pos = { 1244.43737792969, -984.641479492188 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "ErodeDilate1",
+							SourceOp = "Erode_InteriorMask",
 							Source = "Output"
 						},
 						Blue = Input { Value = 0 },
@@ -613,44 +663,44 @@
 						Lift = Input { Value = 0.618 }
 					}
 				},
-				Filter1 = Filter {
+				Filter_SharpenAlpha = Filter {
 					ViewInfo = OperatorInfo { Pos = { 1644.79711914062, -1218.10290527344 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "PipeRouter17",
+							SourceOp = "PR_ScaledToFilters",
 							Source = "Output"
 						},
 						FilterType = Input { Value = 3 }
 					}
 				},
-				CustomTool3 = Custom {
+				Custom_MaxChannel = Custom {
 					ViewInfo = OperatorInfo { Pos = { 1644.79711914062, -1145.13989257812 } },
 					Inputs = {
 						LUTIn1 = Input {
-							SourceOp = "CustomTool3LUTIn1",
+							SourceOp = "Custom_MaxChannelLUTIn1",
 							Source = "Value"
 						},
 						LUTIn2 = Input {
-							SourceOp = "CustomTool3LUTIn2",
+							SourceOp = "Custom_MaxChannelLUTIn2",
 							Source = "Value"
 						},
 						Image1 = Input {
-							SourceOp = "Filter1",
+							SourceOp = "Filter_SharpenAlpha",
 							Source = "Output"
 						},
 						LUTIn3 = Input {
-							SourceOp = "CustomTool3LUTIn3",
+							SourceOp = "Custom_MaxChannelLUTIn3",
 							Source = "Value"
 						},
 						AlphaExpression = Input { Value = "if(if(i1>0,i1,0)>1,1,i1)" },
 						LUTIn4 = Input {
-							SourceOp = "CustomTool3LUTIn4",
+							SourceOp = "Custom_MaxChannelLUTIn4",
 							Source = "Value"
 						},
 						Intermediate1 = Input { Value = "max(r1,(max(g1,b1)))" }
 					}
 				},
-				CustomTool3LUTIn1 = LUTBezier {
+				Custom_MaxChannelLUTIn1 = LUTBezier {
 					CtrlWZoom = false,
 					KeyColorSplines = {
 						[0] = {
@@ -660,7 +710,7 @@
 					},
 					SplineColor = { Blue = 0, Red = 0, Green = 0 }
 				},
-				CustomTool3LUTIn2 = LUTBezier {
+				Custom_MaxChannelLUTIn2 = LUTBezier {
 					CtrlWZoom = false,
 					KeyColorSplines = {
 						[0] = {
@@ -670,7 +720,7 @@
 					},
 					SplineColor = { Blue = 0, Red = 0, Green = 0 }
 				},
-				CustomTool3LUTIn3 = LUTBezier {
+				Custom_MaxChannelLUTIn3 = LUTBezier {
 					CtrlWZoom = false,
 					KeyColorSplines = {
 						[0] = {
@@ -680,7 +730,7 @@
 					},
 					SplineColor = { Blue = 0, Red = 0, Green = 0 }
 				},
-				CustomTool3LUTIn4 = LUTBezier {
+				Custom_MaxChannelLUTIn4 = LUTBezier {
 					CtrlWZoom = false,
 					KeyColorSplines = {
 						[0] = {
@@ -690,12 +740,12 @@
 					},
 					SplineColor = { Blue = 0, Red = 0, Green = 0 }
 				},
-				ErodeDilate5 = ErodeDilate {
+				Erode_TextureEdges = ErodeDilate {
 					ViewInfo = OperatorInfo { Pos = { 1644.79711914062, -1078.19470214844 } },
 					Inputs = {
 						Blue = Input { Value = 0 },
 						Input = Input {
-							SourceOp = "CustomTool3",
+							SourceOp = "Custom_MaxChannel",
 							Source = "Output"
 						},
 						Green = Input { Value = 0 },
@@ -704,7 +754,7 @@
 						XAmount = Input { Value = 0.018 }
 					}
 				},
-				modulo = Custom {
+				Modulo_TextureEdges = Custom {
 					NameSet = true,
 					ViewInfo = OperatorInfo { Pos = { 1644.79711914062, -1001.96911621094 } },
 					Inputs = {
@@ -712,31 +762,31 @@
 						NumberIn1 = Input { Value = 1 },
 						PointControls = Input { Value = 1 },
 						LUTIn1 = Input {
-							SourceOp = "moduloLUTIn1",
+							SourceOp = "Modulo_TextureEdgesLUTIn1",
 							Source = "Value"
 						},
 						Image1 = Input {
-							SourceOp = "ErodeDilate5",
+							SourceOp = "Erode_TextureEdges",
 							Source = "Output"
 						},
 						LUTIn2 = Input {
-							SourceOp = "moduloLUTIn2",
+							SourceOp = "Modulo_TextureEdgesLUTIn2",
 							Source = "Value"
 						},
 						LUTControls = Input { Value = 1 },
 						AlphaExpression = Input { Value = "(1-(abs(i1-.5))-0.5)*2" },
 						NumberControls = Input { Value = 1 },
 						LUTIn4 = Input {
-							SourceOp = "moduloLUTIn4",
+							SourceOp = "Modulo_TextureEdgesLUTIn4",
 							Source = "Value"
 						},
 						LUTIn3 = Input {
-							SourceOp = "moduloLUTIn3",
+							SourceOp = "Modulo_TextureEdgesLUTIn3",
 							Source = "Value"
 						}
 					}
 				},
-				moduloLUTIn1 = LUTBezier {
+				Modulo_TextureEdgesLUTIn1 = LUTBezier {
 					CtrlWZoom = false,
 					KeyColorSplines = {
 						[0] = {
@@ -746,7 +796,7 @@
 					},
 					SplineColor = { Blue = 0, Red = 0, Green = 0 }
 				},
-				moduloLUTIn2 = LUTBezier {
+				Modulo_TextureEdgesLUTIn2 = LUTBezier {
 					CtrlWZoom = false,
 					KeyColorSplines = {
 						[0] = {
@@ -756,7 +806,7 @@
 					},
 					SplineColor = { Blue = 0, Red = 0, Green = 0 }
 				},
-				moduloLUTIn3 = LUTBezier {
+				Modulo_TextureEdgesLUTIn3 = LUTBezier {
 					CtrlWZoom = false,
 					KeyColorSplines = {
 						[0] = {
@@ -766,7 +816,7 @@
 					},
 					SplineColor = { Blue = 0, Red = 0, Green = 0 }
 				},
-				moduloLUTIn4 = LUTBezier {
+				Modulo_TextureEdgesLUTIn4 = LUTBezier {
 					CtrlWZoom = false,
 					KeyColorSplines = {
 						[0] = {
@@ -776,21 +826,21 @@
 					},
 					SplineColor = { Blue = 0, Red = 0, Green = 0 }
 				},
-				PipeRouter11 = PipeRouter {
+				PR_TextureMask = PipeRouter {
 					Colors = { TileColor = { B = 0.0823529411764706, R = 0.623529411764706, G = 0.776470588235294 } },
 					ViewInfo = PipeRouterInfo { Pos = { 1644.79711914062, -892.699951171875 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "modulo",
+							SourceOp = "Modulo_TextureEdges",
 							Source = "Output"
 						}
 					}
 				},
-				BrightnessContrast1_2 = BrightnessContrast {
+				BC_TextureInfluence = BrightnessContrast {
 					ViewInfo = OperatorInfo { Pos = { 1448.91723632812, -892.699951171875 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "PipeRouter11",
+							SourceOp = "PR_TextureMask",
 							Source = "Output"
 						},
 						Blue = Input { Value = 0 },
@@ -802,63 +852,63 @@
 						Lift = Input { Value = 0.443 }
 					}
 				},
-				ChannelBooleans2 = ChannelBoolean {
+				Mix_TextureAndEdges = ChannelBoolean {
 					ViewInfo = OperatorInfo { Pos = { 1244.43737792969, -892.699951171875 } },
 					Inputs = {
 						Background = Input {
-							SourceOp = "BrightnessContrast1",
+							SourceOp = "BC_EdgeInfluence",
 							Source = "Output"
 						},
 						Operation = Input { Value = 6 },
 						Foreground = Input {
-							SourceOp = "BrightnessContrast1_2",
+							SourceOp = "BC_TextureInfluence",
 							Source = "Output"
 						}
 					}
 				},
-				PipeRouter21 = PipeRouter {
+				PR_ImageInput = PipeRouter {
 					ViewInfo = PipeRouterInfo { Pos = { 26.7972412109375, -1917.05297851562 } }
 				},
-				PipeRouter13 = PipeRouter {
+				PR_InputToScale = PipeRouter {
 					ViewInfo = PipeRouterInfo { Pos = { 26.7972412109375, -1295.91284179688 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "PipeRouter21",
+							SourceOp = "PR_ImageInput",
 							Source = "Output"
 						}
 					}
 				},
-				Scale2 = Scale {
+				Scale_HalfRes = Scale {
 					ViewInfo = OperatorInfo { Pos = { 973.607299804688, -1295.91284179688 } },
 					Inputs = {
 						HiQOnly = Input { Value = 0 },
 						PixelAspect = Input { Value = { 1, 1 } },
 						Input = Input {
-							SourceOp = "PipeRouter13",
+							SourceOp = "PR_InputToScale",
 							Source = "Output"
 						},
 						XSize = Input { Value = 0.5 }
 					}
 				},
-				PipeRouter17 = PipeRouter {
+				PR_ScaledToFilters = PipeRouter {
 					ViewInfo = PipeRouterInfo { Pos = { 1644.79711914062, -1295.91284179688 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "Scale2",
+							SourceOp = "Scale_HalfRes",
 							Source = "Output"
 						}
 					}
 				},
-				PipeRouter27 = PipeRouter {
+				PR_ScaledToShape = PipeRouter {
 					ViewInfo = PipeRouterInfo { Pos = { 2073.26733398438, -1295.91284179688 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "PipeRouter17",
+							SourceOp = "PR_ScaledToFilters",
 							Source = "Output"
 						}
 					}
 				},
-				ErodeDilate4 = ErodeDilate {
+				Erode_ShapeMask = ErodeDilate {
 					UserControls = ordered() {
 						TextureSettings = {
 							LBLC_MultiLine = true,
@@ -895,7 +945,7 @@
 					Inputs = {
 						Blue = Input { Value = 0 },
 						Input = Input {
-							SourceOp = "PipeRouter27",
+							SourceOp = "PR_ScaledToShape",
 							Source = "Output"
 						},
 						Green = Input { Value = 0 },
@@ -904,36 +954,36 @@
 						XAmount = Input { Value = -0.1134 }
 					}
 				},
-				modulo2 = Custom {
+				Modulo_ShapeEdges = Custom {
 					NameSet = true,
 					ViewInfo = OperatorInfo { Pos = { 2073.26733398438, -1006.52136230469 } },
 					Inputs = {
 						LUTIn1 = Input {
-							SourceOp = "modulo2LUTIn1",
+							SourceOp = "Modulo_ShapeEdgesLUTIn1",
 							Source = "Value"
 						},
 						NumberIn1 = Input { Value = -0.4 },
 						LUTIn2 = Input {
-							SourceOp = "modulo2LUTIn2",
+							SourceOp = "Modulo_ShapeEdgesLUTIn2",
 							Source = "Value"
 						},
 						Image1 = Input {
-							SourceOp = "ErodeDilate4",
+							SourceOp = "Erode_ShapeMask",
 							Source = "Output"
 						},
 						LUTIn3 = Input {
-							SourceOp = "modulo2LUTIn3",
+							SourceOp = "Modulo_ShapeEdgesLUTIn3",
 							Source = "Value"
 						},
 						AlphaExpression = Input { Value = "(1-(abs(i1-.5))-0.5)*2" },
 						LUTIn4 = Input {
-							SourceOp = "modulo2LUTIn4",
+							SourceOp = "Modulo_ShapeEdgesLUTIn4",
 							Source = "Value"
 						},
 						Intermediate1 = Input { Value = "(a1 % n1)/n1" }
 					}
 				},
-				modulo2LUTIn1 = LUTBezier {
+				Modulo_ShapeEdgesLUTIn1 = LUTBezier {
 					CtrlWZoom = false,
 					KeyColorSplines = {
 						[0] = {
@@ -943,7 +993,7 @@
 					},
 					SplineColor = { Blue = 0, Red = 0, Green = 0 }
 				},
-				modulo2LUTIn2 = LUTBezier {
+				Modulo_ShapeEdgesLUTIn2 = LUTBezier {
 					CtrlWZoom = false,
 					KeyColorSplines = {
 						[0] = {
@@ -953,7 +1003,7 @@
 					},
 					SplineColor = { Blue = 0, Red = 0, Green = 0 }
 				},
-				modulo2LUTIn3 = LUTBezier {
+				Modulo_ShapeEdgesLUTIn3 = LUTBezier {
 					CtrlWZoom = false,
 					KeyColorSplines = {
 						[0] = {
@@ -963,7 +1013,7 @@
 					},
 					SplineColor = { Blue = 0, Red = 0, Green = 0 }
 				},
-				modulo2LUTIn4 = LUTBezier {
+				Modulo_ShapeEdgesLUTIn4 = LUTBezier {
 					CtrlWZoom = false,
 					KeyColorSplines = {
 						[0] = {
@@ -973,21 +1023,21 @@
 					},
 					SplineColor = { Blue = 0, Red = 0, Green = 0 }
 				},
-				PipeRouter10 = PipeRouter {
+				PR_ShapeToMix = PipeRouter {
 					Colors = { TileColor = { B = 0.572549019607843, R = 0.572549019607843, G = 0.572549019607843 } },
 					ViewInfo = PipeRouterInfo { Pos = { 2073.26733398438, -812.31591796875 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "modulo2",
+							SourceOp = "Modulo_ShapeEdges",
 							Source = "Output"
 						}
 					}
 				},
-				BrightnessContrast1_3 = BrightnessContrast {
+				BC_ShapeInfluence = BrightnessContrast {
 					ViewInfo = OperatorInfo { Pos = { 1453.90698242188, -812.31591796875 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "PipeRouter10",
+							SourceOp = "PR_ShapeToMix",
 							Source = "Output"
 						},
 						Blue = Input { Value = 0 },
@@ -999,24 +1049,24 @@
 						Lift = Input { Value = 0.514 }
 					}
 				},
-				ChannelBooleans8 = ChannelBoolean {
+				Mix_AllSpeedSources = ChannelBoolean {
 					ViewInfo = OperatorInfo { Pos = { 1244.43737792969, -812.31591796875 } },
 					Inputs = {
 						Background = Input {
-							SourceOp = "ChannelBooleans2",
+							SourceOp = "Mix_TextureAndEdges",
 							Source = "Output"
 						},
 						Operation = Input { Value = 6 },
 						Foreground = Input {
-							SourceOp = "BrightnessContrast1_3",
+							SourceOp = "BC_ShapeInfluence",
 							Source = "Output"
 						}
 					}
 				},
-				PipeRouter22 = PipeRouter {
+				PR_SpeedMapInput = PipeRouter {
 					ViewInfo = PipeRouterInfo { Pos = { 187.277221679688, -611.788818359375 } }
 				},
-				BrightnessContrast2 = BrightnessContrast {
+				BC_CustomSpeedMap = BrightnessContrast {
 					ViewInfo = OperatorInfo { Pos = { 984.617553710938, -611.788818359375 } },
 					Inputs = {
 						Blue = Input { Value = 0 },
@@ -1025,13 +1075,13 @@
 						ClipBlack = Input { Value = 1 },
 						Red = Input { Value = 0 },
 						Input = Input {
-							SourceOp = "PipeRouter22",
+							SourceOp = "PR_SpeedMapInput",
 							Source = "Output"
 						},
 						ClipWhite = Input { Value = 1 }
 					}
 				},
-				Switch1 = Switch {
+				Switch_SpeedSource = Switch {
 					Colors = { TileColor = { B = 0.0823529411764706, R = 0.623529411764706, G = 0.776470588235294 } },
 					UserControls = ordered() {
 						TextureSettings = {
@@ -1050,32 +1100,32 @@
 						Name1 = Input { Value = "Shape" },
 						Name4 = Input { Value = "Custom" },
 						Input4 = Input {
-							SourceOp = "BrightnessContrast2",
+							SourceOp = "BC_CustomSpeedMap",
 							Source = "Output"
 						},
 						Input3 = Input {
-							SourceOp = "ChannelBooleans8",
+							SourceOp = "Mix_AllSpeedSources",
 							Source = "Output"
 						},
 						Input0 = Input {
-							SourceOp = "PipeRouter11",
+							SourceOp = "PR_TextureMask",
 							Source = "Output"
 						},
 						Name0 = Input { Value = "Texture" },
 						Input1 = Input {
-							SourceOp = "PipeRouter9",
+							SourceOp = "PR_ShapeMask",
 							Source = "Output"
 						},
 						Name3 = Input { Value = "Combined" },
 						Input2 = Input {
-							SourceOp = "PipeRouter5",
+							SourceOp = "PR_InteriorMask",
 							Source = "Output"
 						},
 						NumberOfInputs = Input { Value = 5 },
 						Name2 = Input { Value = "Interior" }
 					}
 				},
-				BrightnessContrast5 = BrightnessContrast {
+				BC_EdgeStrength = BrightnessContrast {
 					ViewInfo = OperatorInfo { Pos = { 1644.79711914062, -540.77783203125 } },
 					Inputs = {
 						Blue = Input { Value = 0 },
@@ -1083,35 +1133,35 @@
 						Green = Input { Value = 0 },
 						Red = Input { Value = 0 },
 						Input = Input {
-							SourceOp = "Switch1",
+							SourceOp = "Switch_SpeedSource",
 							Source = "Output"
 						},
 						Lift = Input { Value = 0.01 }
 					}
 				},
-				Scale2_1 = Scale {
+				Scale_DoubleRes = Scale {
 					ViewInfo = OperatorInfo { Pos = { 1644.79711914062, -472.493896484375 } },
 					Inputs = {
 						HiQOnly = Input { Value = 0 },
 						PixelAspect = Input { Value = { 1, 1 } },
 						Input = Input {
-							SourceOp = "BrightnessContrast5",
+							SourceOp = "BC_EdgeStrength",
 							Source = "Output"
 						},
 						XSize = Input { Value = 2 }
 					}
 				},
-				PipeRouter12 = PipeRouter {
+				PR_SpeedMapToVariblur = PipeRouter {
 					Colors = { TileColor = { B = 0.466666666666667, R = 0.776470588235294, G = 0.627450980392157 } },
 					ViewInfo = PipeRouterInfo { Pos = { 1644.79711914062, -415.779907226562 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "Scale2_1",
+							SourceOp = "Scale_DoubleRes",
 							Source = "Output"
 						}
 					}
 				},
-				PipeRouter1 = PipeRouter {
+				PR_SpeedMapOutput = PipeRouter {
 					Colors = { TileColor = { B = 0.466666666666667, R = 0.776470588235294, G = 0.627450980392157 } },
 					UserControls = ordered() {
 						ShapeSettings = {
@@ -1128,33 +1178,33 @@
 					ViewInfo = PipeRouterInfo { Pos = { 1644.79711914062, 449.124267578125 } },
 					Inputs = {
 						Input = Input {
-							SourceOp = "PipeRouter12",
+							SourceOp = "PR_SpeedMapToVariblur",
 							Source = "Output"
 						}
 					}
 				},
-				Switch1_1_1_1 = Switch {
+				Switch_OutputMode = Switch {
 					Colors = { TileColor = { B = 0.466666666666667, R = 0.776470588235294, G = 0.627450980392157 } },
 					ViewInfo = OperatorInfo { Pos = { 2504.14721679688, 449.124267578125 } },
 					Inputs = {
 						Name1 = Input { Value = "Age" },
 						Input3 = Input {
-							SourceOp = "PipeRouter1",
+							SourceOp = "PR_SpeedMapOutput",
 							Source = "Output"
 						},
 						Name3 = Input { Value = "Growth Speed" },
 						Input0 = Input {
-							SourceOp = "Saver1_1_1",
+							SourceOp = "Saver_DistanceMap",
 							Source = "Output"
 						},
 						Name0 = Input { Value = "Render" },
 						Input1 = Input {
-							SourceOp = "PipeRouter20",
+							SourceOp = "PR_AgeOutput",
 							Source = "Output"
 						},
 						Source = Input { Value = 2 },
 						Input2 = Input {
-							SourceOp = "CustomTool5_1_1_1",
+							SourceOp = "Custom_TrailGenerator",
 							Source = "Output"
 						},
 						NumberOfInputs = Input { Value = 4 },
@@ -1231,40 +1281,154 @@
 					CT_Priority = 0
 				},
 				Controls = ControlPage {
-					CT_Visible = false,
-					CT_Priority = 0
+					CT_Visible = true,
+					CT_Priority = 1
+				},
+
+				WorkflowLabel = {
+					INP_Integer = false,
+					INP_Default = 1,
+					LBLC_DropDownButton = true,
+					LINKID_DataType = "Number",
+					LBLC_NumInputs = 1,
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "LabelControl",
+					LINKS_Name = "Workflow Automation"
+				},
+
+				AutoProcess = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+local vff = require("vectorfill_workflows")
+if not tool then tool = comp.ActiveTool end
+vff.auto_process(tool, comp, {show_progress = true})
+]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 1,
+					LINKS_Name = "Auto Process (All Steps)",
+				},
+
+				SetupLabel = {
+					INP_Integer = false,
+					INP_External = false,
+					LBLC_DropDownButton = true,
+					INP_Passive = false,
+					LINKID_DataType = "Number",
+					LBLC_NumInputs = 4,
+					LBLC_NestLevel = 2,
+					ICS_ControlPage = "Controls",
+					INPID_InputControl = "LabelControl",
+					LINKS_Name = "Setup",
+				},
+
+				GenerateCanvas = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+local vff = require("vectorfill_workflows")
+if not tool then tool = comp.ActiveTool end
+vff.generate_canvas(tool, comp, {show_progress = true})
+]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 0.5,
+					LINKS_Name = "1. Generate Canvas",
+				},
+
+				SetStartFrame = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+local vff = require("vectorfill_workflows")
+if not tool then tool = comp.ActiveTool end
+vff.set_start_frame(tool, comp)
+]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 0.5,
+					LINKS_Name = "2. Set Start Frame",
+				},
+
+				Process = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+local vff = require("vectorfill_workflows")
+if not tool then tool = comp.ActiveTool end
+vff.process(tool, comp)
+]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 1,
+					LINKS_Name = "3. Process Growth",
+				},
+
+				ClearCache = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+local vff = require("vectorfill_workflows")
+if not tool then tool = comp.ActiveTool end
+vff.clear_cache(tool, comp)
+]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 1,
+					LINKS_Name = "Clear Cache",
 				}
 			},
 			ViewInfo = GroupInfo {
 			},
 			Outputs = ordered() {
 				MainOutput1 = InstanceOutput {
-					SourceOp = "Switch1_1_1_1",
+					SourceOp = "Switch_OutputMode",
 					Source = "Output"
 				}
 			},
 			Inputs = ordered() {
 				MainInput1 = InstanceInput {
 					Name = "Growth Source",
-					SourceOp = "PipeRouter23",
+					SourceOp = "PR_GrowthSourceInput",
 					Source = "Input"
 				},
 				MainInput2 = InstanceInput {
 					Name = "Image",
-					SourceOp = "PipeRouter21",
+					SourceOp = "PR_ImageInput",
 					Source = "Input"
 				},
 				MainInput3 = InstanceInput {
 					Name = "Speed Map",
-					SourceOp = "PipeRouter22",
+					SourceOp = "PR_SpeedMapInput",
 					Source = "Input"
 				},
-				Switch1_SpeedSource = InstanceInput {
+				Switch_SpeedSource_Source = InstanceInput {
 					Page = "Speed Map",
 					Center = 0.5,
 					Name = "Speed Source",
 					Default = 0,
-					SourceOp = "Switch1",
+					SourceOp = "Switch_SpeedSource",
 					Source = "Source",
 					MinScale = 0,
 					MaxScale = 1
@@ -1281,7 +1445,7 @@
 					Center = 0,
 					Name = "Edge Strength",
 					Default = 0.01,
-					SourceOp = "BrightnessContrast5",
+					SourceOp = "BC_EdgeStrength",
 					Source = "Lift",
 					MinScale = 0,
 					MaxScale = 1
@@ -1291,7 +1455,7 @@
 					Center = 0,
 					Name = "Edge Width",
 					Default = 0.018,
-					SourceOp = "ErodeDilate5",
+					SourceOp = "Erode_TextureEdges",
 					Source = "XAmount",
 					MinScale = -0.01,
 					MaxScale = 0.01
@@ -1301,7 +1465,7 @@
 					Center = 0.5,
 					Name = "Edge Repeat",
 					Default = 1,
-					SourceOp = "modulo",
+					SourceOp = "Modulo_TextureEdges",
 					Source = "NumberIn1",
 					MinScale = 0,
 					MaxScale = 1
@@ -1318,7 +1482,7 @@
 					Center = 0,
 					Name = "Edge Width",
 					Default = -0.1134,
-					SourceOp = "ErodeDilate4",
+					SourceOp = "Erode_ShapeMask",
 					Source = "XAmount",
 					MinScale = -0.01,
 					MaxScale = 0.01
@@ -1328,7 +1492,7 @@
 					Center = 0.5,
 					Name = "Edge Repeat",
 					Default = -0.4,
-					SourceOp = "modulo2",
+					SourceOp = "Modulo_ShapeEdges",
 					Source = "NumberIn1",
 					MinScale = 0,
 					MaxScale = 1
@@ -1345,7 +1509,7 @@
 					Center = 0,
 					Name = "Edge Width",
 					Default = -0.01,
-					SourceOp = "ErodeDilate1",
+					SourceOp = "Erode_InteriorMask",
 					Source = "XAmount",
 					MinScale = -0.01,
 					MaxScale = 0.01
@@ -1362,7 +1526,7 @@
 					Center = 0,
 					Name = "Shape Influence",
 					Default = 0.514,
-					SourceOp = "BrightnessContrast1_3",
+					SourceOp = "BC_ShapeInfluence",
 					Source = "Lift",
 					MinScale = 0,
 					MaxScale = 1
@@ -1372,7 +1536,7 @@
 					Center = 0,
 					Name = "Edge Influence",
 					Default = 0.618,
-					SourceOp = "BrightnessContrast1",
+					SourceOp = "BC_EdgeInfluence",
 					Source = "Lift",
 					MinScale = 0,
 					MaxScale = 1
@@ -1382,7 +1546,7 @@
 					Center = 0,
 					Name = "Texture Influence",
 					Default = 0.443,
-					SourceOp = "BrightnessContrast1_2",
+					SourceOp = "BC_TextureInfluence",
 					Source = "Lift",
 					MinScale = 0,
 					MaxScale = 1
@@ -1392,7 +1556,7 @@
 					Center = 5,
 					Name = "Growth Speed",
 					Default = 4,
-					SourceOp = "VariBlur2",
+					SourceOp = "VariBlur_GrowthPropagation",
 					Source = "XBlurSize",
 					MinScale = 0,
 					MaxScale = 10
@@ -1402,17 +1566,17 @@
 					Center = 0.5,
 					Name = "Start Frame",
 					Default = 1001,
-					SourceOp = "CustomTool5_1_1_1",
+					SourceOp = "Custom_TrailGenerator",
 					Source = "NumberIn7",
 					MinScale = 0,
 					MaxScale = 1
 				},
-				Switch1_1_1_BlankCanvas = InstanceInput {
+				Switch_BlankCanvas_Source = InstanceInput {
 					Page = "Render",
 					Center = 0.5,
 					Name = "Blank Canvas",
-					Default = 0,
-					SourceOp = "Switch1_1_1",
+					Default = 1,
+					SourceOp = "Switch_BlankCanvas",
 					Source = "Source",
 					MinScale = 0,
 					MaxScale = 1
@@ -1420,27 +1584,27 @@
 				Loader1_1_2_Load = InstanceInput {
 					Page = "Render",
 					Name = "Load",
-					SourceOp = "Loader1_1_2",
+					SourceOp = "Loader_PreviousFrame",
 					Source = "Clip"
 				},
 				Saver1_1_1_Save = InstanceInput {
 					Page = "Render",
 					Name = "Save",
-					SourceOp = "Saver1_1_1",
+					SourceOp = "Saver_DistanceMap",
 					Source = "Clip"
 				},
 				Saver1_1_1_SaveFrames = InstanceInput {
 					Page = "Render",
 					Name = "Save Frames",
-					SourceOp = "Saver1_1_1",
+					SourceOp = "Saver_DistanceMap",
 					Source = "SaveFrames"
 				},
-				Switch1_1_1_1_Output = InstanceInput {
+				Switch_OutputMode_Source = InstanceInput {
 					Page = "Render",
 					Center = 0.5,
 					Name = "Output",
 					Default = 2,
-					SourceOp = "Switch1_1_1_1",
+					SourceOp = "Switch_OutputMode",
 					Source = "Source",
 					MinScale = 0,
 					MaxScale = 1
@@ -1457,7 +1621,7 @@
 					Center = 0.5,
 					Name = "Alpha Offset",
 					Default = -0.1,
-					SourceOp = "CustomTool5_1_1_1",
+					SourceOp = "Custom_TrailGenerator",
 					Source = "NumberIn4",
 					MinScale = 0,
 					MaxScale = 1
@@ -1467,7 +1631,7 @@
 					Center = 0.5,
 					Name = "Tail Length",
 					Default = 0,
-					SourceOp = "CustomTool5_1_1_1",
+					SourceOp = "Custom_TrailGenerator",
 					Source = "NumberIn3",
 					MinScale = 0,
 					MaxScale = 1
@@ -1477,7 +1641,7 @@
 					Center = 0.5,
 					Name = "Head Length",
 					Default = 20,
-					SourceOp = "CustomTool5_1_1_1",
+					SourceOp = "Custom_TrailGenerator",
 					Source = "NumberIn2",
 					MinScale = 0,
 					MaxScale = 1
@@ -1487,7 +1651,7 @@
 					Center = 0.5,
 					Name = "Trail Offset",
 					Default = -0.1,
-					SourceOp = "CustomTool5_1_1_1",
+					SourceOp = "Custom_TrailGenerator",
 					Source = "NumberIn1",
 					MinScale = 0,
 					MaxScale = 1
@@ -1497,7 +1661,7 @@
 					Center = 0.5,
 					Name = "Alpha Contrast",
 					Default = 50,
-					SourceOp = "CustomTool5_1_1_1",
+					SourceOp = "Custom_TrailGenerator",
 					Source = "NumberIn5",
 					MinScale = 0,
 					MaxScale = 1

@@ -134,6 +134,23 @@ function vectorlib.sleep(seconds)
     end
 end
 
+--- Check if file exists
+--- @param filepath string Path to file
+--- @return boolean Whether file exists
+function vectorlib.file_exists(filepath)
+    if bmd and bmd.fileexists then
+        return bmd.fileexists(filepath)
+    else
+        -- Fallback method using io.open
+        local f = io.open(filepath, "r")
+        if f then
+            f:close()
+            return true
+        end
+        return false
+    end
+end
+
 --- Check if composition is valid and saved
 --- @param comp object Fusion composition object
 --- @return boolean Whether composition is valid
@@ -261,7 +278,7 @@ function vectorlib.generate_cleanpass_fast(tool, comp)
         local padding = string.format("%04d", frame)
         local newName = seq.Path .. seq.CleanName .. padding .. seq.Extension
         -- Skip the original frame (it already exists)
-        if frame ~= renderStart and not bmd.fileexists(newName) then
+        if frame ~= renderStart and not vectorlib.file_exists(newName) then
             if not vectorlib.copy_file(oldName, newName) then
                 print("Failed to copy frame " .. frame)
             end
