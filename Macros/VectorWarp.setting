@@ -43,7 +43,7 @@ SIMPLIFIED WORKFLOWS (NEW):
   - Industry standard approach for stabilization
   - Provides most balanced motion compensation
 
-• Quick Track: Tracks forward motion from current frame
+• Track Forward: Tracks forward motion from current frame
   Uses current frame as reference, ideal for following an object.
 
 MANUAL WORKFLOW:
@@ -814,7 +814,7 @@ for better motion analysis quality.
 					LINKID_DataType = "Number",
 					ICS_ControlPage = "Controls",
 					ICD_Width = 0.5,
-					LINKS_Name = "Quick Track",
+					LINKS_Name = "Quick Track Forward",
 				},
 
 				SetupLabel = {

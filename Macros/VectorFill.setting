@@ -172,13 +172,15 @@ Variable Refactoring & Automation: 2025
 				},
 				TimeSpeed_PreviousFrame = TimeSpeed {
 					ViewInfo = OperatorInfo { Pos = { 2730.43725585938, -1688.65698242188 } },
+					NameSet = true,
+					CtrlWZoom = false,
 					Inputs = {
 						SampleSpread = Input { Disabled = true },
+						Delay = Input { Value = 1 },
 						Input = Input {
 							SourceOp = "PR_LoaderToTimeSpeed",
 							Source = "Output"
 						},
-						Delay = Input { Value = 1 },
 						InterpolateBetweenFrames = Input { Value = 0 }
 					}
 				},
@@ -399,7 +401,7 @@ Variable Refactoring & Automation: 2025
 								TimeCode = 0,
 								GlobalStart = -2000000000,
 								GlobalEnd = 0,
-								Filename = "Comp:DistanceMap\\DistMap1.1001.exr",
+								Filename = "Comp:DistanceMap\\DistMap1.0000.exr",
 								ExtendLast = 0,
 								Length = 0,
 								TrimIn = 0,
@@ -413,7 +415,7 @@ Variable Refactoring & Automation: 2025
 						["OpenEXRFormat.Compression"] = Input { Value = 4 },
 						["OpenEXRFormat.ZipCompressionLevel"] = Input { Value = 4 },
 						["OpenEXRFormat.Channels"] = Input { Value = 1 },
-						SaveFrames = Input { Value = FuID { "HiQInteractive" } },
+						SaveFrames = Input { Value = FuID { "Full" } },
 						Input = Input {
 							SourceOp = "Switch_BlankCanvas",
 							Source = "Output"
@@ -433,20 +435,21 @@ Variable Refactoring & Automation: 2025
 				Loader_PreviousFrame = Loader {
 					Clips = {
 						Clip {
-							ExtendFirst = 0,
-							Loop = 1,
-							AspectMode = 0,
-							Depth = 0,
-							GlobalEnd = 1001,
-							GlobalStart = 1001,
 							ID = "Clip1",
-							Filename = "Comp:DistanceMap\\DistMap1.1001.exr",
-							ExtendLast = 0,
-							Length = 0,
+							Filename = "Comp:DistanceMap\\DistMap1.0000.exr",
+							StartFrame = 0,
+							Length = 2000,
 							LengthSetManually = true,
 							TrimIn = 0,
-							TrimOut = 0,
-							FormatID = "OpenEXRFormat"
+							TrimOut = 2000,
+							ExtendFirst = 0,
+							ExtendLast = 0,
+							Loop = 1,
+							AspectMode = 0,
+							Depth = 5,
+							TimeCode = 0,
+							GlobalStart = 0,
+							GlobalEnd = 2000
 						}
 					},
 					ViewInfo = OperatorInfo { Pos = { 2911.12719726562, -1784.25390625 } },
@@ -1202,7 +1205,6 @@ Variable Refactoring & Automation: 2025
 							SourceOp = "PR_AgeOutput",
 							Source = "Output"
 						},
-						Source = Input { Value = 2 },
 						Input2 = Input {
 							SourceOp = "Custom_TrailGenerator",
 							Source = "Output"
@@ -1277,12 +1279,19 @@ Variable Refactoring & Automation: 2025
 			},
 			UserControls = ordered() {
 				Common = ControlPage {
-					CT_Visible = false,
-					CT_Priority = 0
+					CT_Visible = true,
+					CT_Priority = 2
 				},
 				Controls = ControlPage {
+					CTID_DIB_ID = "Icons.Tools.Tabs.Primatte",
 					CT_Visible = true,
 					CT_Priority = 1
+				},
+				File = ControlPage {
+					CT_Visible = true,
+					CTID_DIB_ID = "Icons.Tools.Tabs.Solve",
+					CTS_FullName = "Canvas and Saver",
+					CT_Priority = 0
 				},
 
 				WorkflowLabel = {
@@ -1301,10 +1310,10 @@ Variable Refactoring & Automation: 2025
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-local vff = require("vectorfill_utilities")
-if not tool then tool = comp.ActiveTool end
-vff.auto_process(tool, comp, {show_progress = true})
-]],
+				local vff = require("vectorfill_utilities")
+				if not tool then tool = comp.ActiveTool end
+				vff.auto_process(tool, comp)
+				]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
 					INP_MinAllowed = -1000000,
@@ -1320,7 +1329,7 @@ vff.auto_process(tool, comp, {show_progress = true})
 					LBLC_DropDownButton = true,
 					INP_Passive = false,
 					LINKID_DataType = "Number",
-					LBLC_NumInputs = 4,
+					LBLC_NumInputs = 6,
 					LBLC_NestLevel = 2,
 					ICS_ControlPage = "Controls",
 					INPID_InputControl = "LabelControl",
@@ -1332,35 +1341,34 @@ vff.auto_process(tool, comp, {show_progress = true})
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-local vff = require("vectorfill_utilities")
-if not tool then tool = comp.ActiveTool end
-vff.generate_canvas(tool, comp, {show_progress = true})
-]],
+				local vff = require("vectorfill_utilities")
+				if not tool then tool = comp.ActiveTool end
+				vff.generate_canvas_fast(tool, comp)
+				]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
 					INP_MinAllowed = -1000000,
 					LINKID_DataType = "Number",
 					ICS_ControlPage = "Controls",
-					ICD_Width = 0.5,
-					LINKS_Name = "1. Generate Canvas",
+					ICD_Width = 0.35,
+					LINKS_Name = "1. Render Canvas",
 				},
-
 				SetStartFrame = {
 					INP_MaxAllowed = 1000000,
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-local vff = require("vectorfill_utilities")
-if not tool then tool = comp.ActiveTool end
-vff.set_start_frame(tool, comp)
-]],
+				local vff = require("vectorfill_utilities")
+				if not tool then tool = comp.ActiveTool end
+				vff.go_to_start(tool, comp)
+				]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
 					INP_MinAllowed = -1000000,
 					LINKID_DataType = "Number",
 					ICS_ControlPage = "Controls",
-					ICD_Width = 0.5,
-					LINKS_Name = "2. Set Start Frame",
+					ICD_Width = 0.25,
+					LINKS_Name = "2. Go to Start",
 				},
 
 				Process = {
@@ -1368,16 +1376,16 @@ vff.set_start_frame(tool, comp)
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-local vff = require("vectorfill_utilities")
-if not tool then tool = comp.ActiveTool end
-vff.process(tool, comp)
-]],
+				local vff = require("vectorfill_utilities")
+				if not tool then tool = comp.ActiveTool end
+				vff.process_forward(tool, comp)
+				]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
 					INP_MinAllowed = -1000000,
 					LINKID_DataType = "Number",
 					ICS_ControlPage = "Controls",
-					ICD_Width = 1,
+					ICD_Width = 0.4,
 					LINKS_Name = "3. Process Growth",
 				},
 
@@ -1386,10 +1394,10 @@ vff.process(tool, comp)
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-local vff = require("vectorfill_utilities")
-if not tool then tool = comp.ActiveTool end
-vff.clear_cache(tool, comp)
-]],
+				local vff = require("vectorfill_utilities")
+				if not tool then tool = comp.ActiveTool end
+				vff.clear_cache(tool, comp)
+				]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
 					INP_MinAllowed = -1000000,
@@ -1404,10 +1412,10 @@ vff.clear_cache(tool, comp)
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-local flib = require("fusionlib")
-if not tool then tool = comp.ActiveTool end
-flib.create_loader(tool, comp)
-]],
+				local flib = require("fusionlib")
+				if not tool then tool = comp.ActiveTool end
+				flib.create_loader(tool, comp)
+				]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
 					INP_MinAllowed = -1000000,
@@ -1579,7 +1587,7 @@ flib.create_loader(tool, comp)
 					MinScale = 0,
 					MaxScale = 10
 				},
-				CustomTool5_1_1_1_StartFrame = InstanceInput {
+				CT5_StartFrame = InstanceInput {
 					Page = "Render",
 					Center = 0.5,
 					Name = "Start Frame",
@@ -1599,24 +1607,6 @@ flib.create_loader(tool, comp)
 					MinScale = 0,
 					MaxScale = 1
 				},
-				Loader1_1_2_Load = InstanceInput {
-					Page = "Render",
-					Name = "Load",
-					SourceOp = "Loader_PreviousFrame",
-					Source = "Clip"
-				},
-				Saver1_1_1_Save = InstanceInput {
-					Page = "Render",
-					Name = "Save",
-					SourceOp = "Saver_DistanceMap",
-					Source = "Clip"
-				},
-				Saver1_1_1_SaveFrames = InstanceInput {
-					Page = "Render",
-					Name = "Save Frames",
-					SourceOp = "Saver_DistanceMap",
-					Source = "SaveFrames"
-				},
 				Switch_OutputMode_Source = InstanceInput {
 					Page = "Render",
 					Center = 0.5,
@@ -1634,7 +1624,7 @@ flib.create_loader(tool, comp)
 					SourceOp = "Controls",
 					Source = "MapControls"
 				},
-				CustomTool5_1_1_1_AlphaOffset = InstanceInput {
+				CT5_AlphaOffset = InstanceInput {
 					Page = "Render",
 					Center = 0.5,
 					Name = "Alpha Offset",
@@ -1644,7 +1634,7 @@ flib.create_loader(tool, comp)
 					MinScale = 0,
 					MaxScale = 1
 				},
-				CustomTool5_1_1_1_TailLength = InstanceInput {
+				CT5_TailLength = InstanceInput {
 					Page = "Render",
 					Center = 0.5,
 					Name = "Tail Length",
@@ -1654,7 +1644,7 @@ flib.create_loader(tool, comp)
 					MinScale = 0,
 					MaxScale = 1
 				},
-				CustomTool5_1_1_1_HeadLength = InstanceInput {
+				CT5_HeadLength = InstanceInput {
 					Page = "Render",
 					Center = 0.5,
 					Name = "Head Length",
@@ -1664,7 +1654,7 @@ flib.create_loader(tool, comp)
 					MinScale = 0,
 					MaxScale = 1
 				},
-				CustomTool5_1_1_1_TrailOffset = InstanceInput {
+				CT5_TrailOffset = InstanceInput {
 					Page = "Render",
 					Center = 0.5,
 					Name = "Trail Offset",
@@ -1674,7 +1664,7 @@ flib.create_loader(tool, comp)
 					MinScale = 0,
 					MaxScale = 1
 				},
-				CustomTool5_1_1_1_AlphaContrast = InstanceInput {
+				CT5_AlphaContrast = InstanceInput {
 					Page = "Render",
 					Center = 0.5,
 					Name = "Alpha Contrast",
@@ -1683,6 +1673,36 @@ flib.create_loader(tool, comp)
 					Source = "NumberIn5",
 					MinScale = 0,
 					MaxScale = 1
+				},
+				GlobalIn = InstanceInput {
+					SourceOp = "Loader_PreviousFrame",
+					Source = "GlobalIn",
+					ControlGroup = 7,
+					Page = "File"
+				},
+				GlobalOut = InstanceInput {
+					SourceOp = "Loader_PreviousFrame",
+					Source = "GlobalOut",
+					ControlGroup = 7,
+					Page = "File"
+				},
+				LD1_Load = InstanceInput {
+					Name = "Loader(autofilled)",
+					SourceOp = "Loader_PreviousFrame",
+					Source = "Clip",
+					Page = "File"
+				},
+				SV1_Save = InstanceInput {
+					Name = "Saver",
+					SourceOp = "Saver_DistanceMap",
+					Source = "Clip",
+					Page = "File"
+				},
+				SV1_SaveFrames = InstanceInput {
+					Page = "File",
+					Name = "Save Frames",
+					SourceOp = "Saver_DistanceMap",
+					Source = "SaveFrames"
 				}
 			}
 		}

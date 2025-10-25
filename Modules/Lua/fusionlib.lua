@@ -146,6 +146,37 @@ function fusionlib.file_exists(filepath)
     end
 end
 
+--- Move clip timing for Loader tools
+--- Adjusts a Loader's global start position and preserves clip trimming values
+--- @param loader object Loader tool to move
+--- @param oldstart number Current global start frame
+--- @param newstart number New global start frame to move to
+function fusionlib.move_clip(loader, oldstart, newstart)
+    -- Remember clip trimming values
+    local globalin    = loader.GlobalIn[oldstart]
+    local globalout   = loader.GlobalOut[oldstart]
+    local clipstart   = loader.ClipTimeStart[oldstart]
+    local clipend     = loader.ClipTimeEnd[oldstart]
+    local extfirst    = loader.HoldFirstFrame[oldstart]
+    local extlast     = loader.HoldLastFrame[oldstart]
+
+    local len = globalout - globalin + 1
+
+    if newstart > oldstart then -- Moving forwards
+        loader.GlobalOut[oldstart] = newstart + len - 1
+        loader.GlobalIn[oldstart] = newstart
+    else -- Moving backwards
+        loader.GlobalIn[oldstart] = newstart
+        loader.GlobalOut[newstart] = newstart + len - 1
+    end
+
+    -- Fix trimming values at new position
+    loader.ClipTimeStart[newstart]     = clipstart
+    loader.ClipTimeEnd[newstart]       = clipend
+    loader.HoldFirstFrame[newstart]    = extfirst
+    loader.HoldLastFrame[newstart]     = extlast
+end
+
 --- Check if composition is valid and saved
 --- @param comp object Fusion composition object
 --- @return boolean Whether composition is valid
@@ -190,7 +221,7 @@ function fusionlib.move_loader(ldr, comp)
     local clipName = ldr.Clip[1]
 
     if inPoint == globalStart then
-        print("Render IN and Comp Global Start are the same. Trying to parse the loader filename to find the first frame")
+        print("Render IN and Comp Global Start are the same.\nTrying to parse the loader filename to find the first frame")
         if clipName == "" then
             print("Clip Name is empty. Loader not moved")
             comp:EndUndo()
@@ -202,7 +233,7 @@ function fusionlib.move_loader(ldr, comp)
         end
     end
 
-    bmd.MoveClip(ldr, globalStart, tonumber(inPoint))
+    fusionlib.move_clip(ldr, globalStart, tonumber(inPoint))
     print("New Loader IN point: " .. inPoint)
 
     comp:EndUndo()
@@ -273,11 +304,14 @@ function fusionlib.create_loader(tool, comp)
     loader:LoadSettings(settings)
     flow:SetPos(loader, x, y + 1)
 
-    local inputs = tool.MainOutput:GetConnectedInputs()
-    for i, input in ipairs(inputs) do
-        input:ConnectTo(loader.Output)
-    end
-
+    -- local inputs = tool.MainOutput:GetConnectedInputs()
+    -- for i, input in ipairs(inputs) do
+    --     input:ConnectTo(loader.Output)
+    -- end
+    
+    -- FIX: Adjust loader frames to match composition render range
+    fusionlib.move_loader(loader, comp)
+    
     comp:EndUndo()
     comp:Unlock()
 

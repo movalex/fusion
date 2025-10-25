@@ -107,6 +107,14 @@ end
 function vectorwarp_utilities.render_cleanpass_safe(tool, comp)
     local ldr = tool:GetChildrenList(false, "Loader")[1]
     local svr = tool:GetChildrenList(false, "Saver")[1]
+    if #svr == 0 then
+        flib.show_warning(comp, "Saver node not found")
+        return false
+    end
+    if #ldr == 0 then
+        flib.show_warning(comp, "Loader node not found")
+        return false
+    end
     local saverClip = svr.Clip[0]
 
     local renderStart = comp:GetAttrs().COMPN_RenderStart
