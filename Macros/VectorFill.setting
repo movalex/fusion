@@ -1301,7 +1301,7 @@ Variable Refactoring & Automation: 2025
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-local vff = require("vectorfill_workflows")
+local vff = require("vectorfill_utilities")
 if not tool then tool = comp.ActiveTool end
 vff.auto_process(tool, comp, {show_progress = true})
 ]],
@@ -1332,7 +1332,7 @@ vff.auto_process(tool, comp, {show_progress = true})
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-local vff = require("vectorfill_workflows")
+local vff = require("vectorfill_utilities")
 if not tool then tool = comp.ActiveTool end
 vff.generate_canvas(tool, comp, {show_progress = true})
 ]],
@@ -1350,7 +1350,7 @@ vff.generate_canvas(tool, comp, {show_progress = true})
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-local vff = require("vectorfill_workflows")
+local vff = require("vectorfill_utilities")
 if not tool then tool = comp.ActiveTool end
 vff.set_start_frame(tool, comp)
 ]],
@@ -1368,7 +1368,7 @@ vff.set_start_frame(tool, comp)
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-local vff = require("vectorfill_workflows")
+local vff = require("vectorfill_utilities")
 if not tool then tool = comp.ActiveTool end
 vff.process(tool, comp)
 ]],
@@ -1386,7 +1386,7 @@ vff.process(tool, comp)
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-local vff = require("vectorfill_workflows")
+local vff = require("vectorfill_utilities")
 if not tool then tool = comp.ActiveTool end
 vff.clear_cache(tool, comp)
 ]],

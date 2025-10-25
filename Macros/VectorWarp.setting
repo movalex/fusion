@@ -763,7 +763,7 @@ for better motion analysis quality.
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-						local vwf = require("vectorwarp_workflows")
+						local vwf = require("vectorwarp_utilities")
 						if not tool then tool = comp.ActiveTool end
 						vwf.auto_process(tool, comp, {
 							method = "fast",
@@ -786,7 +786,7 @@ for better motion analysis quality.
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-						local vwf = require("vectorwarp_workflows")
+						local vwf = require("vectorwarp_utilities")
 						if not tool then tool = comp.ActiveTool end
 						vwf.quick_stabilize(tool, comp)
 					]],
@@ -804,7 +804,7 @@ for better motion analysis quality.
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-						local vwf = require("vectorwarp_workflows")
+						local vwf = require("vectorwarp_utilities")
 						if not tool then tool = comp.ActiveTool end
 						vwf.quick_track(tool, comp)
 					]],
@@ -865,9 +865,9 @@ for better motion analysis quality.
 					INP_Integer = false,
 					LINKID_DataType = "Number",
 					BTNCS_Execute = [[
-						local vlib = require("vectorlib")
+						local vwu = require("vectorwarp_utilities")
 						if not tool then tool = comp.ActiveTool end
-						vlib.set_reference_frame(tool, comp)
+						vwu.set_reference_frame(tool, comp)
 					]],
 					ICS_ControlPage = "Controls",
 					INPID_InputControl = "ButtonControl",
@@ -915,9 +915,9 @@ for better motion analysis quality.
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-						local vlib = require("vectorlib")
+						local vwu = require("vectorwarp_utilities")
 						if not tool then tool = comp.ActiveTool end
-						vlib.generate_cleanpass_fast(tool, comp)
+						vwu.generate_cleanpass_fast(tool, comp)
 					]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
@@ -932,9 +932,9 @@ for better motion analysis quality.
 					INP_Integer = false,
 					LINKID_DataType = "Number",
 					BTNCS_Execute = [[
-						local vlib = require("vectorlib")
+						local vwu = require("vectorwarp_utilities")
 						if not tool then tool = comp.ActiveTool end
-						vlib.render_cleanpass_safe(tool, comp)
+						vwu.render_cleanpass_safe(tool, comp)
 					]],
 					ICS_ControlPage = "Controls",
 					INPID_InputControl = "ButtonControl",
@@ -945,9 +945,9 @@ for better motion analysis quality.
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-						local vlib = require("vectorlib")
+						local vwu = require("vectorwarp_utilities")
 						if not tool then tool = comp.ActiveTool end
-						vlib.analyze_backward(tool, comp)
+						vwu.analyze_backward(tool, comp)
 					]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
@@ -962,9 +962,9 @@ for better motion analysis quality.
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-						local vlib = require("vectorlib")
+						local vwu = require("vectorwarp_utilities")
 						if not tool then tool = comp.ActiveTool end
-						vlib.analyze_forward(tool, comp)
+						vwu.analyze_forward(tool, comp)
 					]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
@@ -980,9 +980,9 @@ for better motion analysis quality.
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-						local vlib = require("vectorlib")
+						local vwu = require("vectorwarp_utilities")
 						if not tool then tool = comp.ActiveTool end
-						vlib.analyze_both(tool, comp)
+						vwu.analyze_both(tool, comp)
 					]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
@@ -998,10 +998,10 @@ for better motion analysis quality.
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-						local vlib = require("vectorlib")
+						local vwu = require("vectorwarp_utilities")
 						if not tool then tool = comp.ActiveTool end
 						local ldr = tool:GetChildrenList(false, "Loader")[1]
-						vlib.move_loader(ldr, comp)
+						vwu.move_loader(ldr, comp)
 					]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
@@ -1017,9 +1017,9 @@ for better motion analysis quality.
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-						local vlib = require("vectorlib")
+						local vwu = require("vectorwarp_utilities")
 						if not tool then tool = comp.ActiveTool end
-						vlib.delete_vectors(tool, comp)
+						vwu.delete_vectors(tool, comp)
 					]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
@@ -1035,9 +1035,9 @@ for better motion analysis quality.
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-						local vlib = require("vectorlib")
+						local vwu = require("vectorwarp_utilities")
 						if not tool then tool = comp.ActiveTool end
-						vlib.create_loader(tool, comp)
+						vwu.create_loader(tool, comp)
 					]],
 					INP_MaxScale = 1,
 					INP_MinScale = 0,
