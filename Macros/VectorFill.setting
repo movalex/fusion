@@ -1397,6 +1397,24 @@ vff.clear_cache(tool, comp)
 					ICS_ControlPage = "Controls",
 					ICD_Width = 1,
 					LINKS_Name = "Clear Cache",
+				},
+
+				CreateLoader = {
+					INP_MaxAllowed = 1000000,
+					INP_Integer = false,
+					INPID_InputControl = "ButtonControl",
+					BTNCS_Execute = [[
+local flib = require("fusionlib")
+if not tool then tool = comp.ActiveTool end
+flib.create_loader(tool, comp)
+]],
+					INP_MaxScale = 1,
+					INP_MinScale = 0,
+					INP_MinAllowed = -1000000,
+					LINKID_DataType = "Number",
+					ICS_ControlPage = "Controls",
+					ICD_Width = 1,
+					LINKS_Name = "Create Loader",
 				}
 			},
 			ViewInfo = GroupInfo {
@@ -1603,7 +1621,7 @@ vff.clear_cache(tool, comp)
 					Page = "Render",
 					Center = 0.5,
 					Name = "Output",
-					Default = 2,
+					Default = 0,
 					SourceOp = "Switch_OutputMode",
 					Source = "Source",
 					MinScale = 0,

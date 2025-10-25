@@ -251,4 +251,38 @@ function fusionlib.show_confirmation(comp, message)
     return ask ~= nil
 end
 
+--- Create a loader from current macro tool's internal loader settings
+--- @param tool object Macro tool containing a Loader node
+--- @param comp object Fusion composition
+function fusionlib.create_loader(tool, comp)
+    comp:Lock()
+    comp:StartUndo('Create Loader')
+
+    local tool_ldr = tool:GetChildrenList(false, "Loader")[1]
+    if not tool_ldr then
+        print("Error: No Loader found inside the macro")
+        comp:Unlock()
+        return nil
+    end
+
+    local settings = comp:CopySettings(tool_ldr)
+    local flow = comp.CurrentFrame.FlowView
+    local x, y = flow:GetPos(tool)
+
+    local loader = comp:AddTool("Loader")
+    loader:LoadSettings(settings)
+    flow:SetPos(loader, x, y + 1)
+
+    local inputs = tool.MainOutput:GetConnectedInputs()
+    for i, input in ipairs(inputs) do
+        input:ConnectTo(loader.Output)
+    end
+
+    comp:EndUndo()
+    comp:Unlock()
+
+    print("Created new Loader from macro settings")
+    return loader
+end
+
 return fusionlib

@@ -406,31 +406,11 @@ function vectorwarp_utilities.move_loader(ldr, comp)
     return flib.move_loader(ldr, comp)
 end
 
---- Create a loader from current VectorWarp tool settings
+--- Create a loader from current VectorWarp tool settings (wrapper for fusionlib function)
 --- @param tool object VectorWarp macro tool
 --- @param comp object Fusion composition
 function vectorwarp_utilities.create_loader(tool, comp)
-    comp:Lock()
-    comp:StartUndo('Create Vector Loader')
-
-    local tool_ldr = tool:GetChildrenList(false, "Loader")[1]
-    local settings = comp:CopySettings(tool_ldr)
-    local flow = comp.CurrentFrame.FlowView
-    local x, y = flow:GetPos(tool)
-
-    local loader = comp:AddTool("Loader")
-    loader:LoadSettings(settings)
-    flow:SetPos(loader, x, y + 1)
-
-    local inputs = tool.MainOutput:GetConnectedInputs()
-    for i, input in ipairs(inputs) do
-        input:ConnectTo(loader.Output)
-    end
-
-    comp:EndUndo()
-    comp:Unlock()
-
-    print("Created new Loader with vector tool settings")
+    return flib.create_loader(tool, comp)
 end
 
 --------------------------------------------------------------------------------
