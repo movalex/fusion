@@ -15,7 +15,7 @@
     Updates:
         by Alexey Bogomolov
         (mail@abogomolov.com)
-        Donate: https://paypal.me/aabogomolov
+
         v.0.1.6:
         2019/6/30
             -- update for Fusion 9/16+ and Davinci Resolve 16+

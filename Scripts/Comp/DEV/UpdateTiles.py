@@ -7,7 +7,7 @@ Run the script to update or show tiles on all supported tools:
 Based on pvxUpdateTilePictures.lua script
 author: Alexey Bogomolov, mail@abogomolov.com
 version: 1.0, 01.29.2021
-donate: https://paypal.me/aabogomolov/3usd
+
 Requirements: Python
 
 v 1.0 (01.29.2021):

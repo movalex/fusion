@@ -3,7 +3,7 @@
 # contact: mail@abogomolov.com
 # License: MIT
 # version: 1.0
-# donate: https://paypal.me/aabogomolov/5usd
+
 
 import re
 import os

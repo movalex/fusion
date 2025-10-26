@@ -1,6 +1,5 @@
 # Author: Alexey Bogomolov
 # email: mail@abogomolov.com
-# donate: https://www.paypal.com/paypalme/aabogomolov/
 # MIT License -- https://opensource.org/licenses/MIT
 #
 # Version history from 09/17/2021:
