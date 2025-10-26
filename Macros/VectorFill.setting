@@ -1278,22 +1278,36 @@ Variable Refactoring & Automation: 2025
 				}
 			},
 			UserControls = ordered() {
-				Common = ControlPage {
-					CT_Visible = true,
-					CT_Priority = 2
+				User = ControlPage {
+					CT_Visible = false,
+					CT_Priority = 0
 				},
 				Controls = ControlPage {
-					CTID_DIB_ID = "Icons.Tools.Tabs.Primatte",
 					CT_Visible = true,
-					CT_Priority = 1
+					CT_Priority = 5,
+				},
+				["Speed Map"] = ControlPage {
+					CT_Visible = true,
+					CT_Priority = 3,
+					CTID_DIB_ID = "Icons.Tools.Tabs.Degrain",
+					CTS_FullName = "Speed Map",
+				},
+				Render = ControlPage {
+					CT_Visible = true,
+					CT_Priority = 2,
+					CTID_DIB_ID = "Icons.Tools.Tabs.Render",
+					CTS_FullName = "Render",
 				},
 				File = ControlPage {
 					CT_Visible = true,
 					CTID_DIB_ID = "Icons.Tools.Tabs.Solve",
 					CTS_FullName = "Canvas and Saver",
+					CT_Priority = 1
+				},
+				Common = ControlPage {
+					CT_Visible = true,
 					CT_Priority = 0
 				},
-
 				WorkflowLabel = {
 					INP_Integer = false,
 					INP_Default = 1,
@@ -1304,7 +1318,6 @@ Variable Refactoring & Automation: 2025
 					INPID_InputControl = "LabelControl",
 					LINKS_Name = "Workflow Automation"
 				},
-
 				AutoProcess = {
 					INP_MaxAllowed = 1000000,
 					INP_Integer = false,
@@ -1423,7 +1436,22 @@ Variable Refactoring & Automation: 2025
 					ICS_ControlPage = "Controls",
 					ICD_Width = 1,
 					LINKS_Name = "Create Loader",
-				}
+				},
+				MainInput = {
+					LINK_Main = 1,
+					LINKID_DataType = "Image",
+					LINKS_Name = "Image"
+				},
+				GSourceInput = {
+					LINK_Main = 2,
+					LINKID_DataType = "Image",
+					LINKS_Name = "Growth Source"
+				},
+				SpeedMapInput = {
+					LINKID_DataType = "Image",
+					LINK_Main = 3,
+					LINKS_Name = "Speed Map",
+				},
 			},
 			ViewInfo = GroupInfo {
 			},
@@ -1434,20 +1462,17 @@ Variable Refactoring & Automation: 2025
 				}
 			},
 			Inputs = ordered() {
-				MainInput1 = InstanceInput {
-					Name = "Growth Source",
-					SourceOp = "PR_GrowthSourceInput",
-					Source = "Input"
-				},
-				MainInput2 = InstanceInput {
-					Name = "Image",
+				MainInput = InstanceInput {
 					SourceOp = "PR_ImageInput",
-					Source = "Input"
+					Source = "Input",
 				},
-				MainInput3 = InstanceInput {
-					Name = "Speed Map",
+				GSourceInput = InstanceInput {
+					SourceOp = "PR_GrowthSourceInput",
+					Source = "Input",
+				},
+				SpeedMapInput = InstanceInput {
 					SourceOp = "PR_SpeedMapInput",
-					Source = "Input"
+					Source = "Input",
 				},
 				Switch_SpeedSource_Source = InstanceInput {
 					Page = "Speed Map",
@@ -1687,7 +1712,7 @@ Variable Refactoring & Automation: 2025
 					Page = "File"
 				},
 				LD1_Load = InstanceInput {
-					Name = "Loader(autofilled)",
+					Name = "Loader (autofilled)",
 					SourceOp = "Loader_PreviousFrame",
 					Source = "Clip",
 					Page = "File"
