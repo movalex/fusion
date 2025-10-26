@@ -39,12 +39,15 @@ Technical Notes:
 - Re-run Auto Process after parameter changes to regenerate canvas
 
 Control Pages:
+  - Controls: Workflow automation buttons (Auto Process, manual steps, utilities)
   - Speed Map: Configure speed map generation parameters and source selection
   - Render: Canvas generation, output settings, and trail parameters
+  - File: Loader and Saver clip path configuration
+  - Common: Common macro settings
 
-Version: 2.0 (Refactored 2025)
-Original Author: [Tool Author]
-Variable Refactoring & Automation: 2025
+Version: 2.0
+Authors: Zeke Faust, Emilio Sapia, Alexey Bogomolov 
+Last Update: Oct, 2025
 ]]
 
 {
