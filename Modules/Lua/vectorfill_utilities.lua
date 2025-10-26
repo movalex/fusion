@@ -145,7 +145,7 @@ function vectorfill_utilities.generate_canvas_fast(tool, comp)
     comp:Unlock()
 
     -- Load the sequence
-    ldr.Clip[0] = loaderClip
+    ldr.Clip[0] = comp:MapPath(loaderClip)
 
     print("Canvas files created: " .. loaderClip)
     comp.CurrentTime = renderStart
