@@ -142,8 +142,8 @@ end
 --- @param comp object Fusion composition
 --- @return boolean Whether inputs are valid
 local function validate_inputs(tool, comp)
-    local growth_source = tool:FindMainInput(1)  -- Growth Source
-    local image_input = tool:FindMainInput(2)    -- Image
+    local image_input = tool:FindMainInput(1)    -- Image
+    local growth_source = tool:FindMainInput(2)  -- Growth Source
 
     if not growth_source or not growth_source:GetConnectedOutput() then
         flib.show_warning(comp, "Growth Source input not connected.\nPlease connect a growth source and try again.")
