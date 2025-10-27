@@ -1,5 +1,5 @@
 --[[
-VectorFill - Iterative Growth Propagation Tool
+ReFill - Iterative Growth Propagation Tool
 ===============================================
 
 Description:
@@ -8,7 +8,7 @@ defined starting points, with growth speed controlled by various map sources.
 
 Workflow:
   1. Connect Image and Growth Source inputs
-  2. Click "Auto Process" button in Controls
+  2. Click "Auto Process" button in Simulation
   3. Wait for canvas generation and processing (displays progress in console)
   4. Playback will start automatically showing growth effect
   5. Switch output modes as needed via Switch_OutputMode control
@@ -39,7 +39,7 @@ Technical Notes:
 - Re-run Auto Process after parameter changes to regenerate canvas
 
 Control Pages:
-  - Controls: Workflow automation buttons (Auto Process, manual steps, utilities)
+  - Simulation: Workflow automation buttons (Auto Process, manual steps, utilities)
   - Speed Map: Configure speed map generation parameters and source selection
   - Render: Canvas generation, output settings, and trail parameters
   - File: Loader and Saver clip path configuration
@@ -52,7 +52,7 @@ Last Update: Oct, 2025
 
 {
 	Tools = ordered() {
-		["VectorFill"] = GroupOperator {
+		["ReFill"] = GroupOperator {
 			Tools = ordered() {
 				Note_MakeBlank = Note {
 					ViewInfo = StickyNoteInfo {
@@ -241,7 +241,7 @@ Last Update: Oct, 2025
 						}
 					},
 					ViewInfo = OperatorInfo { Pos = { 2504.14721679688, -1575.80187988281 } },
-					EnabledRegion = TimeRegion { { Start = 1001, End = 1252.9999 } }
+					EnabledRegion = TimeRegion { { Start = 0, End = 10000 } }
 				},
 				PR_MergedToVariblur = PipeRouter {
 					ViewInfo = PipeRouterInfo { Pos = { 2504.14721679688, -738.179931640625 } },
@@ -511,7 +511,7 @@ Last Update: Oct, 2025
 						MapControls = {
 							LBLC_MultiLine = true,
 							INP_Integer = true,
-							LINKS_Name = "Map Controls",
+							LINKS_Name = "Trail Controls",
 							LBLC_DropDownButton = false,
 							IC_Visible = true,
 							INP_Passive = true,
@@ -1259,7 +1259,7 @@ Last Update: Oct, 2025
 							LINKID_DataType = "Number",
 							INPID_InputControl = "LabelControl",
 							INP_Passive = true,
-							LINKS_Name = "Map Controls",
+							LINKS_Name = "Trail Controls",
 							LBLC_DropDownButton = true,
 							IC_Visible = true,
 							LBLC_NumInputs = 5
@@ -1286,8 +1286,13 @@ Last Update: Oct, 2025
 					CT_Priority = 0
 				},
 				Controls = ControlPage {
+					CT_Visible = false,
+					CT_Priority = 0,
+				},
+				Simulation = ControlPage {
 					CT_Visible = true,
 					CT_Priority = 5,
+					CTID_DIB_ID = "Icons.Tools.Tabs.Controls",
 				},
 				["Speed Map"] = ControlPage {
 					CT_Visible = true,
@@ -1317,7 +1322,7 @@ Last Update: Oct, 2025
 					LBLC_DropDownButton = true,
 					LINKID_DataType = "Number",
 					LBLC_NumInputs = 1,
-					ICS_ControlPage = "Controls",
+					ICS_ControlPage = "Simulation",
 					INPID_InputControl = "LabelControl",
 					LINKS_Name = "Workflow Automation"
 				},
@@ -1326,7 +1331,7 @@ Last Update: Oct, 2025
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-				local vff = require("vectorfill_utilities")
+				local vff = require("refill_utilities")
 				if not tool then tool = comp.ActiveTool end
 				vff.auto_process(tool, comp)
 				]],
@@ -1334,7 +1339,7 @@ Last Update: Oct, 2025
 					INP_MinScale = 0,
 					INP_MinAllowed = -1000000,
 					LINKID_DataType = "Number",
-					ICS_ControlPage = "Controls",
+					ICS_ControlPage = "Simulation",
 					ICD_Width = 1,
 					LINKS_Name = "Auto Process (All Steps)",
 				},
@@ -1347,7 +1352,7 @@ Last Update: Oct, 2025
 					LINKID_DataType = "Number",
 					LBLC_NumInputs = 6,
 					LBLC_NestLevel = 2,
-					ICS_ControlPage = "Controls",
+					ICS_ControlPage = "Simulation",
 					INPID_InputControl = "LabelControl",
 					LINKS_Name = "Setup",
 				},
@@ -1357,7 +1362,7 @@ Last Update: Oct, 2025
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-				local vff = require("vectorfill_utilities")
+				local vff = require("refill_utilities")
 				if not tool then tool = comp.ActiveTool end
 				vff.generate_canvas_fast(tool, comp)
 				]],
@@ -1365,7 +1370,7 @@ Last Update: Oct, 2025
 					INP_MinScale = 0,
 					INP_MinAllowed = -1000000,
 					LINKID_DataType = "Number",
-					ICS_ControlPage = "Controls",
+					ICS_ControlPage = "Simulation",
 					ICD_Width = 0.35,
 					LINKS_Name = "1. Render Canvas",
 				},
@@ -1374,7 +1379,7 @@ Last Update: Oct, 2025
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-				local vff = require("vectorfill_utilities")
+				local vff = require("refill_utilities")
 				if not tool then tool = comp.ActiveTool end
 				vff.go_to_start(tool, comp)
 				]],
@@ -1382,7 +1387,7 @@ Last Update: Oct, 2025
 					INP_MinScale = 0,
 					INP_MinAllowed = -1000000,
 					LINKID_DataType = "Number",
-					ICS_ControlPage = "Controls",
+					ICS_ControlPage = "Simulation",
 					ICD_Width = 0.25,
 					LINKS_Name = "2. Go to Start",
 				},
@@ -1392,7 +1397,7 @@ Last Update: Oct, 2025
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-				local vff = require("vectorfill_utilities")
+				local vff = require("refill_utilities")
 				if not tool then tool = comp.ActiveTool end
 				vff.process_forward(tool, comp)
 				]],
@@ -1400,7 +1405,7 @@ Last Update: Oct, 2025
 					INP_MinScale = 0,
 					INP_MinAllowed = -1000000,
 					LINKID_DataType = "Number",
-					ICS_ControlPage = "Controls",
+					ICS_ControlPage = "Simulation",
 					ICD_Width = 0.4,
 					LINKS_Name = "3. Process Growth",
 				},
@@ -1410,7 +1415,7 @@ Last Update: Oct, 2025
 					INP_Integer = false,
 					INPID_InputControl = "ButtonControl",
 					BTNCS_Execute = [[
-				local vff = require("vectorfill_utilities")
+				local vff = require("refill_utilities")
 				if not tool then tool = comp.ActiveTool end
 				vff.clear_cache(tool, comp)
 				]],
@@ -1418,7 +1423,7 @@ Last Update: Oct, 2025
 					INP_MinScale = 0,
 					INP_MinAllowed = -1000000,
 					LINKID_DataType = "Number",
-					ICS_ControlPage = "Controls",
+					ICS_ControlPage = "Simulation",
 					ICD_Width = 1,
 					LINKS_Name = "Clear Cache",
 				},
@@ -1436,7 +1441,7 @@ Last Update: Oct, 2025
 					INP_MinScale = 0,
 					INP_MinAllowed = -1000000,
 					LINKID_DataType = "Number",
-					ICS_ControlPage = "Controls",
+					ICS_ControlPage = "Simulation",
 					ICD_Width = 1,
 					LINKS_Name = "Create Loader",
 				},
@@ -1647,20 +1652,10 @@ Last Update: Oct, 2025
 				},
 				Controls_MapControls = InstanceInput {
 					Page = "Render",
-					Name = "Map Controls",
+					Name = "Trail Controls",
 					Default = 0,
 					SourceOp = "Controls",
 					Source = "MapControls"
-				},
-				CT5_AlphaOffset = InstanceInput {
-					Page = "Render",
-					Center = 0.5,
-					Name = "Alpha Offset",
-					Default = -0.1,
-					SourceOp = "Custom_TrailGenerator",
-					Source = "NumberIn4",
-					MinScale = 0,
-					MaxScale = 1
 				},
 				CT5_TailLength = InstanceInput {
 					Page = "Render",
@@ -1689,16 +1684,6 @@ Last Update: Oct, 2025
 					Default = -0.1,
 					SourceOp = "Custom_TrailGenerator",
 					Source = "NumberIn1",
-					MinScale = 0,
-					MaxScale = 1
-				},
-				CT5_AlphaContrast = InstanceInput {
-					Page = "Render",
-					Center = 0.5,
-					Name = "Alpha Contrast",
-					Default = 50,
-					SourceOp = "Custom_TrailGenerator",
-					Source = "NumberIn5",
 					MinScale = 0,
 					MaxScale = 1
 				},

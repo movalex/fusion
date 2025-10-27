@@ -1,24 +1,24 @@
 --[[
-    VectorFill Utilities Module
-    Provides VectorFill-specific functionality and automated workflows
+    ReFill Utilities Module
+    Provides ReFill-specific functionality and automated workflows
     For iterative growth operations and canvas generation
 
     Module Refactoring: 2024-2025
     License: MIT
 --]]
 
-local vectorfill_utilities = {}
+local refill_utilities = {}
 
 -- Load shared Fusion library
 local flib = require("fusionlib")
 
 --- Auto Process - Complete canvas generation and setup workflow in one click
 --- Performs: Generate Canvas → Set Start Frame → Process Growth
---- @param tool object VectorFill macro tool
+--- @param tool object ReFill macro tool
 --- @param comp object Fusion composition
 --- @return boolean Success status
-function vectorfill_utilities.auto_process(tool, comp)
-    print("=== Starting VectorFill Auto Process ===")
+function refill_utilities.auto_process(tool, comp)
+    print("=== Starting ReFill Auto Process ===")
 
     -- Step 1: Check composition is saved
     if not flib.check_comp(comp) then
@@ -42,22 +42,22 @@ function vectorfill_utilities.auto_process(tool, comp)
     -- Step 3: Generate canvas
     print("Step 1/2: Generating canvas...")
 
-    local success = vectorfill_utilities.generate_canvas(tool, comp)
+    local success = refill_utilities.generate_canvas(tool, comp)
     if not success then
         return false
     end
 
     -- Step 4: Set start frame and process growth
-    vectorfill_utilities.go_to_start(tool, comp)
+    refill_utilities.go_to_start(tool, comp)
 
     print("Step 2/2: Starting growth processing...")
 
-    success = vectorfill_utilities.process(tool, comp)
+    success = refill_utilities.process_forward(tool, comp)
     if not success then
         return false
     end
 
-    print("=== VectorFill Auto Process Complete ===")
+    print("=== ReFill Auto Process Complete ===")
     print("Growth processing is now running!")
     print("Once playback finishes, you can switch output modes:")
     print("  - Render: Live calculation (slower)")
@@ -69,11 +69,11 @@ function vectorfill_utilities.auto_process(tool, comp)
 end
 
 --- Generate Canvas Fast - Renders ONE frame and copies it (fast method)
---- @param tool object VectorFill macro tool
+--- @param tool object ReFill macro tool
 --- @param comp object Fusion composition
 --- @return boolean Success status
-function vectorfill_utilities.generate_canvas_fast(tool, comp)
-    print("=== Generating VectorFill Canvas (Fast) ===")
+function refill_utilities.generate_canvas_fast(tool, comp)
+    print("=== Generating ReFill Canvas (Fast) ===")
 
     if not flib.check_comp(comp) then
         return false
@@ -85,7 +85,8 @@ function vectorfill_utilities.generate_canvas_fast(tool, comp)
     
     local renderStart = comp:GetAttrs().COMPN_RenderStart
     local renderEnd = comp:GetAttrs().COMPN_RenderEnd
-    flib.sleep(1)
+    tool.GlobalIn = renderStart
+
     
     -- Set to Canvas mode
     tool.Switch_BlankCanvas_Source = 1
@@ -96,6 +97,7 @@ function vectorfill_utilities.generate_canvas_fast(tool, comp)
     comp.CurrentTime = renderStart
     comp:SetAttrs({COMPN_CurrentTime = renderStart})
     comp:SetAttrs({COMPN_RenderEnd = renderStart + 1})  -- Render just the single frame
+    compIsLooped = comp:GetAttrs().COMPB_LoopPlay
     
     -- Render single frame
     -- fusion.CacheManager:Purge()
@@ -128,9 +130,8 @@ function vectorfill_utilities.generate_canvas_fast(tool, comp)
     seq = flib.parse_filename(comp:MapPath(loaderClip))
     -- Copy frame to create sequence
     print("Copying blank frame to all frames in range...")
-    comp:Lock()
     local oldName = seq.FullPath
-
+    
     -- Copy the single rendered frame to all frames in the range
     for frame = renderStart, renderEnd do
         local padding = string.format("%04d", frame)
@@ -142,29 +143,33 @@ function vectorfill_utilities.generate_canvas_fast(tool, comp)
             end
         end
     end
+    
+    comp:Lock()
+    local clipUpdate = comp:MapPath(loaderClip)
+    tool.LD1_Load = clipUpdate
+    tool.LD1_Load = clipUpdate .. ""
+    ldr:SetAttrs({TOOLB_PassThrough = true})
+    ldr:SetAttrs({TOOLB_PassThrough = false})
     comp:Unlock()
-
-    -- Load the sequence
-    ldr.Clip[0] = comp:MapPath(loaderClip)
+    flib.move_loader(ldr, comp)
 
     print("Canvas files created: " .. loaderClip)
     comp.CurrentTime = renderStart
-    comp:Loop(true)
 
     -- Move loader to match render range
-    flib.move_loader(ldr, comp)
 
     print("[Done] Canvas generation complete (fast)")
     return true
 end
 
 --- Generate Canvas - Renders all frames (safe method, like VectorWarp's render_cleanpass_safe)
---- @param tool object VectorFill macro tool
+--- @param tool object ReFill macro tool
 --- @param comp object Fusion composition
 --- @return boolean Success status
-function vectorfill_utilities.generate_canvas(tool, comp)
+function refill_utilities.generate_canvas(tool, comp)
     local ldr = tool:GetChildrenList(false, "Loader")[1]
     local svr = tool:GetChildrenList(false, "Saver")[1]
+    
     if not svr then
         flib.show_warning(comp, "Saver node not found")
         return false
@@ -174,11 +179,12 @@ function vectorfill_utilities.generate_canvas(tool, comp)
         return false
     end
     local saverClip = svr.Clip[0]
-
+    
     local renderStart = comp:GetAttrs().COMPN_RenderStart
     local renderEnd = comp:GetAttrs().COMPN_RenderEnd
     comp.CurrentTime = renderStart
-
+    
+    tool.GlobalIn = renderStart
     -- Replace double dots in the saver path
     local padding = string.format("%04d", renderStart)
 
@@ -194,40 +200,56 @@ function vectorfill_utilities.generate_canvas(tool, comp)
     -- Set to CleanPass render mode
     -- tool.Render = 0
     local tempStart = renderStart
+    compIsLooped = comp:GetAttrs().COMPB_LoopPlay
+
     comp:Loop(false)
+
     fusion.CacheManager:Purge()
     tool.SV1_SaveFrames = "HiQInteractive"
     comp:Play()
 
     -- Wait for render to complete
     while true do
-        if tempStart < comp.CurrentTime then
-            tempStart = tempStart + 1
-            print(".")
-        end
+        -- Check if playback stopped (primary exit condition)
         if not comp:IsPlaying() then
-            flib.sleep(2)
+            flib.sleep(1)
             break
         end
+        
+        -- Check if we've reached the end (secondary exit condition)
+        if comp.CurrentTime >= renderEnd then
+            print("Canvas generation complete")
+            break
+        end
+        
+        -- Update progress only when frame changes
+        if comp.CurrentTime > tempStart then
+            tempStart = comp.CurrentTime
+            print("Rendering canvas frame " .. tempStart)
+        end
+        
+        flib.sleep(0.1)  -- Small delay to avoid busy-waiting
     end
 
+    comp:Stop()
     comp.CurrentTime = renderStart
-    tool.SV1_SaveFrames = "Full"
-    ldr.Clip[0] = comp:MapPath(loaderClip)
-
+    comp:Lock()
+    local clipUpdate = comp:MapPath(loaderClip)
+    tool.LD1_Load = clipUpdate
+    tool.LD1_Load = clipUpdate .. ""
+    ldr:SetAttrs({TOOLB_PassThrough = true})
+    ldr:SetAttrs({TOOLB_PassThrough = false})
+    comp:Unlock()
     flib.move_loader(ldr, comp)
-    -- print("[Done] Now press Analyze button")
-
-    fusion.CacheManager:Purge()
     return true
 end
 
 --- Clear cache and reset - Clears render cache and prepares for fresh processing
---- @param tool object VectorFill macro tool
+--- @param tool object ReFill macro tool
 --- @param comp object Fusion composition
 --- @return boolean Success status
-function vectorfill_utilities.clear_cache(tool, comp)
-    print("=== Clearing VectorFill Cache ===")
+function refill_utilities.clear_cache(tool, comp)
+    print("=== Clearing ReFill Cache ===")
 
     -- Get render range
     local renderStart = comp:GetAttrs().COMPN_RenderStart
@@ -243,10 +265,10 @@ function vectorfill_utilities.clear_cache(tool, comp)
 end
 
 --- Set start value - Set the CT5_StartFrame parameter to render start
---- @param tool object VectorFill macro tool
+--- @param tool object ReFill macro tool
 --- @param comp object Fusion composition
 --- @return boolean Success status
-function vectorfill_utilities.set_start_frame(tool, comp)
+function refill_utilities.set_start_frame(tool, comp)
     local renderStart = comp:GetAttrs().COMPN_RenderStart
     tool.CT5_StartFrame = renderStart
     print("Start value set to frame: " .. renderStart)
@@ -254,10 +276,10 @@ function vectorfill_utilities.set_start_frame(tool, comp)
 end
 
 --- Go to start frame - Move timeline to the first frame of render range
---- @param tool object VectorFill macro tool
+--- @param tool object ReFill macro tool
 --- @param comp object Fusion composition
 --- @return boolean Success status
-function vectorfill_utilities.go_to_start(tool, comp)
+function refill_utilities.go_to_start(tool, comp)
     -- Get render start
     local renderStart = comp:GetAttrs().COMPN_RenderStart
 
@@ -272,20 +294,20 @@ function vectorfill_utilities.go_to_start(tool, comp)
 end
 
 --- Process - Start the growth processing (assumes canvas already generated)
---- @param tool object VectorFill macro tool
+--- @param tool object ReFill macro tool
 --- @param comp object Fusion composition
 --- @return boolean Success status
-function vectorfill_utilities.process_forward(tool, comp)
+function refill_utilities.process_forward(tool, comp)
 
     local renderStart = comp:GetAttrs().COMPN_RenderStart
     local renderEnd = comp:GetAttrs().COMPN_RenderEnd
     comp.CurrentTime = renderStart
-
     -- Set to Output mode and Render output
     tool.Switch_BlankCanvas_Source = 0  -- Output mode
     tool.SV1_SaveFrames = "HiQInteractive"
-    vectorfill_utilities.set_output_mode(tool, "render")
+    refill_utilities.set_output_mode(tool, "render")
     flib.sleep(1)
+    compIsLooped = comp:GetAttrs().COMPB_LoopPlay
 
     -- Purge cache
     comp:Loop(false)
@@ -295,90 +317,40 @@ function vectorfill_utilities.process_forward(tool, comp)
     -- Play forward
     comp:Play()
     while true do
-        if tempStart < renderEnd then
-            tempStart = tempStart + 1
-            print("Analyzing forward frame " .. tempStart)
-        end
+        -- Check if playback stopped (primary exit condition)
         if not comp:IsPlaying() then
-            flib.sleep(2)
+            flib.sleep(1)
             break
         end
+        
+        -- Check if we've reached the end (secondary exit condition)
+        if comp.CurrentTime >= renderEnd then
+            print("Reached render end frame: " .. renderEnd)
+            break
+        end
+        
+        -- Update and print progress only when frame changes
+        if comp.CurrentTime > tempStart then
+            tempStart = comp.CurrentTime
+            print("Processing frame " .. tempStart)
+        end
+        
+        flib.sleep(0.1)  -- Small delay to avoid busy-waiting
     end
 
-    comp.CurrentTime = renderStart
-    comp:Loop(true)
-    vectorfill_utilities.set_output_mode(tool, "age")
+    comp:Stop()
+    comp:Loop(compIsLooped)
+    refill_utilities.set_output_mode(tool, "age")
+    tool.SV1_SaveFrames = "Full"
     print("Forward processing complete")
     return true
 end
 
---- Process - Start the growth processing (assumes canvas already generated)
---- @param tool object VectorFill macro tool
---- @param comp object Fusion composition
---- @return boolean Success status
-function vectorfill_utilities.process(tool, comp)
-    print("=== Starting VectorFill Processing ===")
-
-    -- Check composition is saved
-    if not flib.check_comp(comp) then
-        return false
-    end
-
-    -- Get render range
-    local renderStart = comp:GetAttrs().COMPN_RenderStart
-    local renderEnd = comp:GetAttrs().COMPN_RenderEnd
-
-    -- Set to Output mode and Render output
-    tool.Switch_BlankCanvas_Source = 0  -- Output mode
-    vectorfill_utilities.set_output_mode(tool, "render")
-
-    -- Go to start frame
-    comp.CurrentTime = renderStart
-    comp:SetAttrs({COMPN_CurrentTime = renderStart})
-
-    -- Purge cache
-    fusion.CacheManager:Purge()
-
-    -- Find the Saver node
-    local saver = tool:GetChildrenList(false, "Saver")
-    if #saver == 0 then
-        flib.show_warning(comp, "Saver node not found")
-        return false
-    end
-
-    local saverNode = saver[1]
-
-    -- Enable interactive rendering (and leave it that way - no switching!)
-    saverNode.SV1_SaveFrames = "HiQInteractive"
-
-    local frameCount = renderEnd - renderStart + 1
-    print("Starting growth processing for " .. frameCount .. " frames...")
-
-    -- Start playback
-    comp:Loop(false)
-    comp:Play()
-
-    print("Growth processing started - playback will continue until the end")
-
-    -- Wait for playback to complete
-    local waitTime = math.max(5, frameCount * 0.5)  -- Approximate wait time
-    flib.sleep(waitTime)
-
-    -- Switch to Age mode for faster playback
-    vectorfill_utilities.set_output_mode(tool, "age")
-
-    print("Processing complete!")
-    print("You can now play back the growth effect or switch output modes")
-
-    comp:Loop(true)
-    return true
-end
-
 --- Set output mode helper function
---- @param tool object VectorFill macro tool
+--- @param tool object ReFill macro tool
 --- @param mode string "render", "age", "trail", or "growth_speed"
 --- @return boolean Success status
-function vectorfill_utilities.set_output_mode(tool, mode)
+function refill_utilities.set_output_mode(tool, mode)
     local mode_map = {
         render = 0,
         age = 1,
@@ -398,4 +370,4 @@ function vectorfill_utilities.set_output_mode(tool, mode)
     end
 end
 
-return vectorfill_utilities
+return refill_utilities
