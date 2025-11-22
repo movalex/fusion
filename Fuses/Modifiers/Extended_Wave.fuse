@@ -7,10 +7,11 @@
  Added : Delay Start Time
  Added : Reverse 
  Written by Dunn Lewis <dunn[dot]lewis[dot]work[at]gmail[dot]com>
+ Updated by Alexey Bogomolov <mail[at]abogomolov[dot]com>
 
 ]]--
 
-version = "v1.01 - 16 JAN 2018"
+version = "v1.02 - 12 NOV 2025"
 
 
 FuRegisterClass("ExtendedWave", CT_Modifier, {
@@ -48,6 +49,7 @@ function Create()
 		LINKID_DataType =		"FuID",
 		INPID_InputControl =	"MultiButtonIDControl",
 		MBTNC_StretchToFit = true,
+		INP_DoNotifyChanged = true,
 		{ MBTNC_AddButton =		WVM_Line },
 		{ MBTNC_AddButton =		WVM_Saw },
 		{ MBTNC_AddButton =		WVM_Tri },
@@ -88,6 +90,57 @@ function Create()
 		INPID_InputControl =	"ScrewControl",
 		})	
 
+-------------------------
+
+    InHoldTime = self:AddInput("Hold Time (sec)", "HoldTime", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default = 2.0,
+        INP_MinScale = 0.1,
+        INP_MaxScale = 10.0,
+        IC_Visible = false,
+    })
+
+    InTransTime = self:AddInput("Transition Time (sec)", "TransTime", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default = 1.0,
+        INP_MinScale = 0.1,
+        INP_MaxScale = 5.0,
+        IC_Visible = false,
+    })
+
+    InEasingType = self:AddInput("Easing Type", "EasingType", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "ComboControl",
+        INP_Default = 0.0,
+        { CCS_AddString = "Smoothstep", },
+        { CCS_AddString = "Smootherstep", },
+        { CCS_AddString = "Ease Out", },
+        { CCS_AddString = "Ease In", },
+        IC_Visible = false,
+    })
+
+    InStep = self:AddInput("Step Size", "Step", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default = 1.0,
+        INP_MinScale = 0.0,
+        INP_MaxScale = 5.0,
+        IC_Visible = false,
+    })
+
+    InTolerance = self:AddInput("Step Tolerance", "Tolerance", {
+        LINKID_DataType = "Number",
+        INPID_InputControl = "SliderControl",
+        INP_Default = 0.1,
+        INP_MinScale = 0.0,
+        INP_MaxScale = 1.0,
+        IC_Visible = false,
+    })
+
+-------------------------
+
 	InLimit = self:AddInput("Limit", "Limit", {
 		LINKID_DataType =		"Number",
 		INPID_InputControl =	"CheckboxControl",
@@ -103,56 +156,14 @@ function Create()
 		INP_MinAllowed =        0.0,
 		INP_MaxScale =          10.0,
 		ICD_Width =           	0.75,
-		})	
-	InReverse = self:AddInput("Reverse", "Reverse", {
+	})
+	
+    InReverse = self:AddInput("Reverse", "Reverse", {
 		LINKID_DataType =		"Number",
 		INPID_InputControl =	"CheckboxControl",
 		INP_Default = 			0.0,
 		ICD_Width =           	0.25,
-		})
-
-    -- Add these new inputs (after existing frequency, strength, offset)
-    InHoldTime = self:AddInput("Hold Time (sec)", "HoldTime", {
-        LINKID_DataType = "Number",
-        INPID_InputControl = "SliderControl",
-        INP_Default = 2.0,
-        INP_MinScale = 0.1,
-        INP_MaxScale = 10.0,
-    })
-
-    InTransTime = self:AddInput("Transition Time (sec)", "TransTime", {
-        LINKID_DataType = "Number",
-        INPID_InputControl = "SliderControl",
-        INP_Default = 1.0,
-        INP_MinScale = 0.1,
-        INP_MaxScale = 5.0,
-    })
-
-    InEasingType = self:AddInput("Easing Type", "EasingType", {
-        LINKID_DataType = "Number",
-        INPID_InputControl = "ComboControl",
-        INP_Default = 0.0,
-        { CCS_AddString = "Smoothstep", },
-        { CCS_AddString = "Smootherstep", },
-        { CCS_AddString = "Ease Out", },
-        { CCS_AddString = "Ease In", },
-    })
-
-    InMinStep = self:AddInput("Min Step Size", "MinStep", {
-        LINKID_DataType = "Number",
-        INPID_InputControl = "SliderControl",
-        INP_Default = 0.0,
-        INP_MinScale = 0.0,
-        INP_MaxScale = 2.0,
-    })
-
-    InMaxStep = self:AddInput("Max Step Size", "MaxStep", {
-        LINKID_DataType = "Number",
-        INPID_InputControl = "SliderControl",
-        INP_Default = 0.0,  -- 0 means disabled
-        INP_MinScale = 0.0,
-        INP_MaxScale = 2.0,
-    })
+	})
 
 
 	---------------------------------------------------------	
@@ -171,7 +182,19 @@ function Create()
 		})				
 end
 
-
+function NotifyChanged(inp, param, time)
+    if inp == InWave then
+        local wave = param.Value
+        local isEasingNoise = (wave == WVM_NoiseWithEasing)
+        
+        -- Show/hide easing-specific controls using ViewShow
+        InHoldTime:SetAttrs({ INP_Disabled = not isEasingNoise, IC_Visible = isEasingNoise })
+        InTransTime:SetAttrs({ INP_Disabled = not isEasingNoise, IC_Visible = isEasingNoise })
+        InEasingType:SetAttrs({ INP_Disabled = not isEasingNoise, IC_Visible = isEasingNoise })
+        InStep:SetAttrs({ INP_Disabled = not isEasingNoise, IC_Visible = isEasingNoise })
+        InTolerance:SetAttrs({ INP_Disabled = not isEasingNoise, IC_Visible = isEasingNoise })
+    end
+end
 --//----------------------------------------------
 
 function Process(req) 
@@ -235,10 +258,12 @@ function Process(req)
 		r = r * strength + offset
 
     elseif wave == WVM_NoiseWithEasing then
-        -- Get the input values (THIS WAS MISSING!)
+        -- Get the input values
         local holdtime = InHoldTime:GetValue(req).Value
         local transtime = InTransTime:GetValue(req).Value
         local easingtype = InEasingType:GetValue(req).Value
+        local step = InStep:GetValue(req).Value
+        local tolerance = InTolerance:GetValue(req).Value
         
         -- Use period to scale the timing
         local totaltime = (holdtime + transtime) * period
@@ -247,11 +272,45 @@ function Process(req)
         local segment = math.floor((t - Delay_Time) / totaltime)
         local localtime = ((t - Delay_Time) % totaltime)
         
-        -- Generate two consecutive random values
-        local seed1 = segment * 12345.6789
-        local seed2 = (segment + 1) * 12345.6789
-        local pos1 = bmd.noise(seed1)
-        local pos2 = bmd.noise(seed2)
+        -- Build cumulative position using constrained random walk
+        local pos1 = 0
+        local pos2 = 0
+        
+        if step > 0 then
+            -- Constrained step mode with tolerance
+            for i = 0, segment + 1 do
+                local seed = i * 12345.6789
+                
+                if i > 0 then  -- Skip first position (starts at 0)
+                    -- Get random value for tolerance variation
+                    local toleranceRandom = bmd.noise(seed + 100)
+                    -- Map to range: -tolerance to +tolerance
+                    local variation = toleranceRandom * tolerance
+                    
+                    -- Get random direction (positive or negative step)
+                    local direction = bmd.noise(seed) > 0 and 1 or -1
+                    
+                    -- Calculate actual step: step ± tolerance variation
+                    local actualStep = step + variation
+                    
+                    if i <= segment then
+                        -- Accumulate position for current segment
+                        pos1 = pos1 + (actualStep * direction)
+                    end
+                    
+                    if i == segment + 1 then
+                        -- Calculate next position (pos2 is pos1 plus one more step)
+                        pos2 = pos1 + (actualStep * direction)
+                    end
+                end
+            end
+        else
+            -- Original random behavior when step is 0
+            local seed1 = segment * 12345.6789
+            local seed2 = (segment + 1) * 12345.6789
+            pos1 = bmd.noise(seed1)
+            pos2 = bmd.noise(seed2)
+        end
         
         -- Apply easing during transition
         local scaled_transtime = transtime * period
@@ -283,12 +342,6 @@ function Process(req)
 
         r = r * strength + offset
     end
-	
-	if reverseNum == 1 then
-	r = -(r * strength + offset)
-	else
-	r = r * strength + offset
-	end
 	
 	end
 	OutResult:Set(req, Number(r))
