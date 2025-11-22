@@ -1,13 +1,26 @@
 
 --[[
 
- This is an extended version of the Wave Modifier
- So all credit to goes the great eyeon Team for this modifier
+ Extended Wave Modifier
+ 
+ Description:
+ This modifier generates various waveforms to animate values over time. It extends the standard Wave modifier 
+ with additional features like Delay Start Time, Reverse, and a new Easing Noise mode for creating smooth, 
+ controlled random motion. It supports standard waveforms (Line, Saw, Triangle, Square, Sine, Noise) and 
+ provides advanced controls for timing and shaping the output.
+
+ Based on the original Wave Modifier by eyeon Software.
 
  Added : Delay Start Time
  Added : Reverse 
  Written by Dunn Lewis <dunn[dot]lewis[dot]work[at]gmail[dot]com>
  Updated by Alexey Bogomolov <mail[at]abogomolov[dot]com>
+
+ Update v1.02 (12 NOV 2025):
+ - Added "Easing Noise" mode: A constrained random walk with customizable hold and transition times.
+ - Added Easing Type control: Choose between Smoothstep, Smootherstep, Ease In, Ease Out, or Linear.
+ - Added Step Size and Tolerance: Control the magnitude and variation of value changes.
+ - Dynamic UI: Easing controls are only visible when "Easing Noise" is selected.
 
 ]]--
 
