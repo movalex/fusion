@@ -52,7 +52,7 @@ Last Update: Oct, 2025
 
 {
 	Tools = ordered() {
-		["ReFill"] = GroupOperator {
+		["ReFill"] = MacroOperator {
 			Tools = ordered() {
 				Note_MakeBlank = Note {
 					ViewInfo = StickyNoteInfo {
