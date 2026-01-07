@@ -3,19 +3,24 @@
     
 Description:
     A comprehensive tool renaming utility for Blackmagic Fusion that provides both
-    single and batch renaming capabilities with advanced enumeration options.
+    single and batch renaming capabilities with advanced function modes.
     
     The script opens a floating dialog near the cursor that allows users to:
     - Rename individual selected tools or underlays
     - Batch rename multiple tools with automatic sequential numbering (_01, _02, etc.)
-    - Fix tool name serialization issues (removes duplicate numbers like Tool1_1_1)
-    - Apply five enumeration modes:
+    - Apply twelve function modes for batch operations:
         * Enumerate: Adds sequential numbers to existing names
         * Append ID: Appends the internal Fusion tool ID to the name
         * Strip Numbers: Removes all trailing numbers and underscores
         * Strip and Enumerate All: Removes old numbers then adds new sequential numbers
-        * Strip and Enumerate by ID: Groups tools by type, removes old numbers, 
-          then enumerates within each type group (e.g., Blur_01, Blur_02, Merge_01, Merge_02)
+        * Strip and Enumerate by ID: Groups tools by type, then enumerates within groups
+        * Add Prefix: Adds text before tool names with underscore (prefix_ToolName)
+        * Add Suffix: Adds text after tool names with underscore (ToolName_suffix)
+        * Remove Prefix: Removes specified prefix (with or without underscore)
+        * Remove Suffix: Removes specified suffix (with or without underscore)
+        * UPPERCASE: Converts tool names to uppercase
+        * lowercase: Converts tool names to lowercase
+        * Title Case: Converts tool names to title case
     
     The UI appears at the cursor position with smart boundary detection to stay on screen.
     Automatically updates ToolManager metadata to maintain tag associations after renaming.
@@ -31,7 +36,7 @@ Features:
     * Batch rename: Sequentially rename multiple selected tools with _01, _02, etc.
     * Smart name validation: Prepends "_" if name starts with a number
     * ToolManager integration: Preserves tool tags and metadata after renaming
-    * Enumeration modes: Strip, enumerate, or re-enumerate tool names
+    * Function modes: Add/remove prefix/suffix, change case, enumerate tools
     * Fusion auto-increment: Properly handles Fusion's automatic name incrementing
     * UI positioning: Opens near cursor with screen boundary detection
     * Keyboard shortcuts: ESC to cancel, Enter to confirm
@@ -42,10 +47,11 @@ Usage:
     - Select tool(s) and run script
     - For single rename: Enter new name and press Enter or click OK
     - For batch rename: Check "Batch Rename", enter base name, click OK
-    - For enumeration: Check "Batch Rename" and "Enumeration", select mode, click OK
+    - For function modes: Check "Batch Rename" and "Function", select mode, click OK
     - Press ESC or click Cancel to abort
     
 Version History:
+    v2.0:  Added prefix/suffix functions, case conversion modes (UPPERCASE, lowercase, Title Case)
     v1.93: Added batch rename options with four enumeration modes
     v1.92: Added fix serialization to remove duplicate number suffixes
     v1.91: Fixed Resolve 17 compatibility (omit __flags metadata)
@@ -221,7 +227,7 @@ function showUI(tool, cur_name)
                 },
                 ui:CheckBox{
                     ID = 'fix',
-                    Text = 'Enumeration',
+                    Text = 'Function',
                     Enabled = false,
                     Checked = false,
                 },
@@ -251,11 +257,18 @@ function showUI(tool, cur_name)
     itm.mytext:SelectAll()
     
     -- Populate enumeration mode dropdown
-    itm.FixMode:AddItem('Enumerate')
-    itm.FixMode:AddItem('Append ID')
-    itm.FixMode:AddItem('Strip Numbers')
-    itm.FixMode:AddItem('Strip and Enumerate All')
-    itm.FixMode:AddItem('Strip and Enumerate by ID')
+    itm.FixMode:AddItem('Enumerate')                  -- 0
+    itm.FixMode:AddItem('Append ID')                  -- 1
+    itm.FixMode:AddItem('Strip Numbers')              -- 2
+    itm.FixMode:AddItem('Strip and Enumerate All')    -- 3
+    itm.FixMode:AddItem('Strip and Enumerate by ID')  -- 4
+    itm.FixMode:AddItem('Add Prefix')                 -- 5
+    itm.FixMode:AddItem('Add Suffix')                 -- 6
+    itm.FixMode:AddItem('Remove Prefix')              -- 7
+    itm.FixMode:AddItem('Remove Suffix')              -- 8
+    itm.FixMode:AddItem('UPPERCASE')                  -- 9
+    itm.FixMode:AddItem('lowercase')                  -- 10
+    itm.FixMode:AddItem('Title Case')                 -- 11
     
     -- ------------------------------------------------------------------------
     -- Rename Functions
@@ -371,6 +384,98 @@ function showUI(tool, cur_name)
                     t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = toolName})
                 end
             end
+        
+        -- Mode 5: Add Prefix - Add text before the tool name
+        elseif mode == 5 then
+            local prefix = itm.mytext:GetText()
+            if prefix == "" then
+                print("Please enter a prefix in the text field")
+                return
+            end
+            for _, t in ipairs(tools) do
+                local toolName = prefix .. "_" .. t.Name
+                toolName = validateToolName(toolName)
+                t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = toolName})
+            end
+            
+        -- Mode 6: Add Suffix - Add text after the tool name
+        elseif mode == 6 then
+            local suffix = itm.mytext:GetText()
+            if suffix == "" then
+                print("Please enter a suffix in the text field")
+                return
+            end
+            for _, t in ipairs(tools) do
+                local toolName = t.Name .. "_" .. suffix
+                t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = toolName})
+            end
+            
+        -- Mode 7: Remove Prefix - Remove specified prefix from names (handles prefix_ or prefix)
+        elseif mode == 7 then
+            local prefix = itm.mytext:GetText()
+            if prefix == "" then
+                print("Please enter the prefix to remove")
+                return
+            end
+            local prefixWithUnderscore = prefix .. "_"
+            for _, t in ipairs(tools) do
+                local toolName = t.Name
+                -- Try to remove prefix with underscore first
+                if toolName:sub(1, #prefixWithUnderscore) == prefixWithUnderscore then
+                    toolName = toolName:sub(#prefixWithUnderscore + 1)
+                elseif toolName:sub(1, #prefix) == prefix then
+                    toolName = toolName:sub(#prefix + 1)
+                end
+                if toolName ~= "" and toolName ~= t.Name then
+                    toolName = validateToolName(toolName)
+                    t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = toolName})
+                end
+            end
+            
+        -- Mode 8: Remove Suffix - Remove specified suffix from names (handles _suffix or suffix)
+        elseif mode == 8 then
+            local suffix = itm.mytext:GetText()
+            if suffix == "" then
+                print("Please enter the suffix to remove")
+                return
+            end
+            local suffixWithUnderscore = "_" .. suffix
+            for _, t in ipairs(tools) do
+                local toolName = t.Name
+                -- Try to remove suffix with underscore first
+                if toolName:sub(-#suffixWithUnderscore) == suffixWithUnderscore then
+                    toolName = toolName:sub(1, -#suffixWithUnderscore - 1)
+                elseif toolName:sub(-#suffix) == suffix then
+                    toolName = toolName:sub(1, -#suffix - 1)
+                end
+                if toolName ~= "" and toolName ~= t.Name then
+                    toolName = validateToolName(toolName)
+                    t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = toolName})
+                end
+            end
+            
+        -- Mode 9: UPPERCASE - Convert names to uppercase
+        elseif mode == 9 then
+            for _, t in ipairs(tools) do
+                local toolName = string.upper(t.Name)
+                t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = toolName})
+            end
+            
+        -- Mode 10: lowercase - Convert names to lowercase
+        elseif mode == 10 then
+            for _, t in ipairs(tools) do
+                local toolName = string.lower(t.Name)
+                t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = toolName})
+            end
+            
+        -- Mode 11: Title Case - Convert names to title case
+        elseif mode == 11 then
+            for _, t in ipairs(tools) do
+                local toolName = t.Name:gsub("(%a)([%w_']*)", function(first, rest)
+                    return first:upper() .. rest:lower()
+                end)
+                t:SetAttrs({TOOLB_NameSet = true, TOOLS_Name = toolName})
+            end
         end
     end
     
@@ -387,6 +492,34 @@ function showUI(tool, cur_name)
         disp:ExitLoop()
     end
     
+    -- Update text field state based on selected mode
+    local function updateTextFieldState()
+        local mode = itm.FixMode.CurrentIndex
+        -- Modes that require text input: Add Prefix (5), Add Suffix (6), Remove Prefix (7), Remove Suffix (8)
+        local needsInput = (mode == 5 or mode == 6 or mode == 7 or mode == 8)
+        if itm.fix.Checked then
+            itm.mytext.Enabled = needsInput
+            if mode == 5 then
+                itm.mytext.PlaceholderText = "Enter prefix..."
+                itm.mytext.Text = ""
+            elseif mode == 6 then
+                itm.mytext.PlaceholderText = "Enter suffix..."
+                itm.mytext.Text = ""
+            elseif mode == 7 then
+                itm.mytext.PlaceholderText = "Prefix to remove..."
+                itm.mytext.Text = ""
+            elseif mode == 8 then
+                itm.mytext.PlaceholderText = "Suffix to remove..."
+                itm.mytext.Text = ""
+            else
+                itm.mytext.PlaceholderText = ""
+            end
+        else
+            itm.mytext.Enabled = true
+            itm.mytext.PlaceholderText = ""
+        end
+    end
+    
     function win.On.batch.Clicked(ev)
         itm.fix.Enabled = true
         itm.mytext:SelectAll()
@@ -395,8 +528,12 @@ function showUI(tool, cur_name)
     
     function win.On.fix.Clicked(ev)
         itm.fix:SetFocus("OtherFocusReason")
-        itm.mytext.Enabled = not itm.fix.Checked
         itm.FixMode.Enabled = itm.fix.Checked
+        updateTextFieldState()
+    end
+    
+    function win.On.FixMode.CurrentIndexChanged(ev)
+        updateTextFieldState()
     end
     
     function win.On.ok.Clicked(ev)
