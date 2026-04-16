@@ -149,11 +149,9 @@ class GrabStillsOptionsDialog(BaseUI):
     def close(self, ev=None):
         """Override close to ensure proper cleanup."""
         try:
-            self.result = None  # Ensure result is None when closing
             super().close(ev)
         except Exception as e:
             print(f"Error closing dialog: {e}")
-            # Fallback: force exit the dispatcher loop
             if hasattr(self, 'disp'):
                 try:
                     self.disp.ExitLoop()
@@ -722,7 +720,6 @@ def _run_script():
     }
     dlg = GrabStillsOptionsDialog(defaults)
     options = dlg.run()
-    options = getattr(dlg, "result", None)
     if options is None:
         print("Canceled. No stills were grabbed.")
         return
