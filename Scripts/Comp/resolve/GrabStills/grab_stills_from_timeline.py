@@ -615,7 +615,12 @@ def grab_stills_from_markers(current_timeline, still_album, color_filter: str = 
     if not markers:
         print("No markers found in timeline")
         return []
-    # sort markers by frame
+
+    # Marker frame IDs are offsets from the timeline start.
+    # SetCurrentTimecode expects an absolute timecode, so add the start frame.
+    start_tc = current_timeline.GetStartTimecode()
+    start_frame = utils.timecode_to_frame(start_tc)
+
     stills = []
     for frame_id in sorted(markers.keys()):
         marker_data = markers[frame_id]
@@ -623,7 +628,8 @@ def grab_stills_from_markers(current_timeline, still_album, color_filter: str = 
             if marker_data.get("color") != color_filter:
                 continue
         # Navigate and grab
-        current_timeline.SetCurrentTimecode(utils.frame_to_timecode(frame_id))
+        absolute_frame = start_frame + frame_id
+        current_timeline.SetCurrentTimecode(utils.frame_to_timecode(absolute_frame))
         print(f"Processing marker at timecode: {current_timeline.GetCurrentTimecode()}")
         time.sleep(0.2)  # small delay for stability
         still = current_timeline.GrabStill()
